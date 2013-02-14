@@ -1,0 +1,41 @@
+from os.path import join, basename
+import glob
+
+project = "dedupv1d_test"
+
+Import("env", "build_mode")
+
+localenv = env.Clone()
+Export("localenv")
+
+localenv["CPPFLAGS"].append("-DDEDUPV1_TEST")
+localenv["LIBS"].append("gtest")
+
+dedupv1d_test_src = Glob("*.cc")
+
+dedupv1d_obj = localenv.SConscript("#dedupv1d/src/SConscript", variant_dir = "dedupv1d_obj") 
+dedupv1d_pb_obj = localenv.SConscript("#dedupv1d/resources/SConscript", variant_dir = "dedupv1d_pb_obj")
+
+dedupv1_pb_obj = localenv.SConscript("#core/resources/SConscript", variant_dir = "dedupv1_pb_obj")
+dedupv1_core_obj = localenv.SConscript("#core/src/SConscript", variant_dir = "dedupv1_core_obj")   
+
+dedupv1_base_obj = localenv.SConscript("#base/src/SConscript", variant_dir = join("dedupv1_base_obj"))   
+dedupv1_base_pb_obj = localenv.SConscript("#base/resources/SConscript", variant_dir = join("dedupv1_base_pb_obj"))
+dedupv1_base_shared_test_obj = localenv.SConscript("#base/shared_test/SConscript", variant_dir = join("dedupv1_base_shared_test_obj"))
+
+prog = localenv.Program(project, 
+                source = dedupv1d_obj + dedupv1d_test_src + dedupv1d_pb_obj + 
+                	dedupv1_core_obj + dedupv1_pb_obj + 
+                	dedupv1_base_obj + dedupv1_base_pb_obj + dedupv1_base_shared_test_obj, 
+                CPPPATH = localenv["CPPPATH"] + 
+                	["#core/include", # normal includes
+                	"#core/resources", # protobuf inclues
+                	"#base/include", 
+                	"#base/resources", 
+                	"#dedupv1d/include",
+                	"#dedupv1d/resources"],
+                 )
+                 
+localenv.Alias("all", project)
+localenv.Alias("test", project)
+localenv.Alias(project, prog)

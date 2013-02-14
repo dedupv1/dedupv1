@@ -1,0 +1,8 @@
+TODO
+----
+
+- Extract base and core into shared object libraries
+- Move SCST interface to sysfs
+- Add FC support
+- Add Block Locality Cache
+- Add Block Index Compression

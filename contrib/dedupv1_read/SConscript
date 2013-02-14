@@ -1,0 +1,32 @@
+from os.path import join, basename
+import glob
+
+project = "dedupv1_read"
+
+Import("env", "build_mode")
+
+localenv = env.Clone()
+localenv["CFLAGS"] = localenv["CFLAGS"]
+
+Export("localenv")
+
+dedupv1_base_obj = localenv.SConscript("#base/src/SConscript", variant_dir = join("dedupv1_base_obj"))   
+dedupv1_base_pb_obj = localenv.SConscript("#base/resources/SConscript", variant_dir = join("dedupv1_base_pb_obj"))
+
+dedupv1_core_obj = localenv.SConscript("#core/src/SConscript", variant_dir = join("dedupv1_core_obj"))   
+dedupv1_core_pb_obj = localenv.SConscript("#core/resources/SConscript", variant_dir = join("dedupv1_pb_obj"))
+
+dedupv1d_obj = localenv.SConscript("#dedupv1d/src/SConscript", variant_dir = join("dedupv1d_obj"))   
+dedupv1d_pb_obj = localenv.SConscript("#dedupv1d/resources/SConscript", variant_dir = join("dedupv1d_pb_obj"))
+
+dedupv1_obj = [dedupv1_base_obj, dedupv1_base_pb_obj, dedupv1_core_obj, dedupv1_core_pb_obj, dedupv1d_obj, dedupv1d_pb_obj]
+dedupv1_includes = ["#core/include", "#core/resources", "#base/include", "#base/resources", "#dedupv1d/include", "#dedupv1d/resources"]
+
+dedupv1_read = localenv.Program(project, 
+                source = Glob("src/*.cc") + dedupv1_obj, 
+                CPPPATH = localenv["CPPPATH"] + dedupv1_includes
+                 )
+
+localenv.Alias("all", project)
+localenv.Default(project)
+Return("dedupv1_read")

@@ -1,0 +1,5 @@
+*.heap
+cpuprofile
+work
+core
+

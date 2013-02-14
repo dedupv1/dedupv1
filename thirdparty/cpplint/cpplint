@@ -1,0 +1,8 @@
+if [ ! "x" = "x$DEDUPV1_ROOT" ]; then 
+    cd $DEDUPV1_ROOT
+fi
+python thirdparty/cpplint/cpplint.py --verbose=3 --filter=-build/include base/src/* base/include/base* core/src/* core/include/core/* dedupv1d/src/* dedupv1d/include/*
+
+if [ ! "x" = "x$DEDUPV1_ROOT" ]; then                                                                                                                                                                         
+    cd $DEDUPV1_ROOT/thirdparty/cpplint
+fi

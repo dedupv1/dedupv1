@@ -1,0 +1,410 @@
+#!/usr/bin/python
+#
+# dedupv1 - iSCSI based Deduplication System for Linux
+#
+# (C) 2008 Dirk Meister
+# (C) 2009 - 2011, Dirk Meister, Paderborn Center for Parallel Computing
+# (C) 2012 Dirk Meister, Johannes Gutenberg University Mainz
+# 
+# This file is part of dedupv1.
+#
+# dedupv1 is free software: you can redistribute it and/or modify it under the terms of the 
+# GNU General Public License as published by the Free Software Foundation, either version 3 
+# of the License, or (at your option) any later version.
+#
+# dedupv1 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without 
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with dedupv1. If not, see http://www.gnu.org/licenses/.
+#
+
+
+import sys
+import os
+import optparse
+import simplejson
+import random
+from time import sleep
+import re
+
+if "DEDUPV1_ROOT" not in os.environ or len(os.environ["DEDUPV1_ROOT"]) == 0:
+    DEDUPV1_ROOT = os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]),"../"))
+    os.environ["DEDUPV1_ROOT"] = DEDUPV1_ROOT
+else:
+    DEDUPV1_ROOT = os.environ["DEDUPV1_ROOT"]
+
+sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python")))
+sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python2.6/site-packages/")))
+for file in [f for f in os.listdir(os.path.join(DEDUPV1_ROOT, "lib/python2.6/site-packages/")) if f.endswith(".egg")]:
+    sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python2.6/site-packages/", file)))
+import dedupv1
+import command
+import scst
+import iscsi_scst
+from dedupv1logging import log_error, log_info, log_warning, log_verbose
+from config_loader import Config
+from monitor import Monitor
+import config
+from dedupv1d_pb2 import DirtyFileData
+from protobuf_util import read_sized_message
+import protobuf_json
+import volume
+import group
+
+monitor = None
+
+def register_all(monitor, options, config):
+    """ register users, targets, groups, and volumes manually.
+    
+        Usually this is done by dedupv1_adm but it is helpful for
+        support tasks and if the dedupv1d is started in the non-daemon
+        mode, which is needed for profiling.
+    """
+                    
+    dedupv1.register_groups(monitor, options, config)
+    dedupv1.register_targets(monitor, options, config)
+    dedupv1.register_volumes(monitor, options, config)
+    dedupv1.register_users(monitor, options)
+        
+def unregister_all(options, config):
+    """ unregisters users, targets, and groups using the information provided
+        by the SCST interface
+    """
+    remove_lock(options, config, fail_if_missing=False)
+    dedupv1.unregister_users_direct(options, config)
+    dedupv1.unregister_targets_direct(options, config)
+    dedupv1.unregister_groups_direct(options, config) 
+    
+def unregister_users(options, config):
+    """ unregisters all users using SCST information
+    """
+    dedupv1.unregister_users_direct(options, config)
+    
+def unregister_targets(options, config):
+    """ unregister all targets
+    """
+    dedupv1.unregister_targets_direct(options, config)
+
+def unregister_groups(options, config):
+    """ unregister all groups
+    """
+    dedupv1.unregister_groups_direct(options, config) 
+
+def unregister_group(options, config, groups):
+    """ unregisters a given group
+    """
+    dedupv1.unregister_group_direct(options, config, groups)
+    
+def start_app(options, config):
+	config_file = options.configfile
+	cmd_line = " ".join([os.path.join(DEDUPV1_ROOT, "bin/dedupv1d") , config_file, " --no-daemon"])
+
+	command.execute_cmd(cmd_line, direct_output = True)
+    
+def start_bypassing(monitor, options, config):
+    dedupv1.start_device(DEDUPV1_ROOT, monitor, options, config, bypass=True)
+    
+def system_reset(options, config):
+    if not options.force:
+        raise Exception("Cannot reset without force flag")
+    
+    if dedupv1.is_running(config):
+        dedupv1.stop_device(DEDUPV1_ROOT, monitor, options, config)
+
+    log_info(options, "dedupv1d reset")
+        
+    unregister_all(options, config)
+    system_clean(options, config)
+    
+    start_options = options
+    start_options.create = True
+    
+    dedupv1.start_device(DEDUPV1_ROOT, monitor, start_options, config)
+            
+def system_clean(options, config):
+    """ cleans the dedupv1 system. This deleted all data files.
+        The contents of the installation is lost. The function is only executed if the
+        force option is set
+    """
+    if not options.force:
+        raise Exception("Cannot clean without force flag")
+    dedupv1.clean_device(monitor, options, config)
+
+def self_test(options, config):
+    """ Performs a self-test by registering a new volume, mounting it via scst_local.
+        Then 1 GB of data is written to the file, re-read, and compared.
+        Afterwards the new volume is deleted
+    """
+    if not options.force:
+        raise Exception("Cannot perform self-test without force flag")
+    if not dedupv1.is_running(config):
+        raise Exception("dedupv1 is not running")
+    if not os.path.exists(options.configfile):
+        parser.error("%s not found" % options.configfile)
+    if not dedupv1.check_root():
+        raise Exception("dedupv1_support self-test must run as root")
+    
+    log_warning(options, "No operation should interrupt the self-test or run in parallel to it")
+    
+    vols = volume.read_all_volumes(monitor)
+    max_vol_id = 0
+    for (vol_id, vol) in vols.items():
+        max_vol_id = max(max_vol_id, int(vol_id))
+    max_vol_id += 1
+    
+    max_default_group_lun = -1
+    default_group = group.read_group(monitor, "Default")
+    for (vol_lun) in default_group.volumes():
+        lun = int(vol_lun.partition(":")[2])
+        max_default_group_lun = max(max_default_group_lun, lun)
+    max_default_group_lun += 1
+    
+    stats_mon_data = monitor.read("stats")
+    chunk_index_fill_ratio = stats_mon_data["core"]["chunk index"]["index fill ratio"]
+    block_index_fill_ratio = stats_mon_data["core"]["block index"]["index fill ratio"]
+    storage_fill_ratio = stats_mon_data["core"]["chunk store"]["storage"]["allocator"]["fill ratio"]
+    
+    if (chunk_index_fill_ratio > 0.9 or block_index_fill_ratio > 0.9 or storage_fill_ratio > 0.9):
+        raise Exception("Self test not possible. Not enough space")
+    
+    log_verbose(options, "Use volume id %s as LUN %s" % (max_vol_id, max_default_group_lun))
+    
+    try:
+        print "Starting self test"
+        r = random.randint(0, 64 * 1024)
+        command.execute_cmd("/opt/dedupv1/bin/dedupv1_volumes attach id=%s device-name=selftest%s logical-size=80G group=Default:%s" % (max_vol_id, r, max_default_group_lun))
+        
+        command.execute_cmd("modprobe scst_local")
+        sleep(5)
+        
+        device = None
+        for bus_device in os.listdir("/sys/bus/scsi/devices/"):
+            link = os.readlink(os.path.join("/sys/bus/scsi/devices/", bus_device))
+            if link.find("scst_fake_") >= 0 and re.match("[0-9]+:[0-9]+:[0-9]+:%s" % (max_default_group_lun), bus_device):
+                block = os.path.join("/sys/bus/scsi/devices/", bus_device, "block")
+     
+                s = os.listdir(block)
+                device = os.path.join("/dev/", s[0])
+                
+                #device = os.path.join("/dev/", os.path.basename(generic_link))
+                if not os.path.exists(device):
+                    device = None
+                else:
+                    log_verbose(options, "Found device %s" % bus_device)
+                    break
+        
+        if not device:
+            raise Exception("Failed to find SCST device");
+        
+        log_verbose(options, "Copy data")
+        
+        copy_cmd = "dd if=/dev/urandom count=1K bs=1M status=noxfer | tee %s | sha1sum -b" % (device)
+        sha1_pre = command.execute_cmd(copy_cmd).split("\n")[-1].split(" ")[0]
+        
+        log_verbose(options, "Verify data")
+        
+        check_cmd = "dd if=%s count=1K bs=1M status=noxfer | sha1sum -b" % (device)
+        sha1_post = command.execute_cmd(check_cmd).split("\n")[-1].split(" ")[0]
+        
+        if sha1_pre != sha1_post:
+            raise Exception("Self test failed")
+    finally:
+        sleep(5)
+        command.execute_cmd("rmmod scst_local")
+        sleep(5)
+        
+        command.execute_cmd("/opt/dedupv1/bin/dedupv1_volumes group remove id=%s group=Default" % (max_vol_id))
+        
+        command.execute_cmd("/opt/dedupv1/bin/dedupv1_volumes detach id=%s" % (max_vol_id))
+        
+        log_info(options, "Finished self test")
+        
+def remove_lock(options, config, fail_if_missing=True):
+    """ Removes a lockfile
+        Usually this call is not necessary anymore, but there might be circumstances where such a
+        function might be handy
+    """
+    filename = config.get("daemon.lockfile")
+    if dedupv1.is_running(config):
+        if not options.force:
+            raise Exception("dedupv1d is running. Failed to remove lockfile %s without -f" % filename)
+        else:
+            log_info(options, "dedupv1d seems to run. Forcing removal of lockfile %s" % filename)
+    if os.path.exists(filename):
+        log_verbose(options, "Remove %s" %filename)
+        os.remove(filename)
+    elif fail_if_missing:
+        raise Exception("Lockfile %s doesn't exists" % filename)
+
+def kill(options, config):
+    """ kills a running dedupv1d via the PID given in the lock file
+        The method is only executed if the force option is set
+    """
+    if not options.force:
+        raise Exception("Cannot kill without force flag")
+    if not dedupv1.check_root():
+        raise Exception("dedupv1_support kill must run as root")
+    
+    pid = dedupv1.is_running(config)
+    if pid:
+        
+        # kill daemon with abort
+        try:
+            os.kill(pid, 6)
+            sleep(5)
+        except Exception as e:
+            raise ScstException("Failed to kill daemon", e)
+    else:
+        log_error(options, "dedupv1d not running")
+
+def fix_permissions(monitor, options, config):
+    if is_running(config):
+        raise Exception("dedupv1d running")
+    if not dedupv1.check_root():
+        raise Exception("dedupv1_support fix-permissions must run as root")
+    
+    def get_uid_gid():
+        user_name = config.get("daemon.user", "root")
+        group_name = config.get("daemon.group", "root")        
+        pw = pwd.getpwnam(user_name)
+        g = grp.getgrnam(group_name)        
+        return (pw.pw_uid, g.gr_gid)
+    
+    (uid, gid) = get_uid_gid()
+    def fix_perm(filename):
+        os.chown(filename, uid, gid)
+
+    dirty_filename = config.get("daemon.dirtyfile")
+    fix_perm(dirty_filename)
+    
+    for (key, value) in config.items():
+        if not key.endswith("filename"):
+            continue
+        fix_perm(value)
+        fix_perm(value + "-meta")
+            
+        # Remove the tc write-ahead log files if existing
+        fix_perm(value + ".wal")
+        
+        # Special case for the detacher
+        if key.endswith("volume-info.filename"):
+            detaching_filename = value + "_detaching_state"
+            fix_perm(detaching_filename)
+            
+def show_dirty_file(options, config):
+    """ shows the contents of the dirty file
+    """
+    dirty_file = config.get("daemon.dirtyfile")
+    if not os.path.exists(dirty_file):
+        raise Exception("dirty file missing")
+    dirty_data = DirtyFileData()
+    content = open(dirty_file, "r").read()
+    read_sized_message(dirty_data, content)
+    
+    print simplejson.dumps(protobuf_json.pb2json(dirty_data), sort_keys=True, indent=4)
+            
+if __name__ == "__main__":
+    if not (dedupv1.check_root() or dedupv1.check_dedupv1_group()):
+        print >> sys.stderr, "Permission denied"
+        sys.exit(1)
+        
+    usage = """usage: %prog (clean | unregister-(all|users|targets|groups|group) | remove-lock) [options]
+    
+Examples:
+%prog clean --force
+%prog reset --force 
+
+%prog register-all
+
+%prog unregister-all
+%prog unregister-users
+%prog unregister-targets 
+%prog unregister-groups
+
+%prog unregister-group backup_group
+
+%prog remove-lock
+%prog fix-permissions
+
+%prog kill -f (requires root permissions)
+%prog self-test -f (requires root permissions)
+
+%prog show-dirty-file
+
+%prog --version
+%prog --help
+"""
+    version = "%s (hash %s)" % (config.DEDUPV1_VERSION_STR, config.DEDUPV1_REVISION_STR)
+    
+    parser = optparse.OptionParser(usage=usage, version=version)
+
+    parser.add_option("--config",
+    	dest="configfile",
+    	default=config.DEDUPV1_DEFAULT_CONFIG)
+    parser.add_option("-f", "--force",
+        action="store_true",
+        dest="force",
+        default=False)
+    parser.add_option("-v", "--verbose",
+        dest="verbose",
+        action="store_true",
+        default=False)
+    parser.add_option("-c", "--create", dest="create", action="store_true", default=False)
+    parser.add_option("--raw", dest="raw", action="store_true", help="outputs in raw JSON format", default=False)
+    parser.add_option("--debug", dest="debug", action="store_true", default=False)
+    (options, argv) = parser.parse_args()
+  	
+    if not os.path.exists(options.configfile):
+        print >> sys.stderr, options.configfile, "not found"
+        sys.exit(1)
+    configuration = Config(options.configfile)
+    monitor = Monitor("localhost", configuration.get("monitor.port", config.DEDUPV1_DEFAULT_MONITOR_PORT, type=int))
+      
+    if len(argv) == 0:
+        parser.error("No command specified")
+	sys.exit(1)
+    cmd = argv[0]
+    result = 0
+    try:
+        if cmd == "register-all":
+            register_all(monitor, options, configuration)
+        elif cmd == "unregister-all":
+            unregister_all(options, configuration)
+        elif cmd == "unregister-users":
+            unregister_users(options, configuration)
+        elif cmd == "unregister-targets":
+            unregister_targets(options, configuration)
+        elif cmd == "unregister-groups":
+            unregister_groups(options, configuration)
+        elif cmd == "unregister-group":
+            unregister_group(options, configuration, argv[1:])
+        elif cmd == "start-app":
+        	start_app(options, config)
+        elif cmd == "start-bypassing":
+            start_bypassing(monitor, options, configuration)
+        elif cmd == "fix-permissions":
+            fix_permissions(monitor, options, configuration)
+        elif cmd == "show-dirty-file":
+            show_dirty_file(options, configuration)
+        elif cmd == "clean":
+            system_clean(options, configuration)
+        elif cmd == "kill":
+            kill(options, configuration)
+        elif cmd == "self-test":
+            self_test(options, configuration)
+        elif cmd == "reset":
+            system_reset(options, configuration)
+        elif cmd == "remove-lock":
+            remove_lock(options, configuration)
+        else:
+            parser.error("Invalid command %s" % cmd)
+            
+	    sys.exit(1)
+    except KeyboardInterrupt:
+        sys.exit(1)    
+    except Exception as e:
+        log_error(options, e)
+        sys.exit(1)  
+    sys.exit(result)
+

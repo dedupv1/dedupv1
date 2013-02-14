@@ -1,0 +1,51 @@
+# Fast Copy
+
+**Fast Copy** is a feature of dedupv1 to copy data from one volume to another volume on the server side. This has the advantage that only the metadata has to be copied. No real data is transfered or copied.
+
+We call the special case that a complete volume is fast-copied **cloning**.
+
+## Usage
+
+A fast copy job can be started with the `dedupv1_volume` utility.
+
+`dedupv1_volumes fast-copy src-id=VOLUME-ID1 target-id=TARGET-ID1 size=SIZE [src-offset=SRCOFFSET] [target-offset=TARGETOFFSET]`
+
+The parameters `src-offset` and `target-offset` are optional. If they are not given, the offset 0 is assumed. `size`, `src-offset`, and `target-offset` are storage unit parameters. This means that in addition to raw bytes, the suffixes K, M, G, T for \(2^10 \),\(2^20 \),\(2^30 \),\(2^40 \) are valid.
+
+To clone a volume, you can first attach a volume with the given parameters in maintenance mode and than fast-copy the source volume to it. There is a short-cut for this:
+
+`dedupv1_volumes clone id=TARGET-ID1 src-id=VOLUME-ID1 device-name=DEVICE-NAME`
+
+The clone call accepts most parameters of an attach call with the additional source-id parameter. The logical-size parameter is not allowed. Instead the logical size of the source volume is used as the logical size of the new volume. The clone call starts to clone operation as a normal fast-copy operation. It is the responsibility of the client to check when the fast copy or clone operations finished.
+
+## Monitoring
+
+The actual monitoring job state is provided in the volume monitor as a subpoint of the target volume. Here is an example:
+```text
+"fast copy": [ {
+ "source id": "1",
+ "source start offset": "0",
+ "target start offset": "0",
+ "size", "100000000",
+ "current", "2000"
+}
+```
+It is possible to calculate the current progress of the copy operation.
+
+## Implementation Notes
+
+The current fast copy jobs are maintained by the `Dedupv1dVolumeFastCopy` class, which in a single thread processes all fast copy job in a round robin fashion. In each step, a portion of the data (default 64MB) is fast-copied by reading the block mapping of the original block, copying the block mapping items to the target block storing the new target block mapping as usual. If only a portion of a block should be copied, the appropriate slicing is done.
+
+The filter chain is not executed for fast-copied blocks.
+
+In the case of a crash, it might happen that some already copied data, is overwritten by the same data, but this is fine.
+
+## Limitations
+
+ * The source and the target volume must be in maintenance mode
+ * Source and target volume cannot be the same *
+ * A volume can only be the target of one fast copy job at a time *
+ * A volume cannot be deleted while it is the source or the target of a fast copy job *
+ * Only a single thread issues fast-copy steps in a synchronous manner *
+
+Note: These are limitations of the current implementation. If required, limitations marked with a star (*) can -- at least partly -- be removed.

@@ -1,0 +1,30 @@
+Guidelines
+----------
+
+Deduplication software is often more complex than other storage software. Additionally, 
+a storage system protects the one of the most valued asset of companies: Their data. 
+
+The quality of the software, especially with regards to data loss problems, should not be 
+traded against other goals. All developers make mistakes so testing, code review, and 
+testing are important. Testing should take place on various levels: Unit, Integration, and System.
+
+Code Style
+----------
+
+The code style is oriented on the Google C++ Code Style" (http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml) but it is adapted for the dedupv1 project.
+
+Some important points are:
+
+ * Avoid non constant references as parameters. Use pointers to denote out-parameters. Non constant references
+   are allowed in other situations, e.g. as return values for containers
+ * Avoid exceptions, use the CHECK macros
+ * Only simple assignments should be done in constructors. Provide an additional
+   Init method for initialization that can fail.
+ * If an deconstruction of an object can fail, provide an Close method instead of
+   overwriting the destructor. At the end of an Close call (successful or failed), the
+   memory of the object should be freed.
+ * Use of ScopedLock and a ScopedPtr is encouraged.
+ * CHECK_GOTO is discouraged, but difficult to avoid in certain situations.
+ * For atomic operations: Favor fetch_and_increment over ++ as the first better documents the purpose of using an atomic operation
+ * Avoid "using"s in header files
+ * Use "int* p" instead of "int *p". As the pointer marker is part of the type not part of the variable name.

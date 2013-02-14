@@ -1,0 +1,76 @@
+/*
+ * dedupv1 - iSCSI based Deduplication System for Linux
+ *
+ * (C) 2008 Dirk Meister
+ * (C) 2009 - 2011, Dirk Meister, Paderborn Center for Parallel Computing
+ */
+
+ // compile with /opt/dedupv1/bin/protoc --cpp_out=. dedupv1.proto with working directory common/resources
+
+message DiskHashIndexLogfileData {
+	// 1 is deprecated
+
+	// for configuration checking
+	optional uint32 page_size = 2;
+	optional uint64 size = 3;
+	repeated string filename = 4;
+	optional bool overflow_area = 5;
+
+	// 6 is deprecated
+}
+
+message DiskHashPageData {
+	// 1 is deprecated
+	optional fixed32 crc = 2;
+	optional uint32 entry_count = 3;
+	optional bool overflow = 4 [default = false];
+}
+
+message DiskHashTransactionPageData {
+	optional uint64 bucket_id = 1;
+	optional fixed32 original_crc = 2;
+	optional fixed32 transaction_crc = 3;
+	optional bytes data = 4;
+	optional uint64 item_count = 5;
+	optional uint64 version = 6;
+}
+
+message FixedIndexMetaData {
+	optional uint64 width = 1;
+	optional uint64 size = 2;
+	optional uint64 file_count = 3;
+}
+
+enum FixedIndexBucketStateData {
+   FIXED_INDEX_STATE_VALID = 0;
+   FIXED_INDEX_STATE_INVALID = 1;
+}
+
+message FixedIndexBucketData {
+	optional int64 key = 4;
+    optional bytes data = 1;
+    optional FixedIndexBucketStateData state = 2;
+    optional bytes crc_bytes = 3; // old version, should be removed later
+    optional fixed32 crc = 5;
+}
+
+message IntData {
+	optional uint64 i = 1;
+}
+
+message BitmapData {
+	optional uint64 size = 1;
+	optional uint64 clean_bits = 2;
+	optional uint64 page_size = 3;
+	optional uint32 crc = 4;
+}
+
+message BitmapPageData {
+	optional bytes data = 1;
+	optional uint32 crc = 2;
+}
+
+// used only for testing
+message RawByteData {
+	optional string raw_value = 1;
+}

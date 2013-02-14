@@ -1,0 +1,247 @@
+#!/usr/bin/python
+#
+# dedupv1 - iSCSI based Deduplication System for Linux
+#
+# (C) 2008 Dirk Meister
+# (C) 2009 - 2011, Dirk Meister, Paderborn Center for Parallel Computing
+# (C) 2012 Dirk Meister, Johannes Gutenberg University Mainz
+# 
+# This file is part of dedupv1.
+#
+# dedupv1 is free software: you can redistribute it and/or modify it under the terms of the 
+# GNU General Public License as published by the Free Software Foundation, either version 3 
+# of the License, or (at your option) any later version.
+#
+# dedupv1 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without 
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with dedupv1. If not, see http://www.gnu.org/licenses/.
+#
+
+import sys
+import os
+import subprocess
+import platform
+import shutil
+
+class TestSuite:
+    def __init__(self, type, testmode, options, dir, work_dir = None):
+        self.type = type
+        self.testmode = testmode.upper()
+        self.options = options
+        self.output = options.output
+        self.textoutput = options.text_output
+        self.dir = dir
+        self.work_dir = work_dir
+        
+    def get_prefix_env_for_testmode(self):
+        suppression_file = "../../scripts/valgrind/dedupv1.supp"
+        
+        prefix = ""
+        env = os.environ.copy()
+        if self.testmode == "VALGRIND-XML":
+            valgrind_xml_output_file = os.path.normpath(os.path.join("../../", self.output, "valgrind/%s-valgrind.xml" % (self.type)))
+            valgrind_output_file = os.path.normpath(os.path.join("../../", self.output, "valgrind/%s-valgrind.txt" % (self.type)))
+            prefix = "valgrind -q --leak-check=full --suppressions=%s --xml=yes --xml-file=%s --log-file=%s" % (
+                    suppression_file, valgrind_xml_output_file, valgrind_output_file)
+        elif self.testmode == "VALGRIND":
+            prefix = "valgrind  --leak-check=full --show-reachable=yes --suppressions=%s --malloc-fill=AA --free-fill=BB" % suppression_file  
+        elif self.testmode == "CACHEGRIND":
+            prefix = "valgrind --tool=cachegrind"
+        elif self.testmode == "PTRCHECK":
+            prefix = "valgrind --suppressions=%s --tool=exp-ptrcheck" % suppression_file  
+        elif self.testmode == "HELGRIND":
+            prefix = "valgrind --suppressions=%s --tool=helgrind" % suppression_file 
+        elif self.testmode == "VALGRIND-SUPP":
+            prefix = "valgrind  --leak-check=full --show-reachable=yes --gen-suppressions=yes --suppressions=%s" % suppression_file
+        elif self.testmode == "GDB":
+            prefix = "gdb --args"
+        elif self.testmode == "DUMA":
+            env["LD_PRELOAD"] = "/opt/dedupv1/lib/libduma.so"
+            env["DUMA_DISABLE_BANNER"] = "1"
+            env["DUMA_REPORT_ALL_LEAKS"] = "1"
+        elif self.testmode == "COV":
+            pass
+#            app = app.replace("debug", "debug-coverage")
+        elif self.testmode == "MEMPROFILE":
+            env["HEAPPROFILE"] = "heapprofile"
+        elif self.testmode == "MEMCHECK":
+            env["HEAPCHECK"] = "minimal"
+        elif self.testmode == "CPUPROFILE":
+            env["CPUPROFILE"] = "cpuprofile"
+        elif self.testmode == "":
+            pass # testmode not set
+        else:
+            raise Exception("Illegal testmode %s" % self.testmode) 
+        return (prefix, env)
+    
+    def get_app_path(self):
+        app = "../../build/debug/%s_test/%s_test" % (self.type, self.type)
+        if self.options.release:
+            app = app.replace("debug", "release")
+        elif self.testmode == "COV":
+            app = app.replace("debug", "debug-coverage")
+        return app
+    
+    def check_work_dir(self):
+        orig_work_dir = os.path.join(self.dir, "work")
+             
+        if self.work_dir:
+            if not os.path.exists(self.work_dir):
+                os.mkdir(self.work_dir)
+            if os.path.exists(orig_work_dir):
+                if os.path.islink(orig_work_dir):
+                    os.unlink(orig_work_dir)
+                else:
+                    shutil.rmtree(orig_work_dir)
+            os.symlink(self.work_dir, orig_work_dir)
+        else:
+            if os.path.lexists(orig_work_dir):
+                if os.path.islink(orig_work_dir):
+                    os.unlink(orig_work_dir)
+                if os.path.exists(orig_work_dir):
+                    shutil.rmtree(orig_work_dir)
+            os.mkdir(orig_work_dir)
+    
+    def check_app_for_custom_mallocs(self, app_path):
+        
+        if self.testmode.find("VALGRIND") >= 0:
+            # if a valgrind mode is used, there should be no other custom malloc
+            malloc_libs = set(["libtcmalloc", "libtbbmalloc"])
+            p = subprocess.Popen(["/usr/bin/ldd",  app_path], stdout=subprocess.PIPE, cwd = self.dir)
+            for line in p.stdout:
+                for malloc_lib in malloc_libs:
+                    if line.find(malloc_lib) >= 0:
+                        raise Exception("Unit test binary for type %s contains malloc library: %s" % (self.type, malloc_lib))
+        
+    def execute(self, argv):        
+        (prefix, env) = self.get_prefix_env_for_testmode()
+        app = self.get_app_path()
+            
+        self.check_work_dir()
+        self.check_app_for_custom_mallocs(app)
+        
+            
+        # TODO (dmeister): Really still needed?
+        if platform.uname()[0] == "Darwin":
+            env["DYLD_LIBRARY_PATH"] = env.get("DYLD_LIBRARY_PATH","") + ":/opt/dedupv1/lib"
+        
+        if self.testmode == "COV":
+            self.prepare_cov()
+        
+        if not self.textoutput:
+            output_file = os.path.normpath(os.path.join("../../", self.output, "test/%s.xml" % (self.type)))
+            command = " ".join([prefix, app, '--gtest_output="xml:%s"' % (output_file)] + argv)
+        else:
+            command = " ".join([prefix, app] + argv)
+            
+        print "Running suite", self.type
+        rc = run(command, cwd = self.dir, env = env)
+        
+        if self.testmode == "COV":
+            self.gather_cov()
+            
+        return rc == 0
+    
+    def prepare_cov(self):
+        run("lcov --zerocounters --directory build/debug-coverage/%s_test/" % (self.type))
+        
+    def gather_cov(self):
+        coverage_dir = os.path.normpath(os.path.join(self.output, "coverage"))
+        if not os.path.exists(coverage_dir):
+            os.mkdir(coverage_dir)
+        if not self.textoutput:
+            output_file = os.path.join(coverage_dir, "%s_cov.xml" % (self.type))
+            run("scripts/gcovr -r %s --xml | python filter_path.py --stdin > %s" % (os.path.abspath("."), output_file))
+        else:
+            output_file = os.path.join(coverage_dir, "%s_cov.txt" % (self.type))
+            run("scripts/gcovr -r %s | python filter_path.py --stdin > %s" % (os.path.abspath("."), output_file))
+
+def run(command, *args, **kwargs):
+    def build_command():
+        command_args = []
+        command_args.extend(args)
+        command_args.extend(["%s=%s" % (k, kwargs[k]) for k in kwargs])
+        command_args = [str(a) for a in command_args]
+        c = '%s %s' % (command, " ".join(command_args))
+        return c
+    
+    cwd = kwargs.get("cwd")
+    if cwd:
+        del kwargs["cwd"]
+    env = kwargs.get("env")
+    if env:
+        del kwargs["env"]
+    
+    c = build_command()
+    p = subprocess.Popen(c, shell = True, cwd = cwd, env = env)
+    p.wait()
+    
+    return p.returncode
+        
+test_type_shorthand = {
+                       "base": "dedupv1_base",
+                       "core": "dedupv1_core",
+                       "contrib": "dedupv1_contrib"}
+test_type_dir = {"dedupv1_base": "base/unit_test",
+                 "dedupv1_core": "core/unit_test",
+                 "dedupv1d": "dedupv1d/unit_test",
+                 "dedupv1_contrib": "contrib/unit_test"}
+
+def run_tests():
+    args = [arg for arg in sys.argv[1:] if not arg.startswith("--gtest")]
+    gtest_args = [arg for arg in sys.argv[1:] if arg.startswith("--gtest")]
+    
+    import optparse
+    parser = optparse.OptionParser()
+    parser.add_option("--output",
+        dest="output",
+        default="./docs")
+    parser.add_option("--mode",
+        dest="mode",
+        default="")
+    parser.add_option("--release",
+        dest="release",
+        action="store_true",
+        default=False)
+    parser.add_option("--text",
+        dest="text_output",
+        action="store_true",
+        default=False)
+    parser.add_option("--temp_dir",
+        dest="temp_dir",
+        default=None)
+    (options, argv) = parser.parse_args(args)
+    
+    failed = False
+    try:
+        if len(argv) == 0:
+            print "No test type given"
+            sys.exit(1)
+        elif len(argv) == 1 and argv[0] == "all":
+            argv = ["dedupv1_base", "dedupv1_core", "dedupv1d", "dedupv1_contrib"]
+        for type in argv:
+            type = test_type_shorthand.get(type, type)
+            if not type in test_type_dir:
+                print "Illegal test type", type
+                sys.exit(1)
+            dir = test_type_dir[type]
+            ts = TestSuite(type = type, 
+                           testmode = options.mode.upper(),
+                           options = options,
+                           dir = dir,
+                           work_dir = options.temp_dir)
+            if not ts.execute(gtest_args):
+                failed = True
+        
+        if failed:
+            sys.exit(1)
+    except KeyboardInterrupt:
+        pass
+    except Exception as e:
+        print >> sys.stderr, str(e)
+        sys.exit(1)
+    
+if __name__ == "__main__":
+    run_tests()

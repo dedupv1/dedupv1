@@ -1,0 +1,22 @@
+Here is a short description of all commands used for run and administrate a dedupv1 system.
+
+ * <code> $DEDUPV1_ROOT/bin/dedupv1_adm start [--config=<configfile>] </code>
+   Starts the dedupv1 daemon with the given configuration. The configuration file must have an absolute path.
+   If no configuration file is given, the default configuration $DEDUPV1_ROOT/etc/var/dedupv1/dedupv1.conf is used. Setting a symboling link of the used configuration to dedupv1.conf is the prevented way to configure the system. When the call finished, the daemon is started and the volumes are registered at the SCST SCSI system.
+
+ * <code> $DEDUPV1_ROOT/bin/dedupv1_adm stop </code>
+   Stops the dedupv1 daemon and unregisters the volumes at the SCST SCSI system.
+
+ * <code> $DEDUPV1_ROOT/bin/dedupv1_support clean  [--config=<configfile>] --force </code>
+   Clears the complete data of the deduplication system.
+   Because the call removes all data without the possibility to recover, the user has to give the --force flag
+
+ * <code> $DEDUPV1_ROOT/bin/dedupv1_volumes [--port=<port>] attach id=<id> logical-size=<logical-size> [device-name=<device-name>] [group=<group:lun>] [target=<target:lun>]</code>
+   Attaches a new volume to the deduplication system. The id has to be unique. The logical size denotes the size of the volume as the user sees it. The content should contain less space because of the deduplication. The storage space needed is requested in lazy fashion. The groups denote the SCST groups in which the volume is visible. If no group is given the default group "Default:0" is used. Each group:lun pair has to be unique in the system. Each group needs a lun 0. The target donate the SCST Targets through which  the volumes can be accessed  via iSCSI. Both group and target are optional. The attachment is permanent. If the daemon is restarted the volume still exists
+
+ * <code> $DEDUPV1_ROOT/bin/dedupv1_volumes [--port=<port>] detach id=<id> </code>
+   Detaches a volume with a given id permanently from the deduplication system. The detachment is not revokable. The data may be freed immediately.
+ 
+ * <code> $DEDUPV1_ROOT/bin/dedupv1_volumes [--port=<port>] show </code>
+   Shows the currently attaches volumes
+ 

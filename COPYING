@@ -1,0 +1,15 @@
+Files: *
+Copyright: (c) 2008-2012 by Dirk Meister (dirkmeister@acm.org), University of Paderborn, Johannes Gutenberg University Mainz
+License: GPL3 with runtime exception (see COPYING-GPL3-RE)
+
+Files: thirdparty/*
+Copyright: see COPYING or LICENSE file in thirdparty file
+
+Files: conf/*
+Copyright: (c) 2008-2012 by Dirk Meister (dirkmeister@acm.org), University of Paderborn, Johannes Gutenberg University Mainz
+License: Public Domain
+
+Files: base/src/hashing_util_bob_jenkins.cc
+Copyright: (c) 2006 Bob Jenkins
+License: Public Domain
+

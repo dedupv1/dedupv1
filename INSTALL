@@ -1,0 +1,69 @@
+Installation
+------------
+
+dedupv1 currently supports only Ubuntu 12.04 and Ubuntu 12.10 server operating environment. 
+The following packages should be installed
+
+  * scons - Build system 
+  * gcc/g++ - Compiler suite
+  * libz - zlib compression
+  * libbz2 - bz2 compression
+  * libcurl - http client
+  * python - Glue code and scripting language
+  * python setuptools - Installing python components
+  * python dev - Installing Python components that use a native library.
+  * libesmtp - SMTP library to send mails from the logging system
+
+Install on Ubuntu via:
+
+   sudo apt-get install scons gcc g++ zlib1g zlib1g-dev libbz2-1.0 libbz2-dev libcurl3 libcurl3-openssl-dev \
+     valgrind python-setuptools python-dev libesmtp5 libesmtp-dev unzip tcl patch git libcrypto++-dev
+
+
+Install SCST kernel patches
+---------------------------
+
+The SCST system is the connection to the SCSI layer of Linux. 
+For a better performance, the SCST has developed several patches for the 
+Linux kernel that should be applied.
+
+For more information about the custom patches and SCST in general, see:
+
+    * thirdparty/scst-1.0.1/README
+    * thirdpary/iscsi-scst-1.0.1/README
+    * http://scst.sourceforge.net/
+
+Install libraries 
+-----------------
+
+dedupv1 used several thirdparty libraries to build on stable components for basic tasks as logging. 
+We use the following components
+
+ * Google Protocol buffers - Data exchange and storage format (2.3.0, New BSD license)
+ * Apache log4cxx - Logging (0.10, Apache 2.0 license)
+ * Apache Portable Runtime - Utility functions (1.3.8, Apache 2.0 license)
+ * Apache Portable Runtime Util - Utility functions (1.3.9, Apache 2.0 license)
+ * Google Performance Tools - Memory management (1.5.0, New BSD license)
+ * microhttpd - Embedded HTTP server (0.4.2, LGPL license)
+ * libbz2 - Compression (1.0.5, BSD-like license)
+ * jsoncpp - JSON data format (0.2, Public Domain)
+ * Tokyo Cabinet - Database libary (1.4.33, LGPL)
+ * Google Test - Unit testing (1.4.0, New BSD license)
+ * Google Mock - Unit testing (1.4.0, New BSD license)
+
+Some of this components have been patched for work in our environment. All patches can be found in the thirdparty directory. The patches
+are distributed under the same license as the patched library. See the licenses of the libraries for details.
+
+All thirdparty library can be found in the thirdparty directory. There is also an script file to install everything for you
+in the standard installation directory /opt/dedupv1.
+
+     install-libs.py --module=test installs everything to /opt/dedupv1.
+
+Install dedupv1d
+----------------
+
+dedupv1 is installed in the directory /opt/dedupv1 to avoid as much interference with other system components as possible.
+The installation is done with the following simple commands
+
+    scons
+    scons install

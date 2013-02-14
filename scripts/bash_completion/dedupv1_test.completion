@@ -1,0 +1,26 @@
+#
+# Simple completions for dedupv1_test
+#
+_dedupv1_test() 
+{
+    local cur prev opts
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    opts="--temp_dir --gtest_filter --gtest_repeat --gtest_repeat_until_failure"
+    type_opts="base core dedupv1d contrib all"
+    
+    if [[ ${#COMP_WORDS[*]} == 2 ]] ; then
+        COMPREPLY=( $(compgen -W "${type_opts}" -- ${cur}) )
+        return 0 
+    fi
+    if [[ ${prev} == "--temp_dir" ]] ; then
+        COMPREPLY=( $(compgen -A directory -- ${cur}) )
+        return 0
+    fi
+    if [[ ${cur} == -* ]] ; then
+        COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+        return 0
+    fi
+}
+complete -F _dedupv1_test dedupv1_test

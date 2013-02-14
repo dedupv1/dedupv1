@@ -1,0 +1,19 @@
+--- iscsi-scst/kernel/iscsi.c.orig	2010-11-17 10:50:37.149792002 +0100
++++ iscsi-scst/kernel/iscsi.c	2010-11-17 10:52:05.349792003 +0100
+@@ -2824,11 +2824,13 @@
+ 			PRINT_INFO("Closing all connections for target %x at "
+ 				"initiator's %s request",
+ 				cmnd->conn->session->target->tid,
+-				conn->session->initiator_name);
+-			target_del_all_sess(cmnd->conn->session->target, 0);
++				(conn->session ? conn->session->initiator_name : "null"));
++			if (cmnd->conn->session) {
++			    target_del_all_sess(cmnd->conn->session->target, 0);
++			}
+ 		} else {
+ 			PRINT_INFO("Closing connection at initiator's %s "
+-				"request", conn->session->initiator_name);
++				"request", (conn->session ? conn->session->initiator_name : "null"));
+ 			mark_conn_closed(conn);
+ 		}
+ 	}

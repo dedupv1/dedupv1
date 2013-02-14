@@ -1,0 +1,13 @@
+This directory contains several thirdparty libraries used by the dedupv1 project.
+
+The libraries have seperated licenses that can be found in the source archives. The patches contained
+in this directory modified the libraries to that they work in the environment. The patch files
+are licenses under and appropriate license for the modified library.
+
+Note:
+ - All used libraries must be licensed under terms that allow the development and distribution of closed
+   source software, e.g. BSD or LPGL.
+ - If a new major library is added or the version of an already used library is updated, 
+   the dedupv1/version.h file and the installation scripts should be updated.
+ - SCST is GPL software: So it is not possible to overtake any code. However, opening /dev/scst_user
+   should not force dedupv1 under GPL terms. 

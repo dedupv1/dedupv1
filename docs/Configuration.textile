@@ -1,0 +1,177 @@
+h1. Configuration
+
+h2. Introduction
+
+dedupv1 are standard UNIX configuration files with "#" as comment and non-significant whitespace. 
+
+ * A line is either empty or it consists of a key-value pair set by <key>=<value>. 
+ * The order of the entries is important because e.g. the order of the filter steps is decided by the order 
+   in the configuration file. 
+ * The configuration file is case-sensitive.
+ * For complex settings the . is used to specific implementation dependent configuration options, e.g. if
+   the chunk-index is set to "static-disk-hash", a possible suboption is size, so chunk-index.size sets the size of the chunk index.
+   Not all implementations of the index interface have a size suboption.
+ * All file pathnames must be absolute*
+
+h2. Examples
+
+ Some example files are given in the directory $DEDUPV1_ROOT/etc/dedupv1.
+ Note that not all files may run on every given system.
+
+h2. Specification
+
+ * *block-size*: Size (in bytes) of the internal block sizes (Default: 256K)
+ * *session-count*: Maximal number of parallel dedup core sessions
+ * *disable-sync-cache*: (true, false) Disabled SYNCRONIZE CACHE (16) commands (Default: false)
+ * *write-retries*: Number of times a failed write request should retried (Default: 0)
+ * *read-retries*: Number of times a failed read request should retried (Default: 0)
+ * *parallel-stop*: (DEPRECIATED) 
+
+ * *block-index.auxiliary*: Index type of the auxiliary index
+ * *block-index.auxiliary.[option]* :  Options for the block index auxiliary index (see index options)
+ * *block-index.max-auxiliary-size*: 
+ * *block-index.auxiliary-size-threshold*: 
+ * *block-index.auxiliary-size-hard-limit*: 
+ * *block-index.check-full-state*: iff set to true, the block index check if it is full. If set to false, the block index accepts new blocks until the last disk space if used (Default: true)
+ * *block-index.persistent*: Index type of the persistent index
+ * *block-index.persistent.[option]* :  Options for the block index persistent index (see index options)
+ * *block-index.log-filename*: (DEPRECIATED)  
+
+ * *chunk-index.auxiliary*: Index type of the auxiliary index
+ * *chunk-index.auxiliary.[option]* :  Options for the chunk index auxiliary index (see index options)
+ * *chunk-index.max-auxiliary-size*: 
+ * *chunk-index.auxiliary-size-threshold*: 
+ * *chunk-index.auxiliary-size-hard-limit*: 
+ * *chunk-index.check-full-state*: iff set to true, the chunk index check if it is full. If set to false, the chunk index accepts new chunk until the last disk space if used (Default: true)
+ * *chunk-index.persistent*: Index type of the persistent index
+ * *chunk-index.persistent.[option]* :  Options for the chunk index persistent index (see index options)
+ * *chunk-index.log-filename*: (DEPRECIATED)
+ * *chunk-index.bg-thread-count*: Number of threads committing chunk in the background (Default: 4)
+ * *chunk-index.parallel-import*: (DEPRECIATED)
+
+ * *storage* : Storage type. container-storage is currently to only option.
+ * *storage.container-size*: Size (in byte) of a size container (Default: 4 MB)
+ * *storage.size*: Size (in byte) of the overall available storage. Should be a multiple of the container size
+ * *storage.log-filename*: (DEPRECIATED) 
+ * *storage.checksum*: Iff set to true, if each container stored a checksum and that the validity of each container item should be checked against its fingerprint (Default: true)
+ * *storage.preallocate*: Iff set to true, the storage is allocated during the formatting at once. If set to false, the storage is only allocated when needed. For performance and reliability reasons, productive system should pre allocate its storage. However, the preallocation can take up to multiple hours depending on the storage size (Default: false)
+ * *storage.sync*: (DEPRECIATED) 
+ * *storage.cache.size*: Size of the container read cache in number of containers (Default: 32)
+ * *storage.read-cache-size*: Synonym of storage.cache.size
+ * *storage.write-cache.size*: Size of the container write cache in number of containers (Default: 8)
+ * *storage.write-cache.strategy*: Strategy to assign items to the open containers in the write cache (Default: earliest-free)
+ * *storage.write-container-count*: Synonym of storage.write-cache.size
+ * *storage.background-commit*: (DEPRECIATED) 
+ * *storage.background-commit.thread-count*: 8
+ * *storage.timeout-commit*: (DEPRECIATED)
+ * *storage.timeout-commit-timeout*: Number of seconds before an once opened container while remain uncomitted (Default: 4)
+ * *storage.compression*: Type of compression is used to shrink container items (none, deflate, bz2, Default: none)
+ * *storage.filename*: Filename of a storage file
+ * *storage.meta-data*: Index type of the container storage meta data (Usually: tc-disk-btree)
+ * *storage.meta-data.[option]* :  Options for the container storage meta data (see index options)
+ * *storage.gc*: Type of container gc strategy. greedy is the only option
+ * *storage.gc.type*: Index type of the container storage gc index (Usually: tc-disk-btree)
+ * *storage.gc.threshold*: Threshold of the active container size under which containers are seen as candidates for merging with other containers (Default: 0.4 of the container size)
+ * *storage.gc.item-count-threshold*: Threshold of the active container items under which containers can be considered as candidate for merging. (Default: 0.4 of the maximal number of items in a container)
+ * *storage.gc.bucket-size*: Bucket size with that the containers are clustered in the gc index (Default: 100K)
+ * *storage.gc.eviction-timeout*: Number of seconds a container must not be used, moved, or merged before the gc is active on that container (Default: 5)
+ * *storage.gc.[option]* :  Options for the container storage gc index (see index options)
+ * *storage.alloc*: Type of the container allocation strategy. Currently the only option is memory-bitmap
+ * *storage.alloc.type*: Index type of the container storage allocation index (Usually: tc-disk-btree)
+ * *storage.alloc.write-back*: (DEPRECIATED)
+ * *storage.alloc.[option]* :  Options for the container storage allocation index (see index options)
+
+ * *filter.block-index-filter* : Activates the block index filter
+ * *filter.chunk-index-filter* : Activates the chunk index filter
+ * *filter.bytecompare-filter* : Activates the byte-compare filter
+
+ * *log.filename* : Filename used by the log
+ * *log.delayed-replay*: (DEPRECIATED) 
+ * *log.delayed-replay-thread-count*: (DEPRECIATED) 
+ * *log.delayed-replay-thread-prio*: Sets the thread priority of the direct replay thread (Default: 0)
+ * *log.recover-by-full-search*: Iff set to true, the log positions are always recovered by a full search. Iff to false, the log positions are searched by a binary search variant (Default: false)
+ * *log.max-log-size*: Maximal size of the log file(s)
+ * *log.max-entry-width*: Width of an log entry (Default: 2k)
+ * *log.type* : Index type of the log (Default: disk-fixed)
+ * *log.index.[option]*: Options for the log index (see index options)
+ * *gc* : (DEPRECIATED) 
+ * *gc.type* : Index type of the garbage collector (Usually: tc-disk-btree)
+ * *gc.parallel-log-replay* : (DEPRECIATED)  
+ * *gc.[option]*: Options for the gc index (see index options)
+ * *idle-detection.time*: Time (in s) in which there is no request until the system is marked as idle
+ * *idle-detection.idle-tick-interval*: Interval (in s) between registered components receive idle ticks
+ * *idle-detection.idle-check-interval*: Interval (in s) between between two checks if the system is idle
+ * *block-locks.count*: Number of locks used to protect blocks against concurrent accesses (Default: 1021)
+ * *report-long-running-requests* : (true, false) Reports requests that run longer than 1s as WARNING (Default: false)
+
+ * *chunking*: Type of the chunking approach used (usually rabin for rabin fingerprints)
+ * *chunking.avg-chunk-size*: Average chunk size, Default 8K (only rabin chunking type)
+ * *chunking.min-chunk-size*: Minimal chunk size, Default 2K (only rabin chunking type)
+ * *chunking.max-chunk-size*: Maximal chunk size, Default 32K (only rabin chunking type)
+ * *chunking.polynom*: Irreduciable 64-bit Polynom  (only rabin chunking type)
+ * *fingerprinting*: Fingerprinting algorithm to use (Default: sha1)
+
+ * *content-storage.parallel-filter-chain*: (DEPRECIATED)   
+ * *content-storage.content-storage.crc*: (DEPRECIATED)  
+ * *content-storage.checksum* : Checksumming approach used by the content storage (Default: none)
+
+ * *daemon.user*: Username with that the dedupv1d daemon runs. If not set, the daemon runs as root. Usually the value is dedupv1d
+ * *daemon.group*: Groupname that can configure dedupv1. If not set, only root users can configure dedupv1. Usually the value is set to dedupv1
+ * *daemon.lockfile*: Filename of the lockfile used by the daemon to ensure that only a single instance is running 
+ * *daemon.dirtyfile*: Filename of the file that stores e.g. if the daemon is dirty
+ * *daemon.memory-parachute*: Size of the memory parachute in MB
+
+ * *monitor.[monitor-name]*: (true,false) Disabled or enables the given monitor instance (Default: true)
+ * *threadpool.size*: Number of the threads in the thread pool (Default: 32)
+ * *volume-info*: Index type of the volume info (Usually: tc-disk-btree)
+ * *volume-info.[option]*: Options for the volume info index (see index options)
+ * *target-info*: Index type of the target info (Usually: tc-disk-btree)
+ * *target-info.[option]*: Options for the target info index (see index options)
+ * *group-info*: Index type of the group info (Usually: tc-disk-btree)
+ * *group-info.[option]*: Options for the group info index (see index options)
+ * *user-info*: Index type of the user info (Usually: tc-disk-btree)
+ * *user-info.[option]*: Options for the user info index (see index options)
+ * *stats*: Index type of the persistent statistics (Usually: tc-disk-btree)
+ * *stats.[option]*: Options for the persistent statistics index (see index options)
+ * *info*: Index type of the storage for system configuration and state (Usually: tc-disk-btree)
+ * *info.[option]*: Options for the system configuration and state index (see index options)
+
+ * *log-replayer.replay-if-idle*: Iff true, the log is replayed in the background when the system is idle (Default: true)
+
+ * *target*: Starts the definition of a new preconfigured target with the given target id
+ * *target.[option] *: 
+ * *user*: Starts the definition of a new preconfigured user with the given user name
+ * *user.[option] *: 
+ * *group*: Starts the definition of a new preconfigured group with the given group name
+ * *group.[option] *:
+ * *volume*: Starts the definition of a new preconfigured volume with the given volume id
+ * *volume.[option] *:
+
+ * *stats.persist-interval*: Interval (in s) in which the statistics are persisted to allow an recovery of the statistics after a crash
+ * *stats.log-interval*: Interval (in s) in which the statistics are written to a log file
+
+ * *iscsi.port*: Port the iSCSI daemon listens on. If not set, the default iSCSI port (3560) is used.
+ * *iscsi.host*: Host address of the interface the iSCSI daemon listens on. If not set, the iSCSI daemon listens on all network adapters
+
+ * *core-dump*: (true, false) If set to true, the dedupv1d tries to enable core dumps
+ * *logging*: Name of the configuration of the logging file (not used when syslog is used)
+
+h3. Index Type Specification
+
+h4. Static Disk-based Hash Index
+
+The static-disk-hash is a statically managed disk-based hash index using fixed size buckets.
+
+ * *page-size*: Page size of a bucket in bytes (Default: 4k)
+ * *size*: Total size of the index in bytes
+ * *sync*: (true, false) Iff set to true, each bucket is first written to the write-ahead log (in a synchronized way) and than also synchronized to the index file. If set to false, the bucket is also saved in the write-ahead log, but only flushed to disk to the transaction bucket is reused. This way multiple writes a file are combined in a single request (and more importantly the SSD firmware might optimize the call). (Default: false)
+ * *lazy-sync*: (DEPRECIATED) 
+ * *use-key-as-hash*: Iff set to false, the entry key is hashed to a bucket to distribute the keys equally to the buckets. If set to true, the key is itself is used. This is possible when the user of the index is sure that the keys are equally distributed over the key space as it is the case e.g. for chunk fingerprints.
+ * *max-fill-ratio*: Synonym for estimated-max-fill-ratio
+ * *estimated-max-fill-ratio*: Ratio of the maximal number of items of the index over which the index is marked as full (Default: 0.8)
+ * *overflow-area*: If not set, an insert fails when the bucket in which the item is hashed to is full. Iff set to an index type, these additional buckets are stored in the overflow area index
+ * *overflow-area.[option]*: Options for the overflow area index (see index options)
+ * *transactions*: (DEPRECIATED) 
+ * *transactions.filename*: Name of a transaction file. By default, a transaction file is configured for each index file
+ * *transactions.area-size*: Total number of transaction areas (Default: 128)
+ * *transaction.page-size*: Size of a transaction page (Default: max(2 * index page size, 256K) )

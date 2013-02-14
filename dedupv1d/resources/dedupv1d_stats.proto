@@ -1,0 +1,30 @@
+
+message CommandHandlerStatsData {
+	optional uint64 scsi_command_count = 1;
+	repeated CommandHandlerOpcodeStatsData opcode_stats = 2;
+	repeated CommandHandlerTaskMgmtStatsData task_mgmt_stats = 3;
+	repeated CommandHandlerErrorStatsData error_stats = 4;
+	
+	optional uint64 sector_read_count = 5;
+	optional uint64 sector_write_count = 6;
+	optional uint64 retry_count = 7;
+}
+
+message CommandHandlerOpcodeStatsData {
+	optional int32 opcode = 1;
+	optional uint64 count = 2;
+}
+
+message CommandHandlerTaskMgmtStatsData {
+	optional int32 tmcode = 1;
+	optional uint64 count = 2;
+}
+
+message CommandHandlerErrorStatsData {
+	optional int32 opcode = 1;
+	optional uint64 count = 2;
+}
+
+message Dedupv1dStatsData {
+	optional double service_time = 1;
+}

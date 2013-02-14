@@ -1,0 +1,9 @@
+Import("localenv")
+
+dedupv1d_src = filter(lambda s: not s.path.endswith("dedupv1d_app.cc"), Glob("*.cc"))        
+
+dedupv1d_obj = localenv.Object(dedupv1d_src, 
+	CPPPATH = localenv["CPPPATH"] + ["#core/include", "#core/resources", 
+		"#base/include", "#base/resources", 
+		"#dedupv1d/include", "#dedupv1d/resources"])
+Return("dedupv1d_obj")

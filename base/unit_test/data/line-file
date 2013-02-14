@@ -1,0 +1,5 @@
+block-index=static-disk-hash
+block-index.page-size=2K
+block-index.size=4M
+block-index.filename=work/block-index1
+block-index.filename=work/block-index2

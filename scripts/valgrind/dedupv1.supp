@@ -1,0 +1,268 @@
+
+# libc valgrind false positives. Google for it
+{
+   tc_realpath_read4
+   Memcheck:Addr4
+   fun:tcrealpath
+   ...
+}
+{
+   tc_pathlock_read4
+   Memcheck:Addr4
+   fun:tcmapputkeep2
+   fun:tcpathlock
+   ...
+}
+{
+   tc_strdup_read4
+   Memcheck:Addr4
+   fun:tcstrdup
+   ...
+}
+{
+   tc_strcat_read4
+   Memcheck:Addr4
+   fun:tcxstrcat2
+   ...
+}
+{
+   tcmapout2_read4
+   Memcheck:Addr4
+   fun:tcmapout2
+   ...
+}
+
+{
+   tcm_valmem
+   Memcheck:Param
+   msync(start)
+   fun:__msync_nocancel
+   fun:validate_mem
+   fun:access_mem
+   fun:dwarf_get
+   fun:_ULx86_64_step
+   fun:_Z13GetStackTracePPvii
+   fun:_ZN8tcmalloc8PageHeap8GrowHeapEm
+   fun:_ZN8tcmalloc8PageHeap3NewEm
+   fun:_ZN8tcmalloc15CentralFreeList8PopulateEv
+   fun:_ZN8tcmalloc15CentralFreeList18FetchFromSpansSafeEv
+   fun:_ZN8tcmalloc15CentralFreeList11RemoveRangeEPPvS2_i
+   fun:_ZN8tcmalloc11ThreadCache21FetchFromCentralCacheEmm
+}
+
+# As far as I can see these are zlib internal issues
+# zlib is known to produce errors with valgrind. Google for it.
+{
+   inflateInit_Cond
+   Memcheck:Cond
+   fun:inflateReset2
+   fun:inflateInit2_
+   fun:uncompress
+   ...
+}
+{
+   inflate_Value8
+   Memcheck:Value8
+   ...
+   fun:inflate
+   fun:uncompress
+   ...
+}
+{
+   inflate_Cond
+   Memcheck:Cond
+   ...
+   fun:inflate
+   fun:uncompress
+   ...
+}
+{
+   inflate_result_Cond
+   Memcheck:Cond
+   fun:_ZNK7dedupv110chunkstore9Container11CopyRawDataEPKNS0_13ContainerItemEPvm
+   ...
+}
+{
+   compress_test_cond
+   Memcheck:Cond
+   fun:_ZN7testing8internal11CmpHelperEQIllEENS_15AssertionResultEPKcS4_RKT_RKT0_
+   fun:_ZN7testing8internal8EqHelperILb0EE7CompareIllEENS_15AssertionResultEPKcS6_RKT_RKT0_
+   fun:_ZN21CompressTest_Use_Test8TestBodyEv
+   ...
+}
+
+# Ignore the clone thing
+{
+   clone_Param
+   Memcheck:Param
+   clone(child_tidptr)
+   fun:clone
+}
+
+{
+   tcb_trancommit_param
+   Memcheck:Param
+   pwrite64(buf)
+   obj:/lib/libpthread-2.9.so
+   fun:tchdbseekwrite
+   fun:tchdbwriterec
+   fun:tchdbputimpl
+   fun:tchdbput
+   fun:tcbdbleafsave
+   fun:tcbdbmemsync
+   fun:tcbdbtrancommit
+   ...
+}
+
+{
+   log4cxx_decode
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSs4_Rep9_S_createEmmRKSaIcE
+   fun:_ZNSs4_Rep8_M_cloneERKSaIcEm
+   fun:_ZNSs7reserveEm
+   fun:_ZN7log4cxx7helpers10Transcoder6decodeERKSsRSs
+   fun:_Z8decodeLSIcESsPKT_
+   fun:_ZN7log4cxx4FileC1EPKc
+   fun:main
+}
+
+{
+   log4cxx_thread
+   Memcheck:Leak
+   fun:calloc
+   fun:_dl_allocate_tls
+   fun:pthread_create@@GLIBC_2.2.5
+   fun:_ZN7log4cxx7helpers6Thread3runEPFPvP12apr_thread_tS2_ES2_
+   fun:main
+}
+
+{
+   fault_inject_leak
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSs4_Rep9_S_createEmmRKSaIcE
+   obj:/usr/lib/libstdc++.so.6.0.10
+   fun:_ZNSsC1EPKcRKSaIcE
+   fun:_GLOBAL__I_parser.cc
+   obj:/opt/dedupv1/lib/libprotobuf.so.6.0.0
+   obj:/opt/dedupv1/lib/libprotobuf.so.6.0.0
+   obj:*
+   obj:/lib/ld-2.9.so
+   obj:/lib/ld-2.9.so
+   obj:*
+   obj:*
+}
+{
+   gtest_leak
+   Memcheck:Leak
+   fun:_Znam
+   fun:_ZN7testing8TestCaseC1EPKcS2_PFvvES4_
+   fun:_ZN7testing8internal12UnitTestImpl11GetTestCaseEPKcS3_PFvvES5_
+   fun:_ZN7testing8internal23MakeAndRegisterTestInfoEPKcS2_S2_S2_PKvPFvvES6_PNS0_15TestFactoryBaseE
+   ...
+}
+{
+   gflag_leak
+   Memcheck:Leak
+   ...
+   fun:_ZN6google14FlagRegistererC1EPKcS2_S2_S2_PvS3_
+   ...
+}
+{
+   gflag_leak
+   Memcheck:Leak
+   ...
+   fun:_ZN6google12_GLOBAL__N_112FlagRegistry12RegisterFlagEPNS0_15CommandLineFlagE
+   ...
+}
+
+{
+   gtest_leak2
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN9__gnu_cxx13new_allocatorIiE8allocateEmPKv
+   fun:_ZNSt12_Vector_baseIiSaIiEE11_M_allocateEm
+   fun:_ZNSt6vectorIiSaIiEE13_M_insert_auxEN9__gnu_cxx17__normal_iteratorIPiS1_EERKi
+   fun:_ZN7testing8TestCase11AddTestInfoEPNS_8TestInfoE
+   fun:_ZN7testing8internal23MakeAndRegisterTestInfoEPKcS2_S2_S2_PKvPFvvES6_PNS0_15TestFactoryBaseE
+   ...
+}
+{
+   tpp_leak
+   Memcheck:Leak
+   fun:calloc
+   ...
+   fun:_ZN3tbb8internal12dynamic_linkEPKcPKNS0_23dynamic_link_descriptorEmmPPv
+   fun:_ZN3tbb8internal3rml11tbb_factory4openEv
+   fun:_ZN3tbb8internal8governor17acquire_resourcesEv
+   ...
+}
+{
+   tbb_leak2
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:_ZN3tbb8internal12dynamic_linkEPKcPKNS0_23dynamic_link_descriptorEmmPPv
+   fun:_ZN3tbb8internal34initialize_cache_aligned_allocatorEv
+}
+{
+   tbb_leak3
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:_ZN3tbb8internal12dynamic_linkEPKcPKNS0_23dynamic_link_descriptorEmmPPv
+}
+{
+   tbb_leak4
+   Memcheck:Leak
+   fun:calloc
+   ...
+   fun:_ZN3tbb8internal12dynamic_linkEPKcPKNS0_23dynamic_link_descriptorEmmPPv
+}
+{
+   log4cxx_leak
+   Memcheck:Leak
+   ...
+   fun:_ZN7log4cxx20PropertyConfigurator17configureAndWatchERKNS_4FileEl
+   ...
+}
+{
+   tbb_leak5
+   Memcheck:Leak
+   fun:realloc
+   fun:vasprintf
+   fun:asprintf
+   fun:dlerror
+   fun:_ZN3tbb8internal12dynamic_linkEPKcPKNS0_23dynamic_link_descriptorEmmPPv
+   fun:_ZN3tbb8internal24DoOneTimeInitializationsEv
+   fun:_ZN3tbb8internalL21dummy_padded_allocateEmm
+   ...
+}
+{
+   tbb_leak6
+   Memcheck:Leak
+   fun:realloc
+   fun:vasprintf
+   fun:asprintf
+   fun:dlerror
+   fun:_ZN3tbb8internal12dynamic_linkEPKcPKNS0_23dynamic_link_descriptorEmmPPv
+   fun:_ZN3tbb8internal3rml11tbb_factory4openEv
+   fun:_ZN3tbb8internal8governor17acquire_resourcesEv
+   ...
+}
+
+{
+   disk_hash_cache_page_overwrite1
+   Memcheck:Overlap
+   fun:memcpy
+   fun:_ZN7dedupv14base8internal17DiskHashCachePage13DropAllPinnedEv
+   ...
+}
+{
+   disk_hash_cache_page_overwrite2
+   Memcheck:Overlap
+   fun:memcpy
+   fun:_ZN7dedupv14base8internal17DiskHashCachePage6DeleteEPKvj
+   ...
+}

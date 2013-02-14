@@ -1,0 +1,31 @@
+CC=gcc
+AR=ar
+RANLIB=ranlib
+LDFLAGS=
+CFLAGS=-Wall -W -Wno-implicit-function-declaration -O2 -g
+PREFIX=/usr/local
+
+all: liblz4.a
+
+liblz4.a: lz4.o
+	rm -f liblz4.a
+	$(AR) cq liblz4.a lz4.o
+	@if ( test -f $(RANLIB) -o -f /usr/bin/ranlib -o \
+		-f /bin/ranlib -o -f /usr/ccs/bin/ranlib ) ; then \
+		echo $(RANLIB) liblz4.a ; \
+		$(RANLIB) liblz4.a ; \
+	fi
+
+install: liblz4.a
+	if ( test ! -d $(PREFIX)/lib ) ; then mkdir -p $(PREFIX)/lib ; fi
+	if ( test ! -d $(PREFIX)/include ) ; then mkdir -p $(PREFIX)/include ; fi
+	cp -f lz4.h $(PREFIX)/include
+	chmod a+r $(PREFIX)/include/lz4.h
+	cp -f liblz4.a $(PREFIX)/lib
+	chmod a+r $(PREFIX)/lib/liblz4.a
+
+clean: 
+	rm -f *.o liblz4.a
+
+lz4: lz4.c
+	$(CC) $(CFLAGS) -c lz4.c

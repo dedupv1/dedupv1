@@ -1,0 +1,11 @@
+ Various scripts
+#################
+
+This directory contains varios scripts that had been useful at some point during the development.
+
+Everything here is mainly untested. If it helps nice, if not: Fix it
+
+gcovr:
+  Script to generate reports from gcov coverage data
+  License: BSD
+  Link: https://software.sandia.gov/trac/fast/wiki/gcovr

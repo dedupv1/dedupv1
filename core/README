@@ -1,0 +1,13 @@
+
+Structure of the common directory tree
+
+ - include: All include files
+ - include/common: All main include files
+ - include/test_fixtures: All test fixture include files
+ 
+ - resources: All (generated or generatable) resources, mainly .proto files
+ - src: All main source files
+ 
+ - test fixtures:
+ - integration_test:
+ - unit_test:

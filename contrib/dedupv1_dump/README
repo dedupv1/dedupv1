@@ -1,0 +1,3 @@
+dedupv1_dump
+
+The dedupv1_dump application is used to dump the log of the dedupv1 system while the daemon is not started.

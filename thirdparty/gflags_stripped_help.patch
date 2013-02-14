@@ -1,0 +1,205 @@
+diff -u -r gflags-1.4/src//gflags/gflags.h gflags-1.4.mod/src//gflags/gflags.h
+--- gflags-1.4/src//gflags/gflags.h	2010-11-29 12:40:06.187396997 +0100
++++ gflags-1.4.mod/src//gflags/gflags.h	2010-11-29 11:45:50.147397003 +0100
+@@ -198,7 +198,7 @@
+ 
+ // Create a descriptive string for a flag.
+ // Goes to some trouble to make pretty line breaks.
+-extern std::string DescribeOneFlag(const CommandLineFlagInfo& flag);
++extern std::string DescribeOneFlag(const CommandLineFlagInfo& flag, bool help_full);
+ 
+ // Thread-hostile; meant to be called before any threads are spawned.
+ extern void SetArgv(int argc, const char** argv);
+diff -u -r gflags-1.4/src//gflags.cc gflags-1.4.mod/src//gflags.cc
+--- gflags-1.4/src//gflags.cc	2010-08-30 22:22:11.000000000 +0200
++++ gflags-1.4.mod/src//gflags.cc	2010-11-29 11:30:06.547396995 +0100
+@@ -147,19 +147,15 @@
+ 
+ // Special flags, type 1: the 'recursive' flags.  They set another flag's val.
+ DEFINE_string(flagfile, "",
+-              "load flags from file");
++        NULL);
+ DEFINE_string(fromenv, "",
+-              "set flags from the environment"
+-              " [use 'export FLAGS_flag1=value']");
++        NULL);
+ DEFINE_string(tryfromenv, "",
+-              "set flags from the environment if present");
++        NULL);
+ 
+ // Special flags, type 2: the 'parsing' flags.  They modify how we parse.
+ DEFINE_string(undefok, "",
+-              "comma-separated list of flag names that it is okay to specify "
+-              "on the command line even if the program does not define a flag "
+-              "with that name.  IMPORTANT: flags in this list that have "
+-              "arguments MUST use the flag=value format");
++        NULL);
+ 
+ _START_GOOGLE_NAMESPACE_
+ 
+Only in gflags-1.4.mod/src/: gflags.cc.orig
+diff -u -r gflags-1.4/src//gflags_completions.cc gflags-1.4.mod/src//gflags_completions.cc
+--- gflags-1.4/src//gflags_completions.cc	2009-12-30 12:50:04.000000000 +0100
++++ gflags-1.4.mod/src//gflags_completions.cc	2010-11-29 11:46:14.527396993 +0100
+@@ -65,11 +65,9 @@
+ #endif
+ 
+ DEFINE_string(tab_completion_word, "",
+-              "If non-empty, HandleCommandLineCompletions() will hijack the "
+-              "process and attempt to do bash-style command line flag "
+-              "completion on this value.");
++        NULL);
+ DEFINE_int32(tab_completion_columns, 80,
+-             "Number of columns to use in output for tab completion");
++        NULL);
+ 
+ _START_GOOGLE_NAMESPACE_
+ 
+@@ -717,7 +715,7 @@
+     const string &line_indentation,
+     const CommandLineFlagInfo &info) {
+ 
+-  string output = DescribeOneFlag(info);
++  string output = DescribeOneFlag(info, true);
+ 
+   // Replace '-' with '--', and remove trailing newline before appending
+   // the module definition location.
+diff -u -r gflags-1.4/src//gflags_reporting.cc gflags-1.4.mod/src//gflags_reporting.cc
+--- gflags-1.4/src//gflags_reporting.cc	2009-12-30 12:50:04.000000000 +0100
++++ gflags-1.4.mod/src//gflags_reporting.cc	2010-11-29 11:48:29.197396995 +0100
+@@ -66,17 +66,17 @@
+ DEFINE_bool(help, false,
+             "show help on all flags [tip: all flags can have two dashes]");
+ DEFINE_bool(helpfull, false,
+-            "show help on all flags -- same as -help");
++        NULL);
+ DEFINE_bool(helpshort, false,
+-            "show help on only the main module for this program");
++        NULL);
+ DEFINE_string(helpon, "",
+-              "show help on the modules named by this flag value");
++        NULL);
+ DEFINE_string(helpmatch, "",
+-              "show help on modules whose name contains the specified substr");
++        NULL);
+ DEFINE_bool(helppackage, false,
+-            "show help on all modules in the main package");
++        NULL);
+ DEFINE_bool(helpxml, false,
+-            "produce an xml version of help");
++        NULL);
+ DEFINE_bool(version, false,
+             "show version and build info and exit");
+ 
+@@ -111,7 +111,12 @@
+ 
+ // Create a descriptive string for a flag.
+ // Goes to some trouble to make pretty line breaks.
+-string DescribeOneFlag(const CommandLineFlagInfo& flag) {
++string DescribeOneFlag(const CommandLineFlagInfo& flag, bool help_full) {
++
++    if (!help_full && flag.description.empty()) {
++        return "";
++    }
++
+   string main_part = (string("    -") + flag.name +
+                       " (" + flag.description + ')');
+   const char* c_string = main_part.c_str();
+@@ -157,8 +162,11 @@
+     chars_in_line = 6;
+   }
+ 
++  if (help_full)  {
+   // Append data type
+   AddString(string("type: ") + flag.type, &final_string, &chars_in_line);
++  }
++
+   // Append the effective default value (i.e., the value that the flag
+   // will have after the command line is parsed if the flag is not
+   // specified on the command line), which may be different from the
+@@ -266,7 +274,7 @@
+ // including gflags/gflags.h), then this flag will not be displayed by
+ // '--help' and its variants.
+ static void ShowUsageWithFlagsMatching(const char *argv0,
+-                                       const vector<string> &substrings) {
++                                       const vector<string> &substrings, bool help_full) {
+   fprintf(stdout, "%s: %s\n", Basename(argv0), ProgramUsage());
+ 
+   vector<CommandLineFlagInfo> flags;
+@@ -283,17 +291,17 @@
+       // If the flag has been stripped, pretend that it doesn't exist.
+       if (flag->description == kStrippedFlagHelp) continue;
+       found_match = true;     // this flag passed the match!
+-      if (flag->filename != last_filename) {                      // new file
++      if (flag->filename != last_filename && help_full) {                      // new file
+         if (Dirname(flag->filename) != Dirname(last_filename)) {  // new dir!
+           if (!first_directory)
+             fprintf(stdout, "\n\n");   // put blank lines between directories
+           first_directory = false;
+         }
+-        fprintf(stdout, "\n  Flags from %s:\n", flag->filename.c_str());
++        fprintf(stdout, "\n");
+         last_filename = flag->filename;
+       }
+       // Now print this flag
+-      fprintf(stdout, "%s", DescribeOneFlag(*flag).c_str());
++      fprintf(stdout, "%s", DescribeOneFlag(*flag, help_full).c_str());
+     }
+   }
+   if (!found_match && !substrings.empty()) {
+@@ -301,16 +309,16 @@
+   }
+ }
+ 
+-void ShowUsageWithFlagsRestrict(const char *argv0, const char *restrict) {
++void ShowUsageWithFlagsRestrict(const char *argv0, const char *restrict, bool help_full) {
+   vector<string> substrings;
+   if (restrict != NULL && *restrict != '\0') {
+     substrings.push_back(restrict);
+   }
+-  ShowUsageWithFlagsMatching(argv0, substrings);
++  ShowUsageWithFlagsMatching(argv0, substrings, help_full);
+ }
+ 
+-void ShowUsageWithFlags(const char *argv0) {
+-  ShowUsageWithFlagsRestrict(argv0, "");
++void ShowUsageWithFlags(const char *argv0, bool help_full) {
++  ShowUsageWithFlagsRestrict(argv0, "", help_full);
+ }
+ 
+ // Convert the help, program, and usage to xml.
+@@ -382,21 +390,21 @@
+   if (FLAGS_helpshort) {
+     // show only flags related to this binary:
+     // E.g. for fileutil.cc, want flags containing   ... "/fileutil." cc
+-    ShowUsageWithFlagsMatching(progname, substrings);
++    ShowUsageWithFlagsMatching(progname, substrings, FLAGS_helpfull);
+     commandlineflags_exitfunc(1);   // almost certainly exit()
+ 
+   } else if (FLAGS_help || FLAGS_helpfull) {
+     // show all options
+-    ShowUsageWithFlagsRestrict(progname, "");   // empty restrict
++    ShowUsageWithFlagsRestrict(progname, "", FLAGS_helpfull);   // empty restrict
+     commandlineflags_exitfunc(1);
+ 
+   } else if (!FLAGS_helpon.empty()) {
+     string restrict = "/" + FLAGS_helpon + ".";
+-    ShowUsageWithFlagsRestrict(progname, restrict.c_str());
++    ShowUsageWithFlagsRestrict(progname, restrict.c_str(), FLAGS_helpfull);
+     commandlineflags_exitfunc(1);
+ 
+   } else if (!FLAGS_helpmatch.empty()) {
+-    ShowUsageWithFlagsRestrict(progname, FLAGS_helpmatch.c_str());
++    ShowUsageWithFlagsRestrict(progname, FLAGS_helpmatch.c_str(), FLAGS_helpfull);
+     commandlineflags_exitfunc(1);
+ 
+   } else if (FLAGS_helppackage) {
+@@ -415,7 +423,7 @@
+         continue;
+       const string package = Dirname(flag->filename) + "/";
+       if (package != last_package) {
+-        ShowUsageWithFlagsRestrict(progname, package.c_str());
++        ShowUsageWithFlagsRestrict(progname, package.c_str(), FLAGS_helpfull);
+         if (!last_package.empty()) {      // means this isn't our first pkg
+           fprintf(stderr, "WARNING: Multiple packages contain a file=%s\n",
+                   progname);

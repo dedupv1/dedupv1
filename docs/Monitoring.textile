@@ -1,0 +1,18 @@
+dedupv1 contains a runtime monitoring system to allow the administrators to inspect certain aspects of the system.
+All monitoring components can be accessed via:
+<code>
+    $DEDUPV1_ROOT/bin/dedupv1_mon [--port=<port>] <monitor> [<option-name>=<option>]*
+ </code>
+
+dedupv1_mon must be called from the root user on the local machine. 
+
+At least the following monitors are usually active by default:
+
+ * monitor - Gives a list of all installed monitors
+ * stats - General statistics about the system incl. amount of stored and deduplicated data
+ * status - Current status of the system, e.g. ok or shutting down
+ * profile - Profiling information
+ * config - Prints out the current configuration of the system
+
+Besides the monitoring system, the dedupv1 system writes log files. By default, the log file is written
+ to /opt/dedupv1/var/log/dedupv1/. The log settings can be changed in the log settings file /opt/dedupv1/etc/dedupv1/logging.xml.

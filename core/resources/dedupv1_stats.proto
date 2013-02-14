@@ -1,0 +1,110 @@
+/*
+ * dedupv1 - iSCSI based Deduplication System for Linux
+ *
+ * (C) 2008 Dirk Meister
+ * (C) 2009 - 2011, Dirk Meister, Paderborn Center for Parallel Computing
+ */
+
+message ChunkIndexStatsData {
+    optional uint64 imported_container_count = 1;
+    optional uint64 index_full_failure_count = 2;
+}
+
+message BlockIndexStatsData {
+    optional uint64 index_read_count = 1;
+    optional uint64 index_write_count = 2;
+    optional uint64 index_real_write_count = 3;
+    optional uint64 imported_block_count = 4;
+    optional uint64 failed_block_write_count = 5;
+}
+
+message ChunkStoreStatsData {
+    optional uint64 read_count = 1;
+    optional uint64 write_count = 2;
+    optional uint64 real_write_count = 3;
+}
+
+message ContainerStorageWriteCacheStatsData {
+    optional uint64 hit_count = 1;
+    optional uint64 miss_count = 2;
+    optional uint64 check_count = 3;
+}
+
+message ContainerStorageStatsData {
+    optional uint64 read_count = 1;
+    optional uint64 write_cache_hit_count = 2;
+    optional uint64 container_timeout_count = 3;
+    optional uint64 readed_container_count = 4;
+    optional uint64 committed_container_count = 5;
+    optional uint64 moved_container_count = 6;
+    optional uint64 merged_container_count = 7;
+    optional uint64 failed_container_count = 8;
+    optional uint64 deleted_container_count = 9;
+}
+
+message ContainerStorageReadCacheStatsData {
+    optional uint64 hit_count = 1;
+    optional uint64 miss_count = 2;
+    optional uint64 check_count = 3;
+    optional uint64 update_count = 4;
+}
+
+message BlockIndexFilterStatsData {
+	optional uint64 hit_count = 1;
+	optional uint64 miss_count = 2;
+	optional uint64 read_count = 3;
+}
+
+message BloomFilterStatsData {
+    optional uint64 hit_count = 1;
+    optional uint64 miss_count = 2;
+    optional uint64 read_count = 3;
+    optional uint64 write_count = 4;
+}
+
+message ByteCompareFilterStatsData {
+	optional uint64 hit_count = 1;
+	optional uint64 miss_count = 2;
+	optional uint64 read_count = 3;
+}
+
+message ChunkIndexFilterStatsData {
+	optional uint64 hit_count = 1;
+	optional uint64 miss_count = 2;
+	optional uint64 read_count = 3;
+	optional uint64 write_count = 4;
+	optional uint64 failure_count = 6;
+	
+	optional uint64 empty_fp_hit_count = 5;
+}
+
+message GarbageCollectorStatsData {
+	optional uint64 processed_block_count = 1;
+	optional uint64 processed_gc_candidate_count = 2;
+    optional uint64 skipped_chunk_count = 3;
+    optional uint64 already_processed_chunk_count = 4;
+    optional uint64 processed_chunk_count = 5;
+}
+
+message RabinChunkerStatsData {
+    optional uint64 chunk_count = 1;
+    optional uint64 size_forced_chunk_count = 2;
+    optional uint64 close_forced_chunk_count = 3;
+}
+
+message ContentStorageStatsData {
+    optional uint64 read_count = 1;
+    optional uint64 write_count = 2;
+    optional uint64 read_size = 3;
+    optional uint64 write_size = 4;
+}
+
+message LogStatsData {
+    message LogTypeCounter {
+        optional int32 type = 1;
+        optional uint64 count = 2;
+    }
+	optional uint64 event_count = 1;
+	optional uint64 replayed_event_count = 2;
+	repeated LogTypeCounter logtype_count = 3;
+}

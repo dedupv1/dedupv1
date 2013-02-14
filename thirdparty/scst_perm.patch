@@ -1,0 +1,198 @@
+diff -r -u scst-trunk-r1635/iscsi-scst/usr/iscsid.h scst-trunk-r1635.mod/iscsi-scst/usr/iscsid.h
+--- scst-trunk-r1635/iscsi-scst/usr/iscsid.h	2010-04-06 10:57:48.000000000 +0200
++++ scst-trunk-r1635.mod/iscsi-scst/usr/iscsid.h	2010-06-30 09:51:32.000000000 +0200
+@@ -204,6 +204,7 @@
+ 
+ /* iscsi_scstd.c */
+ extern uint16_t server_port;
++extern uint16_t access_gid;
+ extern struct iscsi_init_params iscsi_init_params;
+ extern void isns_set_fd(int isns, int scn_listen, int scn);
+ 
+diff -r -u scst-trunk-r1635/iscsi-scst/usr/iscsi_scstd.c scst-trunk-r1635.mod/iscsi-scst/usr/iscsi_scstd.c
+--- scst-trunk-r1635/iscsi-scst/usr/iscsi_scstd.c	2010-04-06 10:57:48.000000000 +0200
++++ scst-trunk-r1635.mod/iscsi-scst/usr/iscsi_scstd.c	2010-06-30 09:51:32.000000000 +0200
+@@ -24,6 +24,7 @@
+ #include <getopt.h>
+ #include <netdb.h>
+ #include <signal.h>
++#include <grp.h>
+ 
+ #include <sys/poll.h>
+ #include <sys/socket.h>
+@@ -55,6 +56,7 @@
+ 
+ static char* server_address;
+ uint16_t server_port = ISCSI_LISTEN_PORT;
++uint16_t access_gid = 0;
+ 
+ static struct pollfd poll_array[POLL_MAX];
+ static struct connection *incoming[INCOMING_MAX];
+@@ -77,6 +79,7 @@
+ 	{"port", required_argument, 0, 'p'},
+ 	{"version", no_argument, 0, 'v'},
+ 	{"help", no_argument, 0, 'h'},
++        {"accessgroup", required_argument, 0, 'i'},
+ 	{0, 0, 0, 0},
+ };
+ 
+@@ -613,6 +616,7 @@
+ {
+ 	int ch, longindex;
+ 	char *config = NULL;
++        char *access_group = NULL;
+ 	uid_t uid = 0;
+ 	gid_t gid = 0;
+ 	int err;
+@@ -632,7 +636,7 @@
+ 	 */
+ 	signal(SIGPIPE, SIG_IGN);
+ 
+-	while ((ch = getopt_long(argc, argv, "c:fd:s:u:g:a:p:vh", long_options, &longindex)) >= 0) {
++	while ((ch = getopt_long(argc, argv, "c:fd:s:u:g:i:a:p:vh", long_options, &longindex)) >= 0) {
+ 		switch (ch) {
+ 		case 'c':
+ 			config = optarg;
+@@ -649,7 +653,16 @@
+ 		case 'g':
+ 			gid = strtoul(optarg, NULL, 0);
+ 			break;
+-		case 'a':
++                case 'i':
++                        access_group = optarg;
++                        struct group* g = getgrnam(access_group);
++                        if (g == NULL) {
++                            perror("group not existing");
++                            exit(-1);
++                        }
++                        access_gid = g->gr_gid;
++                        break;
++                case 'a':
+ 			server_address = strdup(optarg);
+ 			if (server_address == NULL) {
+ 				perror("strdup failed");
+diff -r -u scst-trunk-r1635/iscsi-scst/usr/message.c scst-trunk-r1635.mod/iscsi-scst/usr/message.c
+--- scst-trunk-r1635/iscsi-scst/usr/message.c	2010-04-06 10:57:48.000000000 +0200
++++ scst-trunk-r1635.mod/iscsi-scst/usr/message.c	2010-06-30 09:51:32.000000000 +0200
+@@ -17,6 +17,8 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <unistd.h>
++#include <pwd.h>
++#include <grp.h>
+ 
+ #include <sys/socket.h>
+ #include <sys/types.h>
+@@ -141,6 +143,59 @@
+ 	rsp->err = err;
+ }
+ 
++int iscsi_adm_uid_in_group(int uid, int gid)
++{
++    struct group* gr = NULL;
++    struct group grx;
++    char* grpbuf = NULL;
++    size_t grpbuflen = sysconf(_SC_GETGR_R_SIZE_MAX);
++    struct passwd* pw = NULL;
++    struct passwd pwx;
++    char* pwbuf = NULL;
++    size_t pwbuflen = sysconf(_SC_GETPW_R_SIZE_MAX);
++    int err;
++    int i;
++
++    grpbuf = malloc(grpbuflen);
++    if (!grpbuf) {
++        err = -ENOMEM;
++        goto out;
++    }
++    err = getgrgid_r(gid, &grx, grpbuf, grpbuflen, &gr);
++    if (gr == NULL) {
++        err = -ENOENT;
++        goto out;
++    }
++    if (err) {
++        goto out;
++    }
++    pwbuf = malloc(pwbuflen);
++    if (!pwbuf) {
++        err = -ENOMEM;
++        goto out;
++    }
++    err = getpwuid_r(uid, &pwx, pwbuf, pwbuflen, &pw);
++    if (pw == NULL) {
++        err = -ENOENT;
++        goto out;
++    }
++    i = 0;
++    err = 0;
++    for(;gr->gr_mem[i] != 0 && err == 0;i++) {
++        if (strcmp(gr->gr_mem[i], pw->pw_name) == 0) {
++            err = 1;
++        }
++    }
++out:
++    if (grpbuf) {
++        free(grpbuf);
++    }
++    if (pwbuf) {
++        free(pwbuf);
++    }
++    return err;
++}
++
+ int iscsi_adm_request_handle(int accept_fd)
+ {
+ 	struct sockaddr addr;
+@@ -152,6 +207,7 @@
+ 	struct iovec iov[3];
+ 	void *rsp_data = NULL;
+ 	size_t rsp_data_sz;
++        int perm = 0;
+ 
+ 	memset(&rsp, 0, sizeof(rsp));
+ 	len = sizeof(addr);
+@@ -169,8 +225,13 @@
+ 		rsp.err = -EPERM;
+ 		goto send;
+ 	}
+-
+-	if (cred.uid || cred.gid) {
++        if (cred.uid || cred.gid) {
++            err = iscsi_adm_uid_in_group(cred.uid, access_gid);
++            if (err != 1) {
++                perm = 1;
++            }
++        }
++	if (perm) {
+ 		rsp.err = -EPERM;
+ 		goto send;
+ 	}
+diff -r -u scst-trunk-r1635/scst/src/scst_proc.c scst-trunk-r1635.mod/scst/src/scst_proc.c
+--- scst-trunk-r1635/scst/src/scst_proc.c	2010-04-06 10:57:48.000000000 +0200
++++ scst-trunk-r1635.mod/scst/src/scst_proc.c	2010-06-30 09:51:33.000000000 +0200
+@@ -2716,6 +2716,9 @@
+ 	.show = scst_dev_handler_info_show,
+ };
+ 
++static int proc_gid = 0;
++module_param(proc_gid, int, S_IRUGO);
++
+ struct proc_dir_entry *scst_create_proc_entry(struct proc_dir_entry *root,
+ 	const char *name, struct scst_proc_data *pdata)
+ {
+@@ -2726,13 +2729,14 @@
+ 	if (root) {
+ 		mode_t mode;
+ 
+-		mode = S_IFREG | S_IRUGO | (pdata->seq_op.write ? S_IWUSR : 0);
++		mode = S_IFREG | S_IRUGO | (pdata->seq_op.write ? (S_IWUSR | S_IWGRP) : 0);
+ 		p = create_proc_entry(name, mode, root);
+ 		if (p == NULL) {
+ 			PRINT_ERROR("Fail to create entry %s in /proc", name);
+ 		} else {
+ 			p->proc_fops = &pdata->seq_op;
+ 			p->data = pdata->data;
++                        p->gid = proc_gid;
+ 		}
+ 	}
+ 

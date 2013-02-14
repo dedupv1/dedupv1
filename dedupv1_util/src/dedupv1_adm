@@ -1,0 +1,139 @@
+#!/usr/bin/python
+#
+# dedupv1 - iSCSI based Deduplication System for Linux
+#
+# (C) 2008 Dirk Meister
+# (C) 2009 - 2011, Dirk Meister, Paderborn Center for Parallel Computing
+# (C) 2012 Dirk Meister, Johannes Gutenberg University Mainz
+# 
+# This file is part of dedupv1.
+#
+# dedupv1 is free software: you can redistribute it and/or modify it under the terms of the 
+# GNU General Public License as published by the Free Software Foundation, either version 3 
+# of the License, or (at your option) any later version.
+#
+# dedupv1 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without 
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with dedupv1. If not, see http://www.gnu.org/licenses/.
+#
+
+
+import sys
+import os
+import optparse
+import simplejson
+from time import sleep
+
+if "DEDUPV1_ROOT" not in os.environ or len(os.environ["DEDUPV1_ROOT"]) == 0:
+    DEDUPV1_ROOT= os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]), "../"))
+    os.environ["DEDUPV1_ROOT"] = DEDUPV1_ROOT
+else:
+    DEDUPV1_ROOT = os.environ["DEDUPV1_ROOT"]
+
+sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python")))
+for file in [f for f in os.listdir(os.path.join(DEDUPV1_ROOT, "lib/python2.6/site-packages/")) if f.endswith(".egg")]:
+    sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python2.6/site-packages/", file)))
+import dedupv1
+import command
+import scst
+from dedupv1logging import log_error, log_info, log_warning, log_verbose
+from config_loader import Config
+from monitor import Monitor
+import config
+
+monitor = None
+
+def restart(options, config):
+    # Only execute the stop with force when --force if given more than once
+    stop_options = options
+    old_force = options.force
+    if options.force == 1:
+        stop_options.force = False
+    
+    dedupv1.stop_device(DEDUPV1_ROOT, monitor, stop_options, config)
+    sleep(5)
+
+    options.force = old_force
+    dedupv1.start_device(DEDUPV1_ROOT, monitor, options, config)
+            
+if __name__ == "__main__":        
+    usage = """usage: %prog (start | stop | status) [options]
+
+Performs administrative action on the dedupv1 daemon.
+
+Examples:
+%prog start --config=/opt/dedupv1/etc/dedupv1/myconfig.conf
+%prog start --config=/opt/dedupv1/etc/dedupv1/myconfig.conf --create
+%prog stop
+%prog restart
+%prog status
+%prog bootstrap (required root)
+%prog --version
+%prog --help
+"""
+    version = "%s (hash %s)" % (config.DEDUPV1_VERSION_STR, config.DEDUPV1_REVISION_STR)
+    parser = optparse.OptionParser(usage=usage, version=version)
+    parser.add_option("--config",
+    	dest="configfile",
+    	default=config.DEDUPV1_DEFAULT_CONFIG)
+    parser.add_option("-f", "--force",
+        action="count",
+        dest="force",
+        default=0)
+    parser.add_option("-v", "--verbose",
+        dest="verbose",
+        action="store_true",
+        default=False)
+    parser.add_option("-c", "--create", dest="create", action="store_true", default=False)
+    parser.add_option("--debug", dest="debug", action="store_true", default=False)
+    parser.add_option("--raw", dest="raw", action="store_true", help="outputs in raw JSON format", default=False)
+    (options, argv) = parser.parse_args()
+  	
+    if not os.path.exists(options.configfile):
+        parser.error("%s not found" % options.configfile)
+    configuration = Config(options.configfile)
+    monitor = Monitor("localhost", configuration.get("monitor.port", config.DEDUPV1_DEFAULT_MONITOR_PORT, type=int))
+      
+    if not (dedupv1.check_root() or dedupv1.check_dedupv1_group(configuration)):
+        parser.error("Permission denied")
+        sys.exit(1)
+      
+    if options.raw and options.verbose:
+        parser.error("Only specify --raw or --verbose, but not both")
+        sys.exit(1)
+    if len(argv) == 0:
+        parser.error("No command specified")
+	sys.exit(1)
+    if len(argv) > 1:
+        parser.error("Illegal command %s" % " ".join(argv))
+        sys.exit(1)
+    cmd = argv[0]
+    try:
+        if cmd == "start":
+            dedupv1.start_device(DEDUPV1_ROOT, monitor, options, configuration)
+        elif cmd == "stop":
+            dedupv1.stop_device(DEDUPV1_ROOT, monitor, options, configuration, False)
+        elif cmd == "writeback-stop":
+            dedupv1.stop_device(DEDUPV1_ROOT, monitor, options, configuration, True)
+        elif cmd == "restart":
+            restart(options, configuration)
+        elif cmd == "status":
+            dedupv1.system_status(monitor, options, configuration)
+        elif cmd == "bootstrap":
+            dedupv1.bootstrap_system(DEDUPV1_ROOT, monitor, options, configuration)
+        elif cmd == "help":
+            parser.print_help()
+            parser.error("Invalid command %s" % cmd)
+            sys.exit(1)
+        else:
+            parser.print_help()
+            sys.exit(1)            
+    except KeyboardInterrupt:
+        sys.exit(1)
+    except Exception as e:
+        log_error(options, e)
+        sys.exit(1)
+    sys.exit(0)
+

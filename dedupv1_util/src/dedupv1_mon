@@ -1,0 +1,115 @@
+#!/usr/bin/python
+#
+# dedupv1 - iSCSI based Deduplication System for Linux
+#
+# (C) 2008 Dirk Meister
+# (C) 2009 - 2011, Dirk Meister, Paderborn Center for Parallel Computing
+# (C) 2012 Dirk Meister, Johannes Gutenberg University Mainz
+# 
+# This file is part of dedupv1.
+#
+# dedupv1 is free software: you can redistribute it and/or modify it under the terms of the 
+# GNU General Public License as published by the Free Software Foundation, either version 3 
+# of the License, or (at your option) any later version.
+#
+# dedupv1 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without 
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with dedupv1. If not, see http://www.gnu.org/licenses/.
+#
+
+import os
+import sys
+import socket
+import optparse
+import urllib
+import simplejson
+import time
+
+if "DEDUPV1_ROOT" not in os.environ:
+    DEDUPV1_ROOT= os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]),"../"))
+    os.environ["DEDUPV1_ROOT"] = DEDUPV1_ROOT
+else:
+    DEDUPV1_ROOT = os.environ["DEDUPV1_ROOT"]
+
+sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python")))
+for file in [f for f in os.listdir(os.path.join(DEDUPV1_ROOT, "lib/python2.6/site-packages/")) if f.endswith(".egg")]:
+    sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python2.6/site-packages/", file)))
+import monitor
+import config
+from dedupv1logging import log_error, log_info, log_warning, log_verbose
+
+def print_json(data):
+    print simplejson.dumps(data, sort_keys=True, indent=4)
+    
+def process_filter(buf, filter):    
+    for filter_part in filter.split("/"):
+        if filter_part in buf:
+            buf = buf[filter_part]
+        else:
+            return {}
+    return buf
+
+if __name__ == "__main__":
+    usage = """usage: %prog [options] <monitor name>
+
+    Example monitor names: stats, trace, volume, status.
+    Call the "monitor" monitor for a full list.
+
+    Returns:
+    0 - Ok
+    1 - Error while calling the monitor, e.g. server not running
+    2 - Error on the server while processing the monitor, e.g. monitor name not known
+"""
+
+    version = "%s (hash %s)" % (config.DEDUPV1_VERSION_STR, config.DEDUPV1_REVISION_STR)
+    
+    parser = optparse.OptionParser(usage=usage, version=version)
+    parser.add_option("-f", "--filter", dest="filter")
+    parser.add_option("-p" , "--port", type="int", dest="port", default=config.DEDUPV1_DEFAULT_MONITOR_PORT)
+    parser.add_option("--host", dest="hostname", default="localhost")
+    parser.add_option("-r", "--refresh", type="int", dest="refresh", default=None)
+    parser.add_option("--debug", dest="debug", action="store_true", default=False)
+    parser.add_option("--raw", dest="raw", action="store_true", help="outputs in raw JSON format", default=False)
+
+    (options, args) = parser.parse_args()
+    if len(args) < 1:
+        parser.error("No monitor specified (monitor gives a list of all monitors)")
+        sys.exit(1)
+    monitor_name = args[0]
+    m = monitor.Monitor(options.hostname, options.port)
+    
+    error_code = 0
+    try:    
+        repeat = True
+        while repeat:
+            try:
+                params = args[1:]
+                params = [(p[0].strip(), p[2].strip()) for p in [p.partition("=") for p in params]]
+                buf = m.read(monitor_name, params, allow_non_json = False)
+                
+                if "ERROR" in buf:
+                    error_code = 2
+                    
+                if options.filter:
+                    buf = process_filter(buf, options.filter)
+
+                print_json(buf)
+            except monitor.MonitorJSONException as e:
+                if options.raw:
+                    print_json({"ERROR": e.raw_text})
+                else:
+                    print '"', e.raw_text,'"',
+                raise
+
+            if not options.refresh:
+                repeat = False
+            else:
+                time.sleep(options.refresh)
+    except KeyboardInterrupt:
+        sys.exit(1)    
+    except Exception as e:
+        log_error(options, e)
+        sys.exit(1)  
+    sys.exit(error_code)

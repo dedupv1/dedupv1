@@ -1,0 +1,4 @@
+Import("localenv")
+                    
+dedupv1d_pb_obj = localenv.Object( Glob("*.cc"), CPPPATH = localenv["CPPPATH"])
+Return("dedupv1d_pb_obj")

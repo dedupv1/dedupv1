@@ -1,0 +1,6 @@
+
+Bash Completion Support for dedupv1
+
+= Installation =
+
+* Copy to /etc/bash_completion.d/ 

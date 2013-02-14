@@ -1,0 +1,377 @@
+#!/usr/bin/python
+#
+# dedupv1 - iSCSI based Deduplication System for Linux
+#
+# (C) 2008 Dirk Meister
+# (C) 2009 - 2011, Dirk Meister, Paderborn Center for Parallel Computing
+# (C) 2012 Dirk Meister, Johannes Gutenberg University Mainz
+# 
+# This file is part of dedupv1.
+#
+# dedupv1 is free software: you can redistribute it and/or modify it under the terms of the 
+# GNU General Public License as published by the Free Software Foundation, either version 3 
+# of the License, or (at your option) any later version.
+#
+# dedupv1 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without 
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with dedupv1. If not, see http://www.gnu.org/licenses/.
+#
+
+
+import sys
+import os
+import optparse
+import simplejson
+import zipfile
+from StringIO import StringIO
+import glob
+import stat
+import time
+import re
+
+if "DEDUPV1_ROOT" not in os.environ or len(os.environ["DEDUPV1_ROOT"]) == 0:
+    DEDUPV1_ROOT = os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]), "../"))
+    os.environ["DEDUPV1_ROOT"] = DEDUPV1_ROOT
+else:
+    DEDUPV1_ROOT = os.environ["DEDUPV1_ROOT"]
+
+sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python")))
+for file in [f for f in os.listdir(os.path.join(DEDUPV1_ROOT, "lib/python2.6/site-packages/")) if f.endswith(".egg")]:
+    sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python2.6/site-packages/", file)))
+import dedupv1
+import command
+import scst
+import iscsi_scst
+from omdict import omdict
+from monitor import Monitor, MonitorException
+from dedupv1logging import log_error, log_info, log_warning, log_verbose
+import config
+
+monitor = None
+run = command.execute_cmd
+
+class Report:
+    def __init__(self, file, prefix, options):
+        self.options = options
+        self.monitor = Monitor(options.hostname, options.port);
+        self.file = file
+        # We store the Reports with ZIP64 extension, it may contain more then 2 GB of data. 
+        # This is can be necessary if we have a high log level
+        self.zip = zipfile.ZipFile(self.file, "w", zipfile.ZIP_DEFLATED, True)
+        self.prefix = prefix
+
+    def gather_all(self):
+        self.gather_dedupv1d_log()
+        self.gather_monitor_data()
+        self.gather_default_config()
+        self.gather_target()
+        self.gather_scst_info()
+        self.gather_scst_state()
+        self.gather_time()
+        self.gather_host_info()
+        
+        if not self.options.no_core_dump:
+            self.gather_core_dump()    
+            
+    def gather_host_info(self):
+        log_verbose(self.options, "Gather host info")
+        try:
+            load_regex = re.compile(r"^.+load\saverage:\s+([\d\.]+),\s+([\d\.]+),\s+([\d\.]+).*$")
+            tasks_regex = re.compile(r"^.+\s(\d+)\s+total,\s+(\d+)\s+running,\s+(\d+)\s+sleeping,\s+(\d+)\s+stopped,\s+(\d+)\s+zombie.*$")
+            cpu_regex = re.compile(r"^.+\s+([\d\.]+)%us,\s+([\d\.]+)%sy,\s+([\d\.]+)%ni,\s+([\d\.]+)%id,\s+([\d\.]+)%wa,\s+([\d\.]+)%hi,\s+([\d\.]+)%si,\s+([\d\.]+)%st.*$")
+            mem_regex = re.compile(r"^.+\s+(\d+)k\s+total,\s+(\d+)k\s+used,\s+(\d+)k\s+free,\s+(\d+)k\s+buffers.*$")
+            swap_regex = re.compile(r"^.+\s+(\d+)k\s+total,\s+(\d+)k\s+used,\s+(\d+)k\s+free,\s+(\d+)k\s+cached.*$")
+            
+            host_info = dict()
+            
+            load_found = False
+            tasks_found = False
+            cpu_found = False
+            mem_found = False
+            swap_found = False
+            process_found = False
+            
+            top_data_raw = run("top -bn 1")
+            top_data = top_data_raw.splitlines()
+            
+            for line in top_data:
+                line = line.strip().lower()
+                if not load_found and line.startswith("top"):
+                    load_found = True
+                    matches = load_regex.match(line)
+                    if matches is not None and matches.lastindex == 3:
+                        host_info["load"] = dict()
+                        host_info["load"]["avg01"] = float(matches.group(1))
+                        host_info["load"]["avg05"] = float(matches.group(2))
+                        host_info["load"]["avg15"] = float(matches.group(3))
+                elif not tasks_found and line.startswith("tasks"):
+                    tasks_found = True
+                    matches = tasks_regex.match(line)
+                    if matches is not None and matches.lastindex == 5:
+                        host_info["tasks"] = dict()
+                        host_info["tasks"]["total"] = int(matches.group(1))
+                        host_info["tasks"]["running"] = int(matches.group(2))
+                        host_info["tasks"]["sleeping"] = int(matches.group(3))
+                        host_info["tasks"]["stopped"] = int(matches.group(4))
+                        host_info["tasks"]["zombie"] = int(matches.group(5))
+                elif not cpu_found and line.startswith("cpu"):
+                    cpu_found = True
+                    matches = cpu_regex.match(line)
+                    if matches is not None and matches.lastindex == 8:
+                        host_info["cpu"] = dict()
+                        host_info["cpu"]["user"] = float(matches.group(1))
+                        host_info["cpu"]["system"] = float(matches.group(2))
+                        host_info["cpu"]["nice"] = float(matches.group(3))
+                        host_info["cpu"]["idle"] = float(matches.group(4))
+                        host_info["cpu"]["iowait"] = float(matches.group(5))
+                        host_info["cpu"]["hw_interrupts"] = float(matches.group(6))
+                        host_info["cpu"]["sw_interrupts"] = float(matches.group(7))
+                        host_info["cpu"]["steal"] = float(matches.group(8))
+                elif not mem_found and line.startswith("mem"):
+                    mem_found = True
+                    matches = mem_regex.match(line)
+                    if matches is not None and matches.lastindex == 4:
+                        host_info["memory"] = dict()
+                        host_info["memory"]["total"] = long(matches.group(1))
+                        host_info["memory"]["used"] = long(matches.group(2))
+                        host_info["memory"]["free"] = long(matches.group(3))
+                        host_info["memory"]["buffers"] = long(matches.group(4))
+                elif not swap_found and line.startswith("swap"):
+                    swap_found = True
+                    matches = swap_regex.match(line)
+                    if matches is not None and matches.lastindex == 4:
+                        host_info["swap"] = dict()
+                        host_info["swap"]["total"] = long(matches.group(1))
+                        host_info["swap"]["used"] = long(matches.group(2))
+                        host_info["swap"]["free"] = long(matches.group(3))
+                        host_info["swap"]["cached"] = long(matches.group(4))
+                elif not process_found and line.endswith("dedupv1d"):
+                    process_found = True
+                    process = line.split()
+                    if process.__len__() == 12:
+                        host_info["process"] = dict()
+                        host_info["process"]["pid"] = int(process[0])
+                        host_info["process"]["user"] = process[1]
+                        host_info["process"]["priority"] = process[2]
+                        host_info["process"]["nice"] = int(process[3])
+                        host_info["process"]["memory"] = dict()
+                        virtual_memory = process[4].lower()
+                        if virtual_memory.endswith("m"):
+                            virtual_memory = float(virtual_memory[0:-1]) * 1024
+                        elif virtual_memory.endswith("g"):
+                            virtual_memory = float(virtual_memory[0:-1]) * 1024 * 1024
+                        host_info["process"]["memory"]["virtual"] = int(virtual_memory)
+                        resident_memory = process[5].lower()
+                        if resident_memory.endswith("m"):
+                            resident_memory = float(resident_memory[0:-1]) * 1024
+                        elif resident_memory.endswith("g"):
+                            resident_memory = float(resident_memory[0:-1]) * 1024 * 1024
+                        host_info["process"]["memory"]["resident"] = int(resident_memory)
+                        shared_memory = process[6].lower()
+                        if shared_memory.endswith("m"):
+                            shared_memory = float(shared_memory[0:-1]) * 1024
+                        elif shared_memory.endswith("g"):
+                            shared_memory = float(shared_memory[0:-1]) * 1024 * 1024
+                        host_info["process"]["memory"]["shared"] = int(shared_memory)
+                        state = dict()
+                        state["z"] = 0
+                        state["t"] = 1
+                        state["s"] = 2
+                        state["r"] = 3
+                        state["d"] = 4
+                        host_info["process"]["state"] = state.get(process[7])
+                        host_info["process"]["cpu"] = float(process[8])
+                        host_info["process"]["memory"]["usage"] = float(process[9])
+                        cpu_time = process[10].split(":")
+                        host_info["process"]["cpu_time"] = (float(cpu_time[0]) * 60) + float(cpu_time[1])
+                        host_info["process"]["command"] = process[11]
+                        break
+            
+            self.zip.writestr(os.path.join(self.prefix, "monitor/host"), simplejson.dumps(host_info, sort_keys=True, indent=4))
+        except Exception as e:
+            log_error(self.options, "Failed to gather host infos: " + str(e))
+    
+    def gather_time(self):
+        log_verbose(self.options, "Gather timestamp")
+        
+        timestamp = "%s\n" % time.ctime()
+        
+        self.zip.writestr(os.path.join(self.prefix, "timestamp"), timestamp) 
+
+    def gather_scst_info(self):
+        log_verbose(self.options, "Gather SCST info")
+        try:
+            # Devices
+            d = scst.get_devices()
+            self.zip.writestr(os.path.join(self.prefix, "device_info"),
+                              simplejson.dumps(d, sort_keys=True, indent=4))
+            
+            # Groups
+            g = {}
+            for group_name in scst.get_scst_groups():
+                g[group_name] = {}
+                g[group_name]["devices"] = scst.get_devices_in_group(group_name)
+                g[group_name]["names"] = scst.get_initiator_pattern_in_group(group_name)
+            self.zip.writestr(os.path.join(self.prefix, "group_info"),
+                              simplejson.dumps(g, sort_keys=True, indent=4))
+            
+            # Sessions
+            sesson_data = open("/proc/scsi_tgt/sessions", "r").read()
+            self.zip.writestr(os.path.join(self.prefix, "session_info"), sesson_data)
+        except Exception as e:
+            log_error(self.options, "Failed to gather SCST infos: " + str(e))
+
+    def gather_target(self):
+        log_verbose(self.options, "Gather iSCSI info")
+        try:
+            target_data = {}
+            for (tid, t) in iscsi_scst.get_targets().items():
+                target_data[tid] = t.all()
+                
+            target_data = simplejson.dumps(target_data, sort_keys=True, indent=4)
+            self.zip.writestr(os.path.join(self.prefix, "target_info"), target_data)
+        except Exception as e:
+            log_error(self.options, "Failed to gather iSCSI target infos: " + str(e))
+
+    def gather_default_config(self):
+        log_verbose(self.options, "Gather default config info")
+        try:
+            if os.path.exists(config.DEDUPV1_DEFAULT_CONFIG):
+                self.zip.write(config.DEDUPV1_DEFAULT_CONFIG, arcname=os.path.join(self.prefix, "dedupv1.conf"))
+        except Exception as e:
+            log_error(self.options, "Failed to gather default config: " + str(e))
+        
+    def gather_dedupv1d_log(self):
+        def gather_file(filename):
+            # Set more accessible mode
+            changed_perm = True
+            try:
+                orig_mode = mode = os.stat(log_file)[stat.ST_MODE]
+                os.chmod(log_file, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH | stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH)
+            except OSError:
+                changed_perm = False
+                
+            self.zip.write(log_file, arcname=os.path.join(self.prefix, os.path.basename(log_file)))
+            # restore original mode
+            if changed_perm:
+                os.chmod(log_file, orig_mode)
+        log_verbose(self.options, "Gather dedupv1d log")
+        try:
+            log_dir = os.path.normpath(os.path.join(os.environ["DEDUPV1_ROOT"], "var/log/dedupv1/*"))
+            for log_file in glob.glob(log_dir):
+                gather_file(log_file)
+            for log_file in glob.glob("/var/log/dedupv1*"):
+                gather_file(log_file)
+        except Exception as e:
+            log_error(self.options, "Failed to gather dedupv1d logs: " + 
+                       str(e))
+
+    def gather_core_dump(self):
+        log_verbose(self.options, "Gather core dump")
+        try:
+            core_dump_pattern = run("sysctl -n kernel.core_pattern")
+            core_dump_dir = os.path.dirname(core_dump_pattern)
+            if (os.path.exists(core_dump_dir)):
+                for file in os.listdir(core_dump_dir):
+                    core_file = os.path.join(core_dump_dir, file)
+                    if core_file.find("-reported") < 0:
+                        self.zip.write(core_file, arcname=os.path.join(self.prefix, os.path.basename(file)))
+                        p = core_file.rpartition(".")
+                        new_filename = p[0] + "-reported.core"
+                        os.rename(core_file, new_filename)               
+        except Exception as e:
+            log_error(self.options, "Failed to get core dump: " + str(e))
+
+    def gather_scst_state(self):
+        log_verbose(self.options, "Gather SCST data")
+        try:
+            for root, dirs, files in os.walk('/proc/scsi_tgt'):
+                for file in files:
+                    path = os.path.join(root, file)
+                    data = open(path, "r").read()
+                    zip_path = "/".join(path.split("/")[2:])
+                    self.zip.writestr(os.path.join(self.prefix, zip_path), data)
+        except Exception as e:
+            log_error(self.options, "Failed to gather scst state: " + str(e))
+            
+    def gather_monitor_data(self):
+        def write_monitor(monitor_name):
+            try:
+                data = self.monitor.read(monitor_name)
+                self.zip.writestr(os.path.join(self.prefix, "monitor/%s" % (monitor_name)), simplejson.dumps(data, sort_keys=True, indent=4))
+            except:
+                pass    
+        log_verbose(self.options, "Gather monitor data")
+        
+        try:
+            monitor_list = self.monitor.read("monitor")
+            self.zip.writestr(os.path.join(self.prefix, "monitor/monitor"), simplejson.dumps(monitor_list, sort_keys=True, indent=4))
+        except MonitorException as me:
+            # empty monitor list
+            monitor_list = { "adapters": []}
+        
+        for monitor in monitor_list["adapters"]:
+            if monitor != "monitor":
+                write_monitor(monitor)
+                  
+if __name__ == "__main__":
+    if not (dedupv1.check_root() or dedupv1.check_dedupv1_group()):
+        print >> sys.stderr, "Permission denied"
+        sys.exit(1)
+        
+        
+    usage = """usage: %prog <filename> [options]
+    
+Examples:
+%prog report.zip
+%prog --help
+%prog --version
+"""
+    version = "%s (hash %s)" % (config.DEDUPV1_VERSION_STR, config.DEDUPV1_REVISION_STR)
+    
+    parser = optparse.OptionParser(usage=usage, version=version)
+
+    parser.add_option("-p", "--port", type="int", dest="port", help="port of the dedupv1d", default=config.DEDUPV1_DEFAULT_MONITOR_PORT)
+    parser.add_option("--host", dest="hostname", help="hostname of the dedupv1d", default="localhost")
+    parser.add_option("--debug", dest="debug", action="store_true", default=False)
+    parser.add_option("--coredump", dest="no_core_dump", action="store_false", default=True)
+    parser.add_option("--verbose",
+        dest="verbose",
+        action="store_true",
+        default=False)
+    parser.add_option("--quiet",
+        dest="quiet",
+        action="store_true",
+        default=False)
+    (options, args) = parser.parse_args()
+    
+    if len(args) == 0:
+        parser.error("No command specified")
+        sys.exit(1)
+    if options.verbose and options.quiet:
+        parser.error("--verbose and --quiet cannot be active at the same time")
+        sys.exit(1)
+    cmd = args[0]
+
+    try:        
+        if cmd == "help":
+            parser.print_help()
+        elif cmd == "version":
+            parser.print_version()
+        else:
+            # normal filename mode
+            report_file = open(args[0], "w")
+            prefix = args[0]
+            prefix = os.path.basename(prefix)
+            if prefix.endswith(".zip"):
+                prefix = prefix[:-4]
+            report = Report(report_file, prefix, options)
+            report.gather_all()
+    except KeyboardInterrupt:
+        sys.exit(1)
+    except Exception as e:
+        log_error(options, e)
+        sys.exit(1)     
+    sys.exit(0)

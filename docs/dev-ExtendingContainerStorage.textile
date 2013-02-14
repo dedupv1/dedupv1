@@ -1,0 +1,26 @@
+# Extending Container Storage
+
+This page describes the feature to extend the (container) storage after the system is created. This is e.g. useful when additional internal or external storage is attached to the system to **extend its physical capacity**. 
+
+This page assumes that additional storage is available using a filesystem, either by extending the existing storage file system using some kind of storage virtualization or logical volume manager or by creating a new filesystem on the storage and mounting the filesystem.
+
+The extension is done by adapting the configuration file.
+
+ * Change the `storage.size` option to the new total maximal size. The new size must be larger than the existing logical size.
+ * Add additional file to the list of `storage.filename` options. The additional size is divided to the new files in equal parts
+ * It is possible to assign explicit file sizes to container files if necessary. This is done by the `storage.file-size option`. It is not possible to change the explicit file size of a container file afterwards.
+
+The changed configuration file is accepted by the system if `dedupv1_adm start` is called with the force flag (as it is usual for configuration changes).
+
+Please note: This feature does not include to increase the size of the chunk index. **If the container storage holds more chunks than the persistent index of the chunk index can hold, the chunk index might run full**. Write requests fail when the chunk index is full. It is currently not possible to extend the capacity of the chunk index. 
+
+## Backwards Compatibility
+
+In general the feature is backwards compatible when one thing is respected: When an old system (without this feature) is upgraded to the new version (that includes the feature) it is necessary to start and stop the system once without extending the storage. After the stop, the state information are automatically upgraded to the new version and it is now possible to safely extend the storage capacity.
+
+## Current Limitations
+
+ * It is not possible to remove, or the change the size of storage files names.
+ * While renaming is possible as long the names are reflected in the config file, the ordering of the file is importing. Switching the ordering of files in the configuration may lead to data loss.
+ * New files must be added to the end of the file list
+ * The current allocation policy uses a round robin distribution of containers to files. This leads to an un-balanced distribution of the containers to the files with regards to the available remaining file size.

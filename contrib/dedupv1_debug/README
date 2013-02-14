@@ -1,0 +1,9 @@
+dedupv1_debug
+
+The dedupv1_debug application is used to inspect the dedupv1 system while the daemon is not started.
+
+The current implementation starts the complete system internally, so that in fact there is no
+advantage compared to starting the daemon and using the inspect monitor.
+
+In future versions, the dedupv1_debug application should be modified to a) not start the whole
+system and b) also start if parts of the system are not runnable, e.g. due to a inconsistent state.

@@ -1,0 +1,6 @@
+latex
+system_test
+integration_test
+.DS_Store
+html
+valgrind

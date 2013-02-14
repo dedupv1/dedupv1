@@ -1,0 +1,7 @@
+Import("localenv", "build_mode")
+
+
+
+dedupv1_fixture_obj = localenv.Object(Glob("*.cc"), 
+	CPPPATH = localenv["CPPPATH"] + ["#core/include", "#core/resources", "#base/include", "#base/resources"])
+Return("dedupv1_fixture_obj")

@@ -1,0 +1,7 @@
+vgcore*
+*.heap
+cpuprofile
+gmon.out
+work
+core
+*.swp

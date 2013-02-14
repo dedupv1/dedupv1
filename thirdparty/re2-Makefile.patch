@@ -1,0 +1,11 @@
+--- Makefile.orig	2011-01-05 19:04:25.628160000 +0100
++++ Makefile	2011-01-05 19:04:44.018160011 +0100
+@@ -20,7 +20,7 @@
+ 
+ # Variables mandated by GNU, the arbiter of all good taste on the internet.
+ # http://www.gnu.org/prep/standards/standards.html
+-prefix=/usr/local
++prefix=/opt/dedupv1
+ exec_prefix=$(prefix)
+ bindir=$(exec_prefix)/bin
+ includedir=$(prefix)/include

@@ -1,0 +1,32 @@
+h1. Manage dedupv1 Volumes
+
+Volumes are the basic storage building block in dedupv1. From the client point of view a volume is virtual hard disk.
+How much storage capacity is used by a volume depends on its data deduplication properties. Because the deduplication is global (here it means over all volumes), the storage capacity used by a single volumes cannot be accounted in any meaning full way.
+
+h2. Dynamic management
+
+Dynamic volumes are managed via the dedupv1_volumes utility.
+A new volumes is created via <code>dedupv1_volumes attach id=VID device-name=NAME logical-size=LS</code> where VID is a unique volume id, NAME is a device name, and LS is the logical size of the volume in byte.
+While the device-name is technically optional, it is recommended to set it. The device-name might become mandatory in the future for new volumes. The letters "G" for giga and "T" for tera can be used to specific the logical size. We here use the 2^x meaning for giga and tera.
+
+Two further optional arguments are one or multiple "group" entries and one or multiple "target" entries in the form <code>group=NAME:LUN</code> and <code>target=NAME:LUN</code>. More about groups and targets can be found on the Wiki page [[Using dedupv1 Volumes over iSCSI]].
+
+A volume can be detached from the system via <code>dedupv1_volumes detach id=VID</code>. After the operation the data of the volume will eventually be deleted. The operation is not revert-able. The id can be reused for other volumes after the data of the volume has been deleted completely in the background.
+
+Besides the assignment to groups and targets at the time of creation, it is also possible to remove and add volumes to groups and targets at runtime via <code>dedupv1_volumes group [add | remove] id=VID group=NAME</code> and <code>dedupv1_volumes target [add | remove] id=VID target=NAME</code>.
+
+A target can be set into a maintenance state, where the volume is not accessible via SCSI, but the data is preserved via <code>dedupv1_volumes change-state id=VID state=maintenance</code>. To make the volume in maintenance mode accessible issue the command <code>dedupv1_volumes change-state id=VID state=running</code>.
+
+h2. Preconfiguration
+
+Besides the dynamic management of volumes, dedupv1d allows also pre-configured volumes. 
+In dedupv1d pre-configured volumes cannot be managed via dedupv1_volumes so the volume configuration are essentially read-only. It is not supported to add or remove pre-configured volumes after the initial start of the system. The goal of the pre-configuration is to make the testing of a system faster and easier. It should not be considered for production usage.
+
+Here is an example that shows all basic elements:
+
+pre. volume.id=0
+volume.device-name=dedupv1
+volume.group=Default:0
+volume.target=iqn.2005-05.de.dedupv1:example:0
+volume.logical-size=1T
+volume.threads=24

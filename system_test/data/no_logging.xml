@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<log4j:configuration xmlns:log4j='http://jakarta.apache.org/log4j/'>
+    
+    <appender name="FA" class="org.apache.log4j.RollingFileAppender">
+        <param name="filename" value="/opt/dedupv1/var/log/dedupv1/dedupv1-2.log"/>
+        <param name="maxBackupIndex" value="12"/>
+        <param name="maxFileSize" value="256MB"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d{dd.MM.yyyy HH:mm:ss,SSS} - %5p [%x]  %18c - %-80m - %l%n" />
+        </layout>
+    </appender>
+    
+    <root>
+        <level value="FATAL" />
+        <appender-ref ref="FA" />
+    </root>
+</log4j:configuration>

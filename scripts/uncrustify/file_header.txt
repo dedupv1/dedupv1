@@ -1,0 +1,6 @@
+/*
+ * dedupv1 - iSCSI based Deduplication System for Linux
+ *
+ * (C) 2008 Dirk Meister
+ * (C) 2009 - 2011, Dirk Meister, Paderborn Center for Parallel Computing
+ */

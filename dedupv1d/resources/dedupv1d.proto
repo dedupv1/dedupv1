@@ -1,0 +1,114 @@
+ // compile with /opt/dedupv1/bin/protoc --cpp_out=. dedupv1d.proto with working directory dedupv1d/resources
+ 
+message OptionPair {
+	required string option_name = 1;
+	required string option = 2;
+}
+ 
+message VolumeInfoData {
+	required uint32 volume_id = 1;
+	optional string device_name = 2;
+	
+	optional uint64 logical_size = 3;
+	optional uint32 command_thread_count = 4;
+	
+	repeated string groups = 5;
+	
+	repeated string targets = 8;
+	   
+	optional VolumeInfoStateData state = 6 [default = VOLUME_STATE_RUNNING];
+	
+	optional uint32 sector_size = 7;
+	
+	repeated OptionPair chunking_options = 9;
+	repeated OptionPair filter_chain_options = 10;
+}
+
+message ScsiResultData {
+	optional uint32 result = 1;
+	optional uint32 sense_key = 2;
+	optional uint32 asc = 3;
+	optional uint32 ascq = 4;
+}
+
+message CommandErrorReportData {
+	optional uint32 time = 1;
+	optional uint32 opcode = 2;
+	optional uint64 sector = 3;
+	optional string details = 4;
+	optional ScsiResultData result = 5;
+}
+
+message CommandErrorReportsData {
+	repeated CommandErrorReportData report = 1;
+}
+
+enum VolumeInfoStateData {
+	VOLUME_STATE_RUNNING = 0;
+	VOLUME_STATE_MAINTENANCE = 1;
+}
+
+message VolumeInfoDetachingData {
+	required uint32 volume_id = 1;
+	optional string former_device_name = 2;
+	optional uint64 former_logical_size = 3;
+	
+	optional uint64 start_block_id = 4;
+	optional uint64 end_block_id = 5;
+	optional uint64 current_block_id = 6;
+}
+
+message VolumeFastCopyJobData {
+	required uint32 src_volume_id = 1;
+	required uint32 target_volume_id = 2;
+		
+	optional uint64 src_start_offset = 3;
+	optional uint64 target_start_offset = 4;
+	optional uint64 size = 5;
+	
+	optional uint64 current_offset = 6;
+
+        optional bool job_failed = 7;
+}
+
+message VolumeInfoFastCopyData {
+	repeated VolumeFastCopyJobData jobs = 1;
+}
+
+message GroupInfoData {
+	optional string group_name = 1;
+	
+	repeated string initiator_pattern = 2;
+}
+
+message TargetAuthData {
+	optional string username = 1;
+	optional string secret = 2;
+}
+
+message TargetInfoData {
+    optional string target_name = 1;
+    optional uint32 tid = 2;
+    
+    repeated string params=3;
+    
+    optional TargetAuthData auth = 4;
+}
+
+message UserInfoData {
+	optional string user_name = 1;
+	optional string secret = 3;
+	
+	repeated string targets = 2;
+	
+	optional uint32 encoding_version = 4 [default = 0];
+}
+
+message DirtyFileData {
+    optional bool clean = 1;
+    optional string config = 2;
+	optional bool stopped = 3;
+	
+	optional string revision = 4;
+	
+} 

@@ -1,0 +1,31 @@
+# iSCSI Authentication
+
+## Client Authentication
+
+A iSCSI user has an password to authenticate iSCSI users via the classical username/password combination.
+
+A new user is created via the dedupv1_user command.
+
+`dedupv1_users add name=admin1 secret-hash=gHJwf3KBfW6AgIR8f3EN`
+
+The hash can be created via the new dedupv1_passwd command that has a similar function as htpasswd and sladpasswd.
+
+`dedupv1_passwd secretverysecret`
+
+However, we need the password in clear text at some point as the iSCSI daemon used the [[CHAP|http://tools.ietf.org/html/rfc1994] authentication protocol. As the encoding has therefore to be revertible anyway only a simple encoding scheme is used.
+
+*Note: Currently unencoded passwords via the secret parameter are still supported, but at some point in time this method will be deactivated. All existing user passwords are automatically updates to the new encoding scheme.*
+
+## Mutual authentication
+
+In addition to a client authentication, iSCSI provides the possibility that the server also authenticates at the client.
+
+The server username and password (in SCST terminology also called OutgoingUser) can be set via dedupv1_target.
+
+`dedupv1_target attach tid=1 name=IQN auth.name=USERNAME auth.secret=SECRET`
+
+The secret is here an hidden password that is generated via `dedupv1_passwd`. The server username and the server password can be changed with the same utility.
+
+`dedupv1_target change tid=1 auth.name=USERNAME auth.secret=SECRET`
+
+Note: Server authentication is only active when the client has also authenticated.

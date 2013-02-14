@@ -1,0 +1,10 @@
+--- jsoncpp/SConstruct	2009-11-21 19:20:25.000000000 +0100
++++ jsoncpp/SConstruct	2009-12-02 19:15:48.000000000 +0100
+@@ -174,7 +174,6 @@
+     print "UNSUPPORTED PLATFORM."
+     env.Exit(1)
+ 
+-env.Tool('doxygen')
+ env.Tool('substinfile')
+ env.Tool('targz')
+ env.Tool('srcdist')

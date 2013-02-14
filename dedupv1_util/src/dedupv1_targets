@@ -1,0 +1,299 @@
+#!/usr/bin/python
+#
+# dedupv1 - iSCSI based Deduplication System for Linux
+#
+# (C) 2008 Dirk Meister
+# (C) 2009 - 2011, Dirk Meister, Paderborn Center for Parallel Computing
+# (C) 2012 Dirk Meister, Johannes Gutenberg University Mainz
+# 
+# This file is part of dedupv1.
+#
+# dedupv1 is free software: you can redistribute it and/or modify it under the terms of the 
+# GNU General Public License as published by the Free Software Foundation, either version 3 
+# of the License, or (at your option) any later version.
+#
+# dedupv1 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without 
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with dedupv1. If not, see http://www.gnu.org/licenses/.
+#
+
+import sys
+import os
+import optparse
+import simplejson
+
+if "DEDUPV1_ROOT" not in os.environ:
+    DEDUPV1_ROOT= os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]),"../"))
+    os.environ["DEDUPV1_ROOT"] = DEDUPV1_ROOT
+
+sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python")))
+for file in [f for f in os.listdir(os.path.join(DEDUPV1_ROOT, "lib/python2.6/site-packages/")) if f.endswith(".egg")]:
+    sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python2.6/site-packages/", file)))
+import dedupv1
+import cmd
+import scst
+from omdict import omdict
+from monitor import Monitor
+import iscsi_scst
+import target
+import volume
+from dedupv1logging import log_error, log_info, log_warning, log_verbose
+import config
+from dedupv1_util import parse_params
+
+monitor = None
+
+def print_raw_data(data):
+    print simplejson.dumps(data, sort_keys=True, indent=4)
+
+def change_param(options, args):
+    """ calls the dedupv1 daemon to change the parameters of a target
+        A special case of a target parameter is the name
+    """
+    config_params = omdict( [ ("op", "change-param") ] )
+    config_params = parse_params(config_params, args)
+    
+    if not "tid" in config_params:
+        raise Exception("Missing required option: tid")   
+    target_id = config_params["tid"]
+
+    exiting_target = target.read_target(monitor, target_id)
+    validation_errors = exiting_target.validate()
+    if len(validation_errors) > 0:
+        raise Exception("Illegal target: " << ",".join(validation_errors))
+
+    if "name" in config_params:
+        scst_targets = iscsi_scst.get_targets()
+        scst_target = scst_targets.get(exiting_target.tid, None)
+        if len(scst_target["sessions"]) > 0:
+            if options.force:
+                log_warning(options, "iSCSI target has still open sessions")
+            else:
+                raise Exception("iSCSI target has still open sessions")
+        target.check_target_name(config_params["name"])
+    
+    monitor_data = monitor.read("target", config_params.items());
+    if "ERROR" in monitor_data:
+        raise Exception(monitor_data["ERROR"])
+    else:
+        if options.raw:
+            print_raw_data(monitor_data)
+            
+        new_target = target.read_target(monitor, target_id)
+        
+        if "name" in config_params:
+            # Remove old target
+            iscsi_scst.unregister_target(exiting_target)
+            group_name = "Default_" + exiting_target.name()
+            if group_name in scst.get_scst_groups():
+                scst.rm_group(group_name)
+                
+            log_verbose(options, "Target %s unregistered" % exiting_target.name())
+                
+            # Re-add under new name
+            iscsi_scst.register_target(new_target)
+            if len(new_target.volumes()) > 0:
+                new_group_name = "Default_" + new_target.name()
+                scst.add_group(new_group_name)
+                for volume_data in new_target.volumes():
+                    p = volume_data.rpartition(":")
+                    (volume_name, lun) = (p[0], p[2])
+                    vol = volume.read_volume_by_name(monitor, volume_name)
+                    # The only reason for vol being None is the volume
+                    # is in detaching mode, which cannot happen
+                    scst.add_to_group(vol, new_group_name + ":" + lun)
+            # Only add a group when the target has an assigned volume
+            log_verbose(options, "Target %s registered" % new_target.name()) 
+        else:
+            # Normal update
+            updated_params = {}
+            auth_changed = False
+            for (arg_key, arg_value) in config_params:
+                if arg_key.startswith("param."):
+                    updated_params[arg_key] = arg_value
+                if arg_key.startswith("auth."):
+                    auth_changed = True
+            
+            if len(updated_params):
+                iscsi_scst.change_target_params(existing_target, updated_params)
+                log_verbose(options, "Target %s params updated" % new_target.name()) 
+            
+            if auth_changed:
+                iscsi_scst.change_target_auth(new_target)
+                log_verbose(options, "Target %s auth updated" % new_target.name())
+                    
+def add_target(options, args):
+    def check_target_collision(tid, target_name):
+        for (tid, existing_target) in target.read_all_targets(monitor).items():
+            if target_id == tid:
+                raise Exception("Tid %s already assigned" % tid)
+            if existing_target.name() == target_name:
+                raise Exception("Target name %s already assigned" % target_name) 
+              
+    config_params = omdict( [ ("op", "add") ] )
+    config_params = parse_params(config_params, args)
+    
+    if not "tid" in config_params:
+        raise Exception("Missing required option: tid")
+    if not "name" in config_params:
+        raise Exception("Missing required option: name")
+    target_id = config_params["tid"]
+    target_name = config_params["name"]
+    target.check_target_name(target_name)
+
+    t = target.Target(target_id, config_params)
+    validation_errors = t.validate()
+    if len(validation_errors) > 0:
+        raise Exception("Illegal target: " + ",".join(validation_errors))
+    
+    check_target_collision(target_id, target_name)
+    
+    monitor_data = monitor.read("target", config_params.items());
+    if "ERROR" in monitor_data:
+        raise Exception(monitor_data["ERROR"])
+    else:
+        if options.raw:
+            print_raw_data(monitor_data)
+            
+        scst_target = target.read_target(monitor, target_id)
+        iscsi_scst.register_target(scst_target)
+        
+        # Only add a group when the target has an assigned volume
+        log_verbose(options, "Target %s registered" % t.name()) 
+            
+def remove_target(options, args):
+    config_params = omdict( [ ("op", "remove") ] )   
+    config_params = parse_params(config_params, args)
+    if not "tid" in config_params:
+        raise Exception("Missing required option: tid");
+
+    t = target.read_target(monitor, config_params["tid"])
+    validation_errors = t.validate()
+    if len(validation_errors) > 0:
+        raise Exception("Illegal target: " << ",".join(validation_errors))
+    
+    if len(t.users()) > 0:
+        if options.force:
+            log_warning(options, "Target %s has still assigned users" % (t.name()))
+        else:
+            raise Exception("Target %s has still assigned users" % (t.name()))
+    
+    # check that no volume is in the target
+    vols = volume.read_all_volumes(monitor)
+    for (vol_id, vol) in vols.items():
+        if not vol:
+            continue
+        for (target_name, lun) in vol.targets():
+            if target_name == t.name():
+                if options.force:
+                    log_warning(options, "Target %s has still assigned volumes" % (t.name()))
+                else:
+                    raise Exception("Target %s has still assigned volumes" % (t.name()))
+    
+    scst_targets = iscsi_scst.get_targets()
+    scst_target = scst_targets.get(t.tid, None)
+    if scst_target:
+        for session in scst_target["sessions"]:
+            log_warning(options, "Target %s has still open session with initiator %s" % (scst_target["name"], session["initiator"]))
+        if len(scst_target["sessions"]) > 0:
+            if options.force:
+                log_warning(options, "iSCSI target has still open sessions")
+            else:
+                raise Exception("iSCSI target has still open sessions")
+    else:
+        if not options.force:
+            raise Exception("Target not attached to iscst-scst")
+       
+    monitor_data = monitor.read("target", config_params.items());
+    if "ERROR" in monitor_data:
+        raise Exception(monitor_data["ERROR"])
+    else:
+        if options.raw:
+            print_raw_data(monitor_data)
+        iscsi_scst.unregister_target(t)
+        
+        group_name = "Default_" + t.name()
+        if group_name in scst.get_scst_groups():
+            scst.rm_group(group_name)
+        log_verbose(options, "Target %s unregistered" % t.name())
+            
+def show_targets(options):
+    if options.raw:
+        print_raw_data(monitor.read("target"))
+    else:
+        targets = target.read_all_targets(monitor)
+        for tid in sorted(targets.keys()):
+            t = targets[tid]
+            print "Target: tid %s" % tid
+            print "Name: %s" % t.name()
+            print "Users: %s" % (", ".join(t.users()))
+            print "Volumes: %s" % (", ".join(t.volumes()))
+            if len(t.params()) > 0:
+                for (k,v) in t.params(): 
+                    print "%s: %s" % (k, v)
+            print
+
+if __name__ == "__main__":
+    if not (dedupv1.check_root() or dedupv1.check_dedupv1_group()):
+        print >> sys.stderr, "Permission denied"
+        sys.exit(1)
+        
+        
+    usage = """usage: %prog (add | remove | show) [options]
+    
+Examples:
+%prog add tid=2 name=iqn.2010-05.info.christmann:example
+%prog add tid=2 name=iqn.2010-05.info.christmann:example param.QueuedCommands=16
+%prog add tid=2 name=iqn.2010-05.info.christmann:example auth.name=User1 auth.secret=XYZ
+%prog change tid=2 param.QueuedCommands=32
+%prog change tid=2 name=iqn.2010-05.info.christmann:example2
+%prog change tid=2 auth.name=User1 auth.secret=XYZ
+%prog remove tid=3
+%prog show
+
+%prog --version
+%prog --help
+"""
+    version = "%s (hash %s)" % (config.DEDUPV1_VERSION_STR, config.DEDUPV1_REVISION_STR)
+    
+    parser = optparse.OptionParser(usage=usage, version=version)
+    parser.add_option("-p","--port", type="int", dest="port", help="port of the dedupv1d", default=config.DEDUPV1_DEFAULT_MONITOR_PORT)
+    parser.add_option("--host", dest="hostname", help="hostname of the dedupv1d", default="localhost")
+    parser.add_option("--raw", dest="raw", action="store_true", help="outputs in raw JSON format", default=False)
+    parser.add_option("--debug", dest="debug", action="store_true", default=False)
+    parser.add_option("-f", "--force",
+        action="store_true",
+        dest="force",
+        default=False)
+    parser.add_option("-v", "--verbose",
+        dest="verbose",
+        action="store_true",
+        default=False)
+    (options, args) = parser.parse_args()
+    
+    monitor = Monitor(options.hostname, options.port);
+    
+    if len(args) == 0:
+        parser.error("No command specified")
+        sys.exit(1)
+    cmd = args[0]
+    try:
+        if cmd == "add":
+            add_target(options, args[1:])
+        elif cmd == "remove":
+            remove_target(options, args[1:])
+        elif cmd == "change":
+            change_param(options, args[1:])
+        elif cmd == "show":
+            show_targets(options)
+        else:
+            parser.error("Invalid command %s" % cmd)            
+            sys.exit(1)
+    except KeyboardInterrupt:
+        sys.exit(1)  
+    except Exception as e:
+        log_error(options, e)
+        sys.exit(1)
+    sys.exit(0)

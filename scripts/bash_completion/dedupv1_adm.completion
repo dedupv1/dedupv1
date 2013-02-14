@@ -1,0 +1,9 @@
+#
+# Simple completions for dedupv1 administration tools
+#
+complete -W "start stop restart status bootstrap" dedupv1_adm
+complete -W "clean reset unregister-all unregister-users unregister-targets unregister-groups unregister-group remove-lock fix-permissions kill self-test show-dirty-file" dedupv1_support
+complete -W "attach detach group target change-state change-size change-options fast-copy clone show" dedupv1_volumes
+complete -W "add change remove show" dedupv1_targets
+complete -W "add change remove target show" dedupv1_users
+

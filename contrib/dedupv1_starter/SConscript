@@ -1,0 +1,28 @@
+from os.path import join, basename
+import glob
+
+project = "dedupv1_starter"
+
+Import("env", "build_mode")
+
+localenv = env.Clone()
+localenv["LINKFLAGS"] = []
+localenv["LIBS"] = []
+localenv["CFLAGS"] = []
+localenv["CPPFLAGS"] = []
+
+# This is a bit hacking
+# We could also use the normal config.h configuration file, but
+# When the dedupv1_starter app would recompile very often. As we have to
+# set the permissions in a special way, we would like to prevent this
+localenv["CPPFLAGS"] = ['-DDEDUPV1_ROOT=\'"%s"\'' % GetOption('prefix')]
+
+Export("localenv")
+
+dedupv1_starter = localenv.Program(project, 
+                source = Glob("src/*.c"), 
+                 )
+
+localenv.Alias("all", project)
+localenv.Default(project)
+Return("dedupv1_starter")
