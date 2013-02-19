@@ -22,8 +22,12 @@
 
 #include <base/shell.h>
 #include <test/log_assert.h>
+#include <base/logging.h>
 
 using dedupv1::base::Option;
+using std::pair;
+
+LOGGER("ShellTest");
 
 class ShellTest : public testing::Test {
 protected:
@@ -31,6 +35,22 @@ protected:
 };
 
 TEST_F(ShellTest, Simple) {
-    Option<bytestring> b = dedupv1::base::RunUntilCompletion("ls -l");
+    Option<pair<int, bytestring> > b = dedupv1::base::RunUntilCompletion("echo abc");
     ASSERT_TRUE(b.valid());
+    ASSERT_EQ(b.value().second[0], 'a');
+    ASSERT_EQ(b.value().second[1], 'b');
+    ASSERT_EQ(b.value().second[2], 'c');
+    ASSERT_EQ(b.value().second[3], '\n');
+}
+
+TEST_F(ShellTest, NonExisting) {
+    Option<pair<int, bytestring> > b = dedupv1::base::RunUntilCompletion("foobarXZY");
+    ASSERT_TRUE(b.valid());
+    ASSERT_FALSE(b.value().first == 0);
+}
+
+TEST_F(ShellTest, ProcessError) {
+    Option<pair<int, bytestring> > b = dedupv1::base::RunUntilCompletion("ls -l /xzya");
+    ASSERT_TRUE(b.valid());
+    ASSERT_FALSE(b.value().first == 0);
 }

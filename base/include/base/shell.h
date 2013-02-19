@@ -30,9 +30,9 @@ namespace dedupv1 {
 namespace base {
 
 /**
- * Runs a given command as a subprocess and returns the output data.
+ * Runs a given command as a subprocess and returns the process result and the output data.
  */
-dedupv1::base::Option<bytestring> RunUntilCompletion(const std::string& cmd);
+dedupv1::base::Option<std::pair<int, bytestring> > RunUntilCompletion(const std::string& cmd);
 
 }
 }
