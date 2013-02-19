@@ -388,7 +388,7 @@ string Inspect::ShowLogInfo() {
     DedupSystem* system = ds_->dedup_system();
     CHECK_RETURN_JSON(system, "System not set");
     Log* log = system->log();
-    CHECK_RETURN_JSON(system, "Log not set");
+    CHECK_RETURN_JSON(log, "Log not set");
 
     stringstream sstr;
     sstr << "{";
