@@ -40,6 +40,7 @@
 
 #include <base/logging.h>
 #include <base/strutil.h>
+#include <base/shell.h>
 
 #include "dedupv1d.h"
 
@@ -48,7 +49,11 @@ using std::stringstream;
 using std::endl;
 using std::list;
 using std::map;
+using std::pair;
+
 using dedupv1::base::strutil::ToString;
+using dedupv1::base::RunUntilCompletion;
+using dedupv1::base::Option;
 
 LOGGER("Version");
 
@@ -56,17 +61,11 @@ namespace dedupv1d {
 
 static string GetUnameOutput() {
     // here we use the high-level system because in-process buffering helps here
-    FILE *stream = popen("uname -a", "r");
-    CHECK_RETURN(stream, "", "Failed to run uname: " << strerror(errno));
+    Option<pair<int, bytestring> > result = dedupv1::base::RunUntilCompletion("uname -a");
+    CHECK_RETURN(result.valid(), "", "Failed to run uname: " << strerror(errno));
 
-    string data;
-    char buffer[256]; // the uname output should not be sooo long
-    while (fgets(buffer, 256, stream) != NULL) {
-        data.append(buffer);
-    }
-    pclose(stream);
-
-    return dedupv1::base::strutil::Trim(data);
+    const char* uname_output = reinterpret_cast<const char*>(result.value().second.data());
+    return dedupv1::base::strutil::Trim(uname_output);
 }
 
 string ReportVersion() {
