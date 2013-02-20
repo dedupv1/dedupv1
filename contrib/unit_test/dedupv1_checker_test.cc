@@ -115,7 +115,7 @@ TEST_P(Dedupv1CheckerTest, CheckWithUnreplayedLog)
     checker.set_passes(passes);
     EXPECT_TRUE(checker.Initialize("data/dedupv1_test.conf"));
     EXPECT_TRUE(checker.Check());
-    uint64_t number_of_chunks = checker.dedupe()->dedup_system()->chunk_index()->GetPersistentCount();
+    uint64_t number_of_chunks = checker.dedupv1d()->dedup_system()->chunk_index()->GetPersistentCount();
     ASSERT_EQ(checker.get_all_pass_processed_chunks(), number_of_chunks);
     ASSERT_EQ(checker.get_all_pass_skipped_chunks(), number_of_chunks * (checker.passes() - 1));
     EXPECT_TRUE(checker.Close());
@@ -158,7 +158,7 @@ TEST_P(Dedupv1CheckerTest, Check)
     checker.set_passes(passes);
     EXPECT_TRUE(checker.Initialize("data/dedupv1_test.conf"));
     EXPECT_TRUE(checker.Check());
-    uint64_t number_of_chunks = checker.dedupe()->dedup_system()->chunk_index()->GetPersistentCount();
+    uint64_t number_of_chunks = checker.dedupv1d()->dedup_system()->chunk_index()->GetPersistentCount();
     ASSERT_EQ(checker.get_all_pass_processed_chunks(), number_of_chunks);
     ASSERT_EQ(checker.get_all_pass_skipped_chunks(), number_of_chunks * (checker.passes() - 1));
     ASSERT_EQ(0, checker.reported_errors());
@@ -236,7 +236,7 @@ TEST_P(Dedupv1CheckerTest, CheckWithChunkDataAddressError)
     checker.set_passes(passes);
     EXPECT_TRUE(checker.Initialize("data/dedupv1_test.conf"));
     EXPECT_TRUE(checker.Check());
-    uint64_t number_of_chunks = checker.dedupe()->dedup_system()->chunk_index()->GetPersistentCount();
+    uint64_t number_of_chunks = checker.dedupv1d()->dedup_system()->chunk_index()->GetPersistentCount();
     ASSERT_EQ(checker.get_all_pass_processed_chunks(), number_of_chunks);
     ASSERT_EQ(checker.get_all_pass_skipped_chunks(), number_of_chunks * (checker.passes() - 1));
     ASSERT_GT(checker.reported_errors(), 0);
@@ -320,7 +320,7 @@ TEST_P(Dedupv1CheckerTest, CheckWithNoGCCandidateError)
     checker.set_passes(passes);
     EXPECT_TRUE(checker.Initialize("data/dedupv1_test.conf"));
     EXPECT_TRUE(checker.Check());
-    uint64_t number_of_chunks = checker.dedupe()->dedup_system()->chunk_index()->GetPersistentCount();
+    uint64_t number_of_chunks = checker.dedupv1d()->dedup_system()->chunk_index()->GetPersistentCount();
     ASSERT_EQ(checker.get_all_pass_processed_chunks(), number_of_chunks);
     ASSERT_EQ(checker.get_all_pass_skipped_chunks(), number_of_chunks * (checker.passes() - 1));
     ASSERT_GT(checker.reported_errors(), 0);
@@ -401,7 +401,7 @@ TEST_P(Dedupv1CheckerTest, RepairWithChunkDataAddressError)
     checker.set_passes(passes);
     EXPECT_TRUE(checker.Initialize("data/dedupv1_test.conf"));
     EXPECT_TRUE(checker.Check());
-    uint64_t number_of_chunks = checker.dedupe()->dedup_system()->chunk_index()->GetPersistentCount();
+    uint64_t number_of_chunks = checker.dedupv1d()->dedup_system()->chunk_index()->GetPersistentCount();
     ASSERT_EQ(checker.get_all_pass_processed_chunks(), number_of_chunks);
     ASSERT_EQ(checker.get_all_pass_skipped_chunks(), number_of_chunks * (checker.passes() - 1));
     ASSERT_GT(checker.fixed_errors(), 0);
@@ -498,7 +498,7 @@ TEST_P(Dedupv1CheckerTest, RepairWithUsageCountError)
     ASSERT_TRUE(checker.set_passes(passes));
     EXPECT_TRUE(checker.Initialize("data/dedupv1_test.conf"));
     EXPECT_TRUE(checker.Check());
-    uint64_t number_of_chunks = checker.dedupe()->dedup_system()->chunk_index()->GetPersistentCount();
+    uint64_t number_of_chunks = checker.dedupv1d()->dedup_system()->chunk_index()->GetPersistentCount();
     ASSERT_EQ(checker.get_all_pass_processed_chunks(), number_of_chunks);
     ASSERT_EQ(checker.get_all_pass_skipped_chunks(), number_of_chunks * (checker.passes() - 1));
     ASSERT_GT(checker.fixed_errors(), 0);
@@ -603,7 +603,7 @@ TEST_P(Dedupv1CheckerTest, RepairWithNoGCCandidateError)
     checker.set_passes(passes);
     EXPECT_TRUE(checker.Initialize("data/dedupv1_test.conf"));
     EXPECT_TRUE(checker.Check());
-    uint64_t number_of_chunks = checker.dedupe()->dedup_system()->chunk_index()->GetPersistentCount();
+    uint64_t number_of_chunks = checker.dedupv1d()->dedup_system()->chunk_index()->GetPersistentCount();
     EXPECT_EQ(checker.get_all_pass_processed_chunks(), number_of_chunks);
     EXPECT_EQ(checker.get_all_pass_skipped_chunks(), number_of_chunks * (checker.passes() - 1));
     EXPECT_GT(checker.fixed_errors(), 0);

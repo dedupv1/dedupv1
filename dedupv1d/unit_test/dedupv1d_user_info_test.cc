@@ -90,7 +90,7 @@ protected:
         ASSERT_TRUE(ti->SetOption("filename", "work/dedupv1_target_info"));
         ASSERT_TRUE(ti->SetOption("max-item-count", "64K"));
         ASSERT_TRUE(ti->SetOption("target", "1"));
-        ASSERT_TRUE(ti->SetOption("target.name", "iqn.2005-10.de.cim:example"));
+        ASSERT_TRUE(ti->SetOption("target.name", "iqn.2005-10.de.jgu:example"));
     }
 
     virtual void TearDown() {

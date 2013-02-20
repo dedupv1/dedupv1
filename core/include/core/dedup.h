@@ -34,8 +34,8 @@
  *
  * The architecture of the system is shown in Figure:
  *
- * \image html docs/architecture.jpg "Architecture of dedupev1"
- * \image latex docs/architecture.eps "Architecture of dedupev1"
+ * \image html docs/architecture.jpg "Architecture of dedupv1"
+ * \image latex docs/architecture.eps "Architecture of dedupv1"
  *
  * The system is integrated in the the generic SCSI target system (SCST) via an user-level target
  * extension. The SCST supports different types of storage backends, which allowed us to

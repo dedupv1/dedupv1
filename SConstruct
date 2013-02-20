@@ -193,7 +193,7 @@ version_str = "<not set>"
 if os.path.exists("version-date.txt"):
     version_str = open("version-date.txt").read().strip()
 if printableRegEx.match(version_str) == None:
-    print "Could not build dedupe: version-date.txt contains special charaters."
+    print "Could not build dedupv1: version-date.txt contains special charaters."
     sys.exit(1)
 config.append("DEDUPV1_VERSION_STR \"%s\"" % version_str)
 

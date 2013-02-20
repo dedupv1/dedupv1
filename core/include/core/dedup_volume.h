@@ -137,7 +137,7 @@ class DedupVolume : public dedupv1::StatisticProvider {
         *
         * After the volume is started, requests can be made.
         *
-        * @param system Reference to the dedupe system object
+        * @param system Reference to the dedupv1 system object
         * @return true iff ok, otherwise an error has occurred
         */
         bool Start(DedupSystem* system, bool initial_maintaince_mode);

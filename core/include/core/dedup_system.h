@@ -53,9 +53,9 @@
 namespace dedupv1 {
 
 /**
- * This class represents a Dedupe-System as whole.
+ * This class represents a DedupSystem as whole.
  *
- * DedupeSystem is the heart of the dedupe system. I holds the references to the subsystems.
+ * DedupSystem is the heart of the dedupv1 system. I holds the references to the subsystems.
  *
  * This class is designed to be used as singleton. It follows the rules of \ref life_cycle
  * with own threads.

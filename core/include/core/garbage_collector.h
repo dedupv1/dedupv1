@@ -489,7 +489,7 @@ class GarbageCollector: public dedupv1::log::LogConsumer,
         /**
          * Set the garbage collector in pause mode.
          *
-         * If dedupe is running and processing, processing will be stopped. It will not be started in idle time.
+         * If dedupv1 is running and processing, processing will be stopped. It will not be started in idle time.
          *
          * @return true iff ok, otherwise an error has occurred
          */
@@ -498,7 +498,7 @@ class GarbageCollector: public dedupv1::log::LogConsumer,
         /**
          * Leave the pause mode.
          *
-         * This method does not change the State of the collector, so it will stay as before. If the dedupe is
+         * This method does not change the State of the collector, so it will stay as before. If the dedupv1 is
          * idle while this method is called, it will not start processing until the next idle time starts.
          *
          * @return true iff ok, otherwise an error has occurred

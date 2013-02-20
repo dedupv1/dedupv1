@@ -196,10 +196,10 @@ bool Dedupv1Checker::CalcPasses() {
     // in the different passes will not hurt us.
     ram <<= 1;
     uint64_t max_chunks_per_pass = ram / kChunkSize;
-    uint64_t chunks_in_dedupe = dedup_system_->chunk_index()->GetPersistentCount();
+    uint64_t persistent_chunks = dedup_system_->chunk_index()->GetPersistentCount();
     this->run_passes_ = 1;
     this->pass_bitmask_ = 0;
-    while ((max_chunks_per_pass * this->run_passes_) < chunks_in_dedupe) {
+    while ((max_chunks_per_pass * this->run_passes_) < persistent_chunks) {
         this->run_passes_ >>= 1;
         this->pass_bitmask_ >>= 1;
         this->pass_bitmask_++;

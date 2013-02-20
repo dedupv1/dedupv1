@@ -122,13 +122,13 @@ class Dedupv1Checker {
         inline uint64_t get_all_pass_processed_chunks() const;
 
         /**
-         * The Reference to the internal used dedupe.
+         * The Reference to the internal used dedupv1.
          *
          * This method is only for testing.
          *
-         * @return the reference to the internal used dedupe.
+         * @return the reference to the internal used dedupv1.
          */
-        inline dedupv1d::Dedupv1d* dedupe();
+        inline dedupv1d::Dedupv1d* dedupv1d();
 
     private:
 
@@ -145,7 +145,7 @@ class Dedupv1Checker {
         };
 
         /**
-         * Size a Chunk takes in memory
+         * Size a chunk takes in memory
          */
         static const uint16_t kChunkSize = 16;
 
@@ -302,7 +302,7 @@ class Dedupv1Checker {
         uint64_t all_pass_processed_chunks_;
 };
 
-inline dedupv1d::Dedupv1d* Dedupv1Checker::dedupe() {
+inline dedupv1d::Dedupv1d* Dedupv1Checker::dedupv1d() {
     return system_;
 }
 
