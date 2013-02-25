@@ -36,7 +36,7 @@ protected:
  * Gets only the PC2 website
  */
 TEST_F(HttpClientTest, GetPC2Homepage) {
-    HttpResult* result = HttpResult::GetUrl("http://www.pc2.uni-paderborn.de");
+    HttpResult* result = HttpResult::GetUrl("http://pc2.uni-paderborn.de");
     ASSERT_TRUE(result);
     ASSERT_EQ(result->code(), 200);
     ASSERT_TRUE(Contains((const char*) result->content(), "Paderborn Center for Parallel Computing"));
