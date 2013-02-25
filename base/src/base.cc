@@ -38,6 +38,7 @@
 #include <base/tc_fixed_index.h>
 #include <base/fixed_index.h>
 #include <base/sqlite_index.h>
+#include <base/leveldb_index.h>
 
 uint64_t make_multi_file_address(uint64_t file_index,
                                  uint64_t file_offset, unsigned int file_count_bits) {
@@ -55,7 +56,8 @@ unsigned int multi_file_get_file_index(uint64_t multi_file_adress,
 unsigned int multi_file_get_file_offset(uint64_t multi_file_adress,
                                         unsigned int file_count_bits) {
     multi_file_adress = multi_file_adress << (file_count_bits + 1);
-    multi_file_adress = multi_file_adress >> (file_count_bits + 1); /* Remove the file index bits out of the adress */
+    // Remove the file index bits out of the address
+    multi_file_adress = multi_file_adress >> (file_count_bits + 1); 
     return multi_file_adress;
 }
 
@@ -83,6 +85,7 @@ void RegisterDefaults() {
     dedupv1::base::TCFixedIndex::RegisterIndex();
     dedupv1::base::FixedIndex::RegisterIndex();
     dedupv1::base::SqliteIndex::RegisterIndex();
+    dedupv1::base::LeveldbIndex::RegisterIndex();
 }
 
 }

@@ -229,6 +229,8 @@ TEST_P(IndexTest, StartWithDefaultFilemode) {
     ASSERT_TRUE(index->Start(StartContext()));
 
     dedupv1::FileMode file_mode;
+    dedupv1::FileMode dir_mode(true);
+
     vector<string> options;
     ASSERT_TRUE(Split(GetParam(), ";", &options));
 
@@ -244,7 +246,14 @@ TEST_P(IndexTest, StartWithDefaultFilemode) {
             struct stat file_stat;
             memset(&file_stat, 0, sizeof(file_stat));
             ASSERT_TRUE(File::Stat(option, &file_stat));
-            ASSERT_EQ(file_mode.mode(), file_stat.st_mode & 07777) << option << " has wrong mode";
+            
+            if ((file_stat.st_mode & S_IFDIR) == 0) {
+              ASSERT_EQ(file_mode.mode(), file_stat.st_mode & 07777) << 
+                option << " has wrong mode";
+            } else {
+              ASSERT_EQ(dir_mode.mode(), file_stat.st_mode & 07777) << 
+                option << " has wrong mode (directory)";
+            }
         }
     }
 }
@@ -257,8 +266,11 @@ TEST_P(IndexTest, StartWithCustomFilemode) {
 
     // normal start
     StartContext start_context;
-    int mode =  S_IRUSR | S_IWUSR | S_IRGRP;
-    start_context.set_file_mode(dedupv1::FileMode::Create(-1, false, mode));
+    int file_mode =  S_IRUSR | S_IWUSR | S_IRGRP;
+    int dir_mode = S_IRUSR | S_IWUSR | S_IXUSR;
+    start_context.set_file_mode(dedupv1::FileMode::Create(-1, false, file_mode));
+    start_context.set_dir_mode(dedupv1::FileMode::Create(-1, false, dir_mode));
+
     ASSERT_TRUE(index->Start(start_context));
 
     vector<string> options;
@@ -276,7 +288,12 @@ TEST_P(IndexTest, StartWithCustomFilemode) {
             struct stat file_stat;
             memset(&file_stat, 0, sizeof(file_stat));
             ASSERT_TRUE(File::Stat(option, &file_stat));
-            ASSERT_EQ(mode, file_stat.st_mode & 07777);
+
+            if ((file_stat.st_mode & S_IFDIR) == 0) {
+              ASSERT_EQ(file_mode, file_stat.st_mode & 07777);
+            } else {
+              ASSERT_EQ(dir_mode, file_stat.st_mode & 07777);
+            }
         }
     }
 }
