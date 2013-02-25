@@ -243,4 +243,5 @@ TEST_P(GreedyContainerGCStrategyIntegrationTest, MergeWithReading) {
 INSTANTIATE_TEST_CASE_P(GreedyContainerGCStrategy,
     GreedyContainerGCStrategyIntegrationTest,
     ::testing::Values(
-        "data/dedupv1_test.conf"));
+        "data/dedupv1_test.conf",
+        "data/dedupv1_leveldb_test.conf"));

@@ -766,7 +766,8 @@ TEST_P(GarbageCollectorIntegrationTest, OutrunnedBlockMappingChainCrashPartialFl
 INSTANTIATE_TEST_CASE_P(GarbageCollector,
     GarbageCollectorIntegrationTest,
     ::testing::Values(
-        "data/dedupv1_test.conf"));
+        "data/dedupv1_test.conf",
+        "data/dedupv1_leveldb_test.conf"));
 
 }
 }

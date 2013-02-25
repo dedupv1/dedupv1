@@ -31,6 +31,7 @@ INSTANTIATE_TEST_CASE_P(DedupSystemDefault,
         "data/dedupv1_test_256k.conf",
         "data/dedupv1_test.conf;chunking.avg-chunk-size=16K;chunking.min-chunk-size=4K;chunking.max-chunk-size=64K",
         // sqlite
-        "data/dedupv1_sqlite_test.conf"
+        "data/dedupv1_sqlite_test.conf",
+        "data/dedupv1_leveldb_test.conf"
         ));
 }

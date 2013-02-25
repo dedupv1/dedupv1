@@ -62,7 +62,7 @@ namespace blockindex {
 
 /**
  * Tests mainly focused on the block index
- * However, these ae not classical unit test as also the correct integration with the other component is validated.
+ * However, these are not classical unit test as also the correct integration with the other component is validated.
  */
 class BlockIndexTest : public testing::TestWithParam<const char*> {
 protected:
