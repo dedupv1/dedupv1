@@ -62,6 +62,14 @@ def install_mhd(options):
     run("make install", cwd="libmicrohttpd-0.9.15")
 
 @install()
+def install_leveldb(options):
+    print "Install leveldb"
+    run("tar -xzf leveldb-1.9.0.tar.gz")
+    run("make", cwd="leveldb-1.9.0")
+    run("cp -r include/leveldb /opt/dedupv1/include", cwd="leveldb-1.9.0")
+    run("cp libleveldb* /opt/dedupv1/lib", cwd="leveldb-1.9.0")
+
+@install()
 def install_apr(options):
     print "Install apr"
     run("tar -zxf apr-1.3.8.tar.gz")
