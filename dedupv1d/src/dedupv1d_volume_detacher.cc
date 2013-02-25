@@ -152,12 +152,17 @@ bool Dedupv1dVolumeDetacher::DetachingThreadRunner(uint32_t volume_id) {
 bool Dedupv1dVolumeDetacher::Start(const StartContext& start_context) {
     CHECK(this->state == STATE_CREATED, "Illegal state: " << this->state);
     CHECK(this->detaching_info() != NULL, "Detached state info not set");
-    CHECK(this->detaching_info()->SupportsCursor(), "Detached state info doesn't support cursors");
-    CHECK(this->detaching_info()->IsPersistent(), "Detached state info is not persistent");
+    CHECK(this->detaching_info()->SupportsCursor(), 
+        "Detached state info doesn't support cursors");
+    CHECK(this->detaching_info()->HasCapability(dedupv1::base::PUT_IF_ABSENT), 
+        "Detached state info doesn't support put if absent operation");
+    CHECK(this->detaching_info()->IsPersistent(), 
+        "Detached state info is not persistent");
 
     DEBUG("Start volume detacher");
 
-    CHECK(this->detaching_info()->Start(start_context), "Failed to start detaching state info");
+    CHECK(this->detaching_info()->Start(start_context), 
+        "Failed to start detaching state info");
     this->state = STATE_STARTED;
     return true;
 }

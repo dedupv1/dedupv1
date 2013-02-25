@@ -81,7 +81,7 @@ Index* TCHashIndex::CreateIndex() {
     return i;
 }
 
-TCHashIndex::TCHashIndex() : PersistentIndex(PERSISTENT_ITEM_COUNT | RETURNS_DELETE_NOT_FOUND) {
+TCHashIndex::TCHashIndex() : PersistentIndex(PERSISTENT_ITEM_COUNT | RETURNS_DELETE_NOT_FOUND | PUT_IF_ABSENT) {
     this->buckets_ = 131071; // default value of TC
     this->record_alignment_ = -1; // default value selected by TC
     this->free_pool_size_ = -1; // default value selected by TC

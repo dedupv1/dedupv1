@@ -95,10 +95,13 @@ MemoryIndex* Index::AsMemoryIndex() {
 
 bool Index::SetOption(const string& option_name, const string& option) {
     ERROR("Illegal option: " << option_name);
+    (void) option;
+
     return false;
 }
 
 bool PersistentIndex::SetOption(const string& option_name, const string& option) {
+  (void) option;
     // no persistent index should fail if configured with one of
     // these options even if they do not make any use of it.
     if (option_name == "sync" ||
@@ -140,6 +143,12 @@ std::string Index::PrintProfile() {
 
 std::string Index::PrintTrace() {
     return "null";
+}
+
+put_result Index::PutIfAbsent(const void* key, size_t key_size,
+        const Message& message) {
+    ERROR("Index doesn't support put-if-absent operations.");
+    return PUT_ERROR;
 }
 
 enum put_result Index::RawPutIfAbsent(

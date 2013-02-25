@@ -96,7 +96,7 @@ bool HashIndex::Start(const StartContext& start_context) {
     return true;
 }
 
-HashIndex::HashIndex() : MemoryIndex(RETURNS_DELETE_NOT_FOUND | COMPARE_AND_SWAP) {
+HashIndex::HashIndex() : MemoryIndex(RETURNS_DELETE_NOT_FOUND | COMPARE_AND_SWAP | PUT_IF_ABSENT) {
     this->bucket_count = 0;
     this->sub_bucket_count = 1;
     this->lock_count = 16;

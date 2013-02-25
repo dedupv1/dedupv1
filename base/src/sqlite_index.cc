@@ -61,7 +61,7 @@ Index* SqliteIndex::CreateIndex() {
     return new SqliteIndex();
 }
 
-SqliteIndex::SqliteIndex() : PersistentIndex(PERSISTENT_ITEM_COUNT | RETURNS_DELETE_NOT_FOUND | RAW_ACCESS) {
+SqliteIndex::SqliteIndex() : PersistentIndex(PERSISTENT_ITEM_COUNT | RETURNS_DELETE_NOT_FOUND | RAW_ACCESS | PUT_IF_ABSENT) {
     this->version_counter = 0;
     this->state = CREATED;
     this->cache_size = 1024;

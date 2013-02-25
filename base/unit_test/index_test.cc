@@ -52,6 +52,8 @@ LOGGER("IndexTest");
 
 #define SKIP_IF_FIXED_INDEX(x) if (dynamic_cast<FixedIndex*>(x)) { INFO("Skipping test for fixed index"); return; }
 
+#define SKIP_UNLESS_PUT_IF_ABSENT_SUPPORTED(index) if(!index->HasCapability(PUT_IF_ABSENT)) { INFO("Skipping test for index"); return; }
+
 #define INDEX_TEST_OP_COUNT (1024 * 4)
 
 namespace dedupv1 {
@@ -681,18 +683,26 @@ TEST_P(IndexTest, MultipleWriteReadDelete) {
 
 TEST_P(IndexTest, DeleteNotFound) {
     SKIP_IF_FIXED_INDEX(index);
+  
+    bool has_cap = index->HasCapability(RETURNS_DELETE_NOT_FOUND);
 
     ASSERT_TRUE(index->Start(StartContext()));
     uint64_t key_value = 1;
     byte* key = (byte*) &key_value;
 
     enum delete_result r = index->Delete(key, sizeof(key_value));
-    ASSERT_TRUE(r == DELETE_NOT_FOUND);
+    if (has_cap) {
+      ASSERT_TRUE(r == DELETE_NOT_FOUND);
+    } else {
+      // if the index has not the capability, it should return DELETE_OK.
+      // It should not be an error
+      ASSERT_TRUE(r == DELETE_OK);
+    }
 }
 
 TEST_P(IndexTest, PutIfAbsent) {
-    SKIP_IF_FIXED_INDEX(index);
-
+    SKIP_UNLESS_PUT_IF_ABSENT_SUPPORTED(index);
+    
     ASSERT_TRUE(index->Start(StartContext()));
     uint64_t key_value = 1;
     byte* key = (byte*) &key_value;

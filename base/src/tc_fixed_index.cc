@@ -82,7 +82,7 @@ Index* TCFixedIndex::CreateIndex() {
     return i;
 }
 
-TCFixedIndex::TCFixedIndex() : IDBasedIndex(PERSISTENT_ITEM_COUNT | RETURNS_DELETE_NOT_FOUND) {
+TCFixedIndex::TCFixedIndex() : IDBasedIndex(PERSISTENT_ITEM_COUNT | RETURNS_DELETE_NOT_FOUND | PUT_IF_ABSENT) {
     this->width_ = -1; // default value selected by TC
     this->size = 0;
     this->version_counter_ = 0;

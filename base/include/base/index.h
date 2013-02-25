@@ -143,7 +143,15 @@ enum index_capability {
      */
     NATIVE_BATCH_OPS = 32,
 
-    COMPARE_AND_SWAP = 64
+    /**
+     * Supports an atomic compare and swap operation
+     */
+    COMPARE_AND_SWAP = 64,
+
+    /**
+     * Supports the PutIfAbsent operation
+     */
+    PUT_IF_ABSENT = 128,
 };
 
 enum cache_lookup_method {
@@ -279,6 +287,10 @@ class Index {
         /**
          * Puts the key/value-pair in the index if there doesn't
          * exists an entry with the same key.
+         * The lookup/put is guarantedd to be atomic.
+         *
+         * This operation is optional. It is only supported
+         * by an index if it has the capability PUT_IF_ABSENT.
          *
          * @param key
          * @param key_size
@@ -287,7 +299,7 @@ class Index {
          */
         virtual enum put_result PutIfAbsent(
                 const void* key, size_t key_size,
-                const google::protobuf::Message& message) = 0;
+                const google::protobuf::Message& message);
 
         /**
          * Deletes the entry with the given key.

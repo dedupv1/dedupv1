@@ -82,7 +82,7 @@ Index* TCBTreeIndex::CreateIndex() {
     return i;
 }
 
-TCBTreeIndex::TCBTreeIndex() : PersistentIndex(PERSISTENT_ITEM_COUNT | RETURNS_DELETE_NOT_FOUND) {
+TCBTreeIndex::TCBTreeIndex() : PersistentIndex(PERSISTENT_ITEM_COUNT | RETURNS_DELETE_NOT_FOUND | PUT_IF_ABSENT) {
     this->leaf_members_ = -1; // default value selected by TC
     this->non_leaf_members_ = -1; // default value selected by TC
     this->buckets_ = 32748;

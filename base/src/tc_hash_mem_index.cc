@@ -72,7 +72,7 @@ Index* TCMemHashIndex::CreateIndex() {
     return i;
 }
 
-TCMemHashIndex::TCMemHashIndex() : MemoryIndex(HAS_ITERATOR | RETURNS_DELETE_NOT_FOUND | RAW_ACCESS | COMPARE_AND_SWAP) {
+TCMemHashIndex::TCMemHashIndex() : MemoryIndex(HAS_ITERATOR | RETURNS_DELETE_NOT_FOUND | RAW_ACCESS | COMPARE_AND_SWAP | PUT_IF_ABSENT) {
     this->mdb_ = NULL;
     this->buckets_ = 0;
     this->state_ = TC_HASH_MEM_INDEX_STATE_CREATED;
