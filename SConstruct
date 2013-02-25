@@ -45,7 +45,7 @@ os_libs = ["m", "pthread"]
 libs = ["microhttpd", "curl", "apr-1", "aprutil-1", 
 	"protobuf", "tokyocabinet", "z", "bz2", "json", 
 	"cryptopp", "tbb", "sqlite3", "gflags", "snappy",
-	"icuuc", "icui18n", "icudata", "lz4"]
+	"icuuc", "icui18n", "icudata", "lz4", "leveldb"]
 build_test = True
 build_dedupv1d = True
 build_contrib = True
