@@ -22,6 +22,7 @@
 #include <leveldb/filter_policy.h>
 #include <leveldb/env.h>
 #include <leveldb/iterator.h>
+#include <leveldb/write_batch.h>
 
 #include <base/strutil.h>
 #include <base/protobuf_util.h>
@@ -33,6 +34,8 @@ using std::string;
 using std::stringstream;
 using std::pair;
 using std::make_pair;
+using std::vector;
+using std::tr1::tuple;
 using leveldb::DB;
 using leveldb::Options;
 using leveldb::WriteOptions;
@@ -250,7 +253,7 @@ Index* LeveldbIndex::CreateIndex() {
   return new LeveldbIndex();
 }
 
-LeveldbIndex::LeveldbIndex() : PersistentIndex(PERSISTENT_ITEM_COUNT) {
+LeveldbIndex::LeveldbIndex() : PersistentIndex(PERSISTENT_ITEM_COUNT | NATIVE_BATCH_OPS) {
   this->db_ = NULL;
   this->bloom_filter_bits_per_key_ = kDefaultBloomFilterBitsPerKey;
   this->use_compression_ = true;
@@ -483,6 +486,53 @@ put_result LeveldbIndex::Put(const void* key, size_t key_size,
   } else {
     stats_.update_count_++;
     item_count_++;
+    version_counter_++;
+
+    if (!LazyStoreItemCount(version_counter_, false)) {
+      ERROR("Failed to store the item count");
+      return PUT_ERROR;
+    }
+    return PUT_OK;
+  }
+}
+
+put_result LeveldbIndex::PutBatch(const vector<tuple<bytestring, const Message*> >& data) {
+  ProfileTimer timer(stats_.total_time_);
+  ProfileTimer update_timer(stats_.update_time_);
+
+  CHECK_RETURN(db_ != NULL, PUT_ERROR, "Index not started")
+
+  WriteOptions options;
+  options.sync = sync_;
+
+  leveldb::WriteBatch batch;
+  vector<tuple<bytestring, const Message*> >::const_iterator i;
+  for (i = data.begin(); i != data.end(); i++) {
+    bytestring key(std::tr1::get<0>(*i));
+    const Message* message = std::tr1::get<1>(*i);
+    CHECK_RETURN(message, PUT_ERROR, "Message not set");
+
+    Slice key_slice(reinterpret_cast<const char*>(key.data()), key.size());
+    string target;
+    CHECK_RETURN(SerializeSizedMessageToString(*message, &target, false),
+      PUT_ERROR, "Failed to serialize message: " <<
+      message->ShortDebugString());
+
+    DEBUG("Put: key " << ToHexString(key.data(), key.size()) <<
+      ", value " << ToHexString(target.data(), target.size()));
+
+    Slice value_slice(target);
+    batch.Put(key_slice, value_slice); 
+  }
+
+  Status s = db_->Write(options, &batch);
+  if (!s.ok()) {
+    ERROR("Failed to write patch: " <<
+        "message " << s.ToString());
+    return PUT_ERROR;
+  } else {
+    stats_.update_count_++;
+    item_count_ += data.size();
     version_counter_++;
 
     if (!LazyStoreItemCount(version_counter_, false)) {

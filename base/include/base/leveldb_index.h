@@ -25,6 +25,9 @@
 
 #include <tbb/atomic.h>
 
+#include <vector>
+#include <tr1/tuple>
+
 #include <leveldb/db.h>
 
 #include <base/base.h>
@@ -163,6 +166,12 @@
 
       virtual enum put_result Put(const void* key, size_t key_size,
           const google::protobuf::Message& message);
+
+      /**
+       * Write batch support for leveldb
+       */ 
+      virtual put_result PutBatch(const std::vector<std::tr1::tuple<bytestring, 
+          const google::protobuf::Message*> >& data);
 
     virtual enum delete_result Delete(const void* key, size_t key_size);
 
