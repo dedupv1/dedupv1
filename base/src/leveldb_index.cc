@@ -149,6 +149,28 @@ class Dedupv1Env : public leveldb::EnvWrapper {
     FileMode file_mode_;
 
     FileMode dir_mode_;
+
+    Status ChangeMode(const std::string& fname, const FileMode& mode) {
+      Status s; // ok status
+      struct stat st;
+      if (stat(fname.c_str(), &st) != 0) {
+        return leveldb::Status::IOError(fname + ": Failed to stat file", 
+            strerror(errno));
+      }
+      if (st.st_gid != mode.gid()) {
+        if (chown(fname.c_str(), -1, mode.gid()) != 0) {
+          return leveldb::Status::IOError(fname + ": Failed to change file group", 
+            strerror(errno));
+        }
+      }
+      if ((st.st_mode & 0777) != mode.mode()) {
+        if (chmod(fname.c_str(), mode.mode()) != 0) {
+          return leveldb::Status::IOError(fname + ": Failed to change file mode",
+              strerror(errno));
+        }
+      }
+      return Status();
+    }
   public:
     Dedupv1Env(const FileMode& file_mode, const FileMode& dir_mode) : 
       EnvWrapper(leveldb::Env::Default()), file_mode_(file_mode), dir_mode_(dir_mode) {
@@ -164,15 +186,7 @@ class Dedupv1Env : public leveldb::EnvWrapper {
                                    leveldb::SequentialFile** result) {
     Status s = EnvWrapper::NewSequentialFile(fname, result);
     if (s.ok()) {
-        if (chown(fname.c_str(), -1, file_mode_.gid()) != 0) {
-        s = leveldb::Status::IOError("Failed to change file group", 
-            strerror(errno));
-      } else {
-        if (chmod(fname.c_str(), file_mode_.mode()) != 0) {
-          s = leveldb::Status::IOError("Failed to change file mode",
-              strerror(errno));
-        }
-      }
+      s = ChangeMode(fname, file_mode_);
     }
     return s;
   }
@@ -188,15 +202,7 @@ class Dedupv1Env : public leveldb::EnvWrapper {
                                      leveldb::RandomAccessFile** result) {
     Status s = EnvWrapper::NewRandomAccessFile(fname, result);
     if (s.ok()) {
-      if (chown(fname.c_str(), -1, file_mode_.gid()) != 0) {
-        s = leveldb::Status::IOError("Failed to change file group", 
-            strerror(errno));
-      } else {
-        if (chmod(fname.c_str(), file_mode_.mode()) != 0) {
-          s = leveldb::Status::IOError("Failed to change file mode",
-              strerror(errno));
-        }
-      }
+      s = ChangeMode(fname, file_mode_);
     }
     return s;
   }
@@ -212,15 +218,7 @@ class Dedupv1Env : public leveldb::EnvWrapper {
                                  leveldb::WritableFile** result) {
     Status s = EnvWrapper::NewWritableFile(fname, result);
     if (s.ok()) {
-      if (chown(fname.c_str(), -1, file_mode_.gid()) != 0) {
-        s = leveldb::Status::IOError("Failed to change file group", 
-            strerror(errno));
-      } else {
-        if (chmod(fname.c_str(), file_mode_.mode()) != 0) {
-          s = leveldb::Status::IOError("Failed to change file mode",
-              strerror(errno));
-        }
-      }
+      s = ChangeMode(fname, file_mode_);
     }
     return s;
   }
@@ -229,19 +227,18 @@ class Dedupv1Env : public leveldb::EnvWrapper {
   virtual Status CreateDir(const std::string& dirname) {
     Status s = EnvWrapper::CreateDir(dirname);
     if (s.ok()) {
-      if (chown(dirname.c_str(), -1, dir_mode_.gid()) != 0) {
-        s = leveldb::Status::IOError("Failed to change directory group", 
-            strerror(errno));
-      } else {
-        if (chmod(dirname.c_str(), dir_mode_.mode()) != 0) {
-          s = leveldb::Status::IOError("Failed to change directory mode",
-              strerror(errno));
-        }
-      }
+      s = ChangeMode(dirname, dir_mode_);
     }
     return s;
   }
 
+  virtual Status LockFile(const std::string& fname, leveldb::FileLock** lock) {
+    Status s = EnvWrapper::LockFile(fname, lock);
+    if (s.ok()) {
+      s = ChangeMode(fname, file_mode_);
+    }
+    return s;
+  }
 };
 
 void LeveldbIndex::RegisterIndex() {
