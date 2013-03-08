@@ -394,6 +394,9 @@ class BlockIndex : public dedupv1::log::LogConsumer, public VolatileBlockCommitC
      */
     ThrottleHelper throttling_;
 
+    /**
+     * TODO (dmeister) Remove this.
+     */ 
     uint32_t minimal_replay_import_size_;
 
     int import_batch_size_;
