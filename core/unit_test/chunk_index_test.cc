@@ -346,6 +346,9 @@ TEST_P(ChunkIndexTest, WriteBack) {
   StorageSession* session = system->chunk_store()->CreateSession();
   WriteTestData(system->chunk_index(), session);
 
+  ASSERT_TRUE(system->storage()->Flush(NO_EC));
+  ASSERT_TRUE(system->log()->WaitUntilDirectReplayQueueEmpty(10));
+
   ASSERT_TRUE(system->idle_detector()->ForceIdle(true));
   LogEventData event_value;
   dedupv1::log::LogReplayContext context(dedupv1::log::EVENT_REPLAY_MODE_DIRECT, 1);
