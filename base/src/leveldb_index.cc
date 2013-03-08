@@ -23,6 +23,7 @@
 #include <leveldb/env.h>
 #include <leveldb/iterator.h>
 #include <leveldb/write_batch.h>
+#include <leveldb/cache.h>
 
 #include <base/strutil.h>
 #include <base/protobuf_util.h>
@@ -261,6 +262,7 @@ LeveldbIndex::LeveldbIndex() : PersistentIndex(PERSISTENT_ITEM_COUNT | NATIVE_BA
   this->checksum_ = true;
   version_counter_ = 0;
   item_count_ = 0;
+  cache_size_ = 1024;
   block_size_ = 0; // use default value
   lazy_item_count_persistent_interval_ = 1024;
 }
@@ -329,6 +331,13 @@ bool LeveldbIndex::SetOption(const string& option_name, const string& option) {
     block_size_= b.value();
     return true;
   }
+  if (option_name == "cache-size") {
+    Option<int64_t> b = ToStorageUnit(option);
+    CHECK(b.valid(), "Illegal cache size value " << option);
+    CHECK(b.value() >= 0, "Illegal cache size value " << option);
+    cache_size_= b.value();
+    return true;
+  }
   if (option_name == "filename") {
     CHECK(index_dir_.empty(), "Filename already set");
     CHECK(option.size() > 0, "Illegal filename");
@@ -359,6 +368,9 @@ bool LeveldbIndex::Start(const StartContext& start_context) {
   }
   if (block_size_ > 0) {
     options.block_size = block_size_;
+  }
+  if (cache_size_ > 0) {
+    options.block_cache = leveldb::NewLRUCache(cache_size_);
   }
 
   leveldb::Status s = DB::Open(options, index_dir_, &db_);

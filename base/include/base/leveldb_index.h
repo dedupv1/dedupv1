@@ -108,6 +108,12 @@
       bool checksum_;
 
       /**
+       * Configurable cache size in number of cached blocks.
+       * 0 means no cache.
+       */
+      uint64_t cache_size_;
+
+      /**
        * Option to set the maximal number of item of the index.
        * This value is only used for for displaying the fill ratio.
        * It is not used as a hard limit.
