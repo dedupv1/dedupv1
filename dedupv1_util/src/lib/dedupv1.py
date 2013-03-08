@@ -29,6 +29,7 @@ from command import execute_cmd, sh_escape, ExecutionError
 import scst
 import signal
 import socket
+import shutil
 from monitor import Monitor
 from monitor import MonitorException
 from monitor import MonitorJSONException
@@ -722,7 +723,10 @@ def clean_device(monitor, options, config):
         """
         if os.path.exists(filename):
             log_verbose(options, "Remove %s" % filename)
-            os.remove(filename)
+            if os.path.isdir(filename):
+              shutil.rmtree(filename)
+            else:
+              os.remove(filename)
             
     if is_running(config):
         raise Exception("dedupv1d running")
