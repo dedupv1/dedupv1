@@ -261,6 +261,7 @@ LeveldbIndex::LeveldbIndex() : PersistentIndex(PERSISTENT_ITEM_COUNT | NATIVE_BA
   this->checksum_ = true;
   version_counter_ = 0;
   item_count_ = 0;
+  block_size_ = 0; // use default value
   lazy_item_count_persistent_interval_ = 1024;
 }
 
@@ -321,6 +322,13 @@ bool LeveldbIndex::SetOption(const string& option_name, const string& option) {
     estimated_max_item_count_ = b.value();
     return true;
   }
+  if (option_name == "block-size") {
+    Option<int64_t> b = ToStorageUnit(option);
+    CHECK(b.valid(), "Illegal block size value " << option);
+    CHECK(b.value() >= 512, "Illegal block size value " << option);
+    block_size_= b.value();
+    return true;
+  }
   if (option_name == "filename") {
     CHECK(index_dir_.empty(), "Filename already set");
     CHECK(option.size() > 0, "Illegal filename");
@@ -348,6 +356,9 @@ bool LeveldbIndex::Start(const StartContext& start_context) {
     options.compression = leveldb::kNoCompression;
   } else {
     options.compression = leveldb::kSnappyCompression;
+  }
+  if (block_size_ > 0) {
+    options.block_size = block_size_;
   }
 
   leveldb::Status s = DB::Open(options, index_dir_, &db_);

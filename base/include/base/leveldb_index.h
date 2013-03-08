@@ -84,6 +84,12 @@
        * Option to use compression.
        */
       bool use_compression_;
+
+      /**
+       * Configurable block size the leveldb instance should use.
+       * Can be set using SetOptions().
+       */
+      size_t block_size_;
       
       /**
        * Directory to store the index data in
