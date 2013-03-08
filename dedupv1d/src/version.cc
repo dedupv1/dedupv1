@@ -62,7 +62,7 @@ namespace dedupv1d {
 static string GetUnameOutput() {
     // here we use the high-level system because in-process buffering helps here
     Option<pair<int, bytestring> > result = dedupv1::base::RunUntilCompletion("uname -a");
-    CHECK_RETURN(result.valid(), "", "Failed to run uname: " << strerror(errno));
+    CHECK_RETURN(result.valid(), "", "Failed to run uname");
 
     const char* uname_output = reinterpret_cast<const char*>(result.value().second.data());
     return dedupv1::base::strutil::Trim(uname_output);

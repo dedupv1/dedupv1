@@ -59,7 +59,11 @@ Option<pair<int, bytestring> > RunUntilCompletion(const string& cmd) {
         return false;    
     }
     int result = pclose(stream);
-    CHECK(result >= 0, "Failed to close process stream: cmd " << cmd);
+
+    // ignore if ECHILD is returned. This may happen if the signal handling has been changed.
+    CHECK(result >= 0 || errno == ECHILD, "Failed to close process stream: " <<
+        "cmd " << cmd << 
+        ", message " << strerror(errno) << " (" << errno << ")");
     return make_option(make_pair(result, data));
 }
 
