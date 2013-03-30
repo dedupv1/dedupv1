@@ -25,13 +25,14 @@ import multiprocessing
 import re
 import sys
 
-printableRegEx = re.compile(r"^[\w !\$%&/\(\)\[\]\{\}=\?\*\+\-#<>-_\.,:;]*$") # This Regular Expression is used to check if params do not contain special characters
+# This Regular Expression is used to check if params do not contain special characters
+printableRegEx = re.compile(r"^[\w !\$%&/\(\)\[\]\{\}=\?\*\+\-#<>-_\.,:;]*$")
 
 EnsurePythonVersion(2,6)
 
 SetOption('implicit_cache', 1)
 SetOption('num_jobs', multiprocessing.cpu_count())
-    
+
 config = Config(Split("_GNU_SOURCE POSIX_PTHREAD_SEMANTICS"))
 config.append("_XOPEN_SOURCE 600") # for Single UNIX Specification, Version 3
 # kyoto carbinet needs the C-Konstant INT32_MAX. Using C++ it is only available when __STDC_LIMIT_MACROS is declared.
@@ -58,12 +59,12 @@ support_deadlock_check = True
 use_ccache = False
 default_dedupv1_config = None
 
-AddOption('--prefix', 
-    dest='prefix', 
-    type='string', 
-    nargs=1, 
-    action='store', 
-    metavar='DIR', 
+AddOption('--prefix',
+    dest='prefix',
+    type='string',
+    nargs=1,
+    action='store',
+    metavar='DIR',
     help='installation prefix', default="/opt/dedupv1")
 
 # Uses the syslog logging facility instead of log4cxx. Release versions should usually use syslog 
@@ -84,7 +85,8 @@ AddOption("--no-distcc", dest="no_distcc", action="store_true", default=False)
 # If the flag is set, the use of ccache is avoided even when ccache is available
 AddOption("--no-ccache", dest="no_ccache", action="store_true", default=False)
 
-# Compiles die target in release mode. The release mode used gcc optimizations, removes some debugging-only
+# Compiles die target in release mode. The release mode used gcc optimizations,
+# removes some debugging-only
 # code, and removes all TRACE logging.
 AddOption("--release", dest="release_mode", action="store_true", default=False)
 
@@ -129,7 +131,7 @@ if GetOption("release_mode"):
 else:
     build_mode = "debug"
     cflags.extend(debug_cflags)
-    
+
 # logging mode
 if GetOption("force_syslog"):
     config.append("LOGGING_SYSLOG")
@@ -141,7 +143,7 @@ else:
     libs.append("log4cxx")
 if GetOption("console_for_ndaemon"):
     config.append("LOGGING_CONSOLE_FOR_NDAEMON")
-    
+
 # profile mode
 if GetOption("perftools_profile") == True:
     libs.append("profiler")
@@ -149,11 +151,11 @@ if GetOption("perftools_profile") == True:
 if GetOption("gnu_profile_mode"):
     cflags.extend(Split("-g -pg"))
     ldflags.append("-pg")
-    
+
 # di-dedupv1 mode
 if GetOption("didedupv1_mode"):
     config.append("DI_DEDUPV1")
-    
+
 if GetOption('default_dedupv1_config'):
     default_dedupv1_config = GetOption("default_dedupv1_config")
 
@@ -163,15 +165,15 @@ if GetOption("fault_inject"):
         print "Provide only one of --release (x)or --fault-inject"
         Exit(1)
     config.append("FAULT_INJECTION")
-    
+
 if GetOption("research") == False:
-	cflags.append("-DNO_RESEARCH")
+    cflags.append("-DNO_RESEARCH")
 else:
     libs.append("kyotocabinet")
-   
+
 if (GetOption("with_dcheck") or build_mode == "debug") and not GetOption("coverage"):
     config.append("WITH_DCHECK")
-    
+
 config.append("DEDUPV1_ROOT \"%s\"" % GetOption('prefix'))
 config.append("DEDUPV1_DEFAULT_MONITOR_PORT %s" % GetOption('default_monitor_port'))
 
@@ -188,7 +190,7 @@ for p in ["/usr/sbin", "/usr/local/sbin"]:
 else:
     print "not found"
 
-# Version handling    
+# Version handling
 version_str = "<not set>"
 if os.path.exists("version-date.txt"):
     version_str = open("version-date.txt").read().strip()
@@ -268,7 +270,7 @@ if build_mode != "release":
                 env["CC"] = "ccache distcc %s" % env.get("RAW_CC");SetOption('num_jobs', 2 * int(Execute("distcc -j")))
             else:
                 env["CXX"] = "distcc %s" % env.get("RAW_CXX")
-                env["CC"] = "distcc %s" % env.get("RAW_CC");SetOption('num_jobs', 2 * int(Execute("distcc -j")))            
+                env["CC"] = "distcc %s" % env.get("RAW_CC");SetOption('num_jobs', 2 * int(Execute("distcc -j")))
 
 if not conf.CheckModprobe("scst"):
     if GetOption("force_scst"):
@@ -279,7 +281,7 @@ if not conf.CheckModprobe("scst"):
         build_dedupv1d = False
         build_contrib = False
         config.append("NO_SCST")
-    
+
 for lib in os_libs:
     if not conf.CheckLib(lib):
         print "%s library must be installed" % lib
@@ -289,8 +291,8 @@ for lib in libs:
         print "%s library must be installed" % lib
         Exit(1)
 if not conf.CheckHeader("valgrind.h"):
-	print "Valgrind production header valgrind.h not available"
-	config.append("NVALGRIND")    
+    print "Valgrind production header valgrind.h not available"
+    config.append("NVALGRIND")
 if not conf.CheckHeader("sys/sysinfo.h"):
     config.append("NO_SYS_SYSINFO_H")
 if not conf.CheckHeader("gtest/gtest_prod.h"):
@@ -317,24 +319,24 @@ if not conf.CheckMHDVersion("0.9.15"):
     print "Update libmicrohttpd to at least 0.9.15"
     Exit(1)
 if not conf.CheckFunc("tcmdbputproc") or not conf.CheckFunc("tcmdbcas"):
-	print "Update tokyo cabinet"
-	Exit(1)
+    print "Update tokyo cabinet"
+    Exit(1)
 if not conf.CheckFunc("pthread_condattr_setclock"):
     config.append("NO_PTHREAD_CONDATTR_SETCLOCK")
     if build_mode == "release":
         print "pthread_condattr_setclock is necessary in release mode"
         Exit(1)
-        
+
 if not conf.CheckHeader("time.h"):
     Exit(1)
-    
+
 # malloc mode
 if support_tcmalloc:
     if conf.CheckLib("tcmalloc"):
         support_tbbmalloc = False
 if support_tbbmalloc:
     if not conf.CheckLib("tbbmalloc"):
-        print "No multithreaded malloc library available. Application performance will be reduced."        
+        print "No multithreaded malloc library available. Application performance will be reduced."
 
 if build_test and not (conf.CheckLib("gtest") and conf.CheckLib("gmock") and conf.CheckCXXHeader("gtest/gtest.h")):
     print "gtest library not found. Skipping unit tests"
@@ -362,16 +364,16 @@ if GetOption("coverage"):
     if build_mode == "release":
         print "coverage is not supported in release mode"
         Exit(1)
-        
+
     env["CPPFLAGS"].extend(Split("-fprofile-arcs -ftest-coverage --coverage"))
     env["LINKFLAGS"].extend(Split("--coverage"))
     build_mode = build_mode + "-coverage"
-    
+
     # e.g. DCHECK are removed in coverage mode.
     # This is similar to the ALWAYS, NEVER macros
     # sqlite: http://www.sqlite.org/testing.html
     config.append("COVERAGE_MODE")
-    
+
     # We deactivate the deadlock check in coverage mode
     # to remove these lines from the reporting
     support_deadlock_check = False
@@ -383,7 +385,7 @@ if platform.machine() == 'i686' or platform.machine() == "x86_64":
         env["CPPFLAGS"].append("-mtune=native")
 
 print "Checking for OS...", platform.uname()[0]
-        
+
 if support_deadlock_check:
     if IsMac():
         print "Deadlock check not supported on Mac"
@@ -403,15 +405,15 @@ if support_deadlock_check:
 else:
     print "Found 32-bit machine. Skipping daemon"
     build_dedupv1d = False
-    
+
 
 env["CFLAGS"].extend(Split("""-Wall
-	-Wmissing-prototypes -Wcast-align -Wpointer-arith -Wreturn-type
-	-Wformat -Wformat-security -Wnested-externs
+    -Wmissing-prototypes -Wcast-align -Wpointer-arith -Wreturn-type
+    -Wformat -Wformat-security -Wnested-externs
         -Wwrite-strings -Wstrict-prototypes"""))
 env["CPPFLAGS"].extend(Split("""-Wall
     -Wcast-align -Wpointer-arith -Wreturn-type
-	-Wformat -Wformat-security -Wwrite-strings -Wno-sign-compare"""))	
+    -Wformat -Wformat-security -Wwrite-strings -Wno-sign-compare"""))
 
 env = conf.Finish()
 
@@ -460,7 +462,7 @@ if build_dedupv1d:
     env.Install("$PREFIX/bin", "dedupv1_util/src/dedupv1_report")
 
     env.Install("$PREFIX/etc/dedupv1", Glob("conf/*"))
-        
+
     env.Command("$PREFIX/var/log/dedupv1", [], Mkdir("$TARGET"))
     env.Command("$PREFIX/var/lock/", [], Mkdir("$TARGET"))
     env.Command("$PREFIX/var/lib/dedupv1", [], Mkdir("$TARGET"))
@@ -483,20 +485,20 @@ if build_contrib:
         env.Install("$PREFIX/bin", dedupv1_starter_prog)
 
     # Add all other contrib tools
-    contribs = ["dedupv1_replay", 
-                "dedupv1_debug", 
-                "dedupv1_read", 
-                "dedupv1_chunk_restorer", 
-                "dedupv1_check", 
+    contribs = ["dedupv1_replay",
+                "dedupv1_debug",
+                "dedupv1_read",
+                "dedupv1_chunk_restorer",
+                "dedupv1_check",
                 "dedupv1_passwd",
                 "dedupv1_dump"]
     non_installable_contribs = set()
 
     for contrib_prog_name in contribs:
-        dedupv1_contrib_prog = SConscript("contrib/%s/SConscript" % contrib_prog_name, 
+        dedupv1_contrib_prog = SConscript("contrib/%s/SConscript" % contrib_prog_name,
         variant_dir = join("build", build_mode, contrib_prog_name))
         env.Alias(contrib_prog_name, dedupv1_contrib_prog)
-        
+
         if not contrib_prog_name in non_installable_contribs:
             all_targets.append(dedupv1_contrib_prog)
             contrib_targets.append(dedupv1_contrib_prog)
@@ -509,4 +511,4 @@ env.Alias("contrib", contrib_targets)
 if not build_dedupv1d and not build_test:
     print "No valid target given"
     Exit(1)
- 
+
