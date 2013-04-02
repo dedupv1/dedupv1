@@ -889,7 +889,7 @@ class BlockIndex : public dedupv1::log::LogConsumer, public VolatileBlockCommitC
      */
     bool ImportAllReadyBlocks();
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
     void ClearData();
 #endif
 };

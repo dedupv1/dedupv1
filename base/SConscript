@@ -1,0 +1,7 @@
+Import("env")
+
+src = Glob("src/*.cc") + Glob("resources/*.cc")
+dedupv1_base_lib = env.SharedLibrary("dedupv1_base",
+  src,
+  CPPPATH = env["CPPPATH"] + ["include", "resources"])
+Return("dedupv1_base_lib")

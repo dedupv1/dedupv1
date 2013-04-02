@@ -437,7 +437,7 @@ class Dedupv1dVolumeInfo: public dedupv1::StatisticProvider {
         std::string PrintStatisticSummary();
         std::string PrintLockStatistics();
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1D_TEST
         void ClearData();
 #endif
 };

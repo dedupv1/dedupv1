@@ -212,7 +212,7 @@ class Dedupv1dVolumeDetacher {
 
         dedupv1::base::Option<std::list<uint32_t> > GetDetachingVolumeList();
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1D_TEST
         void ClearData();
 #endif
 };

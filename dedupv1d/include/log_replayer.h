@@ -279,7 +279,7 @@ class LogReplayer: public dedupv1::IdleTickConsumer {
 
         inline bool is_failed() const;
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1D_TEST
         void ClearData();
 #endif
 };

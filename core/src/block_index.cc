@@ -157,7 +157,7 @@ BlockIndex::BlockIndex()
     minimal_replay_import_size_ = 16 * 1024;
     is_full_log_replay_ = false;
     failed_block_write_index_ = NULL;
-#ifndef DEDUPV1_TEST
+#ifndef DEDUPV1_CORE_TEST
     stop_thread_count_ = 8;
 #else
     stop_thread_count_ = 1;
@@ -409,7 +409,7 @@ bool BlockIndex::DumpMetaInfo() {
     return true;
 }
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
 void BlockIndex::ClearData() {
     this->bg_committer_.Stop(StopContext::WritebackStopContext());
     if (this->block_index_) {

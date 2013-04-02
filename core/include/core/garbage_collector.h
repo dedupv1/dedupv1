@@ -505,7 +505,7 @@ class GarbageCollector: public dedupv1::log::LogConsumer,
          */
         bool UnPause();
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
         /**
          * Closes all indexes to allow crash-like tests.
          */

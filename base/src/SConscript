@@ -1,7 +1,0 @@
-Import("localenv", "build_mode")
-
-src = Glob("*.cc")
-
-dedupv1_base_obj = localenv.Object(src, 
-	CPPPATH = localenv["CPPPATH"] + ["#base/include", "#base/resources"])
-Return("dedupv1_base_obj")

@@ -103,7 +103,7 @@ bool ContainerGCStrategy::OnStoragePressure() {
     return true;
 }
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
 void ContainerGCStrategy::ClearData() {
 }
 #endif
@@ -778,7 +778,7 @@ string GreedyContainerGCStrategy::PrintProfile() {
     return sstr.str();
 }
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
 void GreedyContainerGCStrategy::ClearData() {
     if (this->merge_candidates_) {
         this->merge_candidates_->Close();

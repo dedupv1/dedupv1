@@ -598,7 +598,7 @@ bool ContainerStorage::MarkContainerCommitAsFailed(Container* container) {
 }
 
 bool ContainerStorage::CommitContainer(Container* container, const ContainerStorageAddressData& address) {
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
     if (clear_data_called_) {
         return true;
     }
@@ -1000,7 +1000,7 @@ ContainerStorage::ContainerStorage() : meta_data_cache_(this),
     has_superblock_ = true;
     had_been_started_ = false;
     chunk_index_ = NULL;
-    #ifdef DEDUPV1_TEST
+    #ifdef DEDUPV1_CORE_TEST
     clear_data_called_ = false;
     #endif
 }
@@ -3342,7 +3342,7 @@ dedupv1::log::Log* ContainerStorage::log() {
     return log_;
 }
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
 void ContainerStorage::ClearData() {
     TRACE("Clear data for crash simulation");
     

@@ -350,7 +350,7 @@ bool Dedupv1dVolumeDetacher::DeclareFullyDetached(uint32_t volume_id) {
     return true;
 }
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1D_TEST
 void Dedupv1dVolumeDetacher::ClearData() {
     Stop(dedupv1::StopContext::FastStopContext());
     this->detaching_info_->Close();

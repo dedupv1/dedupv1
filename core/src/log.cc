@@ -146,7 +146,7 @@ Log::Log() :
     this->log_id_update_intervall_ = kDefaultLogIDUpdateIntervall_;
     this->wasStarted_ = false; // TODO (dmeister) Coding convention
     this->is_last_read_event_data_valid_ = false;
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
     this->data_cleared = false;
 #endif
 }
@@ -1010,7 +1010,7 @@ bool Log::CommitEvent(enum event_type event_type, const google::protobuf::Messag
     ProfileTimer timer(this->stats_.commit_time_);
     tbb::tick_count start_tick = tbb::tick_count::now();
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
     // if the data is cleared during a test, we simply what to bring the system down
     if (this->data_cleared) {
         return true;
@@ -1583,7 +1583,7 @@ bool Log::PersistReplayID(int64_t replayID) {
 }
 
 bool Log::DumpMetaInfo() {
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
     if (!this->log_data_)
     return true;
 #endif
@@ -1859,7 +1859,7 @@ string Log::PrintProfile() {
     return sstr.str();
 }
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
 
 void Log::ClearData() {
     this->Stop(StopContext::FastStopContext());

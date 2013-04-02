@@ -384,7 +384,7 @@ class IdleDetector : public dedupv1::StatisticProvider {
         return forced_busy_;
     }
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
     void ClearData();
 #endif
 };

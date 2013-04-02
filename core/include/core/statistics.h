@@ -121,7 +121,7 @@ class IndexPersistentStatistics : public PersistStatistics {
 
         virtual dedupv1::base::Option<bool> Exists(const std::string& key);
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
         bool data_cleared_;
 
         void ClearData();

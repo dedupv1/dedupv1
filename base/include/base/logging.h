@@ -100,15 +100,10 @@ tbb::atomic<uint64_t>& LoggingStatistics::warn_count() {
 }
 }
 
-#ifndef DAEMON
-#ifndef DEDUPV1_TEST
 #ifdef LOGGING_CONSOLE_FOR_NDAEMON
 #define LOGGING_CONSOLE
 #undef LOGGING_LOG4CXX
 #undef LOGGING_SYSLOG
-
-#endif
-#endif
 #endif
 
 #ifdef LOGGING_LOG4CXX

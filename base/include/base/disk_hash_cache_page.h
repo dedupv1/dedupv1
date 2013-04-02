@@ -273,7 +273,6 @@ class DiskHashCachePage {
          * current number of entries in the page
          */
         uint32_t item_count_;
-#ifdef DEDUPV1_TEST
     public:
 
         byte* ReplaceBufferPointer(byte* replacement_buffer) {
@@ -281,12 +280,12 @@ class DiskHashCachePage {
             buffer_ = replacement_buffer;
             return b;
         }
-#endif
+
         /**
          * true if new entries have enough space with the current size of the buffer.
          */
         bool IsAcceptingNewEntries();
-    public:
+
         /**
          * 8 byte bucket id
          * 2 byte item count

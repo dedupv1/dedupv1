@@ -1,0 +1,49 @@
+from os.path import join, basename
+import glob
+import os
+import sys
+import re
+
+project = "dedupv1_contrib_test"
+
+Import("env", 
+  "build_mode",
+  "dedupv1_base_lib",
+  "dedupv1_base_shared_test_lib",
+  "dedupv1_core_lib",
+  "dedupv1d_lib")
+
+localenv = env.Clone()
+Export("localenv")
+
+localenv["CPPFLAGS"].append("-DDEDUPV1_TEST")
+localenv["LIBS"].append("gtest")
+localenv["LIBS"].append(dedupv1_base_lib)
+localenv["LIBS"].append(dedupv1_base_shared_test_lib)
+localenv["LIBS"].append(dedupv1_core_lib)
+localenv["LIBS"].append(dedupv1d_lib)
+
+dedupv1_includes = ["#core/include",
+  "#core/resources",
+  "#base/include",
+  "#base/resources",
+  "#dedupv1d/include",
+  "#dedupv1d/resources"]
+dedupv1_contrib_test_src = Glob("unit_test/*.cc")
+dedupv1_contrib_src = [f for f in Glob("*/src/*.cc") if not f.name.endswith("_app.cc")]
+
+def has_main_function(contents):
+  return re.match(".*main\(.*\).*", contents)
+
+if any([has_main_function(f.get_contents()) for f in dedupv1_contrib_src]):
+  print "Double main method detected."
+  print "The main method of a contrib tool should be in a file ending in _app.cc"
+  sys.exit(1)
+
+prog = localenv.Program(project, 
+  source = dedupv1_contrib_test_src + dedupv1_contrib_src,
+  CPPPATH = localenv["CPPPATH"] + Glob("#contrib/*/src") + dedupv1_includes)
+
+localenv.Alias("all", project)
+localenv.Alias("test", project)
+localenv.Alias(project, prog)

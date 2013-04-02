@@ -74,7 +74,7 @@ class InfoStore {
 
         virtual dedupv1::base::lookup_result RestoreInfo(std::string key, google::protobuf::Message* message) = 0;
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
         virtual void ClearData();
 #endif
 };
@@ -121,7 +121,7 @@ class IndexInfoStore : public InfoStore {
 
         virtual dedupv1::base::lookup_result RestoreInfo(std::string key, google::protobuf::Message* message);
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
         bool data_cleared_;
 
         void ClearData();

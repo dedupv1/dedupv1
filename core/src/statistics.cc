@@ -67,7 +67,7 @@ string StatisticProvider::PrintTrace() {
 IndexPersistentStatistics::IndexPersistentStatistics() {
     index_ = NULL;
     started_ = false;
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
     data_cleared_ = false;
 #endif
 }
@@ -114,7 +114,7 @@ bool IndexPersistentStatistics::Close() {
 
 bool IndexPersistentStatistics::Persist(const std::string& key, const google::protobuf::Message& message) {
     CHECK(started_, "Statistics not started");
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
     if (data_cleared_) {
         return true;
     }
@@ -128,7 +128,7 @@ bool IndexPersistentStatistics::Persist(const std::string& key, const google::pr
 
 bool IndexPersistentStatistics::Restore(const std::string& key, google::protobuf::Message* message) {
     CHECK(started_, "Statistics not started");
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
     if (data_cleared_) {
         return true;
     }
@@ -147,7 +147,7 @@ dedupv1::base::Option<bool> IndexPersistentStatistics::Exists(const std::string&
     return make_option(lr == dedupv1::base::LOOKUP_FOUND);
 }
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
 void IndexPersistentStatistics::ClearData() {
     data_cleared_ = true;
     ThreadUtil::Sleep(1, ThreadUtil::SECONDS);

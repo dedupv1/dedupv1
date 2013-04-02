@@ -173,7 +173,7 @@ Dedupv1d::Dedupv1d() :
     this->daemon_user_ = "";
     this->daemon_group_ = "";
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1D_TEST
     // we ignore the locking during the tests
     this->daemon_lockfile_ = "";
 #else
@@ -344,7 +344,7 @@ bool Dedupv1d::AttachLockfile(dedupv1::base::File* lock_file) {
 }
 
 bool Dedupv1d::OpenLockfile() {
-#ifndef DEDUPV1_TEST
+#ifndef DEDUPV1D_TEST
     // we ignore the locking during the tests
     if (daemon_lockfile_.empty()) {
         return true;
@@ -1165,7 +1165,7 @@ bool Dedupv1d::ReceiveOutOfMemoryEvent() {
     return true;
 }
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1D_TEST2
 void Dedupv1d::ClearData() {
     persistent_stats_.ClearData();
     log_replayer()->ClearData();

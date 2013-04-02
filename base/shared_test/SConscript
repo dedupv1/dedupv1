@@ -1,5 +1,0 @@
-Import("localenv", "build_mode")
-
-dedupv1_shared_test_obj = localenv.Object(Glob("*.cc"), 
-	CPPPATH = localenv["CPPPATH"] + ["#base/include"])
-Return("dedupv1_shared_test_obj")

@@ -358,7 +358,7 @@ ScstHandle::scst_handle_state ScstHandle::state() const {
     return this->state_;
 }
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1D_TEST
 bool ScstHandle::ClearData() {
     return true;
 }

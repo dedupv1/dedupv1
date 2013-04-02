@@ -252,7 +252,7 @@ class ScstHandle {
 
         bool NotifyDeviceCapacityChanged();
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1D_TEST
         /**
          * Method for use only in test cases.
          */

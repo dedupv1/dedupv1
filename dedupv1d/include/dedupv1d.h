@@ -539,7 +539,7 @@ class Dedupv1d : public dedupv1::base::memory::NewHandlerListener, public dedupv
     */
    inline dedupv1::StopContext GetStopContext();
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1D_TEST
     void ClearData();
 #endif
 };

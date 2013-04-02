@@ -432,7 +432,7 @@ class VolatileBlockStore : public dedupv1::StatisticProvider {
         return commit_state_callback_;
     }
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
     void ClearData();
 #endif
 };

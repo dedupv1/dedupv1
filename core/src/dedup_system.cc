@@ -319,7 +319,7 @@ bool DedupSystem::SetOption(const string& option_name, const string& option) {
         this->report_long_running_requests_ = To<bool>(option).value();
         return true;
     }
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
     if (StartsWith(option_name, "raw-volume.")) {
         CHECK(this->volume_info_->SetOption(option_name.substr(strlen("raw-volume.")), option), "Raw volume configuration failed");
         return true;
@@ -1288,7 +1288,7 @@ dedupv1::gc::GarbageCollector* DedupSystem::garbage_collector() {
     return this->gc_;
 }
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
 void DedupSystem::ClearData() {
     idle_detector_.ClearData();
     if (gc_ != NULL) {

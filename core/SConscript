@@ -1,0 +1,12 @@
+Import("env", "dedupv1_base_lib")
+
+localenv = env.Clone()
+
+localenv["LIBS"].append(dedupv1_base_lib)
+
+src = Glob("src/*.cc") + Glob("resources/*.cc")
+includes = ["include", "resources", "#base/include", "#base/resources"]
+dedupv1_core_lib = localenv.SharedLibrary("dedupv1_core",
+  src,
+  CPPPATH = localenv["CPPPATH"] + includes)
+Return("dedupv1_core_lib")

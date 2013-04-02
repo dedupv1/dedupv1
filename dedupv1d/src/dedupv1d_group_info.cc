@@ -353,7 +353,7 @@ string Dedupv1dGroupInfo::DebugStringOptions(const list< pair< string, string> >
     return s;
 }
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1D_TEST
 void Dedupv1dGroupInfo::ClearData() {
     if (this->info_) {
         this->info_->Close();

@@ -272,7 +272,7 @@ bool ChunkIndex::Start(const StartContext& start_context, DedupSystem* system) {
         // set better maximal key size if the static hash index is used
         // this is the only usage of the content storage in the chunk index
         dedupv1::ContentStorage* content_storage = system->content_storage();
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
         // I need this for some tests
         if (content_storage == NULL) {
             CHECK(this->chunk_index_->SetOption("max-key-size", "20"), "Failed to set max key size");
@@ -285,7 +285,7 @@ bool ChunkIndex::Start(const StartContext& start_context, DedupSystem* system) {
             CHECK(fp->Close(), "Failed to close fingerprinter");
             fp = NULL;
             CHECK(this->chunk_index_->SetOption("max-key-size", ToString(fp_size)), "Failed to set max key size");
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
         }
 #endif
     }
@@ -388,7 +388,7 @@ bool ChunkIndex::Close() {
     return true;
 }
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
 void ChunkIndex::ClearData() {
     if (this->bg_committer_) {
         this->bg_committer_->Stop(StopContext::WritebackStopContext());
@@ -403,10 +403,6 @@ void ChunkIndex::ClearData() {
     }
 }
 
-enum dedupv1::base::put_result ChunkIndex::TestPersistentIndexPutDirectFailure(const void* key, size_t key_size,
-        const google::protobuf::Message& message) {
-    return this->chunk_index_->Put(key, key_size, message);
-}
 #endif
 
 lookup_result ChunkIndex::LookupNextIterator(IndexIterator* it, ChunkMapping* mapping) {
