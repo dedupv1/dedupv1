@@ -16,7 +16,7 @@ localenv["LIBPATH"].append("#build/debug/dedupv1_base_shared_test_lib")
 
 localenv["CPPFLAGS"].append("-DDEDUPV1_CORE_TEST")
 
-src = Glob("src/*.cc") + Glob("unit_test/*.cc") + Glob("resources/*.cc") + Glob("shared_test/*.cc")
+src = Glob("src/*.cc") + Glob("unit_test/*.cc") + Glob("resources/*.cc")
 prog = localenv.Program("dedupv1_core_test", 
   source = src, 
   CPPPATH = localenv["CPPPATH"] + 
