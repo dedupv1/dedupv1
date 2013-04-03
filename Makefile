@@ -3,32 +3,32 @@
 
 default:    all
 
-all:    
-	./filter_path.py scons all
+all:
+	./scripts/filter_path.py scons all
 
 clean:
 	scons -c | ./filter_path.py --stdin
 
 install:
-	./filter_path.py scons install
+	./scripts/filter_path.py scons install
 
 dedupv1_base_test:
-	./filter_path.py scons dedupv1_base_test
+	./scripts/filter_path.py scons dedupv1_base_test
 
 dedupv1_core_test:
-	./filter_path.py scons dedupv1_core_test
+	./scripts/filter_path.py scons dedupv1_core_test
 
 dedupv1_contrib_test:
-	./filter_path.py scons dedupv1_contrib_test
+	./scripts/filter_path.py scons dedupv1_contrib_test
 
 dedupv1d_test:
-	./filter_path.py scons dedupv1d_test
+	./scripts/filter_path.py scons dedupv1d_test
 	
 dedupv1d:
-	./filter_path.py scons dedupv1d
+	./scripts/filter_path.py scons dedupv1d
 	
 contrib:
-	./filter_path.py scons contrib
+	./scripts/filter_path.py scons contrib
 
 release:
 	scons --release all | ./filter_path.py --stdin

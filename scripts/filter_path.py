@@ -27,10 +27,8 @@ import os
 pattern_prefix = r"[0-9A-Za-z\-\_\\/]*"
 pattern = [("dedupv1_base_obj/", "base/src/"),
                ("dedupv1_base_test/", "base/unit_test/"),
-               ("dedupv1_shared_test_obj/", "base/shared_test/"),
                ("dedupv1_core_test/", "core/unit_test/"),
                ("dedupv1_core_obj/", "core/src/"),
-               ("dedupv1_core_shared_test_obj/", "core/shared_test/"),
                ("dedupv1d_obj/", "dedupv1d/src/"),
                ("dedupv1d_test/", "dedupv1d/unit_test/"),
                ("dedupv1_check/", "contrib/dedupv1_check/"),
@@ -44,7 +42,7 @@ def convert(stream):
     gcc_pattern = re.compile(r"(.*g\+\+)(.*)")
     while(line):
         line = line.strip()
-        
+
         m = gcc_pattern.match(line)
         if m:
             l = line.split(" ")
@@ -60,7 +58,7 @@ def convert(stream):
             line = p[0].sub(p[1], line)
         print line
         line = stream.readline()
-                
+
 if __name__ == "__main__":
     parser = optparse.OptionParser()
     parser.add_option("--stdin",
@@ -68,13 +66,13 @@ if __name__ == "__main__":
         action="store_true",
         default=False)
     (options, argv) = parser.parse_args()
-    
+
     try:
         if options.stdin:
             convert(sys.stdin)
         else:
             proc = subprocess.Popen(" ".join(sys.argv[1:]), shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)  
-            convert(proc.stdout)      
+            convert(proc.stdout)
     except Exception as e:
         raise
         print str(e)
