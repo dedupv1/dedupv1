@@ -897,7 +897,7 @@ std::string Dedupv1dVolume::PrintProfile() {
     return sstr.str();
 }
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1D_TEST
 void Dedupv1dVolume::ClearData() {
     Stop(dedupv1::StopContext::FastStopContext());
     handle()->ClearData();

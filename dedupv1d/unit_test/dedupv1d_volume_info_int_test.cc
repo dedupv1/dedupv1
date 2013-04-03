@@ -217,7 +217,7 @@ TEST_F(Dedupv1dVolumeInfoIntegrationTest, WriteDetach) {
     ASSERT_TRUE(ds->Shutdown(dedupv1::StopContext::FastStopContext()));
 }
 
-TEST_F(Dedupv1dVolumeInfoIntegrationTest, WriteDetachWithCrash) {
+TEST_F(Dedupv1dVolumeInfoIntegrationTest, WriteDetachWithClose) {
     ASSERT_TRUE(ds->Start(dedupv1::StartContext())) << "Cannot start application";
     ASSERT_TRUE(ds->Run());
 
@@ -231,7 +231,6 @@ TEST_F(Dedupv1dVolumeInfoIntegrationTest, WriteDetachWithCrash) {
 
     ASSERT_TRUE(ds->volume_info()->DetachVolume(1));
 
-    ds->ClearData();
     ASSERT_TRUE(ds->Close());
 
     ds = Create("data/dedupv1_test.conf");

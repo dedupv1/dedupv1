@@ -227,7 +227,7 @@ class Dedupv1dGroupInfo {
          */
         dedupv1::base::Option<std::list<std::string> > GetGroupNames();
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1D_TEST
         /**
          * Closes all threads and index data structures to allow a crash simulation during
          * testing

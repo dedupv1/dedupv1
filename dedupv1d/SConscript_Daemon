@@ -1,0 +1,26 @@
+from os.path import join, basename
+import glob
+
+project = "dedupv1d"
+
+Import("env")
+
+localenv = env.Clone()
+localenv["CFLAGS"] = localenv["CFLAGS"] + ["-DDAEMON"]
+localenv["CPPFLAGS"] = localenv["CPPFLAGS"] + ["-DDAEMON"]
+localenv["LIBS"].extend(["dedupv1_base", "dedupv1_core", "dedupv1d"])
+
+dedupv1_includes = ["#dedupv1d/include", 
+  "#dedupv1d/resources",
+  "#core/include",
+  "#core/resources",
+  "#base/include",
+  "#base/resources"]
+
+dedupv1d = localenv.Program(project, 
+  source = ["src/dedupv1d_app.cc"], 
+  CPPPATH = localenv["CPPPATH"] + dedupv1_includes)
+
+localenv.Alias("all", project)
+localenv.Default(project)
+Return("dedupv1d")

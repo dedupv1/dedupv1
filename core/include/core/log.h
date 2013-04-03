@@ -806,7 +806,7 @@ class Log: public dedupv1::StatisticProvider {
          */
         virtual enum Log::log_read ReadEvent(int64_t replay_log_id, uint32_t* partial_count, LogEventData* event_data);
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
         public:
 #endif
         /**
@@ -1075,7 +1075,7 @@ class Log: public dedupv1::StatisticProvider {
          */
         virtual std::string PrintProfile();
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
 
         bool data_cleared;
 

@@ -379,7 +379,7 @@ bool Dedupv1dVolumeFastCopy::Close() {
     return !failed;
 }
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1D_TEST
 void Dedupv1dVolumeFastCopy::ClearData() {
 }
 #endif

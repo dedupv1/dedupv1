@@ -238,47 +238,6 @@ TEST_F(Dedupv1dTest, DirtyFlagAfterNormalClose) {
     ASSERT_TRUE(ds->start_context().dirty()) << "The system should be marked as dirty";
 }
 
-TEST_F(Dedupv1dTest, DirtyFlagAfterCrash) {
-    dedupv1::StartContext start_context;
-    ASSERT_TRUE(ds->LoadOptions("data/dedupv1_test.conf"));
-    ASSERT_TRUE(ds->SetOption("monitor.port", PortUtil::getNextPort()));
-    ASSERT_TRUE(ds->Start(start_context)) << "Cannot start application";
-    ASSERT_TRUE(ds->Run());
-
-    Thread<bool> t_run(NewRunnable(ds, &dedupv1d::Dedupv1d::Wait), "runner");
-    t_run.Start();
-    sleep(2);
-    INFO("Crash simulation");
-    ASSERT_TRUE(ds->Shutdown(dedupv1::StopContext::FastStopContext())) << "Failed to shutdown dedupv1";
-    ASSERT_TRUE(t_run.Join(NULL)) <<  "Failed to join run thread";
-    ASSERT_TRUE(ds->Stop()) << "Failed to stop dedupv1";
-
-    ASSERT_TRUE(ds->WriteDirtyState(start_context.file_mode(), true, false)) << "Rewrite the dirty file";
-    ds->ClearData();
-
-    dedupv1d::Dedupv1d* ds_backup = ds;
-    ds = NULL;
-
-    dedupv1::StartContext start_context2(dedupv1::StartContext::NON_CREATE); // the dirty flag should be recovered by the dedupv1d
-    ds = new dedupv1d::Dedupv1d();
-    ds->Init();
-    ASSERT_TRUE(ds->LoadOptions("data/dedupv1_test.conf"));
-    ASSERT_TRUE(ds->SetOption("monitor.port", PortUtil::getNextPort()));
-    ASSERT_TRUE(ds->Start(start_context2)) << "Cannot start application";
-    ASSERT_TRUE(ds->Run());
-
-    Thread<bool> t_run2(NewRunnable(ds, &dedupv1d::Dedupv1d::Wait), "runner");
-    t_run2.Start();
-    sleep(2);
-    ASSERT_TRUE(ds->Shutdown(dedupv1::StopContext::FastStopContext())) << "Failed to shutdown dedupv1";
-    ASSERT_TRUE(t_run2.Join(NULL)) <<  "Failed to join run thread";
-
-    ASSERT_TRUE(ds->start_context().dirty()) << "The system should be marked as dirty";
-
-    ds_backup->Close(); // Here any error are not important for us
-    ds_backup = NULL;
-}
-
 TEST_F(Dedupv1dTest, DirtyFlagAfterCrashDestroyedDirtyfile) {
     EXPECT_LOGGING(dedupv1::test::ERROR).Repeatedly();
 

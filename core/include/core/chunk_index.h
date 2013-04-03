@@ -394,7 +394,7 @@ class ChunkIndex: public dedupv1::log::LogConsumer, public dedupv1::StatisticPro
     bool ImportContainerParallel(uint64_t container_id, const dedupv1::chunkstore::Container& container,
             dedupv1::base::ErrorContext* ec);
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
     public:
 #endif
 
@@ -739,7 +739,15 @@ class ChunkIndex: public dedupv1::log::LogConsumer, public dedupv1::StatisticPro
         return dirty_import_finished_;
     }
 
-#ifdef DEDUPV1_TEST
+    /**
+     * Direct access to the underlying index data structure.
+     * The direct access should be avoided.
+     */
+    dedupv1::base::PersistentIndex* persistent_index() {
+      return chunk_index_;
+    }
+
+#ifdef DEDUPV1_CORE_TEST
     /**
      * Test if the persistent Index is a DiskHashImage. This is used for unit tests.
      *
@@ -754,13 +762,6 @@ class ChunkIndex: public dedupv1::log::LogConsumer, public dedupv1::StatisticPro
      * @return
      */
     inline size_t TestPersistentIndexAsDiskHashIndexMaxKeySize();
-
-    /**
-     * This method allows to put messages directly in the persistent index. It is used to introduce
-     * failures for testing.
-     */
-    enum dedupv1::base::put_result TestPersistentIndexPutDirectFailure(const void* key, size_t key_size,
-            const google::protobuf::Message& message);
 
     void ClearData();
 #endif
@@ -826,7 +827,7 @@ inline dedupv1::base::IndexIterator* ChunkIndex::CreatePersistentIterator() {
     return this->chunk_index_->CreateIterator();
 }
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
 inline bool ChunkIndex::TestPersistentIndexIsDiskHashIndex() {
     return dynamic_cast<dedupv1::base::DiskHashIndex*> (this->chunk_index_);
 }

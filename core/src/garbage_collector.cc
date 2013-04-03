@@ -132,7 +132,7 @@ GarbageCollector::GarbageCollector() :
     max_candidate_processing_time_ = 2.0;
     tp_ = NULL;
     paused_ = false;
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
     no_gc_candidates_during_last_try_ = false;
 #endif
 }
@@ -317,12 +317,12 @@ bool GarbageCollector::GCLoop() {
 
             lookup_result r = ProcessGCCandidates();
             if (r == LOOKUP_ERROR) {
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
                 no_gc_candidates_during_last_try_ = false;
 #endif
                 WARNING("Failed to process candidates");
             } else if (r == LOOKUP_NOT_FOUND) {
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
                 no_gc_candidates_during_last_try_ = true;
 #endif
                 waiting_time += 1;
@@ -330,7 +330,7 @@ bool GarbageCollector::GCLoop() {
                     waiting_time = kMaxWaitingTime;
                 }
             } else {
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
                 no_gc_candidates_during_last_try_ = false;
 #endif
                 // r == LOOKUP_FOUND
@@ -1976,7 +1976,7 @@ string GarbageCollector::PrintLockStatistics() {
     return "null";
 }
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
 void GarbageCollector::ClearData() {
     Stop(dedupv1::StopContext::WritebackStopContext());
 

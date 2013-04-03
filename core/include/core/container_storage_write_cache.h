@@ -132,7 +132,7 @@ class ContainerStorageWriteCache : public dedupv1::StatisticProvider {
 
     bool ResetTimeout(int index);
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
     void ClearData();
 #endif
 

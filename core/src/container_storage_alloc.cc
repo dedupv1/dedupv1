@@ -136,7 +136,7 @@ bool ContainerStorageAllocator::Close() {
     return true;
 }
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
 void ContainerStorageAllocator::ClearData() {
 }
 #endif
@@ -743,7 +743,7 @@ bool MemoryBitmapContainerStorageAllocator::OnMove(const ContainerMoveEventData&
     return true;
 }
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
 void MemoryBitmapContainerStorageAllocator::ClearData() {
     if (this->persistent_bitmap_) {
         this->persistent_bitmap_->Close();

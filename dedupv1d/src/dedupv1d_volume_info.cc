@@ -1102,7 +1102,7 @@ std::string Dedupv1dVolumeInfo::PrintStatisticSummary() {
     return sstr.str();
 }
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1D_TEST
 void Dedupv1dVolumeInfo::ClearData() {
     if (this->info_) {
         this->info_->Close();

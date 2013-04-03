@@ -483,7 +483,7 @@ public dedupv1::log::LogAckConsumer {
 
     dedupv1::chunkindex::ChunkIndex* chunk_index_;
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
     bool clear_data_called_;
 #endif
 
@@ -981,7 +981,7 @@ public dedupv1::log::LogAckConsumer {
     friend class ContainerStorageSession;
     friend class ContainerStorageBackgroundCommitter;
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
     void ClearData();
 #endif
     FRIEND_TEST(ContainerStorageTest, MergeWithSameContainerLock);

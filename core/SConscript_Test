@@ -1,0 +1,27 @@
+from os.path import join, basename
+import glob
+
+project = "dedupv1_core_test"
+
+Import("env")
+
+localenv = env.Clone()
+Export("localenv")
+
+localenv["LIBS"].append("gtest")
+localenv["LIBS"].append("dedupv1_base")
+localenv["LIBS"].append("dedupv1_base_shared_test")
+localenv["LIBPATH"].append("#build/debug/dedupv1_base_lib")
+localenv["LIBPATH"].append("#build/debug/dedupv1_base_shared_test_lib")
+
+localenv["CPPFLAGS"].append("-DDEDUPV1_CORE_TEST")
+
+src = Glob("src/*.cc") + Glob("unit_test/*.cc") + Glob("resources/*.cc") + Glob("shared_test/*.cc")
+prog = localenv.Program("dedupv1_core_test", 
+  source = src, 
+  CPPPATH = localenv["CPPPATH"] + 
+    ["#core/include", "#core/resources", "#base/include", "#base/resources"])
+
+localenv.Alias("all", project)
+localenv.Alias("test", project)
+localenv.Alias(project, prog)

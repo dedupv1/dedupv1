@@ -1,0 +1,32 @@
+from os.path import join, basename
+import glob
+
+project = "dedupv1d_test"
+
+Import("env")
+
+localenv = env.Clone()
+Export("localenv")
+
+localenv["CPPFLAGS"].append("-DDEDUPV1D_TEST")
+localenv["LIBS"].append("gtest")
+localenv["LIBS"].append("dedupv1_base")
+localenv["LIBS"].append("dedupv1_base_shared_test")
+localenv["LIBS"].append("dedupv1_core")
+
+dedupv1d_test_src = filter(lambda s: not s.path.endswith("dedupv1d_app.cc"), 
+  Glob("unit_test/*.cc") + Glob("src/*.cc") + Glob("resources/*.cc"))
+
+prog = localenv.Program(project,
+  source =  dedupv1d_test_src,
+  CPPPATH = localenv["CPPPATH"] + [
+    "#core/include", # normal includes
+    "#core/resources", # protobuf inclues
+    "#base/include", 
+    "#base/resources", 
+    "#dedupv1d/include",
+    "#dedupv1d/resources"])
+
+localenv.Alias("all", project)
+localenv.Alias("test", project)
+localenv.Alias(project, prog)

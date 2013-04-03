@@ -219,8 +219,10 @@ TEST_P(Dedupv1CheckerTest, CheckWithChunkDataAddressError)
     ASSERT_EQ(dedupv1::base::LOOKUP_FOUND, i->Next(fp, &fp_size, &chunk_data));
     delete i;
 
-    chunk_data.set_data_address(0); // a wrong data addresss
-    ASSERT_EQ(chunk_index->TestPersistentIndexPutDirectFailure(fp, fp_size, chunk_data), dedupv1::base::PUT_OK);
+    chunk_data.set_data_address(0); // a wrong data address
+    dedupv1::base::PersistentIndex* persitent_chunk_index = 
+      chunk_index->persistent_index();
+    ASSERT_EQ(persitent_chunk_index->Put(fp, fp_size, chunk_data), dedupv1::base::PUT_OK);
 
     ASSERT_TRUE(system->Close());
     system = NULL;
@@ -384,8 +386,10 @@ TEST_P(Dedupv1CheckerTest, RepairWithChunkDataAddressError)
     ASSERT_EQ(dedupv1::base::LOOKUP_FOUND, i->Next(fp, &fp_size, &chunk_data));
     delete i;
 
-    chunk_data.set_data_address(0); // a wrong data addresss
-    ASSERT_EQ(dedupv1::base::PUT_OK, chunk_index->TestPersistentIndexPutDirectFailure(fp, fp_size, chunk_data));
+    chunk_data.set_data_address(0); // a wrong data address
+    dedupv1::base::PersistentIndex* persitent_chunk_index = 
+      chunk_index->persistent_index();
+    ASSERT_EQ(dedupv1::base::PUT_OK, persitent_chunk_index->Put(fp, fp_size, chunk_data));
 
     ASSERT_TRUE(system->Close());
     system = NULL;
@@ -480,9 +484,15 @@ TEST_P(Dedupv1CheckerTest, RepairWithUsageCountError)
     chunk_data_increased.set_usage_count(chunk_data_increased.usage_count() + 1);
     chunk_data_extrem_high.set_usage_count(extrem_usage_count);
 
-    ASSERT_EQ(dedupv1::base::PUT_OK, chunk_index->TestPersistentIndexPutDirectFailure(fp_increased, fp_size, chunk_data_increased));
-    ASSERT_EQ(dedupv1::base::PUT_OK, chunk_index->TestPersistentIndexPutDirectFailure(fp_decreased, fp_size, chunk_data_decreased));
-    ASSERT_EQ(dedupv1::base::PUT_OK, chunk_index->TestPersistentIndexPutDirectFailure(fp_extrem_high, fp_size, chunk_data_extrem_high));
+    dedupv1::base::PersistentIndex* persitent_chunk_index = 
+      chunk_index->persistent_index();
+
+    ASSERT_EQ(dedupv1::base::PUT_OK,
+      persitent_chunk_index->Put(fp_increased, fp_size, chunk_data_increased));
+    ASSERT_EQ(dedupv1::base::PUT_OK,
+      persitent_chunk_index->Put(fp_decreased, fp_size, chunk_data_decreased));
+    ASSERT_EQ(dedupv1::base::PUT_OK,
+      persitent_chunk_index->Put(fp_extrem_high, fp_size, chunk_data_extrem_high));
 
     ASSERT_TRUE(system->Close());
     system = NULL;

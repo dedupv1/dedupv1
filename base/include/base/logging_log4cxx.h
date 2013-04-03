@@ -130,16 +130,6 @@
             logger_instance->forcedLog(::log4cxx::Level::getWarn(), oss_.str(oss_ << msg), loc); \
             dedupv1::base::LoggingStatistics::GetInstance().warn_count()++; }}
 
-#ifdef DEDUPV1_TEST
-#define TEST_LOG(msg) { \
-        if (logger->isFatalEnabled()) {\
-            ::log4cxx::helpers::MessageBuffer oss_; \
-            ::log4cxx::spi::LocationInfo loc(file_basename(__FILE__),__func__,__LINE__); \
-            logger->forcedLog(::log4cxx::Level::getFatal(), oss_.str(oss_ << msg), loc); }}
-#else
-#define TEST_LOG(msg)
-#endif
-
 /**
  * \ingroup logging
  * Creates a static file-level logger. Usually the name of the

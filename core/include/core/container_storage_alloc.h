@@ -248,12 +248,12 @@ class ContainerStorageAllocator : public dedupv1::StatisticProvider {
 
     virtual uint64_t GetActiveStorageDataSize() = 0;
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
     virtual void ClearData();
 #endif
 };
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
         class MemoryBitmapContainerStorageAllocatorTestFriend;
 #endif
 
@@ -277,7 +277,7 @@ class ContainerStorageAllocator : public dedupv1::StatisticProvider {
  *.
  */
 class MemoryBitmapContainerStorageAllocator : public ContainerStorageAllocator {
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
         friend class MemoryBitmapContainerStorageAllocatorTestFriend;
 #endif
     private:
@@ -579,7 +579,7 @@ class MemoryBitmapContainerStorageAllocator : public ContainerStorageAllocator {
 
         virtual uint64_t GetActiveStorageDataSize();
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
         virtual void ClearData();
 #endif
 };

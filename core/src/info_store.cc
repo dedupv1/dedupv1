@@ -50,7 +50,7 @@ bool InfoStore::SetOption(const std::string& option_name, const std::string& opt
     return false;
 }
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
 void InfoStore::ClearData() {
 }
 #endif
@@ -62,7 +62,7 @@ bool InfoStore::Close() {
 IndexInfoStore::IndexInfoStore() {
     index_ = NULL;
     started_ = false;
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
     data_cleared_ = false;
 #endif
 }
@@ -109,7 +109,7 @@ bool IndexInfoStore::Close() {
 
 bool IndexInfoStore::PersistInfo(std::string key, const google::protobuf::Message& message) {
     CHECK(started_, "Info store not started");
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
     if (data_cleared_) {
         return true;
     }
@@ -123,7 +123,7 @@ bool IndexInfoStore::PersistInfo(std::string key, const google::protobuf::Messag
 
 lookup_result IndexInfoStore::RestoreInfo(std::string key, google::protobuf::Message* message) {
     CHECK_RETURN(started_, LOOKUP_ERROR, "Info store not started");
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
     if (data_cleared_) {
         return LOOKUP_NOT_FOUND;
     }
@@ -138,7 +138,7 @@ lookup_result IndexInfoStore::RestoreInfo(std::string key, google::protobuf::Mes
     return LOOKUP_FOUND;
 }
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
 void IndexInfoStore::ClearData() {
     if (this->index_) {
         if (!this->index_->Close()) {

@@ -114,7 +114,7 @@ bool ContainerStorageWriteCache::SetOption(const string& option_name, const stri
     return false;
 }
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
 void ContainerStorageWriteCache::ClearData() {
     if (this->write_container.size() > 0) {
         for (int i = 0; i < this->write_container_count_; i++) {
@@ -129,9 +129,9 @@ void ContainerStorageWriteCache::ClearData() {
 #endif
 
 lookup_result ContainerStorageWriteCache::GetWriteCacheContainer(uint64_t address,
-                                                                 Container** write_container,
-                                                                 ReadWriteLock** write_cache_lock,
-                                                                 bool write_lock) {
+      Container** write_container,
+      ReadWriteLock** write_cache_lock,
+      bool write_lock) {
     DCHECK_RETURN(this->write_container.size() > 0, LOOKUP_ERROR, "Write cache not started");
 
     ProfileTimer(this->stats_.cache_check_time_);

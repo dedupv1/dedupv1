@@ -3,22 +3,16 @@ import glob
 
 project = "dedupv1_passwd"
 
-Import("env", "build_mode")
+Import("env")
 
 localenv = env.Clone()
-localenv["CFLAGS"] = localenv["CFLAGS"]
+localenv["LIBS"].append("dedupv1_base")
 
-Export("localenv")
-
-dedupv1_base_obj = localenv.SConscript("#base/src/SConscript", variant_dir = join("dedupv1_base_obj"))
-dedupv1_base_pb_obj = localenv.SConscript("#base/resources/SConscript", variant_dir = join("dedupv1_base_pb_obj"))   
 dedupv1_base_includes = ["#base/include"]
 
-dedupv1_passwd = localenv.Program(project, 
-                source = Glob("src/*.cc") + dedupv1_base_obj + dedupv1_base_pb_obj, 
-                CPPPATH = localenv["CPPPATH"] + dedupv1_base_includes
-                
-                 )
+dedupv1_passwd = localenv.Program(project,
+  source = Glob("src/*.cc"),
+  CPPPATH = localenv["CPPPATH"] + dedupv1_base_includes)
 
 localenv.Alias("all", project)
 localenv.Default(project)

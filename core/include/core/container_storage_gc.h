@@ -139,7 +139,7 @@ class ContainerGCStrategy : public dedupv1::StatisticProvider {
      */
     virtual bool OnStoragePressure();
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
     virtual void ClearData();
 #endif
     DISALLOW_COPY_AND_ASSIGN(ContainerGCStrategy);
@@ -325,7 +325,7 @@ class GreedyContainerGCStrategy : public ContainerGCStrategy {
 
         uint64_t GetBucket(uint64_t active_data_size);
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
         virtual void ClearData();
 #endif
         DISALLOW_COPY_AND_ASSIGN(GreedyContainerGCStrategy);

@@ -397,7 +397,7 @@ const char* LogReplayer::state_name() {
     return NULL;
 }
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1D_TEST
 void LogReplayer::ClearData() {
     this->Stop(StopContext::FastStopContext());
 }

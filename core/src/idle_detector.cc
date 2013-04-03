@@ -355,7 +355,7 @@ string IdleDetector::PrintTrace() {
     return sstr.str();
 }
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
 void IdleDetector::ClearData() {
     this->Stop(StopContext::WritebackStopContext());
 }

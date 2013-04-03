@@ -236,7 +236,7 @@ class Dedupv1dTargetInfo {
          */
         inline bool is_started() const;
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1D_TEST
         void ClearData();
 #endif
 };

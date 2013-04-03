@@ -578,7 +578,7 @@ class DedupSystem : public dedupv1::StatisticProvider {
         return volume_info_->FindVolume(volume_id);
     }
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
     void ClearData();
 #endif
 };

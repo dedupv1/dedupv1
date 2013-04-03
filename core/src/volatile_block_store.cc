@@ -522,7 +522,7 @@ string VolatileBlockStore::PrintProfile() {
     return sstr.str();
 }
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1_CORE_TEST
 void VolatileBlockStore::ClearData() {
     uncommited_block_map_.clear();
     uncommited_container_map_.clear();

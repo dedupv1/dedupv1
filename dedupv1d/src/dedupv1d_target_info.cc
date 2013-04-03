@@ -430,7 +430,7 @@ Option<list<Dedupv1dTarget> > Dedupv1dTargetInfo::GetTargets() {
     return make_option(copy);
 }
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1D_TEST
 void Dedupv1dTargetInfo::ClearData() {
     if (this->info_) {
         this->info_->Close();

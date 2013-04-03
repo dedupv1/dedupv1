@@ -175,7 +175,7 @@ class Dedupv1dVolumeFastCopy {
          */
         inline Dedupv1dVolumeInfo* volume_info();
 
-#ifdef DEDUPV1_TEST
+#ifdef DEDUPV1D_TEST
         void ClearData();
 #endif
 };

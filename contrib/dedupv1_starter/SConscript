@@ -19,9 +19,8 @@ localenv["CPPFLAGS"] = ['-DDEDUPV1_ROOT=\'"%s"\'' % GetOption('prefix')]
 
 Export("localenv")
 
-dedupv1_starter = localenv.Program(project, 
-                source = Glob("src/*.c"), 
-                 )
+dedupv1_starter = localenv.Program(project,
+  source = Glob("src/*.c"))
 
 localenv.Alias("all", project)
 localenv.Default(project)
