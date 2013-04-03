@@ -23,7 +23,7 @@
 #include <base/threadpool.h>
 #include <base/scheduler.h>
 #include <base/runnable.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 #include <base/logging.h>
 
 LOGGER("SchedulerTest");

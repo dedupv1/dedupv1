@@ -128,7 +128,7 @@ class TestSuite:
         else:
           env["LD_LIBRARY_PATH"] = ":".join([env.get("LD_LIBRARY_PATH", ""),
             os.path.join(self.get_build_path(), "dedupv1_base_lib"),
-            os.path.join(self.get_build_path(), "dedupv1_base_shared_test_lib"),
+            os.path.join(self.get_build_path(), "dedupv1_test_util_lib"),
             os.path.join(self.get_build_path(), "dedupv1_core_lib"),
             os.path.join(self.get_build_path(), "dedupv1d_lib")])
 

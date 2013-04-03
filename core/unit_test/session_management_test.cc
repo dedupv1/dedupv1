@@ -21,7 +21,7 @@
 #include <gtest/gtest.h>
 #include <core/session_management.h>
 #include <core/dedup_system.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 
 using dedupv1::base::ResourceManagement;
 

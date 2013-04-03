@@ -23,12 +23,12 @@
 #include <core/chunk_mapping.h>
 #include <base/resource_management.h>
 #include <core/chunk.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 
 #include <gtest/gtest.h>
 #include <stdio.h>
 
-#include <test/chunker_test.h>
+#include "chunker_test.h"
 
 using std::list;
 using dedupv1::base::ResourceManagement;

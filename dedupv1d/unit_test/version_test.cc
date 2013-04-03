@@ -24,7 +24,7 @@
 
 #include <core/dedup.h>
 #include <base/logging.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 
 #include "version.h"
 

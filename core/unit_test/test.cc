@@ -27,9 +27,9 @@
 #include "dedupv1.pb.h"
 
 #include <core/dedup_system.h>
-#include <test/test_listener.h>
-#include <test/null_chunker.h>
-#include <test/null_storage.h>
+#include <test_util/test_listener.h>
+#include "null_chunker.h"
+#include "null_storage.h"
 #include "log4cxx/logger.h"
 #include "log4cxx/basicconfigurator.h"
 #include "log4cxx/propertyconfigurator.h"

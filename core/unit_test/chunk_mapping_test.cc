@@ -23,7 +23,7 @@
 #include <core/chunk.h>
 #include <core/chunk_mapping.h>
 #include <core/storage.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 
 using dedupv1::chunkstore::Storage;
 

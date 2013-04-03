@@ -22,8 +22,8 @@
 #include <curl/curl.h>
 
 #include <core/dedup_system.h>
-#include <test/log_assert.h>
-#include <test/test_listener.h>
+#include <test_util/log_assert.h>
+#include <test_util/test_listener.h>
 
 #include "dedupv1.pb.h"
 

@@ -23,7 +23,7 @@
 #include <gtest/gtest.h>
 #include <base/timer.h>
 #include <base/locks.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 #include <base/thread.h>
 #include <base/runnable.h>
 

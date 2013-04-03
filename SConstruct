@@ -432,12 +432,10 @@ dedupv1_base_lib = SConscript("base/SConscript",
 env.Alias("libdedupv1_base", dedupv1_base_lib)
 env["LIBPATH"].append(join("#build", build_mode, "dedupv1_base_lib"))
 
-dedupv1_base_shared_test_lib = SConscript("base/SConscript_SharedTest",
-    variant_dir = join("build", build_mode, "dedupv1_base_shared_test_lib"))
-Export("dedupv1_base_shared_test_lib")
-env["LIBPATH"].append(join("#build", build_mode, "dedupv1_base_shared_test_lib"))
-env.Alias("libdedupv1_base_shared_test", dedupv1_base_shared_test_lib)
-env.Depends(dedupv1_base_shared_test_lib, dedupv1_base_lib)
+dedupv1_test_util_lib = SConscript("test_util/SConscript",
+    variant_dir = join("build", build_mode, "dedupv1_test_util_lib"))
+env["LIBPATH"].append(join("#build", build_mode, "dedupv1_test_util_lib"))
+env.Alias("libdedupv1_test_util", dedupv1_test_util_lib)
 
 dedupv1_core_lib = SConscript("core/SConscript",
   variant_dir = join("build", build_mode, "dedupv1_core_lib"))
@@ -455,13 +453,14 @@ env.Depends(dedupv1d_lib, dedupv1_core_lib)
 if build_test:
   dedupv1_base_test_prog = SConscript("base/SConscript_Test",
     variant_dir = join("build", build_mode, "dedupv1_base_test"))
+  env.Depends(dedupv1_base_test_prog, dedupv1_test_util_lib)
   test_targets.append(dedupv1_base_test_prog)
   all_targets.append(dedupv1_base_test_prog)
 
   dedupv1_core_test_prog = SConscript("core/SConscript_Test",
     variant_dir = join("build", build_mode, "dedupv1_core_test"))
   env.Depends(dedupv1_core_test_prog, dedupv1_base_lib)
-  env.Depends(dedupv1_core_test_prog, dedupv1_base_shared_test_lib)
+  env.Depends(dedupv1_core_test_prog, dedupv1_test_util_lib)
   test_targets.append(dedupv1_core_test_prog)
   all_targets.append(dedupv1_core_test_prog)
 
@@ -469,7 +468,7 @@ if build_test:
     variant_dir = join("build", build_mode, "dedupv1d_test"))
   env.Depends(dedupv1d_test_prog, dedupv1_base_lib)
   env.Depends(dedupv1d_test_prog, dedupv1_core_lib)
-  env.Depends(dedupv1d_test_prog, dedupv1_base_shared_test_lib)
+  env.Depends(dedupv1d_test_prog, dedupv1_test_util_lib)
   all_targets.append(dedupv1d_test_prog)
   test_targets.append(dedupv1d_test_prog)
 
@@ -478,7 +477,7 @@ if build_test:
   env.Depends(dedupv1_contrib_test_prog, dedupv1_base_lib)
   env.Depends(dedupv1_contrib_test_prog, dedupv1_core_lib)
   env.Depends(dedupv1_contrib_test_prog, dedupv1d_lib)
-  env.Depends(dedupv1_contrib_test_prog, dedupv1_base_shared_test_lib)
+  env.Depends(dedupv1_contrib_test_prog, dedupv1_test_util_lib)
   test_targets.append(dedupv1_contrib_test_prog)
   all_targets.append(dedupv1_contrib_test_prog)
 

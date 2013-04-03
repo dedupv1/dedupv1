@@ -31,7 +31,7 @@
 
 #include "index_test.h"
 
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 
 using std::string;
 using std::map;

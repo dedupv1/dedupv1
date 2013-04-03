@@ -21,7 +21,7 @@
 #include <gtest/gtest.h>
 #include <base/fault_injection.h>
 #include <base/logging.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 
 #include <stdio.h>
 #include <unistd.h>

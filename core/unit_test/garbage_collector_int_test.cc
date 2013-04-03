@@ -34,16 +34,16 @@
 #include <base/protobuf_util.h>
 #include <base/strutil.h>
 
-#include <test/block_mapping_test.h>
-#include <test/log_assert.h>
+#include "block_mapping_test.h"
+#include <test_util/log_assert.h>
 
 #include <test/log_mock.h>
 #include <test/chunk_index_mock.h>
 #include <test/dedup_system_mock.h>
 #include <test/container_storage_mock.h>
 #include <test/storage_mock.h>
-#include "test/container_test_helper.h"
-#include <test/dedup_system_test.h>
+#include "container_test_helper.h"
+#include "dedup_system_test.h"
 
 using std::map;
 using std::set;

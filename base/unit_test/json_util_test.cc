@@ -22,7 +22,7 @@
 
 #include <base/base.h>
 #include <base/json_util.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 
 using dedupv1::base::AsJson;
 using dedupv1::base::Option;

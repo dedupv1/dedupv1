@@ -34,8 +34,8 @@
 #include <core/volatile_block_store.h>
 #include <core/dedup_system.h>
 
-#include <test/block_mapping_test.h>
-#include <test/log_assert.h>
+#include "block_mapping_test.h"
+#include <test_util/log_assert.h>
 
 using std::list;
 using std::set;

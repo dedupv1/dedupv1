@@ -29,7 +29,7 @@
 #include <string>
 #include <list>
 
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 
 namespace dedupv1d {
 namespace monitor {

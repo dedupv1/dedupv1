@@ -29,7 +29,7 @@
 #include "logging_monitor.h"
 #include "monitor.h"
 #include <base/http_client.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 #include "monitor_helper.h"
 #include <json/json.h>
 #include "monitor_test.h"

@@ -27,8 +27,8 @@
 #include <core/session.h>
 #include <core/chunk_store.h>
 #include <core/chunker.h>
-#include <test/log_assert.h>
-#include <test/filter_chain_test_util.h>
+#include <test_util/log_assert.h>
+#include "filter_chain_test_util.h"
 
 using dedupv1::chunkstore::ChunkStore;
 

@@ -21,7 +21,7 @@
 #include <base/socket.h>
 #include <base/thread.h>
 #include <base/runnable.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 #include <base/option.h>
 #include <base/logging.h>
 #include <base/strutil.h>

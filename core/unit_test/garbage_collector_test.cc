@@ -33,8 +33,8 @@
 #include <base/memory.h>
 #include <core/garbage_collector.h>
 
-#include <test/block_mapping_test.h>
-#include <test/log_assert.h>
+#include "block_mapping_test.h"
+#include <test_util/log_assert.h>
 
 #include <test/log_mock.h>
 #include <test/chunk_index_mock.h>

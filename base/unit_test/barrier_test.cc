@@ -25,7 +25,7 @@
 
 #include <base/barrier.h>
 
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 
 using dedupv1::base::Thread;
 using dedupv1::base::NewRunnable;

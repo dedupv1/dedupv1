@@ -25,7 +25,7 @@
 #include <core/storage.h>
 #include <core/container_storage.h>
 #include <core/container.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 
 using dedupv1::chunkstore::Container;
 using dedupv1::chunkstore::Storage;

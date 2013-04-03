@@ -19,7 +19,7 @@
  */
 
 #include <gtest/gtest.h>
-#include <test/chunker_test.h>
+#include "chunker_test.h"
 
 #include <core/chunker.h>
 #include <base/strutil.h>

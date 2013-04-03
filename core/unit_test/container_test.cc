@@ -41,7 +41,7 @@
 #include <core/container.h>
 #include <core/chunk.h>
 #include <core/storage.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 
 LOGGER("ContainerTest");
 

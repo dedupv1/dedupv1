@@ -25,7 +25,7 @@
 #include <base/index.h>
 #include <base/tc_btree_index.h>
 #include "index_test.h"
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 #include <base/logging.h>
 
 #include <tcbdb.h>

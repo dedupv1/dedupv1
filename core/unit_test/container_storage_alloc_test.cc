@@ -46,11 +46,11 @@
 #include <core/container_storage_alloc.h>
 #include <base/option.h>
 #include <base/threadpool.h>
-#include <test/storage_test.h>
-#include <test/log_assert.h>
+#include "storage_test.h"
+#include <test_util/log_assert.h>
 
 #include <core/dedup_system.h>
-#include <test/dedup_system_test.h>
+#include "dedup_system_test.h"
 #include <test/container_storage_mock.h>
 #include <test/storage_mock.h>
 #include <test/log_mock.h>

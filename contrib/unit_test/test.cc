@@ -14,7 +14,7 @@
 
 #include "dedupv1.pb.h"
 
-#include <test/test_listener.h>
+#include <test_util/test_listener.h>
 #include <core/dedup_system.h>
 
 #include "log4cxx/logger.h"

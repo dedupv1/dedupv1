@@ -30,7 +30,7 @@
 #include <base/strutil.h>
 #include <base/protobuf_util.h>
 #include "index_test.h"
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 #include <base/logging.h>
 #include "dedupv1_base.pb.h"
 

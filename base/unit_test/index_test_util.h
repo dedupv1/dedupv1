@@ -18,49 +18,20 @@
  * You should have received a copy of the GNU General Public License along with dedupv1. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef FILTER_TEST_H_
-#define FILTER_TEST_H_
+#ifndef INDEX_TEST_UTIL_H_
+#define INDEX_TEST_UTIL_H_
 
 #include <gtest/gtest.h>
 
-#include <string>
+#include <base/index.h>
 
-#include <core/filter.h>
-#include <test/log_assert.h>
-#include <test/dedup_system_mock.h>
-#include <test/block_index_mock.h>
-#include <test/chunk_index_mock.h>
+#include <string>
+#include <vector>
 
 namespace dedupv1 {
-namespace filter {
-
-/**
- * Test for filter classes
- */
-class FilterTest : public testing::TestWithParam<const char*> {
-    protected:
-    USE_LOGGING_EXPECTATION();
-
-    Filter* filter;
-    std::string config;
-
-    MockDedupSystem system_;
-    MockChunkIndex chunk_index_;
-    MockBlockIndex block_index_;
-
-    virtual void SetUp();
-    virtual void TearDown();
-    public:
-
-    /**
-     * Creates a filter with the options given.
-     * @param options
-     * @return
-     */
-    static Filter* CreateFilter(std::string options);
-};
-
+namespace testing {
+    dedupv1::base::Index* CreateIndex(const std::string& options);
 }
 }
 
-#endif /* FILTER_TEST_H_ */
+#endif /* INDEX_TEST_UTIL_H_ */

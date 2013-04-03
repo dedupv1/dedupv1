@@ -37,9 +37,9 @@
 #include <core/container_storage.h>
 #include <core/container_storage_write_cache.h>
 
-#include <test/storage_test.h>
-#include <test/container_test_helper.h>
-#include <test/log_assert.h>
+#include "storage_test.h"
+#include "container_test_helper.h"
+#include <test_util/log_assert.h>
 #include <test/dedup_system_mock.h>
 #include <test/chunk_index_mock.h>
 

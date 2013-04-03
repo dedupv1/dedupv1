@@ -22,8 +22,8 @@
 #include <base/bitmap.h>
 #include <base/startup.h>
 #include <base/fileutil.h>
-#include <test/log_assert.h>
-#include <test/index_test_util.h>
+#include <test_util/log_assert.h>
+#include "index_test_util.h"
 
 #include <vector>
 LOGGER("BitmapTest");
@@ -53,10 +53,10 @@ class BitmapTest: public testing::Test {
                 index->Close();
                 index = NULL;
             }
-            ASSERT_TRUE(clearWork());
+            ASSERT_TRUE(ClearWork());
         }
 
-        bool clearWork() {
+        bool ClearWork() {
             std::vector<std::string> files;
             CHECK(dedupv1::base::File::ListDirectory("work/", &files), "Could not read work directory");
             for (size_t i = 0; i < files.size(); i++) {
@@ -271,7 +271,7 @@ TEST_F (BitmapTest, Persistent)
 
             index->Close();
             index = NULL;
-            clearWork();
+            ClearWork();
         }
     }
 }

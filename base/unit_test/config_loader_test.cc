@@ -23,7 +23,7 @@
 #include <string>
 
 #include <base/config_loader.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 #include <base/callback.h>
 #include <base/config.h>
 

@@ -22,7 +22,7 @@
 
 #include <base/uuid.h>
 #include <base/logging.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 
 LOGGER("UUIDTest");
 

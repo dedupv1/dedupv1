@@ -19,7 +19,7 @@
  */
 
 #include <gtest/gtest.h>
-#include <test/storage_test.h>
+#include "storage_test.h"
 
 #include <core/storage.h>
 #include <base/strutil.h>

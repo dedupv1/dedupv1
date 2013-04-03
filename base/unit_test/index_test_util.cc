@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU General Public License along with dedupv1. If not, see http://www.gnu.org/licenses/.
  */
 
-#include <test/index_test_util.h>
+#include "index_test_util.h"
 #include <base/index.h>
 #include <base/strutil.h>
 #include <base/logging.h>

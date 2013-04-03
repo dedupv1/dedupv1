@@ -24,7 +24,7 @@
 #include <base/aprutil.h>
 #include <base/protobuf_util.h>
 #include <base/logging.h>
-#include <test/test_listener.h>
+#include <test_util/test_listener.h>
 
 #include "log4cxx/logger.h"
 #include "log4cxx/basicconfigurator.h"

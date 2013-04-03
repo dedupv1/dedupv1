@@ -10,17 +10,19 @@ Export("localenv")
 
 localenv["LIBS"].append("gtest")
 localenv["LIBS"].append("dedupv1_base")
-localenv["LIBS"].append("dedupv1_base_shared_test")
-localenv["LIBPATH"].append("#build/debug/dedupv1_base_lib")
-localenv["LIBPATH"].append("#build/debug/dedupv1_base_shared_test_lib")
+localenv["LIBS"].append("dedupv1_test_util")
 
 localenv["CPPFLAGS"].append("-DDEDUPV1_CORE_TEST")
 
 src = Glob("src/*.cc") + Glob("unit_test/*.cc") + Glob("resources/*.cc")
 prog = localenv.Program("dedupv1_core_test", 
-  source = src, 
-  CPPPATH = localenv["CPPPATH"] + 
-    ["#core/include", "#core/resources", "#base/include", "#base/resources"])
+    source = src,
+  CPPPATH = localenv["CPPPATH"] +
+    ["#core/include",
+    "#core/resources",
+    "#base/include",
+    "#base/resources",
+    "#test_util/include"])
 
 localenv.Alias("all", project)
 localenv.Alias("test", project)

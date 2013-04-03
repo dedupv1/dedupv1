@@ -30,7 +30,7 @@
 #include <base/strutil.h>
 #include <core/dedup_system.h>
 #include <base/option.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 
 #include "dedupv1d.h"
 #include "dedupv1d_target.h"

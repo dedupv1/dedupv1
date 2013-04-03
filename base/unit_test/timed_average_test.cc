@@ -21,7 +21,7 @@
 #include <gtest/gtest.h>
 #include <base/base.h>
 #include <base/timed_average.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 #include <pthread.h>
 
 using dedupv1::base::TimedAverage;

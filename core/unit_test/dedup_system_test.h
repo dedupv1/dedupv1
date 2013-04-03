@@ -18,21 +18,40 @@
  * You should have received a copy of the GNU General Public License along with dedupv1. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef INDEX_TEST_UTIL_H_
-#define INDEX_TEST_UTIL_H_
+#ifndef DEDUP_SYSTEM_TEST_H_
+#define DEDUP_SYSTEM_TEST_H_
 
 #include <gtest/gtest.h>
-
-#include <base/index.h>
-#include <test/log_assert.h>
-
 #include <string>
-#include <vector>
+
+#include <core/dedup_system.h>
+#include <test_util/log_assert.h>
 
 namespace dedupv1 {
-namespace testing {
-    dedupv1::base::Index* CreateIndex(const std::string& options);
-}
-}
 
-#endif /* INDEX_TEST_UTIL_H_ */
+class DedupSystem;
+
+class DedupSystemTest : public testing::TestWithParam<const char*>  {
+    protected:
+    USE_LOGGING_EXPECTATION();
+
+    DedupSystem* system;
+    dedupv1::MemoryInfoStore info_store;
+    dedupv1::base::Threadpool tp;
+
+    virtual void SetUp();
+    virtual void TearDown();
+    public:
+    static DedupSystem* CreateDefaultSystem(std::string config_options,
+            dedupv1::InfoStore* info_store,
+            dedupv1::base::Threadpool* tp,
+            bool start = true,
+            bool restart = false,
+	        bool crashed = false,
+            bool dirty = true,
+            bool full_replay = false);
+};
+
+};
+
+#endif /* DEDUP_SYSTEM_TEST_H_ */

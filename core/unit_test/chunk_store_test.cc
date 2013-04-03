@@ -39,8 +39,8 @@
 #include <core/chunk_store.h>
 #include <core/log_consumer.h>
 #include <core/log.h>
-#include <test/log_assert.h>
-#include <test/container_storage_test_helper.h>
+#include <test_util/log_assert.h>
+#include "container_storage_test_helper.h"
 #include <test/dedup_system_mock.h>
 #include <test/chunk_index_mock.h>
 

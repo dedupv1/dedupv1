@@ -28,8 +28,8 @@
 #include <base/http_client.h>
 #include <base/option.h>
 
-#include <test/log_assert.h>
-#include <test/json_test_util.h>
+#include <test_util/log_assert.h>
+#include <test_util/json_test_util.h>
 
 #include "monitor_test.h"
 #include "dedupv1d.h"

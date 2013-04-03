@@ -30,7 +30,7 @@
 #include <core/dedup_volume.h>
 #include <base/strutil.h>
 #include <core/dedupv1_scsi.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 #include <test/filter_chain_mock.h>
 #include <test/filter_mock.h>
 

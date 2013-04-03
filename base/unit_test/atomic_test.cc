@@ -23,7 +23,7 @@
 
 #include <base/base.h>
 
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 
 using tbb::atomic;
 

@@ -20,7 +20,7 @@
 
 #include <gtest/gtest.h>
 
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 #include "dedupv1d.pb.h"
 #include "dedupv1d_group.h"
 

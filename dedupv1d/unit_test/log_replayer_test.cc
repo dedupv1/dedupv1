@@ -33,7 +33,7 @@
 #include <base/logging.h>
 #include <base/runnable.h>
 #include <base/thread.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 #include <test/dedup_system_mock.h>
 #include <base/strutil.h>
 

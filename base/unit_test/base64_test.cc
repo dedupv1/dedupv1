@@ -21,7 +21,7 @@
 
 #include <base/base64.h>
 #include <base/strutil.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 
 using std::string;
 using dedupv1::base::ToBase64;

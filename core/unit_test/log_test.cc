@@ -43,7 +43,7 @@
 #include <core/log.h>
 #include <base/index.h>
 #include <base/logging.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 #include <test/dedup_system_mock.h>
 #include <cryptopp/cryptlib.h>
 #include <cryptopp/rng.h>

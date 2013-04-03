@@ -18,25 +18,27 @@
  * You should have received a copy of the GNU General Public License along with dedupv1. If not, see http://www.gnu.org/licenses/.
  */
 
-#include <test/json_test_util.h>
-#include <base/logging.h>
-#include <json/json.h>
+#ifndef STORAGE_TEST_H_
+#define STORAGE_TEST_H_
 
-namespace dedupv1 {
-namespace testing {
+#include <string>
 
-::testing::AssertionResult IsJson(const std::string& s) {
-    Json::Reader reader;
-    Json::Value root;
-    bool parsingSuccessful = reader.parse( s, root );
-    if (parsingSuccessful) {
-        return ::testing::AssertionSuccess();
-    } else {
-        ::testing::Message m;
-        m << s << " is not JSON: " << reader.getFormatedErrorMessages();
-        return ::testing::AssertionFailure(m);
-    }
-}
+#include <gtest/gtest.h>
 
-}
-}
+#include <core/storage.h>
+#include <test_util/log_assert.h>
+
+class StorageTest : public testing::TestWithParam<const char*> {
+    protected:
+    USE_LOGGING_EXPECTATION();
+
+    dedupv1::chunkstore::Storage* storage;
+    std::string config;
+
+    virtual void SetUp();
+    virtual void TearDown();
+    public:
+    static dedupv1::chunkstore::Storage* CreateStorage(std::string options);
+};
+
+#endif /* STORAGE_TEST_H_ */

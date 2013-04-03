@@ -20,7 +20,7 @@
 
 #include <gtest/gtest.h>
 #include <base/crc32.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 
 #include <stdio.h>
 #include <fcntl.h>

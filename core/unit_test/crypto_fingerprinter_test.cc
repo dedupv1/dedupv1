@@ -20,8 +20,8 @@
 
 #include <gtest/gtest.h>
 
-#include <test/fingerprinter_test.h>
-#include <test/dedup_system_test.h>
+#include "fingerprinter_test.h"
+#include "dedup_system_test.h"
 #include <core/filter.h>
 
 #include <string>

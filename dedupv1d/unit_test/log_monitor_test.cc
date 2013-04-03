@@ -29,10 +29,10 @@
 #include "monitor.h"
 #include "log_replayer.h"
 #include <base/http_client.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 #include "monitor_test.h"
 #include <json/json.h>
-#include <test/json_test_util.h>
+#include <test_util/json_test_util.h>
 
 using std::string;
 using dedupv1::base::HttpResult;

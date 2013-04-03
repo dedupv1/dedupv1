@@ -1,0 +1,11 @@
+Import("env")
+
+localenv = env.Clone()
+Export("localenv")
+localenv["LIBS"].append("gtest")
+
+dedupv1_test_util_lib = localenv.SharedLibrary(
+  "dedupv1_test_util",
+  Glob("src/*.cc"), 
+  CPPPATH = localenv["CPPPATH"] + ["#test_util/include"])
+Return("dedupv1_test_util_lib")

@@ -23,7 +23,7 @@
 #include <string>
 #include <base/protobuf_util.h>
 #include "dedupv1_base.pb.h"
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 #include <base/logging.h>
 #include <base/strutil.h>
 

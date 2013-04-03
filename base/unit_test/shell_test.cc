@@ -21,7 +21,7 @@
 #include <gtest/gtest.h>
 
 #include <base/shell.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 #include <base/logging.h>
 
 using dedupv1::base::Option;

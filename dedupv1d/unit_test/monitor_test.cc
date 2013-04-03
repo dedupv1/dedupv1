@@ -27,12 +27,12 @@
 #include <base/strutil.h>
 #include <base/http_client.h>
 #include "default_monitor.h"
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 #include <json/json.h>
 #include <base/logging.h>
 #include <base/thread.h>
 #include <base/runnable.h>
-#include <test/json_test_util.h>
+#include <test_util/json_test_util.h>
 #include <re2/re2.h>
 
 using dedupv1::testing::IsJson;

@@ -21,7 +21,7 @@
 #include <gtest/gtest.h>
 #include <core/filter_chain.h>
 #include <core/filter.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 
 #include <stdio.h>
 #include <fcntl.h>

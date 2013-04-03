@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with dedupv1. If not, see http://www.gnu.org/licenses/.
  */
-#include <test/null_storage.h>
+#include "null_storage.h"
 
 #include <stdio.h>
 #include <stdlib.h>

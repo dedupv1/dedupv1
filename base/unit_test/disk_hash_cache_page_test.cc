@@ -31,7 +31,7 @@
 #include <base/logging.h>
 #include <base/protobuf_util.h>
 #include "index_test.h"
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 
 using std::map;
 using dedupv1::base::internal::DiskHashCachePage;

@@ -43,9 +43,9 @@
 #include <core/block_index.h>
 #include <core/session.h>
 
-#include <test/dedup_system_test.h>
-#include <test/log_assert.h>
-#include <test/filter_chain_test_util.h>
+#include "dedup_system_test.h"
+#include <test_util/log_assert.h>
+#include "filter_chain_test_util.h"
 
 namespace dedupv1 {
 namespace contentstorage {

@@ -30,7 +30,7 @@
 #include <core/dedup_system.h>
 #include <base/strutil.h>
 #include <base/http_client.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 
 #include <json/json.h>
 

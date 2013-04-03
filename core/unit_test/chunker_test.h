@@ -18,32 +18,29 @@
  * You should have received a copy of the GNU General Public License along with dedupv1. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef FINGERPRINTER_TEST_H_
-#define FINGERPRINTER_TEST_H_
+#ifndef CHUNKER_TEST_H_
+#define CHUNKER_TEST_H_
 
 #include <gtest/gtest.h>
-#include <core/fingerprinter.h>
-#include <test/log_assert.h>
+#include <core/chunker.h>
+#include <test_util/log_assert.h>
 #include <string>
 
 namespace dedupv1 {
 
-class FingerprinterTest : public testing::TestWithParam<const char*> {
+class ChunkerTest : public testing::TestWithParam<const char*> {
     protected:
     USE_LOGGING_EXPECTATION();
 
-    Fingerprinter* fingerprinter;
+    Chunker* chunker;
     std::string config;
-
-    byte* buffer;
-    size_t buffer_size;
 
     virtual void SetUp();
     virtual void TearDown();
     public:
-    static Fingerprinter* CreateFingerprinter(std::string options);
+    static Chunker* CreateChunker(std::string options);
 };
 
 }
 
-#endif /* FINGERPRINTER_TEST_H_ */
+#endif /* CHUNKER_TEST_H_ */

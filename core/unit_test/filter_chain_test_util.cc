@@ -20,7 +20,7 @@
 #ifndef FILTER_CHAIN_TEST_UTIL_H_
 #define FILTER_CHAIN_TEST_UTIL_H_
 
-#include <test/filter_chain_test_util.h>
+#include "filter_chain_test_util.h"
 #include <core/filter_chain.h>
 #include <base/logging.h>
 

@@ -23,7 +23,7 @@
 #include <core/chunk_locks.h>
 #include <base/thread.h>
 #include <base/runnable.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 
 namespace dedupv1 {
 namespace chunkindex {

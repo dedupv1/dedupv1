@@ -18,14 +18,11 @@
  * You should have received a copy of the GNU General Public License along with dedupv1. If not, see http://www.gnu.org/licenses/.
  */
 
-#include <test/test_listener.h>
+#include <test_util/test_listener.h>
 
 #include <gtest/gtest.h>
-
-#include <test/log_assert.h>
-#include <base/logging.h>
-#include <base/fileutil.h>
-#include <base/option.h>
+#include <sys/types.h>
+#include <dirent.h>
 
 using std::string;
 using std::vector;
@@ -37,24 +34,29 @@ using ::testing::TestEventListeners;
 using ::testing::TestInfo;
 using ::testing::TestPartResult;
 using ::testing::UnitTest;
-using dedupv1::base::File;
-using dedupv1::base::Option;
-
-LOGGER("TestListener");
 
 namespace dedupv1 {
 namespace test {
 
+static int GetWorkDirFileCount() {
+  DIR* dp = NULL;
+  dp = opendir("work");
+  if (dp == NULL) {
+    return -1;
+  }
+  int count = 0;
+  struct dirent* dirp;
+  while((dirp = readdir(dp)) != NULL) {
+      count += 1;
+  }
+  closedir(dp);
+  return count;
+}
+
 // Called before a test starts.
 void CleanWorkDirListener::OnTestStart(const TestInfo& test_info) {
-
-    vector<string> files;
-    File::ListDirectory("work", &files);
-    if (files.size() > 2) {
-        int err = system("rm -rf work/* 2>&1");
-        if (err != 0) {
-            WARNING("Failed to clean work directory: return code " << err);
-        }
+    if (GetWorkDirFileCount() > 2) {
+        system("rm -rf work/* 2>&1");
     }
 }
 
@@ -68,10 +70,7 @@ void CleanWorkDirListener::OnTestEnd(const TestInfo& test_info) {
 
 // Called before a test starts.
 void CopyRealWorkDirListener::OnTestStart(const TestInfo& test_info) {
-    int err = system("rsync data/real/* work/real/ 2>&1");
-    if (err != 0) {
-        WARNING("Failed to restore real data in work directory: return code " << err);
-    }
+    system("rsync data/real/* work/real/ 2>&1");
 }
 
 // Called after a failed assertion or a SUCCESS().

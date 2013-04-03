@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU General Public License along with dedupv1. If not, see http://www.gnu.org/licenses/.
  */
 
-#include <test/block_mapping_test.h>
+#include "block_mapping_test.h"
 
 #include <base/logging.h>
 

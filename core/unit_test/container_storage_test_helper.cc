@@ -36,9 +36,9 @@
 #include <core/container_storage.h>
 #include <core/fingerprinter.h>
 
-#include <test/storage_test.h>
-#include <test/container_storage_test_helper.h>
-#include <test/log_assert.h>
+#include "storage_test.h"
+#include "container_storage_test_helper.h"
+#include <test_util/log_assert.h>
 
 using std::string;
 using std::pair;

@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU General Public License along with dedupv1. If not, see http://www.gnu.org/licenses/.
  */
 
-#include <test/null_chunker.h>
+#include "null_chunker.h"
 
 #include <stdio.h>
 #include <stdlib.h>

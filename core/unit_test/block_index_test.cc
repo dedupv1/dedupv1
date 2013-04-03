@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU General Public License along with dedupv1. If not, see http://www.gnu.org/licenses/.
  */
 
-#include <test/block_mapping_test.h>
+#include "block_mapping_test.h"
 
 #include "dedupv1.pb.h"
 
@@ -38,10 +38,10 @@
 #include <core/chunk_index.h>
 #include <core/block_mapping_pair.h>
 
-#include "test/block_mapping_test.h"
-#include "test/dedup_system_test.h"
-#include "test/container_test_helper.h"
-#include <test/log_assert.h>
+#include "block_mapping_test.h"
+#include "dedup_system_test.h"
+#include "container_test_helper.h"
+#include <test_util/log_assert.h>
 
 LOGGER("BlockIndexTest");
 

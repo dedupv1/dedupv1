@@ -21,7 +21,7 @@
 #include <gtest/gtest.h>
 #include <base/http_client.h>
 #include <base/strutil.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 
 using dedupv1::base::HttpResult;
 using dedupv1::base::strutil::Contains;

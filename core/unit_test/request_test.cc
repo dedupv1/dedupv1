@@ -20,7 +20,7 @@
 
 #include <gtest/gtest.h>
 #include <core/dedup.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 #include <core/request.h>
 
 using dedupv1::Request;

@@ -43,8 +43,8 @@
 
 #include "dedupv1.pb.h"
 
-#include <test/storage_test.h>
-#include <test/log_assert.h>
+#include "storage_test.h"
+#include <test_util/log_assert.h>
 
 #include <test/container_storage_mock.h>
 #include <test/storage_mock.h>

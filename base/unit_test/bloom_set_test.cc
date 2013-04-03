@@ -22,7 +22,7 @@
 
 #include <base/bloom_set.h>
 #include <base/logging.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 
 #include <tbb/tick_count.h>
 

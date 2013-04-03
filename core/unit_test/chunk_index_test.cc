@@ -35,13 +35,12 @@
 #include <core/chunk_store.h>
 #include <core/container_storage.h>
 #include <core/container_storage_gc.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 #include <base/index.h>
 #include <base/disk_hash_index.h>
 #include <base/strutil.h>
 #include <iostream>
-#include <test/dedup_system_test.h>
-#include <test/index_test_util.h>
+#include "dedup_system_test.h"
 #include <base/option.h>
 #include <base/fileutil.h>
 #include <base/strutil.h>

@@ -24,7 +24,7 @@
 #include <base/index.h>
 #include <base/sqlite_index.h>
 #include "index_test.h"
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 #include <base/logging.h>
 
 namespace dedupv1 {

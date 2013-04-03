@@ -9,13 +9,14 @@ localenv = env.Clone()
 Export("localenv")
 
 localenv["LIBS"].append("gtest")
+localenv["LIBS"].append("dedupv1_test_util")
 localenv["CPPFLAGS"].append("-DDEDUPV1_BASE_TEST")
 
-src = Glob("src/*.cc") + Glob("unit_test/*.cc") + Glob("resources/*.cc") + Glob("shared_test/*.cc")
+src = Glob("src/*.cc") + Glob("unit_test/*.cc") + Glob("resources/*.cc")
 prog = localenv.Program(project,
   source =  src,
   CPPPATH = localenv["CPPPATH"] +
-    ["include", "resources"])
+    ["#test_util/include", "include", "resources"])
 
 localenv.Alias("all", project)
 localenv.Alias("test", project)

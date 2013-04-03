@@ -19,7 +19,7 @@
  */
 
 #include <gtest/gtest.h>
-#include <test/fingerprinter_test.h>
+#include "fingerprinter_test.h"
 
 #include <base/index.h>
 #include <base/strutil.h>

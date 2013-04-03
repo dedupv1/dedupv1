@@ -21,7 +21,7 @@
 #include <gtest/gtest.h>
 
 #include <base/timer.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 
 using dedupv1::base::Walltimer;
 

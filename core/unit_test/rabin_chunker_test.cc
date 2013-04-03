@@ -25,9 +25,9 @@
 #include <base/resource_management.h>
 #include <core/chunk.h>
 #include <base/logging.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 
-#include <test/chunker_test.h>
+#include "chunker_test.h"
 
 #include <gtest/gtest.h>
 #include <stdio.h>

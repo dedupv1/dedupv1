@@ -26,7 +26,7 @@
 
 #include <base/memory_new_handler.h>
 #include <base/logging.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 
 using std::list;
 using dedupv1::base::memory::NewHandlerListener;

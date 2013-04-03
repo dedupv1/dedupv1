@@ -14,12 +14,13 @@ Export("localenv")
 localenv["CPPFLAGS"].append("-DDEDUPV1_TEST")
 localenv["LIBS"].append("gtest")
 localenv["LIBS"].append("dedupv1_base")
-localenv["LIBS"].append("dedupv1_base_shared_test")
+localenv["LIBS"].append("dedupv1_test_util")
 localenv["LIBS"].append("dedupv1_core")
 localenv["LIBS"].append("dedupv1d")
 
 dedupv1_includes = ["#core/include",
   "#core/resources",
+  "#test_util/include",
   "#base/include",
   "#base/resources",
   "#dedupv1d/include",
@@ -35,7 +36,7 @@ if any([has_main_function(f.get_contents()) for f in dedupv1_contrib_src]):
   print "The main method of a contrib tool should be in a file ending in _app.cc"
   sys.exit(1)
 
-prog = localenv.Program(project, 
+prog = localenv.Program(project,
   source = dedupv1_contrib_test_src + dedupv1_contrib_src,
   CPPPATH = localenv["CPPPATH"] + Glob("#contrib/*/src") + dedupv1_includes)
 

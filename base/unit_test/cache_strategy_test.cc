@@ -21,7 +21,7 @@
 #include <gtest/gtest.h>
 
 #include <base/cache_strategy.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 
 using dedupv1::base::LRUCacheStrategy;
 

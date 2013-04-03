@@ -29,7 +29,7 @@
 #include <core/dedup_volume.h>
 #include <base/strutil.h>
 #include <core/dedup_system.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 
 namespace dedupv1d {
 

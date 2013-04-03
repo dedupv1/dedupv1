@@ -19,11 +19,11 @@
  */
 
 #include <gtest/gtest.h>
-#include <test/filter_test.h>
+#include "filter_test.h"
 #include <base/index.h>
 #include <base/strutil.h>
 #include <base/logging.h>
-#include <test/json_test_util.h>
+#include <test_util/json_test_util.h>
 
 #include <json/json.h>
 

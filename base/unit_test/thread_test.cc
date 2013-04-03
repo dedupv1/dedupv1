@@ -21,7 +21,7 @@
 
 #include <base/thread.h>
 #include <base/strutil.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 
 #include <string>
 

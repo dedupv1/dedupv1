@@ -24,7 +24,7 @@
 #include <tbb/spin_rw_mutex.h>
 #include <core/dedup_system.h>
 #include <core/dedup_volume.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 #include <base/strutil.h>
 #include "dedupv1d.h"
 #include "dedupv1d_volume.h"

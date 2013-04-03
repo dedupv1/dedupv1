@@ -22,7 +22,7 @@
 #include <base/fileutil.h>
 #include <base/logging.h>
 #include <base/strutil.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 
 LOGGER("LoggingTest");
 

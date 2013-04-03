@@ -18,8 +18,8 @@
  * You should have received a copy of the GNU General Public License along with dedupv1. If not, see http://www.gnu.org/licenses/.
  */
 
-#include <test/filter_test.h>
-#include <test/log_assert.h>
+#include "filter_test.h"
+#include <test_util/log_assert.h>
 #include <core/filter.h>
 #include <gtest/gtest.h>
 

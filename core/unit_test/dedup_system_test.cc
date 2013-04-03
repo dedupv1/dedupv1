@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU General Public License along with dedupv1. If not, see http://www.gnu.org/licenses/.
  */
 
-#include <test/dedup_system_test.h>
+#include "dedup_system_test.h"
 #include <core/dedup_system.h>
 #include <base/logging.h>
 #include <base/strutil.h>

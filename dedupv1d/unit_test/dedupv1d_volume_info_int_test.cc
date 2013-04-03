@@ -45,7 +45,7 @@
 #include <core/garbage_collector.h>
 #include <core/container_storage.h>
 #include <core/chunk_store.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 
 #include "dedupv1d.h"
 #include "dedupv1d_volume.h"

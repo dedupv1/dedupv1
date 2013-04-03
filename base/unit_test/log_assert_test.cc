@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU General Public License along with dedupv1. If not, see http://www.gnu.org/licenses/.
  */
 
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 #include <base/logging.h>
 
 #include <gtest/gtest.h>

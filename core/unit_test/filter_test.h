@@ -18,40 +18,49 @@
  * You should have received a copy of the GNU General Public License along with dedupv1. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef DEDUP_SYSTEM_TEST_H_
-#define DEDUP_SYSTEM_TEST_H_
+#ifndef FILTER_TEST_H_
+#define FILTER_TEST_H_
 
 #include <gtest/gtest.h>
+
 #include <string>
 
-#include <core/dedup_system.h>
-#include <test/log_assert.h>
+#include <core/filter.h>
+#include <test_util/log_assert.h>
+#include <test/dedup_system_mock.h>
+#include <test/block_index_mock.h>
+#include <test/chunk_index_mock.h>
 
 namespace dedupv1 {
+namespace filter {
 
-class DedupSystem;
-
-class DedupSystemTest : public testing::TestWithParam<const char*>  {
+/**
+ * Test for filter classes
+ */
+class FilterTest : public testing::TestWithParam<const char*> {
     protected:
     USE_LOGGING_EXPECTATION();
 
-    DedupSystem* system;
-    dedupv1::MemoryInfoStore info_store;
-    dedupv1::base::Threadpool tp;
+    Filter* filter;
+    std::string config;
+
+    MockDedupSystem system_;
+    MockChunkIndex chunk_index_;
+    MockBlockIndex block_index_;
 
     virtual void SetUp();
     virtual void TearDown();
     public:
-    static DedupSystem* CreateDefaultSystem(std::string config_options,
-            dedupv1::InfoStore* info_store,
-            dedupv1::base::Threadpool* tp,
-            bool start = true,
-            bool restart = false,
-	        bool crashed = false,
-            bool dirty = true,
-            bool full_replay = false);
+
+    /**
+     * Creates a filter with the options given.
+     * @param options
+     * @return
+     */
+    static Filter* CreateFilter(std::string options);
 };
 
-};
+}
+}
 
-#endif /* DEDUP_SYSTEM_TEST_H_ */
+#endif /* FILTER_TEST_H_ */

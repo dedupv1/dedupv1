@@ -21,7 +21,7 @@
 #include <base/hash_index.h>
 #include <base/index.h>
 
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 
 #include "index_test.h"
 

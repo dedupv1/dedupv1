@@ -21,13 +21,9 @@
 #include <gtest/gtest.h>
 #include <re2/re2.h>
 
-#include <test/log_assert.h>
-#include <base/logging.h>
-#include <base/strutil.h>
+#include <test_util/log_assert.h>
 
 using std::vector;
-
-LOGGER("LogAssert");
 
 namespace dedupv1 {
 namespace test {
@@ -283,8 +279,10 @@ LoggingExpectation& LoggingExpectation::Matches(std::string regex) {
 }
 
 std::string LoggingExpectation::Report() {
-    return "Expectation " + DebugString() + " failed: occurred " +
-           dedupv1::base::strutil::ToString(this->event_count_) + " times";
+    std::stringstream sstr;
+    sstr << "Expectation " << DebugString() << " failed: occurred " <<
+           this->event_count_ << " times";
+    return sstr.str();
 }
 
 bool LoggingExpectation::Check() {
@@ -300,37 +298,37 @@ bool LoggingExpectation::Check() {
 
 std::string LoggingExpectation::DebugString() const {
     bool first = true;
-    std::string s;
+    std::stringstream s;
     if (level_.is_level_set()) {
-        s += "level " + level_.DebugString();
+        s << "level " << level_.DebugString();
         first = false;
     }
     if (regex_.size() > 0) {
         if (!first) {
-            s += ", ";
+            s << ", ";
         }
-        s += "message " + regex_;
+        s << "message " << regex_;
     }
     // as regex or level must be set, we do not check for ", " anymore
     if (logger_name_.size() > 0) {
-        s += ", logger " + logger_name_;
+        s << ", logger " << logger_name_;
     }
 
     if (repeatetly_set_) {
-        s += ", cardinality repeatedly";
+        s << ", cardinality repeatedly";
     } else if (never_set_) {
-        s += ", cardinality never";
+        s << ", cardinality never";
     } else if (max_times_ > 0) {
         if (min_times_ == max_times_) {
-            s += ", cardinality " + dedupv1::base::strutil::ToString(min_times_);
+            s << ", cardinality " << min_times_;
         } else {
-            s += ", cardinality " + dedupv1::base::strutil::ToString(min_times_) +
-                 "-" + dedupv1::base::strutil::ToString(max_times_);
+            s << ", cardinality " << min_times_ <<
+                 "-" << max_times_;
         }
     } else {
         // not set => append nothing
     }
-    return s;
+    return s.str();
 }
 
 LevelModifier::LevelModifier() {
@@ -406,7 +404,6 @@ bool LevelModifier::Matches(log4cxx::LevelPtr level_ptr) const {
     } else if (level_int == log4cxx::Level::FATAL_INT) {
         level = FATAL;
     } else {
-        ERROR("Unsupported level: " << level_int);
         return false;
     }
 
@@ -425,13 +422,9 @@ void LoggingExpectationAppender::append (const log4cxx::spi::LoggingEventPtr &ev
         return;
     }
     if (!this->les_) {
-        ERROR("Log expectionset not set");
         return;
     }
-
-    if (!this->les_->Process(event)) {
-        WARNING("Failed to process logging event");
-    }
+    this->les_->Process(event);
 }
 
 LoggingExpectationAppender::LoggingExpectationAppender() {

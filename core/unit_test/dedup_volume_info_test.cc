@@ -33,8 +33,7 @@
 #include <core/dedup_volume_info.h>
 #include <base/strutil.h>
 
-#include <test/log_assert.h>
-#include <test/log_mock.h>
+#include <test_util/log_assert.h>
 #include <test/dedup_system_mock.h>
 #include <test/content_storage_mock.h>
 #include <test/session_mock.h>

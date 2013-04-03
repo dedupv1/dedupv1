@@ -50,10 +50,10 @@
 
 #include "dedupv1.pb.h"
 
-#include <test/storage_test.h>
-#include <test/log_assert.h>
-#include <test/dedup_system_test.h>
-#include <test/container_test_helper.h>
+#include "storage_test.h"
+#include <test_util/log_assert.h>
+#include "dedup_system_test.h"
+#include "container_test_helper.h"
 #include <test/container_storage_mock.h>
 #include <test/storage_mock.h>
 

@@ -18,8 +18,6 @@
  * You should have received a copy of the GNU General Public License along with dedupv1. If not, see http://www.gnu.org/licenses/.
  */
 
-#include <test/dedup_system_test.h>
-
 #include <map>
 #include <vector>
 #include <string>
@@ -40,6 +38,7 @@
 #include <core/storage.h>
 #include <base/strutil.h>
 #include "dedupv1d.h"
+#include <test_util/log_assert.h>
 
 using std::map;
 using std::string;

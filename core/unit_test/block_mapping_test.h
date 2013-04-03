@@ -24,7 +24,7 @@
 #include <gtest/gtest.h>
 
 #include <core/block_mapping.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 
 #include <list>
 

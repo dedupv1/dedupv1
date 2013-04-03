@@ -22,7 +22,7 @@
 #include <sys/resource.h>
 #include <base/threadpool.h>
 #include <base/runnable.h>
-#include <test/log_assert.h>
+#include <test_util/log_assert.h>
 #include <base/logging.h>
 #include <base/strutil.h>
 #include <base/multi_signal_condition.h>
