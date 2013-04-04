@@ -154,8 +154,14 @@ bool DiskHashIndex::SetOption(const string& option_name, const string& option) {
         return true;
     }
     if (option_name == "sync") {
+        if (option == "unsafe") {
+          sync_ = false;
+          lazy_sync_ = false;
+          return true;
+        }
         CHECK(To<bool>(option).valid(), "Illegal option " << option);
         this->sync_ = To<bool> (option).value();
+        lazy_sync_ = !sync_;
         return true;
     }
     if (option_name == "max-fill-ratio") {
@@ -349,13 +355,15 @@ bool DiskHashIndex::Start(const StartContext& start_context) {
     if (this->info_filename_.size() == 0) {
         this->info_filename_ = this->filename_[0] + "-meta";
     }
-    this->lazy_sync_ = !sync_;
 
     DEBUG("Starting disk-hash index: page size " << page_size_ <<
             ", size " << size_ <<
             ", file count " << filename_.size());
 
-    if (this->trans_system_ == NULL) {
+    if (!sync_ && !lazy_sync_) {
+      WARNING("Unsafe sync configuration: Data loss after crash possible");
+    } else {
+      if (this->trans_system_ == NULL) {
         INFO("Auto configure transaction system");
         this->trans_system_ = new internal::DiskHashIndexTransactionSystem(this);
         CHECK(this->trans_system_, "Failed to alloc transaction system");
@@ -363,6 +371,7 @@ bool DiskHashIndex::Start(const StartContext& start_context) {
         for (size_t i = 0; i < this->filename_.size(); i++) {
             CHECK(this->trans_system_->SetOption("filename", filename_[i] + "_trans"), "Failed to auto-configure transaction system");
         }
+      }
     }
 
     this->bucket_count_ = this->size_ / (this->page_size_);
@@ -460,14 +469,15 @@ bool DiskHashIndex::Start(const StartContext& start_context) {
         statistics_.write_cache_free_page_count_ = max_cache_page_count_;
     }
 
-    CHECK(this->trans_system_->SetOption("page-size", ToString(this->page_size() * 2)),
+    if (trans_system_) {
+      CHECK(this->trans_system_->SetOption("page-size", ToString(this->page_size() * 2)),
             "Failed to set page size");
 
-    // if files are created, there should be no restoring of old transactions
-    // this is a hack because we cannot rely on the fact that the create mode is only use once or during restoring
-    // operations
-    CHECK(this->trans_system_->Start(start_context, !files_created), "Failed to start transaction system");
-
+      // if files are created, there should be no restoring of old transactions
+      // this is a hack because we cannot rely on the fact that the create mode is only use once or during restoring
+      // operations
+      CHECK(this->trans_system_->Start(start_context, !files_created), "Failed to start transaction system");
+    }
     this->state_ = STARTED;
     return true;
 }
