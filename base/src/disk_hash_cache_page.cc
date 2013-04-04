@@ -213,7 +213,9 @@ enum lookup_result DiskHashCachePage::ChangePinningState(const void* key, size_t
     TRACE("Pin: bucket " << bucket_id_ <<
             ", key " << ToHexString(key, key_size) <<
             ", key size " << key_size <<
-            ", new pin state " << ToString(new_pinning_state));
+            ", page bin state " << pinned_ << 
+            ", page dirty state " << dirty_ <<
+            ", new key pin state " << ToString(new_pinning_state));
 
     uint32_t pinned_count = 0;
     bool found = false;
@@ -339,6 +341,20 @@ bool DiskHashCachePage::ParseData() {
 
     DCHECK(item_count_ >= 0 && item_count_ <= 1024,
             "Illegal item count");
+
+    dirty_ = false;
+    pinned_ = false;
+    DiskHashCacheEntry entry(buffer_, buffer_size_, max_key_size_, max_value_size_);
+    lookup_result cache_lr = IterateInit(&entry);
+    while (cache_lr == LOOKUP_FOUND) {
+        if (entry.is_dirty()) {
+          dirty_ = true;
+        }
+        if (entry.is_pinned()) {
+          pinned_ = true;
+        }
+        cache_lr = Iterate(&entry);
+    }
     return true;
 }
 

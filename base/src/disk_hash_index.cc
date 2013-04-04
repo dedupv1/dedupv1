@@ -1215,11 +1215,11 @@ lookup_result DiskHashIndex::IsWriteBackPageDirty(uint64_t bucket_id) {
     bool d = cache_line->bucket_dirty_state_[cache_id];
     if (d) {
         TRACE("Check dirty state: bucket id " << bucket_id << ", cache line id " << cache_line_id <<
-                ", cache id " << cache_id << ", dirty");
+                ", cache id " << cache_id << ", dirty true");
         return LOOKUP_FOUND;
     }
     TRACE("Check dirty state: bucket id " << bucket_id << ", cache line id " << cache_line_id <<
-            ", cache id " << cache_id << ", not dirty");
+            ", cache id " << cache_id << ", dirty false");
     return LOOKUP_NOT_FOUND;
 }
 
@@ -1426,7 +1426,8 @@ bool DiskHashIndex::TryPersistDirtyItem(uint32_t max_batch_size, bool* persisted
                 ", cache line id " << cache_line->cache_line_id_ <<
                 ", cache id " << cache_id);
         cache_page.ParseData();
-
+        cache_page.set_dirty(cache_line->bucket_dirty_state_[cache_id]);
+        cache_page.set_pinned(cache_line->bucket_pinned_state_[cache_id]);
         TRACE("Found cache map entry: " << cache_page.DebugString() << ", size " << buf_size);
 
         TRACE("Persist cache item: " <<
@@ -1463,7 +1464,9 @@ bool DiskHashIndex::EvictCacheItem(CacheLine* cache_line, uint32_t cache_id, boo
             "cache map id " << cache_map_id <<
             ", cache line id " << cache_line->cache_line_id_ <<
             ", cache id " << cache_id);
-    cache_page.ParseData();
+    cache_page.ParseData();    
+    cache_page.set_dirty(cache_line->bucket_dirty_state_[cache_id]);
+    cache_page.set_pinned(cache_line->bucket_pinned_state_[cache_id]);
     TRACE("Found cache map entry: " << cache_page.DebugString() << ", size " << buf_size);
 
     uint64_t bucket_id = cache_page.bucket_id();
@@ -1518,11 +1521,6 @@ dedupv1::base::Option<bool> DiskHashIndex::CacheLine::SearchDirtyPage(uint32_t* 
         if (next_dirty_search_cache_victim_ == max_cache_page_count_) {
             next_dirty_search_cache_victim_ = 0;
         }
-        TRACE("Search cache page for eviction: "
-                "cache line id " << cache_line_id_ <<
-                ", cache id " << next_dirty_search_cache_victim_ <<
-                ", pin state " << ToString(bucket_pinned_state_[next_dirty_search_cache_victim_]) <<
-                ", dirty state " << ToString(bucket_dirty_state_[next_dirty_search_cache_victim_]));
         if (bucket_pinned_state_[next_dirty_search_cache_victim_]) {
             pinned_page_count++;
 
@@ -1555,7 +1553,9 @@ dedupv1::base::Option<bool> DiskHashIndex::CacheLine::SearchDirtyPage(uint32_t* 
                 return make_option(false);
             }
         } else {
-            TRACE("Found dirty cache id " << next_dirty_search_cache_victim_);
+            TRACE("Found dirty cache id " << next_dirty_search_cache_victim_ <<
+                ", bucket dirty state " << bucket_dirty_state_[next_dirty_search_cache_victim_] <<
+                ", bucket pinned state " << bucket_pinned_state_[next_dirty_search_cache_victim_]);
             *cache_id = next_dirty_search_cache_victim_;
             return make_option(true);
         }
@@ -1729,6 +1729,8 @@ bool DiskHashIndex::CopyToWriteBackCache(CacheLine* cache_line, internal::DiskHa
         }
         cache_line->cache_page_map_[page->bucket_id()] = cache_id;
     } else {
+        // page already in cache
+        was_dirty = page->is_dirty();
         cache_id = i->second;
     }
     if (!was_dirty && page->is_dirty()) {
@@ -1749,7 +1751,7 @@ bool DiskHashIndex::CopyToWriteBackCache(CacheLine* cache_line, internal::DiskHa
             ", cache line id " << cache_line->cache_line_id_ <<
             ", cache id " << cache_id <<
             ", cache page size " << page->used_size() <<
-            ", was dirty " << ToHexString(was_dirty));
+            ", cache page was dirty " << ToHexString(was_dirty));
 
     page->Store();
     DCHECK(page->used_size() <= page_size_, "Illegal page used size: " <<
