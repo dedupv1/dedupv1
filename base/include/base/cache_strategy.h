@@ -111,6 +111,13 @@ template<class T> class LRUCacheStrategy : public CacheStrategy<T> {
     virtual ~LRUCacheStrategy() {
     }
 
+    /**
+     * Returns the cached objects in the order of the most recent access.
+     */ 
+    const std::list<T>& ordered_objects() const {
+        return objects_;
+    }
+
     virtual bool Touch(T o) {
         typename std::map<T, typename std::list<T>::iterator >::iterator i = object_map_.find(o);
 
