@@ -57,8 +57,9 @@ ChunkIndexBackgroundCommitter::ChunkIndexBackgroundCommitter(ChunkIndex* chunk_i
 bool ChunkIndexBackgroundCommitter::Loop(uint32_t thread_id) {
     DEBUG("Starting chunk index bg committer " << thread_id);
     bool is_running = (this->state_ == RUNNING || this->state_ == STARTED);
+    uint64_t resume_handle = 0;
     while (is_running) {
-        ChunkIndex::import_result ir = this->chunk_index_->TryImportDirtyChunks();
+        ChunkIndex::import_result ir = this->chunk_index_->TryImportDirtyChunks(&resume_handle);
         if (ir == ChunkIndex::IMPORT_ERROR) {
             WARNING("Failed to import chunk index entries");
         }

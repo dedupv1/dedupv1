@@ -551,6 +551,7 @@ class PersistentIndex : public Index {
 
         virtual bool TryPersistDirtyItem(
                 uint32_t max_batch_size,
+                uint64_t* resume_handle,
                 bool* persisted);
 
         /**

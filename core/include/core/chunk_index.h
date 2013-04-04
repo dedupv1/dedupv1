@@ -325,7 +325,7 @@ class ChunkIndex: public dedupv1::log::LogConsumer, public dedupv1::StatisticPro
      */
     enum import_result TryImportContainer();
 
-    enum import_result TryImportDirtyChunks();
+    enum import_result TryImportDirtyChunks(uint64_t* resume_handle);
 
     /**
      * Handles a directly replayed container commit event

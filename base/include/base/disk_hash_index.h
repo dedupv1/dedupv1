@@ -1193,6 +1193,7 @@ class DiskHashIndex : public PersistentIndex {
      */
     bool TryPersistDirtyItem(
             uint32_t max_batch_size,
+            uint64_t* resume_handle,
             bool* persisted);
 
     virtual enum lookup_result ChangePinningState(const void* key, size_t key_size, bool new_pin_state);

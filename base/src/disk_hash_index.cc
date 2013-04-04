@@ -1385,7 +1385,9 @@ bool DiskHashIndex::GetNextDirtyBucket(uint64_t current_bucket_id,
   return true;
 }
 
-bool DiskHashIndex::TryPersistDirtyItem(uint32_t max_batch_size, bool* persisted) {
+bool DiskHashIndex::TryPersistDirtyItem(uint32_t max_batch_size, 
+    uint64_t* resume_handle, 
+    bool* persisted) {
     DCHECK(persisted, "Persisted not set");
 
     if (write_back_cache_ == NULL) {
@@ -1394,6 +1396,9 @@ bool DiskHashIndex::TryPersistDirtyItem(uint32_t max_batch_size, bool* persisted
     }
 
     uint64_t dirty_bucket_id = 0;
+    if (resume_handle) {
+      dirty_bucket_id = *resume_handle;
+    }
     unsigned int cache_index = 0;
     for (int i = 0; i < max_batch_size;i++) {
         uint32_t cache_line_id;
@@ -1430,22 +1435,26 @@ bool DiskHashIndex::TryPersistDirtyItem(uint32_t max_batch_size, bool* persisted
         cache_page.set_pinned(cache_line->bucket_pinned_state_[cache_id]);
         TRACE("Found cache map entry: " << cache_page.DebugString() << ", size " << buf_size);
 
-        TRACE("Persist cache item: " <<
+        if (cache_page.is_dirty()) {
+          TRACE("Persist cache item: " <<
               "cache line id " << cache_line->cache_line_id_ <<
               ", cache id " << cache_id <<
               ", dirty item count " << dirty_item_count_);
 
-        CHECK(WriteBackCachePage(cache_line, &cache_page), "Failed to write back cache page: " <<
+          CHECK(WriteBackCachePage(cache_line, &cache_page), "Failed to write back cache page: " <<
                 "cache line id " << cache_line->cache_line_id_ <<
                 ", cache id " << cache_id <<
                 ", cache page " << cache_page.DebugString());
 
-        statistics_.write_cache_persisted_page_count_++;
-        CHECK_RETURN(CopyToWriteBackCache(cache_line, &cache_page), PUT_ERROR,
+          CHECK_RETURN(CopyToWriteBackCache(cache_line, &cache_page), PUT_ERROR,
                 "Failed to put data to write back cache");
+        }
 
         *persisted = true;
         CHECK(scoped_lock.ReleaseLock(), "Unlock failed");
+    }
+    if (resume_handle) {
+      *resume_handle = dirty_bucket_id;
     }
     return true;
 }

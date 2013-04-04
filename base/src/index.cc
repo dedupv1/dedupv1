@@ -251,6 +251,7 @@ uint64_t PersistentIndex::GetEstimatedMaxCacheItemCount() {
 
 bool PersistentIndex::TryPersistDirtyItem(
         uint32_t max_batch_size,
+        uint64_t* resume_handle,
         bool* persisted) {
     DCHECK(persisted, "Persisted not set");
     *persisted = false;

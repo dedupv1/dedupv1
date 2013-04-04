@@ -1290,7 +1290,7 @@ Option<bool> ChunkIndex::DoImport(uint64_t container_id) {
     return false;
 }
 
-ChunkIndex::import_result ChunkIndex::TryImportDirtyChunks() {
+ChunkIndex::import_result ChunkIndex::TryImportDirtyChunks(uint64_t* resume_handle) {
     ProfileTimer timer(this->stats_.import_time_);
 
     bool should_import = (import_if_replaying_ && is_replaying_ && this->chunk_index_->GetDirtyItemCount() > 0);
@@ -1319,7 +1319,7 @@ ChunkIndex::import_result ChunkIndex::TryImportDirtyChunks() {
     }
 
     bool persisted_page = false;
-    CHECK_RETURN(chunk_index_->TryPersistDirtyItem(128, &persisted_page),
+    CHECK_RETURN(chunk_index_->TryPersistDirtyItem(128, resume_handle, &persisted_page),
             IMPORT_ERROR, "Failed to persist dirty items");
 
     if (persisted_page) {
