@@ -24,6 +24,7 @@ import os
 import subprocess
 import platform
 import shutil
+import json
 
 class TestSuite:
     def __init__(self, type, testmode, options, dir, work_dir = None):
@@ -193,6 +194,16 @@ test_type_dir = {"dedupv1_base": "base/unit_test",
                  "dedupv1d": "dedupv1d/unit_test",
                  "dedupv1_contrib": "contrib/unit_test"}
 
+def check_configuration_file(options, configuration_file):
+    if not os.path.exists(configuration_file):
+       # Configuration files doesn't exist
+       return
+
+    configuration = json.load(open(configuration_file))
+    if options.temp_dir is None and "temp dir" in configuration:
+      options.temp_dir = configuration["temp dir"]
+      print "Using temp dir", options.temp_dir, "(from ~/.dedupv1_test)"
+
 def run_tests():
     args = [arg for arg in sys.argv[1:] if not arg.startswith("--gtest")]
     gtest_args = [arg for arg in sys.argv[1:] if arg.startswith("--gtest")]
@@ -217,7 +228,8 @@ def run_tests():
         dest="temp_dir",
         default=None)
     (options, argv) = parser.parse_args(args)
-
+    check_configuration_file(options, 
+        os.path.expanduser("~/.dedupv1_test"))
     failed = False
     try:
         if len(argv) == 0:
