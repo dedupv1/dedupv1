@@ -684,6 +684,13 @@ class ChunkMappingData : public ::google::protobuf::Message {
   inline ::google::protobuf::uint64 usage_count_failed_write_change_log_id() const;
   inline void set_usage_count_failed_write_change_log_id(::google::protobuf::uint64 value);
   
+  // optional uint64 last_block_hint = 5;
+  inline bool has_last_block_hint() const;
+  inline void clear_last_block_hint();
+  static const int kLastBlockHintFieldNumber = 5;
+  inline ::google::protobuf::uint64 last_block_hint() const;
+  inline void set_last_block_hint(::google::protobuf::uint64 value);
+  
   // @@protoc_insertion_point(class_scope:ChunkMappingData)
  private:
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
@@ -693,11 +700,12 @@ class ChunkMappingData : public ::google::protobuf::Message {
   ::google::protobuf::int64 usage_count_;
   ::google::protobuf::uint64 usage_count_change_log_id_;
   ::google::protobuf::uint64 usage_count_failed_write_change_log_id_;
+  ::google::protobuf::uint64 last_block_hint_;
   friend void  protobuf_AddDesc_dedupv1_2eproto();
   friend void protobuf_AssignDesc_dedupv1_2eproto();
   friend void protobuf_ShutdownFile_dedupv1_2eproto();
   
-  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
   
   // WHY DOES & HAVE LOWER PRECEDENCE THAN != !?
   inline bool _has_bit(int index) const {
@@ -5533,6 +5541,22 @@ inline ::google::protobuf::uint64 ChunkMappingData::usage_count_failed_write_cha
 inline void ChunkMappingData::set_usage_count_failed_write_change_log_id(::google::protobuf::uint64 value) {
   _set_bit(3);
   usage_count_failed_write_change_log_id_ = value;
+}
+
+// optional uint64 last_block_hint = 5;
+inline bool ChunkMappingData::has_last_block_hint() const {
+  return _has_bit(4);
+}
+inline void ChunkMappingData::clear_last_block_hint() {
+  last_block_hint_ = GOOGLE_ULONGLONG(0);
+  _clear_bit(4);
+}
+inline ::google::protobuf::uint64 ChunkMappingData::last_block_hint() const {
+  return last_block_hint_;
+}
+inline void ChunkMappingData::set_last_block_hint(::google::protobuf::uint64 value) {
+  _set_bit(4);
+  last_block_hint_ = value;
 }
 
 // -------------------------------------------------------------------

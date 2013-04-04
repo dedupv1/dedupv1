@@ -86,6 +86,20 @@ class ChunkMapping {
          * Usually not set (NULL).
          */
         const Chunk* chunk_;
+
+        /**
+         * The block hint is an optional value that stores the block id of
+         * the last block that used the chunk.
+         *
+         * This value is used by the BLC caching system.
+         */ 
+        uint64_t block_hint_;
+
+        /**
+         * true iff the block hint is set.
+         */
+        bool has_block_hint_;
+
     public:
         /**
          * Constructor.
@@ -262,7 +276,47 @@ class ChunkMapping {
          * @return
          */
         inline ChunkMapping& set_usage_count_failed_write_change_log_id(uint64_t log_id);
+
+        /**
+         * returns true iff the block hint is set.
+         */
+        inline bool has_block_hint() const;
+
+        /**
+         * sets the block hint
+         */ 
+        inline void set_block_hint(uint64_t block_hint);
+
+        /**
+         * clears the block hint.
+         * has_block_hint() is false afterwards.
+         */
+        inline void clear_block_hint();
+
+        /**
+         * Returns the block hint.
+         * Assumes that has_block_hint is true.
+         */
+        inline uint64_t block_hint() const;
 };
+ 
+bool ChunkMapping::has_block_hint() const {
+    return has_block_hint_;
+}
+
+void ChunkMapping::set_block_hint(uint64_t block_hint) {
+    has_block_hint_ = true;
+    block_hint_ = block_hint;
+}
+
+void ChunkMapping::clear_block_hint() {
+    has_block_hint_ = false;
+    block_hint_ = -1;
+}
+
+uint64_t ChunkMapping::block_hint() const {
+    return block_hint_;
+}
 
 bool ChunkMapping::set_fingerprint(const bytestring& fp) {
     if (fp.size() > dedupv1::Fingerprinter::kMaxFingerprintSize) {

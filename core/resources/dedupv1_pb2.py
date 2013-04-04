@@ -10,7 +10,7 @@ from google.protobuf import descriptor_pb2
 DESCRIPTOR = descriptor.FileDescriptor(
   name='dedupv1.proto',
   package='',
-  serialized_pb='\n\rdedupv1.proto\"\x8b\x01\n\x10\x42lockMappingData\x12\x10\n\x08\x62lock_id\x18\x01 \x01(\x04\x12$\n\x05items\x18\x02 \x03(\x0b\x32\x15.BlockMappingItemData\x12\x17\n\x0fversion_counter\x18\x03 \x01(\r\x12\x14\n\x0c\x65vent_log_id\x18\x06 \x01(\x04\x12\x10\n\x08\x63hecksum\x18\x07 \x01(\x0c\"k\n\x14\x42lockMappingPairData\x12\x10\n\x08\x62lock_id\x18\x01 \x01(\x04\x12\x17\n\x0fversion_counter\x18\x02 \x01(\r\x12(\n\x05items\x18\x03 \x03(\x0b\x32\x19.BlockMappingPairItemData\"~\n\x18\x42lockMappingPairItemData\x12\n\n\x02\x66p\x18\x01 \x02(\x0c\x12\x14\n\x0c\x64\x61ta_address\x18\x02 \x01(\x04\x12\x14\n\x0c\x63hunk_offset\x18\x03 \x01(\r\x12\x0c\n\x04size\x18\x04 \x01(\r\x12\x1c\n\x14usage_count_modifier\x18\x05 \x01(\x05\"\\\n\x14\x42lockMappingItemData\x12\n\n\x02\x66p\x18\x01 \x02(\x0c\x12\x14\n\x0c\x64\x61ta_address\x18\x02 \x01(\x04\x12\x14\n\x0c\x63hunk_offset\x18\x03 \x01(\r\x12\x0c\n\x04size\x18\x04 \x01(\r\"\x90\x01\n\x10\x43hunkMappingData\x12\x14\n\x0c\x64\x61ta_address\x18\x01 \x01(\x04\x12\x13\n\x0busage_count\x18\x02 \x01(\x03\x12!\n\x19usage_count_change_log_id\x18\x03 \x01(\x04\x12.\n&usage_count_failed_write_change_log_id\x18\x04 \x01(\x04\"\x85\x01\n\rContainerData\x12\x12\n\nprimary_id\x18\x01 \x01(\x04\x12\x16\n\x0e\x63ontainer_size\x18\x02 \x01(\r\x12!\n\x05items\x18\x03 \x03(\x0b\x32\x12.ContainerItemData\x12\x13\n\x0b\x63ommit_time\x18\x05 \x01(\r\x12\x10\n\x08\x63hecksum\x18\x07 \x01(\r\"\x83\x01\n\x11\x43ontainerItemData\x12\n\n\x02\x66p\x18\x01 \x01(\x0c\x12\x17\n\x0fposition_offset\x18\x02 \x01(\r\x12\x11\n\titem_size\x18\x03 \x01(\r\x12\x10\n\x08raw_size\x18\x04 \x01(\r\x12\x0f\n\x07\x64\x65leted\x18\x05 \x01(\x08\x12\x13\n\x0boriginal_id\x18\x06 \x01(\x04\"e\n\x16\x43ontainerItemValueData\x12\x14\n\x0con_disk_size\x18\x03 \x01(\r\x12\x35\n\x0b\x63ompression\x18\x04 \x01(\x0e\x32\x10.CompressionMode:\x0e\x43OMPRESSION_NO\"\x15\n\x05Limit\x12\x0c\n\x04size\x18\x01 \x02(\x07\"F\n\x11\x43ontainerFileData\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t\x12\x11\n\tfile_size\x18\x02 \x01(\x04\x12\x0c\n\x04uuid\x18\x03 \x01(\t\"\'\n\x17\x43ontainerSuperblockData\x12\x0c\n\x04uuid\x18\x01 \x01(\t\"\x9c\x01\n\x14\x43ontainerLogfileData\x12\x1f\n\x17last_given_container_id\x18\x01 \x01(\x04\x12\x16\n\x0e\x63ontainer_size\x18\x02 \x01(\r\x12\x0c\n\x04size\x18\x03 \x01(\r\x12 \n\x04\x66ile\x18\x04 \x03(\x0b\x32\x12.ContainerFileData\x12\x1b\n\x13\x63ontains_superblock\x18\x05 \x01(\x08\"V\n\x14SystemStartEventData\x12\x0e\n\x06\x63reate\x18\x01 \x01(\x08\x12\r\n\x05\x64irty\x18\x02 \x01(\x08\x12\x0e\n\x06\x66orced\x18\x03 \x01(\x08\x12\x0f\n\x07\x63rashed\x18\x04 \x01(\x08\"g\n\x14ReplayStartEventData\x12\x13\n\x0breplay_type\x18\x01 \x01(\x05\x12\x11\n\treplay_id\x18\x03 \x01(\x04\x12\x0e\n\x06log_id\x18\x04 \x01(\x04\x12\x17\n\x0f\x66ull_log_replay\x18\x05 \x01(\x08\"^\n\x13ReplayStopEventData\x12\x13\n\x0breplay_type\x18\x01 \x01(\x05\x12\x0f\n\x07success\x18\x02 \x01(\x08\x12\x11\n\treplay_id\x18\x03 \x01(\x04\x12\x0e\n\x06log_id\x18\x04 \x01(\x04\"\xcd\x07\n\x0cLogEventData\x12\x12\n\nevent_type\x18\x61 \x01(\x05\x12\x39\n\x16\x63ontainer_opened_event\x18\x01 \x01(\x0b\x32\x19.ContainerOpenedEventData\x12?\n\x19\x63ontainer_committed_event\x18\x02 \x01(\x0b\x32\x1c.ContainerCommittedEventData\x12\x39\n\x16\x63ontainer_merged_event\x18\x03 \x01(\x0b\x32\x19.ContainerMergedEventData\x12;\n\x17\x63ontainer_deleted_event\x18\x04 \x01(\x0b\x32\x1a.ContainerDeletedEventData\x12\x36\n\x15\x63ontainer_moved_event\x18\x05 \x01(\x0b\x32\x17.ContainerMoveEventData\x12\x46\n\x1d\x63ontainer_commit_failed_event\x18\x06 \x01(\x0b\x32\x1f.ContainerCommitFailedEventData\x12\x37\n\x15volume_attached_event\x18\x07 \x01(\x0b\x32\x18.VolumeAttachedEventData\x12\x37\n\x15volume_detached_event\x18\x08 \x01(\x0b\x32\x18.VolumeDetachedEventData\x12\x42\n\x1b\x62lock_mapping_written_event\x18\t \x01(\x0b\x32\x1d.BlockMappingWrittenEventData\x12K\n block_mapping_write_failed_event\x18\n \x01(\x0b\x32!.BlockMappingWriteFailedEventData\x12\x42\n\x1b\x62lock_mapping_deleted_event\x18\x0b \x01(\x0b\x32\x1d.BlockMappingDeletedEventData\x12\x33\n\x13ophran_chunks_event\x18\x0c \x01(\x0b\x32\x16.OphranChunksEventData\x12\x31\n\x12replay_start_event\x18\r \x01(\x0b\x32\x15.ReplayStartEventData\x12/\n\x11replay_stop_event\x18\x0e \x01(\x0b\x32\x14.ReplayStopEventData\x12\x31\n\x12system_start_event\x18\x0f \x01(\x0b\x32\x15.SystemStartEventData\x12\"\n\x0cmessage_data\x18\x62 \x01(\x0b\x32\x0c.MessageData\"~\n\x0cLogEntryData\x12\x0e\n\x06log_id\x18\x07 \x01(\x03\x12\r\n\x05value\x18\x03 \x01(\x0c\x12\x15\n\rpartial_index\x18\x05 \x01(\r\x12\x15\n\rpartial_count\x18\x06 \x01(\r\x12!\n\x19last_fully_written_log_id\x18\x08 \x01(\x03\"_\n\x18\x43ontainerOpenedEventData\x12\x14\n\x0c\x63ontainer_id\x18\x01 \x02(\x04\x12-\n\x07\x61\x64\x64ress\x18\x02 \x01(\x0b\x32\x1c.ContainerStorageAddressData\"\x90\x01\n\x1b\x43ontainerCommittedEventData\x12\x14\n\x0c\x63ontainer_id\x18\x01 \x02(\x04\x12-\n\x07\x61\x64\x64ress\x18\x04 \x01(\x0b\x32\x1c.ContainerStorageAddressData\x12\x12\n\nitem_count\x18\x05 \x01(\r\x12\x18\n\x10\x61\x63tive_data_size\x18\x06 \x01(\r\"\xa2\x03\n\x18\x43ontainerMergedEventData\x12\x10\n\x08\x66irst_id\x18\x01 \x02(\x04\x12\x11\n\tsecond_id\x18\x02 \x02(\x04\x12\x1e\n\x12\x66irst_secondary_id\x18\x03 \x03(\x04\x42\x02\x10\x01\x12\x1f\n\x13second_secondary_id\x18\x04 \x03(\x04\x42\x02\x10\x01\x12\x33\n\rfirst_address\x18\r \x01(\x0b\x32\x1c.ContainerStorageAddressData\x12\x34\n\x0esecond_address\x18\x0e \x01(\x0b\x32\x1c.ContainerStorageAddressData\x12\x31\n\x0bnew_address\x18\x0f \x01(\x0b\x32\x1c.ContainerStorageAddressData\x12\x16\n\x0enew_primary_id\x18\x12 \x01(\x04\x12\x1c\n\x10new_secondary_id\x18\x0b \x03(\x04\x42\x02\x10\x01\x12\x16\n\nunused_ids\x18\x0c \x03(\x04\x42\x02\x10\x01\x12\x16\n\x0enew_item_count\x18\x10 \x01(\r\x12\x1c\n\x14new_active_data_size\x18\x11 \x01(\r\"\x99\x01\n\x19\x43ontainerDeletedEventData\x12\x14\n\x0c\x63ontainer_id\x18\x01 \x02(\x04\x12\"\n\x16secondary_container_id\x18\x02 \x03(\x04\x42\x02\x10\x01\x12-\n\x07\x61\x64\x64ress\x18\x05 \x01(\x0b\x32\x1c.ContainerStorageAddressData\x12\x13\n\x0b\x66ile_offset\x18\x04 \x01(\x04\"\xf8\x01\n\x16\x43ontainerMoveEventData\x12\x14\n\x0c\x63ontainer_id\x18\x01 \x02(\x04\x12\x31\n\x0bold_address\x18\x06 \x01(\x0b\x32\x1c.ContainerStorageAddressData\x12\x31\n\x0bnew_address\x18\x07 \x01(\x0b\x32\x1c.ContainerStorageAddressData\x12\x18\n\x10\x61\x63tive_data_size\x18\x08 \x01(\x04\x12\x1c\n\x14old_active_data_size\x18\t \x01(\x04\x12\x12\n\nitem_count\x18\n \x01(\r\x12\x16\n\x0eold_item_count\x18\x0b \x01(\r\"H\n\x1e\x43ontainerCommitFailedEventData\x12\x14\n\x0c\x63ontainer_id\x18\x01 \x02(\x04\x12\x10\n\x08item_key\x18\x02 \x03(\x0c\",\n\x17VolumeAttachedEventData\x12\x11\n\tvolume_id\x18\x01 \x02(\r\",\n\x17VolumeDetachedEventData\x12\x11\n\tvolume_id\x18\x01 \x02(\r\"K\n\x1c\x42lockMappingWrittenEventData\x12+\n\x0cmapping_pair\x18\x04 \x01(\x0b\x32\x15.BlockMappingPairData\"k\n BlockMappingWriteFailedEventData\x12+\n\x0cmapping_pair\x18\x04 \x01(\x0b\x32\x15.BlockMappingPairData\x12\x1a\n\x12write_event_log_id\x18\x03 \x01(\x03\"Q\n\x1c\x42lockMappingDeletedEventData\x12\x31\n\x16original_block_mapping\x18\x01 \x01(\x0b\x32\x11.BlockMappingData\")\n\x15OphranChunksEventData\x12\x10\n\x08\x63hunk_fp\x18\x01 \x03(\x0c\"I\n\x15\x42lockIndexLogfileData\x12\x30\n\x11\x63ontainer_tracker\x18\x02 \x01(\x0b\x32\x15.ContainerTrackerData\"I\n\x15\x43hunkIndexLogfileData\x12\x30\n\x11\x63ontainer_tracker\x18\x02 \x01(\x0b\x32\x15.ContainerTrackerData\"j\n\x16\x42loomFilterLogfileData\x12\x13\n\x0b\x66ilter_size\x18\x01 \x01(\x04\x12\t\n\x01k\x18\x02 \x01(\r\x12\x30\n\x11\x63ontainer_tracker\x18\x04 \x01(\x0b\x32\x15.ContainerTrackerData\"\x9c\x01\n\x1eGarbageCollectionCandidateData\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\x04\x12\x31\n\x04item\x18\x02 \x03(\x0b\x32#.GarbageCollectionCandidateItemData\x12\x12\n\nprocessing\x18\x03 \x01(\x08\x12\"\n\x1aunchanged_processing_count\x18\x04 \x01(\r\"\x8a\x01\n\"GarbageCollectionCandidateItemData\x12\n\n\x02\x66p\x18\x01 \x01(\x0c\x12\x36\n\x04type\x18\x02 \x01(\x0e\x32(.GarbageCollectionCandidateItemData.Type\" \n\x04Type\x12\x0c\n\x08STANDARD\x10\x00\x12\n\n\x06\x46\x41ILED\x10\x01\"G\n\x19GarbageCollectionInfoData\x12*\n\"replayed_block_failed_event_log_id\x18\x01 \x03(\x03\"j\n\"ContainerGreedyGCCandidateItemData\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\x04\x12\x18\n\x10\x61\x63tive_data_size\x18\x02 \x01(\r\x12\x19\n\x11\x61\x63tive_item_count\x18\x03 \x01(\r\"S\n\x1e\x43ontainerGreedyGCCandidateData\x12\x31\n\x04item\x18\x01 \x03(\x0b\x32#.ContainerGreedyGCCandidateItemData\"j\n\x1b\x43ontainerStorageAddressData\x12\x12\n\nprimary_id\x18\x03 \x01(\x04\x12\x12\n\nfile_index\x18\x01 \x01(\r\x12\x13\n\x0b\x66ile_offset\x18\x02 \x01(\x04\x12\x0e\n\x06log_id\x18\x04 \x01(\x04\"=\n\x17\x42itmapAllocatorItemData\x12\x12\n\nfree_count\x18\x01 \x01(\r\x12\x0e\n\x06\x62itmap\x18\x02 \x01(\x0c\"S\n\x14\x43ontainerTrackerData\x12\x18\n\x0c\x63ontainer_id\x18\x01 \x03(\x04\x42\x02\x10\x01\x12!\n\x19highest_seen_container_id\x18\x02 \x01(\x04\"$\n\x0fLogReplayIDData\x12\x11\n\treplay_id\x18\x01 \x01(\x03\"\x1e\n\x0cLogLogIDData\x12\x0e\n\x06log_id\x18\x01 \x01(\x03\"9\n\x0cLogStateData\x12\x10\n\x08limit_id\x18\x01 \x01(\x03\x12\x17\n\x0flog_entry_width\x18\x02 \x01(\x03\"\x1e\n\x0bMessageData\x12\x0f\n\x07message\x18\x01 \x01(\t\"\x16\n\x14\x42lockWriteFailedData*\x96\x01\n\x0f\x43ompressionMode\x12\x12\n\x0e\x43OMPRESSION_NO\x10\x00\x12\x17\n\x13\x43OMPRESSION_DEFLATE\x10\x01\x12\x14\n\x10\x43OMPRESSION_GZIP\x10\x02\x12\x13\n\x0f\x43OMPRESSION_BZ2\x10\x03\x12\x16\n\x12\x43OMPRESSION_SNAPPY\x10\x04\x12\x13\n\x0f\x43OMPRESSION_LZ4\x10\x05')
+  serialized_pb='\n\rdedupv1.proto\"\x8b\x01\n\x10\x42lockMappingData\x12\x10\n\x08\x62lock_id\x18\x01 \x01(\x04\x12$\n\x05items\x18\x02 \x03(\x0b\x32\x15.BlockMappingItemData\x12\x17\n\x0fversion_counter\x18\x03 \x01(\r\x12\x14\n\x0c\x65vent_log_id\x18\x06 \x01(\x04\x12\x10\n\x08\x63hecksum\x18\x07 \x01(\x0c\"k\n\x14\x42lockMappingPairData\x12\x10\n\x08\x62lock_id\x18\x01 \x01(\x04\x12\x17\n\x0fversion_counter\x18\x02 \x01(\r\x12(\n\x05items\x18\x03 \x03(\x0b\x32\x19.BlockMappingPairItemData\"~\n\x18\x42lockMappingPairItemData\x12\n\n\x02\x66p\x18\x01 \x02(\x0c\x12\x14\n\x0c\x64\x61ta_address\x18\x02 \x01(\x04\x12\x14\n\x0c\x63hunk_offset\x18\x03 \x01(\r\x12\x0c\n\x04size\x18\x04 \x01(\r\x12\x1c\n\x14usage_count_modifier\x18\x05 \x01(\x05\"\\\n\x14\x42lockMappingItemData\x12\n\n\x02\x66p\x18\x01 \x02(\x0c\x12\x14\n\x0c\x64\x61ta_address\x18\x02 \x01(\x04\x12\x14\n\x0c\x63hunk_offset\x18\x03 \x01(\r\x12\x0c\n\x04size\x18\x04 \x01(\r\"\xa9\x01\n\x10\x43hunkMappingData\x12\x14\n\x0c\x64\x61ta_address\x18\x01 \x01(\x04\x12\x13\n\x0busage_count\x18\x02 \x01(\x03\x12!\n\x19usage_count_change_log_id\x18\x03 \x01(\x04\x12.\n&usage_count_failed_write_change_log_id\x18\x04 \x01(\x04\x12\x17\n\x0flast_block_hint\x18\x05 \x01(\x04\"\x85\x01\n\rContainerData\x12\x12\n\nprimary_id\x18\x01 \x01(\x04\x12\x16\n\x0e\x63ontainer_size\x18\x02 \x01(\r\x12!\n\x05items\x18\x03 \x03(\x0b\x32\x12.ContainerItemData\x12\x13\n\x0b\x63ommit_time\x18\x05 \x01(\r\x12\x10\n\x08\x63hecksum\x18\x07 \x01(\r\"\x83\x01\n\x11\x43ontainerItemData\x12\n\n\x02\x66p\x18\x01 \x01(\x0c\x12\x17\n\x0fposition_offset\x18\x02 \x01(\r\x12\x11\n\titem_size\x18\x03 \x01(\r\x12\x10\n\x08raw_size\x18\x04 \x01(\r\x12\x0f\n\x07\x64\x65leted\x18\x05 \x01(\x08\x12\x13\n\x0boriginal_id\x18\x06 \x01(\x04\"e\n\x16\x43ontainerItemValueData\x12\x14\n\x0con_disk_size\x18\x03 \x01(\r\x12\x35\n\x0b\x63ompression\x18\x04 \x01(\x0e\x32\x10.CompressionMode:\x0e\x43OMPRESSION_NO\"\x15\n\x05Limit\x12\x0c\n\x04size\x18\x01 \x02(\x07\"F\n\x11\x43ontainerFileData\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t\x12\x11\n\tfile_size\x18\x02 \x01(\x04\x12\x0c\n\x04uuid\x18\x03 \x01(\t\"\'\n\x17\x43ontainerSuperblockData\x12\x0c\n\x04uuid\x18\x01 \x01(\t\"\x9c\x01\n\x14\x43ontainerLogfileData\x12\x1f\n\x17last_given_container_id\x18\x01 \x01(\x04\x12\x16\n\x0e\x63ontainer_size\x18\x02 \x01(\r\x12\x0c\n\x04size\x18\x03 \x01(\r\x12 \n\x04\x66ile\x18\x04 \x03(\x0b\x32\x12.ContainerFileData\x12\x1b\n\x13\x63ontains_superblock\x18\x05 \x01(\x08\"V\n\x14SystemStartEventData\x12\x0e\n\x06\x63reate\x18\x01 \x01(\x08\x12\r\n\x05\x64irty\x18\x02 \x01(\x08\x12\x0e\n\x06\x66orced\x18\x03 \x01(\x08\x12\x0f\n\x07\x63rashed\x18\x04 \x01(\x08\"g\n\x14ReplayStartEventData\x12\x13\n\x0breplay_type\x18\x01 \x01(\x05\x12\x11\n\treplay_id\x18\x03 \x01(\x04\x12\x0e\n\x06log_id\x18\x04 \x01(\x04\x12\x17\n\x0f\x66ull_log_replay\x18\x05 \x01(\x08\"^\n\x13ReplayStopEventData\x12\x13\n\x0breplay_type\x18\x01 \x01(\x05\x12\x0f\n\x07success\x18\x02 \x01(\x08\x12\x11\n\treplay_id\x18\x03 \x01(\x04\x12\x0e\n\x06log_id\x18\x04 \x01(\x04\"\xcd\x07\n\x0cLogEventData\x12\x12\n\nevent_type\x18\x61 \x01(\x05\x12\x39\n\x16\x63ontainer_opened_event\x18\x01 \x01(\x0b\x32\x19.ContainerOpenedEventData\x12?\n\x19\x63ontainer_committed_event\x18\x02 \x01(\x0b\x32\x1c.ContainerCommittedEventData\x12\x39\n\x16\x63ontainer_merged_event\x18\x03 \x01(\x0b\x32\x19.ContainerMergedEventData\x12;\n\x17\x63ontainer_deleted_event\x18\x04 \x01(\x0b\x32\x1a.ContainerDeletedEventData\x12\x36\n\x15\x63ontainer_moved_event\x18\x05 \x01(\x0b\x32\x17.ContainerMoveEventData\x12\x46\n\x1d\x63ontainer_commit_failed_event\x18\x06 \x01(\x0b\x32\x1f.ContainerCommitFailedEventData\x12\x37\n\x15volume_attached_event\x18\x07 \x01(\x0b\x32\x18.VolumeAttachedEventData\x12\x37\n\x15volume_detached_event\x18\x08 \x01(\x0b\x32\x18.VolumeDetachedEventData\x12\x42\n\x1b\x62lock_mapping_written_event\x18\t \x01(\x0b\x32\x1d.BlockMappingWrittenEventData\x12K\n block_mapping_write_failed_event\x18\n \x01(\x0b\x32!.BlockMappingWriteFailedEventData\x12\x42\n\x1b\x62lock_mapping_deleted_event\x18\x0b \x01(\x0b\x32\x1d.BlockMappingDeletedEventData\x12\x33\n\x13ophran_chunks_event\x18\x0c \x01(\x0b\x32\x16.OphranChunksEventData\x12\x31\n\x12replay_start_event\x18\r \x01(\x0b\x32\x15.ReplayStartEventData\x12/\n\x11replay_stop_event\x18\x0e \x01(\x0b\x32\x14.ReplayStopEventData\x12\x31\n\x12system_start_event\x18\x0f \x01(\x0b\x32\x15.SystemStartEventData\x12\"\n\x0cmessage_data\x18\x62 \x01(\x0b\x32\x0c.MessageData\"~\n\x0cLogEntryData\x12\x0e\n\x06log_id\x18\x07 \x01(\x03\x12\r\n\x05value\x18\x03 \x01(\x0c\x12\x15\n\rpartial_index\x18\x05 \x01(\r\x12\x15\n\rpartial_count\x18\x06 \x01(\r\x12!\n\x19last_fully_written_log_id\x18\x08 \x01(\x03\"_\n\x18\x43ontainerOpenedEventData\x12\x14\n\x0c\x63ontainer_id\x18\x01 \x02(\x04\x12-\n\x07\x61\x64\x64ress\x18\x02 \x01(\x0b\x32\x1c.ContainerStorageAddressData\"\x90\x01\n\x1b\x43ontainerCommittedEventData\x12\x14\n\x0c\x63ontainer_id\x18\x01 \x02(\x04\x12-\n\x07\x61\x64\x64ress\x18\x04 \x01(\x0b\x32\x1c.ContainerStorageAddressData\x12\x12\n\nitem_count\x18\x05 \x01(\r\x12\x18\n\x10\x61\x63tive_data_size\x18\x06 \x01(\r\"\xa2\x03\n\x18\x43ontainerMergedEventData\x12\x10\n\x08\x66irst_id\x18\x01 \x02(\x04\x12\x11\n\tsecond_id\x18\x02 \x02(\x04\x12\x1e\n\x12\x66irst_secondary_id\x18\x03 \x03(\x04\x42\x02\x10\x01\x12\x1f\n\x13second_secondary_id\x18\x04 \x03(\x04\x42\x02\x10\x01\x12\x33\n\rfirst_address\x18\r \x01(\x0b\x32\x1c.ContainerStorageAddressData\x12\x34\n\x0esecond_address\x18\x0e \x01(\x0b\x32\x1c.ContainerStorageAddressData\x12\x31\n\x0bnew_address\x18\x0f \x01(\x0b\x32\x1c.ContainerStorageAddressData\x12\x16\n\x0enew_primary_id\x18\x12 \x01(\x04\x12\x1c\n\x10new_secondary_id\x18\x0b \x03(\x04\x42\x02\x10\x01\x12\x16\n\nunused_ids\x18\x0c \x03(\x04\x42\x02\x10\x01\x12\x16\n\x0enew_item_count\x18\x10 \x01(\r\x12\x1c\n\x14new_active_data_size\x18\x11 \x01(\r\"\x99\x01\n\x19\x43ontainerDeletedEventData\x12\x14\n\x0c\x63ontainer_id\x18\x01 \x02(\x04\x12\"\n\x16secondary_container_id\x18\x02 \x03(\x04\x42\x02\x10\x01\x12-\n\x07\x61\x64\x64ress\x18\x05 \x01(\x0b\x32\x1c.ContainerStorageAddressData\x12\x13\n\x0b\x66ile_offset\x18\x04 \x01(\x04\"\xf8\x01\n\x16\x43ontainerMoveEventData\x12\x14\n\x0c\x63ontainer_id\x18\x01 \x02(\x04\x12\x31\n\x0bold_address\x18\x06 \x01(\x0b\x32\x1c.ContainerStorageAddressData\x12\x31\n\x0bnew_address\x18\x07 \x01(\x0b\x32\x1c.ContainerStorageAddressData\x12\x18\n\x10\x61\x63tive_data_size\x18\x08 \x01(\x04\x12\x1c\n\x14old_active_data_size\x18\t \x01(\x04\x12\x12\n\nitem_count\x18\n \x01(\r\x12\x16\n\x0eold_item_count\x18\x0b \x01(\r\"H\n\x1e\x43ontainerCommitFailedEventData\x12\x14\n\x0c\x63ontainer_id\x18\x01 \x02(\x04\x12\x10\n\x08item_key\x18\x02 \x03(\x0c\",\n\x17VolumeAttachedEventData\x12\x11\n\tvolume_id\x18\x01 \x02(\r\",\n\x17VolumeDetachedEventData\x12\x11\n\tvolume_id\x18\x01 \x02(\r\"K\n\x1c\x42lockMappingWrittenEventData\x12+\n\x0cmapping_pair\x18\x04 \x01(\x0b\x32\x15.BlockMappingPairData\"k\n BlockMappingWriteFailedEventData\x12+\n\x0cmapping_pair\x18\x04 \x01(\x0b\x32\x15.BlockMappingPairData\x12\x1a\n\x12write_event_log_id\x18\x03 \x01(\x03\"Q\n\x1c\x42lockMappingDeletedEventData\x12\x31\n\x16original_block_mapping\x18\x01 \x01(\x0b\x32\x11.BlockMappingData\")\n\x15OphranChunksEventData\x12\x10\n\x08\x63hunk_fp\x18\x01 \x03(\x0c\"I\n\x15\x42lockIndexLogfileData\x12\x30\n\x11\x63ontainer_tracker\x18\x02 \x01(\x0b\x32\x15.ContainerTrackerData\"I\n\x15\x43hunkIndexLogfileData\x12\x30\n\x11\x63ontainer_tracker\x18\x02 \x01(\x0b\x32\x15.ContainerTrackerData\"j\n\x16\x42loomFilterLogfileData\x12\x13\n\x0b\x66ilter_size\x18\x01 \x01(\x04\x12\t\n\x01k\x18\x02 \x01(\r\x12\x30\n\x11\x63ontainer_tracker\x18\x04 \x01(\x0b\x32\x15.ContainerTrackerData\"\x9c\x01\n\x1eGarbageCollectionCandidateData\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\x04\x12\x31\n\x04item\x18\x02 \x03(\x0b\x32#.GarbageCollectionCandidateItemData\x12\x12\n\nprocessing\x18\x03 \x01(\x08\x12\"\n\x1aunchanged_processing_count\x18\x04 \x01(\r\"\x8a\x01\n\"GarbageCollectionCandidateItemData\x12\n\n\x02\x66p\x18\x01 \x01(\x0c\x12\x36\n\x04type\x18\x02 \x01(\x0e\x32(.GarbageCollectionCandidateItemData.Type\" \n\x04Type\x12\x0c\n\x08STANDARD\x10\x00\x12\n\n\x06\x46\x41ILED\x10\x01\"G\n\x19GarbageCollectionInfoData\x12*\n\"replayed_block_failed_event_log_id\x18\x01 \x03(\x03\"j\n\"ContainerGreedyGCCandidateItemData\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\x04\x12\x18\n\x10\x61\x63tive_data_size\x18\x02 \x01(\r\x12\x19\n\x11\x61\x63tive_item_count\x18\x03 \x01(\r\"S\n\x1e\x43ontainerGreedyGCCandidateData\x12\x31\n\x04item\x18\x01 \x03(\x0b\x32#.ContainerGreedyGCCandidateItemData\"j\n\x1b\x43ontainerStorageAddressData\x12\x12\n\nprimary_id\x18\x03 \x01(\x04\x12\x12\n\nfile_index\x18\x01 \x01(\r\x12\x13\n\x0b\x66ile_offset\x18\x02 \x01(\x04\x12\x0e\n\x06log_id\x18\x04 \x01(\x04\"=\n\x17\x42itmapAllocatorItemData\x12\x12\n\nfree_count\x18\x01 \x01(\r\x12\x0e\n\x06\x62itmap\x18\x02 \x01(\x0c\"S\n\x14\x43ontainerTrackerData\x12\x18\n\x0c\x63ontainer_id\x18\x01 \x03(\x04\x42\x02\x10\x01\x12!\n\x19highest_seen_container_id\x18\x02 \x01(\x04\"$\n\x0fLogReplayIDData\x12\x11\n\treplay_id\x18\x01 \x01(\x03\"\x1e\n\x0cLogLogIDData\x12\x0e\n\x06log_id\x18\x01 \x01(\x03\"9\n\x0cLogStateData\x12\x10\n\x08limit_id\x18\x01 \x01(\x03\x12\x17\n\x0flog_entry_width\x18\x02 \x01(\x03\"\x1e\n\x0bMessageData\x12\x0f\n\x07message\x18\x01 \x01(\t\"\x16\n\x14\x42lockWriteFailedData*\x96\x01\n\x0f\x43ompressionMode\x12\x12\n\x0e\x43OMPRESSION_NO\x10\x00\x12\x17\n\x13\x43OMPRESSION_DEFLATE\x10\x01\x12\x14\n\x10\x43OMPRESSION_GZIP\x10\x02\x12\x13\n\x0f\x43OMPRESSION_BZ2\x10\x03\x12\x16\n\x12\x43OMPRESSION_SNAPPY\x10\x04\x12\x13\n\x0f\x43OMPRESSION_LZ4\x10\x05')
 
 _COMPRESSIONMODE = descriptor.EnumDescriptor(
   name='CompressionMode',
@@ -45,8 +45,8 @@ _COMPRESSIONMODE = descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=5514,
-  serialized_end=5664,
+  serialized_start=5539,
+  serialized_end=5689,
 )
 
 
@@ -75,8 +75,8 @@ _GARBAGECOLLECTIONCANDIDATEITEMDATA_TYPE = descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=4772,
-  serialized_end=4804,
+  serialized_start=4797,
+  serialized_end=4829,
 )
 
 
@@ -318,6 +318,13 @@ _CHUNKMAPPINGDATA = descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
+    descriptor.FieldDescriptor(
+      name='last_block_hint', full_name='ChunkMappingData.last_block_hint', index=4,
+      number=5, type=4, cpp_type=4, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
   ],
   extensions=[
   ],
@@ -328,7 +335,7 @@ _CHUNKMAPPINGDATA = descriptor.Descriptor(
   is_extendable=False,
   extension_ranges=[],
   serialized_start=491,
-  serialized_end=635,
+  serialized_end=660,
 )
 
 
@@ -383,8 +390,8 @@ _CONTAINERDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=638,
-  serialized_end=771,
+  serialized_start=663,
+  serialized_end=796,
 )
 
 
@@ -446,8 +453,8 @@ _CONTAINERITEMDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=774,
-  serialized_end=905,
+  serialized_start=799,
+  serialized_end=930,
 )
 
 
@@ -481,8 +488,8 @@ _CONTAINERITEMVALUEDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=907,
-  serialized_end=1008,
+  serialized_start=932,
+  serialized_end=1033,
 )
 
 
@@ -509,8 +516,8 @@ _LIMIT = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1010,
-  serialized_end=1031,
+  serialized_start=1035,
+  serialized_end=1056,
 )
 
 
@@ -551,8 +558,8 @@ _CONTAINERFILEDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1033,
-  serialized_end=1103,
+  serialized_start=1058,
+  serialized_end=1128,
 )
 
 
@@ -579,8 +586,8 @@ _CONTAINERSUPERBLOCKDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1105,
-  serialized_end=1144,
+  serialized_start=1130,
+  serialized_end=1169,
 )
 
 
@@ -635,8 +642,8 @@ _CONTAINERLOGFILEDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1147,
-  serialized_end=1303,
+  serialized_start=1172,
+  serialized_end=1328,
 )
 
 
@@ -684,8 +691,8 @@ _SYSTEMSTARTEVENTDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1305,
-  serialized_end=1391,
+  serialized_start=1330,
+  serialized_end=1416,
 )
 
 
@@ -733,8 +740,8 @@ _REPLAYSTARTEVENTDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1393,
-  serialized_end=1496,
+  serialized_start=1418,
+  serialized_end=1521,
 )
 
 
@@ -782,8 +789,8 @@ _REPLAYSTOPEVENTDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1498,
-  serialized_end=1592,
+  serialized_start=1523,
+  serialized_end=1617,
 )
 
 
@@ -922,8 +929,8 @@ _LOGEVENTDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1595,
-  serialized_end=2568,
+  serialized_start=1620,
+  serialized_end=2593,
 )
 
 
@@ -978,8 +985,8 @@ _LOGENTRYDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=2570,
-  serialized_end=2696,
+  serialized_start=2595,
+  serialized_end=2721,
 )
 
 
@@ -1013,8 +1020,8 @@ _CONTAINEROPENEDEVENTDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=2698,
-  serialized_end=2793,
+  serialized_start=2723,
+  serialized_end=2818,
 )
 
 
@@ -1062,8 +1069,8 @@ _CONTAINERCOMMITTEDEVENTDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=2796,
-  serialized_end=2940,
+  serialized_start=2821,
+  serialized_end=2965,
 )
 
 
@@ -1167,8 +1174,8 @@ _CONTAINERMERGEDEVENTDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=2943,
-  serialized_end=3361,
+  serialized_start=2968,
+  serialized_end=3386,
 )
 
 
@@ -1216,8 +1223,8 @@ _CONTAINERDELETEDEVENTDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=3364,
-  serialized_end=3517,
+  serialized_start=3389,
+  serialized_end=3542,
 )
 
 
@@ -1286,8 +1293,8 @@ _CONTAINERMOVEEVENTDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=3520,
-  serialized_end=3768,
+  serialized_start=3545,
+  serialized_end=3793,
 )
 
 
@@ -1321,8 +1328,8 @@ _CONTAINERCOMMITFAILEDEVENTDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=3770,
-  serialized_end=3842,
+  serialized_start=3795,
+  serialized_end=3867,
 )
 
 
@@ -1349,8 +1356,8 @@ _VOLUMEATTACHEDEVENTDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=3844,
-  serialized_end=3888,
+  serialized_start=3869,
+  serialized_end=3913,
 )
 
 
@@ -1377,8 +1384,8 @@ _VOLUMEDETACHEDEVENTDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=3890,
-  serialized_end=3934,
+  serialized_start=3915,
+  serialized_end=3959,
 )
 
 
@@ -1405,8 +1412,8 @@ _BLOCKMAPPINGWRITTENEVENTDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=3936,
-  serialized_end=4011,
+  serialized_start=3961,
+  serialized_end=4036,
 )
 
 
@@ -1440,8 +1447,8 @@ _BLOCKMAPPINGWRITEFAILEDEVENTDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=4013,
-  serialized_end=4120,
+  serialized_start=4038,
+  serialized_end=4145,
 )
 
 
@@ -1468,8 +1475,8 @@ _BLOCKMAPPINGDELETEDEVENTDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=4122,
-  serialized_end=4203,
+  serialized_start=4147,
+  serialized_end=4228,
 )
 
 
@@ -1496,8 +1503,8 @@ _OPHRANCHUNKSEVENTDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=4205,
-  serialized_end=4246,
+  serialized_start=4230,
+  serialized_end=4271,
 )
 
 
@@ -1524,8 +1531,8 @@ _BLOCKINDEXLOGFILEDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=4248,
-  serialized_end=4321,
+  serialized_start=4273,
+  serialized_end=4346,
 )
 
 
@@ -1552,8 +1559,8 @@ _CHUNKINDEXLOGFILEDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=4323,
-  serialized_end=4396,
+  serialized_start=4348,
+  serialized_end=4421,
 )
 
 
@@ -1594,8 +1601,8 @@ _BLOOMFILTERLOGFILEDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=4398,
-  serialized_end=4504,
+  serialized_start=4423,
+  serialized_end=4529,
 )
 
 
@@ -1643,8 +1650,8 @@ _GARBAGECOLLECTIONCANDIDATEDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=4507,
-  serialized_end=4663,
+  serialized_start=4532,
+  serialized_end=4688,
 )
 
 
@@ -1679,8 +1686,8 @@ _GARBAGECOLLECTIONCANDIDATEITEMDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=4666,
-  serialized_end=4804,
+  serialized_start=4691,
+  serialized_end=4829,
 )
 
 
@@ -1707,8 +1714,8 @@ _GARBAGECOLLECTIONINFODATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=4806,
-  serialized_end=4877,
+  serialized_start=4831,
+  serialized_end=4902,
 )
 
 
@@ -1749,8 +1756,8 @@ _CONTAINERGREEDYGCCANDIDATEITEMDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=4879,
-  serialized_end=4985,
+  serialized_start=4904,
+  serialized_end=5010,
 )
 
 
@@ -1777,8 +1784,8 @@ _CONTAINERGREEDYGCCANDIDATEDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=4987,
-  serialized_end=5070,
+  serialized_start=5012,
+  serialized_end=5095,
 )
 
 
@@ -1826,8 +1833,8 @@ _CONTAINERSTORAGEADDRESSDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=5072,
-  serialized_end=5178,
+  serialized_start=5097,
+  serialized_end=5203,
 )
 
 
@@ -1861,8 +1868,8 @@ _BITMAPALLOCATORITEMDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=5180,
-  serialized_end=5241,
+  serialized_start=5205,
+  serialized_end=5266,
 )
 
 
@@ -1896,8 +1903,8 @@ _CONTAINERTRACKERDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=5243,
-  serialized_end=5326,
+  serialized_start=5268,
+  serialized_end=5351,
 )
 
 
@@ -1924,8 +1931,8 @@ _LOGREPLAYIDDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=5328,
-  serialized_end=5364,
+  serialized_start=5353,
+  serialized_end=5389,
 )
 
 
@@ -1952,8 +1959,8 @@ _LOGLOGIDDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=5366,
-  serialized_end=5396,
+  serialized_start=5391,
+  serialized_end=5421,
 )
 
 
@@ -1987,8 +1994,8 @@ _LOGSTATEDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=5398,
-  serialized_end=5455,
+  serialized_start=5423,
+  serialized_end=5480,
 )
 
 
@@ -2015,8 +2022,8 @@ _MESSAGEDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=5457,
-  serialized_end=5487,
+  serialized_start=5482,
+  serialized_end=5512,
 )
 
 
@@ -2036,8 +2043,8 @@ _BLOCKWRITEFAILEDDATA = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=5489,
-  serialized_end=5511,
+  serialized_start=5514,
+  serialized_end=5536,
 )
 
 

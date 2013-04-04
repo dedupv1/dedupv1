@@ -52,6 +52,8 @@
  	optional uint64 usage_count_change_log_id = 3;
  	
  	optional uint64 usage_count_failed_write_change_log_id = 4;
+ 	
+ 	optional uint64 last_block_hint = 5;
  }
  
  message ContainerData {

@@ -51,6 +51,7 @@ ChunkMapping::ChunkMapping() {
     this->usage_count_change_log_id_ = 0;
     this->usage_count_failed_write_change_log_id_ = 0;
     this->chunk_ = NULL;
+    this->clear_block_hint();
 }
 
 ChunkMapping::ChunkMapping(const byte* fp, size_t fp_size) {
@@ -63,6 +64,7 @@ ChunkMapping::ChunkMapping(const byte* fp, size_t fp_size) {
     this->usage_count_change_log_id_ = 0;
     this->usage_count_failed_write_change_log_id_ = 0;
     this->chunk_ = NULL;
+    this->clear_block_hint();
 }
 
 ChunkMapping::ChunkMapping(const bytestring& fp) {
@@ -75,6 +77,7 @@ ChunkMapping::ChunkMapping(const bytestring& fp) {
     this->usage_count_change_log_id_ = 0;
     this->usage_count_failed_write_change_log_id_ = 0;
     this->chunk_ = NULL;
+    this->clear_block_hint();
 }
 
 bool ChunkMapping::Init(const Chunk* chunk) {
@@ -91,6 +94,12 @@ bool ChunkMapping::SerializeTo(ChunkMappingData* data) const {
     CHECK(data, "Data not set");
     data->Clear();
     data->set_data_address(this->data_address());
+
+    if (has_block_hint_) {
+        data->set_last_block_hint(block_hint_);
+    } else {
+        data->clear_last_block_hint();
+    }
     if (this->usage_count() != 0) {
         data->set_usage_count(this->usage_count());
     }
@@ -113,6 +122,12 @@ bool ChunkMapping::UnserializeFrom(const ChunkMappingData& data, bool preserve_c
         this->usage_count_ = data.usage_count();
     } else {
         this->usage_count_ = 0;
+    }
+
+    if (data.has_last_block_hint()) {
+        this->set_block_hint(data.last_block_hint());
+    } else {
+        this->clear_block_hint();
     }
 
     if (data.has_usage_count_change_log_id()) {
