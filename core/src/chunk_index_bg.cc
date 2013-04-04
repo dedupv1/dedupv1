@@ -58,9 +58,9 @@ bool ChunkIndexBackgroundCommitter::Loop(uint32_t thread_id) {
     DEBUG("Starting chunk index bg committer " << thread_id);
     bool is_running = (this->state_ == RUNNING || this->state_ == STARTED);
     while (is_running) {
-        ChunkIndex::import_result ir = this->chunk_index_->TryImportContainer();
+        ChunkIndex::import_result ir = this->chunk_index_->TryImportDirtyChunks();
         if (ir == ChunkIndex::IMPORT_ERROR) {
-            WARNING("Failed to import chunk index container");
+            WARNING("Failed to import chunk index entries");
         }
 
         if (this->stoppingMode_ == true && ir == ChunkIndex::IMPORT_NO_MORE) {
@@ -69,13 +69,6 @@ bool ChunkIndexBackgroundCommitter::Loop(uint32_t thread_id) {
             // stopping thread if there are no more items
         }
 
-        // check interval is usually 0 in stopping mode
-        if (ir == ChunkIndex::IMPORT_NO_MORE) {
-            ir = chunk_index_->TryImportDirtyChunks();
-            if (ir == ChunkIndex::IMPORT_ERROR) {
-                WARNING("Failed to import dirty chunk data");
-            }
-        }
         if (ir == ChunkIndex::IMPORT_NO_MORE && this->check_interval_ > 0) {
             ThreadUtil::Sleep(this->check_interval_, ThreadUtil::MILLISECONDS);
         }
