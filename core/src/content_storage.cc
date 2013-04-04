@@ -513,7 +513,9 @@ bool ContentStorage::WriteBlock(Session* session, Request* request, RequestStati
     list<Chunk*> chunks;
     if (result) {
         // Chunk everything
-        REQUEST_STATS_START(request_stats, RequestStatistics::CHUNKING);FAULT_POINT("content-storage.write.pre-chunking");
+        ProfileTimer chunker_timer(stats_.chunking_time_);
+        REQUEST_STATS_START(request_stats, RequestStatistics::CHUNKING);
+        FAULT_POINT("content-storage.write.pre-chunking");
         if (!session->chunker_session()->ChunkData(request->buffer(), request->offset(), request->size(), last_block,
                 &chunks)) {
             ERROR("Block chunking failed");
@@ -1115,6 +1117,7 @@ string ContentStorage::PrintProfile() {
             << std::endl;
     sstr << "\"checksum\": " << this->stats_.checksum_time_.GetSum() << "," << std::endl;
     sstr << "\"content store\": " << this->stats_.profiling_.GetSum() << "," << std::endl;
+    sstr << "\"chunking\": " << this->stats_.chunking_time_.GetSum() << "," << std::endl;
     sstr << "\"fingerprinting\": " << this->stats_.fingerprint_profiling_.GetSum() << std::endl;
     sstr << "}";
     return sstr.str();
