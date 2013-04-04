@@ -892,6 +892,11 @@ class BlockIndex : public dedupv1::log::LogConsumer, public VolatileBlockCommitC
      */
     bool ImportAllReadyBlocks();
 
+    /**
+     * Returns the block size of the blocks in the block index.
+     */ 
+    inline uint32_t block_size() const;
+
 #ifdef DEDUPV1_CORE_TEST
     void ClearData();
 #endif
@@ -912,6 +917,11 @@ dedupv1::base::PersistentIndex* BlockIndex::persistent_block_index() {
 VolatileBlockStore* BlockIndex::volatile_blocks() {
     return &volatile_blocks_;
 }
+
+uint32_t BlockIndex::block_size() const {
+  return block_size_;
+}
+
 
 }
 }
