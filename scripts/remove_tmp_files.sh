@@ -22,3 +22,4 @@ find . -name "*REMOTE*" -delete
 find . -name "*LOCAL*" -delete
 find . -name "*BASE*" -delete
 find . -name "*.orig" -delete
+find . -name "*.rej" -delete
