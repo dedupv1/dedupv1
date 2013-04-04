@@ -123,83 +123,83 @@ namespace chunkstore {
 
 namespace {
 bool IsValidAddressData(const ContainerStorageAddressData& address) {
-    return (address.has_primary_id() || (address.has_file_index() && address.has_file_offset()));
+    return address.has_primary_id() || (address.has_file_index() && address.has_file_offset());
 }
 
 /**
  * Helper class to deal with the in_move_set of the container storage
  */
 class ScopedInMoveSetMembership {
-    private:
-        set<uint64_t>* set_;
-        tbb::spin_mutex* lock_;
-        list<uint64_t> locked_container_id_list_;
-    public:
+private:
+    set<uint64_t>* set_;
+    tbb::spin_mutex* lock_;
+    list<uint64_t> locked_container_id_list_;
+public:
 
-        ScopedInMoveSetMembership(set<uint64_t>* set,
-                tbb::spin_mutex* lock) : set_(set), lock_(lock) {
+    ScopedInMoveSetMembership(set<uint64_t>* set,
+                              tbb::spin_mutex* lock) : set_(set), lock_(lock) {
+    }
+
+    bool Insert(uint64_t container_id) {
+        tbb::spin_mutex::scoped_lock scoped_lock(*lock_);
+
+        if (set_->find(container_id) == set_->end()) {
+            set_->insert(container_id);
+            locked_container_id_list_.push_back(container_id);
+            return true;
+        }
+        return false;
+    }
+
+    bool Insert(list<uint64_t>& container_id_list) {
+        tbb::spin_mutex::scoped_lock scoped_lock(*lock_);
+
+        bool ok = true;
+        list<uint64_t>::iterator i;
+        for (i = container_id_list.begin(); i != container_id_list.end(); i++) {
+            uint64_t container_id = *i;
+            if (set_->find(container_id) != set_->end()) {
+                ok = false;
+            }
         }
 
-        bool Insert(uint64_t container_id) {
-            tbb::spin_mutex::scoped_lock scoped_lock(*lock_);
-
-            if (set_->find(container_id) == set_->end()) {
-                set_->insert(container_id);
-                locked_container_id_list_.push_back(container_id);
-                return true;
-            }
+        if (!ok) {
             return false;
         }
 
-        bool Insert(list<uint64_t>& container_id_list) {
-            tbb::spin_mutex::scoped_lock scoped_lock(*lock_);
-
-            bool ok = true;
-            list<uint64_t>::iterator i;
-            for (i = container_id_list.begin(); i != container_id_list.end(); i++) {
-                uint64_t container_id = *i;
-                if (set_->find(container_id) != set_->end()) {
-                    ok = false;
-                }
-            }
-
-            if (!ok) {
-                return false;
-            }
-
-            for (i = container_id_list.begin(); i != container_id_list.end(); i++) {
-                uint64_t container_id = *i;
-                set_->insert(container_id);
-                locked_container_id_list_.push_back(container_id);
-            }
-
-            return true;
+        for (i = container_id_list.begin(); i != container_id_list.end(); i++) {
+            uint64_t container_id = *i;
+            set_->insert(container_id);
+            locked_container_id_list_.push_back(container_id);
         }
 
-        void RemoveAllFromSet() {
-            tbb::spin_mutex::scoped_lock scoped_lock(*lock_);
+        return true;
+    }
 
-            list<uint64_t>::iterator i;
-            for (i = locked_container_id_list_.begin(); i != locked_container_id_list_.end(); i++) {
-                DEBUG("Remove " << *i << " from in-move set");
-                set_->erase(*i);
-            }
-            locked_container_id_list_.clear();
-        }
+    void RemoveAllFromSet() {
+        tbb::spin_mutex::scoped_lock scoped_lock(*lock_);
 
-        ~ScopedInMoveSetMembership() {
-            RemoveAllFromSet();
+        list<uint64_t>::iterator i;
+        for (i = locked_container_id_list_.begin(); i != locked_container_id_list_.end(); i++) {
+            DEBUG("Remove " << *i << " from in-move set");
+            set_->erase(*i);
         }
+        locked_container_id_list_.clear();
+    }
+
+    ~ScopedInMoveSetMembership() {
+        RemoveAllFromSet();
+    }
 };
 
 }
 
 lookup_result ContainerStorage::ReadContainerWithCache(
-        Container* container) {
+    Container* container) {
     DCHECK_RETURN(container, LOOKUP_ERROR, "Container not set");
     DCHECK_RETURN(state_ == RUNNING || state_ == STARTED, LOOKUP_ERROR,
-            "Illegal state to read container: " <<
-            "state " << this->state_ << ", container " << container->primary_id());
+        "Illegal state to read container: " <<
+        "state " << this->state_ << ", container " << container->primary_id());
 
     bool use_cache = !container->is_metadata_only();
     CacheEntry cache_entry;
@@ -220,20 +220,20 @@ lookup_result ContainerStorage::ReadContainerWithCache(
         }
         cache_container = NULL;
 
-        return (copy_result ? LOOKUP_FOUND : LOOKUP_ERROR);
+        return copy_result ? LOOKUP_FOUND : LOOKUP_ERROR;
     }
     // not found in read cache, cache lock held
     cache_container = NULL;
 
     DCHECK_RETURN(use_cache || !cache_entry.is_set(), LOOKUP_ERROR,
-            "We do not use cache, but we acquired a cache lock anyway");
+        "We do not use cache, but we acquired a cache lock anyway");
 
     enum lookup_result b = ReadContainer(container); // now container lock held
     if (use_cache && cache_entry.is_set()) {
         if (b == LOOKUP_ERROR || b == LOOKUP_NOT_FOUND) {
             // We have to free the cache entry
             CHECK_RETURN(cache_.ReleaseCacheline(container->primary_id(), &cache_entry), LOOKUP_ERROR,
-                    "Failed to release cache line");
+                "Failed to release cache line");
         } else {
             if (!this->cache_.CopyToReadCache(*container, &cache_entry)) {
                 ERROR("Failed to add container to read cache: " << container->DebugString());
@@ -245,23 +245,23 @@ lookup_result ContainerStorage::ReadContainerWithCache(
 }
 
 pair<lookup_result, ContainerStorageAddressData> ContainerStorage::LookupContainerAddress(
-        uint64_t container_id,
-        ReadWriteLock** primary_container_lock,
-        bool acquire_write_lock) {
+    uint64_t container_id,
+    ReadWriteLock** primary_container_lock,
+    bool acquire_write_lock) {
     DCHECK_RETURN(state_ == RUNNING || state_ == STARTED, make_pair(LOOKUP_ERROR, ContainerStorageAddressData()),
-            "Illegal state to lookup container: container " << container_id << ", state " << this->state_);
+        "Illegal state to lookup container: container " << container_id << ", state " << this->state_);
     DCHECK_RETURN(this->meta_data_index_, make_pair(LOOKUP_ERROR, ContainerStorageAddressData()), "Meta data index not set");
 
     TRACE("Lookup container address (no wait): container id " << container_id);
 
     ScopedReadWriteLock scoped_lock(&this->meta_data_lock_);
     CHECK_RETURN(scoped_lock.AcquireReadLock(), make_pair(LOOKUP_ERROR, ContainerStorageAddressData()),
-            "Failed to acquire meta data lock");
+        "Failed to acquire meta data lock");
 
     ContainerStorageAddressData container_address;
     ContainerStorageAddressData first_lookedup_container_address;
     lookup_result lr = this->meta_data_index_->Lookup(&container_id, sizeof(uint64_t),
-            &container_address);
+        &container_address);
     if (lr == LOOKUP_ERROR || lr == LOOKUP_NOT_FOUND) {
         return make_pair(lr, container_address);
     }
@@ -276,11 +276,11 @@ pair<lookup_result, ContainerStorageAddressData> ContainerStorage::LookupContain
         TRACE("Lookup primary container address: container id " << container_id << ", primary container id " << primary_id);
 
         lr = this->meta_data_index_->Lookup(&primary_id, sizeof(uint64_t),
-                &container_address);
+            &container_address);
         if (lr == LOOKUP_ERROR) {
             ERROR("Failed to lookup primary id: secondary id " << container_id <<
-                    ", address " << container_address.ShortDebugString() <<
-                    ", first address looked up " << first_lookedup_container_address.ShortDebugString());
+                ", address " << container_address.ShortDebugString() <<
+                ", first address looked up " << first_lookedup_container_address.ShortDebugString());
         }
         if (lr == LOOKUP_ERROR || lr == LOOKUP_NOT_FOUND) {
             return make_pair(lr, container_address);
@@ -295,25 +295,25 @@ pair<lookup_result, ContainerStorageAddressData> ContainerStorage::LookupContain
         // lr == FOUND
     }
     CHECK_RETURN(container_address.has_file_index() && container_address.has_file_offset(),
-            make_pair(LOOKUP_ERROR, container_address),
-            "Illegal container address: " <<
-            "address " << container_address.ShortDebugString() <<
-            ", lookup container id " << container_id <<
-            ", first looked up container address " << first_lookedup_container_address.ShortDebugString() <<
-            ", reason should be primary");
+        make_pair(LOOKUP_ERROR, container_address),
+        "Illegal container address: " <<
+        "address " << container_address.ShortDebugString() <<
+        ", lookup container id " << container_id <<
+        ", first looked up container address " << first_lookedup_container_address.ShortDebugString() <<
+        ", reason should be primary");
 
     if (primary_container_lock) {
         ReadWriteLock* rw_lock = this->GetContainerLock(primary_id);
         DCHECK_RETURN(rw_lock,
-                make_pair(LOOKUP_ERROR, ContainerStorageAddressData()), "Container lock not set");
+            make_pair(LOOKUP_ERROR, ContainerStorageAddressData()), "Container lock not set");
 
         TRACE("Acquire container lock: primary container id " << primary_id);
         if (acquire_write_lock) {
             CHECK_RETURN(rw_lock->AcquireWriteLock(),
-                    make_pair(LOOKUP_ERROR, container_address), "Failed to acquire lock");
+                make_pair(LOOKUP_ERROR, container_address), "Failed to acquire lock");
         } else {
             CHECK_RETURN(rw_lock->AcquireReadLock(),
-                    make_pair(LOOKUP_ERROR, container_address), "Failed to acquire lock");
+                make_pair(LOOKUP_ERROR, container_address), "Failed to acquire lock");
         }
         TRACE("Acquired container lock: primary container id " << primary_id);
 
@@ -323,18 +323,18 @@ pair<lookup_result, ContainerStorageAddressData> ContainerStorage::LookupContain
 }
 
 pair<lookup_result, ContainerStorageAddressData> ContainerStorage::LookupContainerAddressWait(
-        uint64_t container_id,
-        ReadWriteLock** primary_container_lock,
-        bool acquire_write_lock) {
+    uint64_t container_id,
+    ReadWriteLock** primary_container_lock,
+    bool acquire_write_lock) {
     DCHECK_RETURN(state_ == RUNNING || state_ == STARTED, make_pair(LOOKUP_ERROR, ContainerStorageAddressData()),
-            "Illegal state to lookup container: container " << container_id << ", state " << this->state_);
+        "Illegal state to lookup container: container " << container_id << ", state " << this->state_);
     DCHECK_RETURN(this->meta_data_index_, make_pair(LOOKUP_ERROR, ContainerStorageAddressData()), "Meta data index not set");
 
     TRACE("Lookup container address: container id " << container_id);
     pair<lookup_result, ContainerStorageAddressData> container_address =
-            LookupContainerAddress(container_id, primary_container_lock, acquire_write_lock);
-    CHECK_RETURN(container_address.first != LOOKUP_ERROR, container_address, 
-            "Failed to lookup container address: container id " << container_id);
+        LookupContainerAddress(container_id, primary_container_lock, acquire_write_lock);
+    CHECK_RETURN(container_address.first != LOOKUP_ERROR, container_address,
+        "Failed to lookup container address: container id " << container_id);
     if (container_address.first == LOOKUP_NOT_FOUND) {
         // we do not hold the lock here
         TRACE("Container not found in meta data index: container id " << container_id);
@@ -361,7 +361,7 @@ pair<lookup_result, ContainerStorageAddressData> ContainerStorage::LookupContain
         }
 
         CHECK_RETURN(is_processed.valid(), make_pair(LOOKUP_ERROR, ContainerStorageAddressData()),
-                "Failed to check processing state");
+            "Failed to check processing state");
         TRACE("Finished waiting for currently processed container: container " << container_id);
 
         // re-lookup
@@ -390,14 +390,14 @@ std::string ContainerStorage::DebugString(const ContainerStorageAddressData& add
 }
 
 enum lookup_result ContainerStorage::ReadContainerLocked(Container* container,
-        const ContainerStorageAddressData& container_address) {
+                                                         const ContainerStorageAddressData& container_address) {
     DCHECK_RETURN(container, LOOKUP_ERROR, "Container not set");
     DCHECK_RETURN(state_ == RUNNING || state_ == STARTED, LOOKUP_ERROR,
-            "Illegal state to read container: " << this->state_);
+        "Illegal state to read container: " << this->state_);
     ProfileTimer timer(this->stats_.total_read_container_time_);
 
     CHECK_RETURN(container->primary_id() != Storage::ILLEGAL_STORAGE_ADDRESS,
-            LOOKUP_ERROR, "Container id not set: " << container->DebugString());
+        LOOKUP_ERROR, "Container id not set: " << container->DebugString());
     uint64_t id = container->primary_id();
 
     // LOOKUP_FOUND
@@ -407,7 +407,7 @@ enum lookup_result ContainerStorage::ReadContainerLocked(Container* container,
         file_offset += kSuperBlockSize;
     }
     CHECK_RETURN(file_index < this->file_.size(),
-            LOOKUP_ERROR, "Illegal file index: " << file_index << ", file count " << this->file_.size());
+        LOOKUP_ERROR, "Illegal file index: " << file_index << ", file count " << this->file_.size());
     File* file = this->file_[file_index].file();
     CHECK_RETURN(file, LOOKUP_ERROR, "File not open: file index: " << file_index << ", file count " << this->file_.size());
 
@@ -418,8 +418,8 @@ enum lookup_result ContainerStorage::ReadContainerLocked(Container* container,
         CHECK_RETURN(file_lock.AcquireLockWithStatistics(
                 &this->stats_.file_lock_free_,
                 &this->stats_.file_lock_busy_), LOOKUP_ERROR, "Failed to acquire file lock: " <<
-                "file index " << file_index <<
-                ", container " << container->DebugString());
+            "file index " << file_index <<
+            ", container " << container->DebugString());
     }
     bool load_file = false;
     {
@@ -431,17 +431,17 @@ enum lookup_result ContainerStorage::ReadContainerLocked(Container* container,
     if (!load_file) {
         // error reporting code
         ERROR("Cannot load container: " <<
-                "container id " << id <<
-                ", (partially loaded) container " << container->DebugString() <<
-                ", loaded address " << DebugString(container_address));
+            "container id " << id <<
+            ", (partially loaded) container " << container->DebugString() <<
+            ", loaded address " << DebugString(container_address));
         return LOOKUP_ERROR;
     }
     CHECK_RETURN(file_lock.ReleaseLock(), LOOKUP_ERROR, "Unlock failed");
     this->stats_.readed_container_.fetch_and_increment();
 
     TRACE("Read container from disk: " <<
-            container->DebugString() <<
-            ", address " << DebugString(container_address));
+        container->DebugString() <<
+        ", address " << DebugString(container_address));
     return LOOKUP_FOUND;
 }
 
@@ -451,14 +451,14 @@ enum lookup_result ContainerStorage::ReadContainer(Container* container) {
     ProfileTimer timer(this->stats_.total_read_container_time_);
 
     CHECK_RETURN(container->primary_id() != Storage::ILLEGAL_STORAGE_ADDRESS,
-            LOOKUP_ERROR, "Container id not set: " << container->DebugString());
+        LOOKUP_ERROR, "Container id not set: " << container->DebugString());
     uint64_t id = container->primary_id();
 
     ReadWriteLock* lock = NULL;
     pair<lookup_result, ContainerStorageAddressData> container_address =
-            LookupContainerAddressWait(id, &lock, false);
+        LookupContainerAddressWait(id, &lock, false);
     CHECK_RETURN(container_address.first != LOOKUP_ERROR, LOOKUP_ERROR,
-            "Failed to lookup container address: " << container->DebugString());
+        "Failed to lookup container address: " << container->DebugString());
     if (container_address.first == LOOKUP_NOT_FOUND) {
         return LOOKUP_NOT_FOUND;
     }
@@ -474,7 +474,7 @@ enum lookup_result ContainerStorage::ReadContainer(Container* container) {
     }
 
     CHECK_RETURN(file_index < this->file_.size(),
-            LOOKUP_ERROR, "Illegal file index: " << file_index << ", file count " << this->file_.size());
+        LOOKUP_ERROR, "Illegal file index: " << file_index << ", file count " << this->file_.size());
     File* file = this->file_[file_index].file();
     CHECK_RETURN(file, LOOKUP_ERROR, "File not open: file index: " << file_index << ", file count " << this->file_.size());
 
@@ -486,8 +486,8 @@ enum lookup_result ContainerStorage::ReadContainer(Container* container) {
         CHECK_RETURN(file_lock.AcquireLockWithStatistics(
                 &this->stats_.file_lock_free_,
                 &this->stats_.file_lock_busy_), LOOKUP_ERROR, "Failed to acquire file lock: " <<
-                "file index " << file_index <<
-                ", container " << container->DebugString());
+            "file index " << file_index <<
+            ", container " << container->DebugString());
     }
     bool load_file_result = false;
     {
@@ -519,19 +519,19 @@ enum lookup_result ContainerStorage::ReadContainer(Container* container) {
         }
 
         ERROR("Cannot load container: " <<
-                "container id " << id <<
-                ", (partially loaded) container " << container->DebugString() <<
-                ", loaded address " << DebugString(container_address.second) <<
-                ", " << first_address <<
-                ", " << second_address);
+            "container id " << id <<
+            ", (partially loaded) container " << container->DebugString() <<
+            ", loaded address " << DebugString(container_address.second) <<
+            ", " << first_address <<
+            ", " << second_address);
         return LOOKUP_ERROR;
     }
     CHECK_RETURN(file_lock.ReleaseLock(), LOOKUP_ERROR, "Unlock failed");
     this->stats_.readed_container_.fetch_and_increment();
 
     TRACE("Read container from disk: " <<
-            container->DebugString() <<
-            ", address " << DebugString(container_address.second));
+        container->DebugString() <<
+        ", address " << DebugString(container_address.second));
     return LOOKUP_FOUND;
 }
 
@@ -540,7 +540,7 @@ bool ContainerStorage::WriteContainer(Container* container, const ContainerStora
     DCHECK(container->primary_id() != 0, "Container id not set: " << container->DebugString());
     DCHECK(container->primary_id() != Storage::ILLEGAL_STORAGE_ADDRESS, "Illegal container id " + container->primary_id());
     DCHECK(state_ == RUNNING || state_ == STARTED, "Illegal state to write container: container id " << container->primary_id() <<
-            ", state " << this->state_);
+        ", state " << this->state_);
     FAULT_POINT("container-storage.write.pre");
 
     ProfileTimer write_timer(this->stats_.container_write_time_);
@@ -566,7 +566,7 @@ bool ContainerStorage::WriteContainer(Container* container, const ContainerStora
             &this->stats_.file_lock_busy_), "Failed to acquire file lock: file index " << file_index);
 
     CHECK(container->StoreToFile(file, file_offset, calculate_container_checksum_),
-            "Cannot write container " << container_id << ": " << container->DebugString());
+        "Cannot write container " << container_id << ": " << container->DebugString());
     CHECK(file_lock.ReleaseLock(), "Container unlock failed");
     FAULT_POINT("container-storage.write.after-write");
     TRACE("Write container: " << container->DebugString() << ", address " << DebugString(container_address));
@@ -592,7 +592,7 @@ bool ContainerStorage::MarkContainerCommitAsFailed(Container* container) {
     }
 
     CHECK(log_->CommitEvent(EVENT_TYPE_CONTAINER_COMMIT_FAILED, &failed_data, NULL, this, NO_EC),
-            "Failed to commit container: " << failed_data.ShortDebugString());
+        "Failed to commit container: " << failed_data.ShortDebugString());
     this->stats_.failed_container_++;
     return true;
 }
@@ -607,7 +607,7 @@ bool ContainerStorage::CommitContainer(Container* container, const ContainerStor
     DCHECK(container->primary_id() != 0, "Container id not set");
     DCHECK(container->primary_id() != Storage::ILLEGAL_STORAGE_ADDRESS, "Illegal container id: " + container->primary_id());
     DCHECK(state_ == RUNNING || state_ == STARTED, "Illegal state to commit container: " <<
-            "container " << container->primary_id() << ", state " << this->state_);
+        "container " << container->primary_id() << ", state " << this->state_);
     FAULT_POINT("container-storage.commit.pre");
 
     CHECK(!start_context_.readonly(), "Container storage is in readonly mode");
@@ -622,12 +622,12 @@ bool ContainerStorage::CommitContainer(Container* container, const ContainerStor
     if (result.first == LOOKUP_FOUND) {
         // there is already a container with that id stored
         ERROR("Container id " << container_id << " already stored: " <<
-                "container " << container->DebugString() <<
-                ", last given container id " << this->last_given_container_id_ <<
-                ", address " << DebugString(result.second));
+            "container " << container->DebugString() <<
+            ", last given container id " << this->last_given_container_id_ <<
+            ", address " << DebugString(result.second));
 
         CHECK(MarkContainerCommitAsFailed(container),
-                "Failed to mark container commit as failed: " << container->DebugString());
+            "Failed to mark container commit as failed: " << container->DebugString());
         return false;
     }
 
@@ -638,7 +638,7 @@ bool ContainerStorage::CommitContainer(Container* container, const ContainerStor
         this->meta_data_cache_.Unstick(container_id);
 
         CHECK(MarkContainerCommitAsFailed(container),
-                "Failed to mark container commit as failed: " << container->DebugString());
+            "Failed to mark container commit as failed: " << container->DebugString());
         return false;
     }
 
@@ -661,14 +661,14 @@ bool ContainerStorage::CommitContainer(Container* container, const ContainerStor
             // if the log id is set in case or an error, the event has been written to disk.
             // it is therefore committed
             CHECK(this->meta_data_cache_.Update(container_id, STORAGE_ADDRESS_COMMITED),
-                    "Failed to update the meta data cache: container " << container->DebugString());
+                "Failed to update the meta data cache: container " << container->DebugString());
         } else {
             CHECK(this->meta_data_cache_.Unstick(container_id),
-                    "Failed to unstick the meta data cache: container " << container->DebugString());
+                "Failed to unstick the meta data cache: container " << container->DebugString());
             ContainerCommitFailedEventData failed_data;
             failed_data.set_container_id(container_id);
             CHECK(log_->CommitEvent(EVENT_TYPE_CONTAINER_COMMIT_FAILED, &failed_data, NULL, this, NO_EC),
-                    "Failed to commit container: " << failed_data.ShortDebugString());
+                "Failed to commit container: " << failed_data.ShortDebugString());
         }
         return false;
     }
@@ -681,17 +681,16 @@ bool ContainerStorage::CommitContainer(Container* container, const ContainerStor
         ContainerItem* item = *i;
         if (item) {
             DEBUG("Unpin chunk: container id " << container_id <<
-                    ", item " << item->DebugString());
+                ", item " << item->DebugString());
             this->chunk_index_->ChangePinningState(item->key(), item->key_size(), false);
         }
     }
-
 
     // the cache is updated using the log acknowledgment
     // if we are here, the meta data cache item has been unsticked
 
     DEBUG("Committed container: " << container->DebugString()
-            << ", address " << DebugString(address));
+                                  << ", address " << DebugString(address));
     container->Reuse(Storage::ILLEGAL_STORAGE_ADDRESS);
     FAULT_POINT("container-storage.commit.post");
     return true;
@@ -699,8 +698,8 @@ bool ContainerStorage::CommitContainer(Container* container, const ContainerStor
 
 bool ContainerStorage::LogAck(event_type event_type, const Message* log_message, const LogReplayContext& context) {
     TRACE("Log ack: " << dedupv1::log::Log::GetEventTypeName(event_type) <<
-            ", message " << (log_message ? log_message->ShortDebugString() : "") <<
-            ", log id " << context.log_id());
+        ", message " << (log_message ? log_message->ShortDebugString() : "") <<
+        ", log id " << context.log_id());
     FAULT_POINT("container-storage.ack.pre");
 
     // Container Commit
@@ -737,8 +736,8 @@ bool ContainerStorage::LogAck(event_type event_type, const Message* log_message,
         // Update index
         DCHECK(IsValidAddressData(event_data.address()), "Invalid address data: " << event_data.ShortDebugString());
         CHECK(this->meta_data_index_->Put(&container_id, sizeof(uint64_t), event_data.address()),
-                "Meta data update failed: " << container_id <<
-                ", address " << DebugString(event_data.address()));
+            "Meta data update failed: " << container_id <<
+            ", address " << DebugString(event_data.address()));
         CHECK(this->meta_data_cache_.Update(container_id, STORAGE_ADDRESS_COMMITED), "Failed to update cache");
 
         CHECK(scoped_lock.ReleaseLock(), "Failed to release meta data lock");
@@ -767,8 +766,8 @@ bool ContainerStorage::LogAck(event_type event_type, const Message* log_message,
         DCHECK(IsValidAddressData(event_data.old_address()), "Invalid address data: " << event_data.ShortDebugString());
 
         CHECK(this->meta_data_index_->Put(&container_id, sizeof(uint64_t), event_data.new_address()),
-                "Meta data update failed: " << container_id <<
-                ", address " << DebugString(event_data.new_address()));
+            "Meta data update failed: " << container_id <<
+            ", address " << DebugString(event_data.new_address()));
 
         ScopedReadWriteLock scoped_container_lock(this->GetContainerLock(event_data.container_id()));
         CHECK(scoped_container_lock.AcquireWriteLock(), "Cannot acquire container write lock");
@@ -778,7 +777,7 @@ bool ContainerStorage::LogAck(event_type event_type, const Message* log_message,
         if (this->allocator_) {
             if (!this->allocator_->OnMove(event_data)) {
                 WARNING("Failed to update storage allocator after container move: " <<
-                        event_data.ShortDebugString());
+                    event_data.ShortDebugString());
             }
         }
         if (this->gc_) {
@@ -807,8 +806,8 @@ bool ContainerStorage::LogAck(event_type event_type, const Message* log_message,
         CHECK(scoped_lock.AcquireWriteLock(), "Failed to acquire meta data lock");
         DCHECK(IsValidAddressData(event_data.new_address()), "Invalid address data: " << event_data.ShortDebugString());
         CHECK(this->meta_data_index_->Put(&container_id, sizeof(uint64_t), event_data.new_address()),
-                "Meta data update failed: " << container_id <<
-                ", address " << DebugString(event_data.new_address()));
+            "Meta data update failed: " << container_id <<
+            ", address " << DebugString(event_data.new_address()));
         FAULT_POINT("container-storage.ack.container-merge-after-put");
 
         // set the redirection pointer
@@ -821,7 +820,7 @@ bool ContainerStorage::LogAck(event_type event_type, const Message* log_message,
             TRACE("Redirect merged container " << id << ": primary id " << secondary_data_address.primary_id());
             DCHECK(IsValidAddressData(secondary_data_address), "Invalid address data: " << secondary_data_address.ShortDebugString());
             CHECK(this->meta_data_index_->Put(&id, sizeof(id), secondary_data_address),
-                    "Cannot write new container address: container id " << id);
+                "Cannot write new container address: container id " << id);
             FAULT_POINT("container-storage.ack.container-merge-after-secondary-put");
         }
         for (int i = 0; i < event_data.unused_ids_size(); i++) {
@@ -854,11 +853,11 @@ bool ContainerStorage::LogAck(event_type event_type, const Message* log_message,
 
         if (this->allocator_) {
             CHECK(this->allocator_->OnMerge(event_data),
-                    "Cannot get merge container address: " << event_data.ShortDebugString());
+                "Cannot get merge container address: " << event_data.ShortDebugString());
         }
         if (this->gc_) {
             CHECK(this->gc_->OnMerge(event_data),
-                    "Failed to report merge to gc: " << event_data.ShortDebugString());
+                "Failed to report merge to gc: " << event_data.ShortDebugString());
         }
 
         CHECK(container_lock1.ReleaseLock(), "Cannot release container write lock");
@@ -906,7 +905,7 @@ bool ContainerStorage::LogAck(event_type event_type, const Message* log_message,
 
         if (this->allocator_) {
             CHECK(this->allocator_->OnDeleteContainer(event_data),
-                    "Cannot get delete container address: " << event_data.ShortDebugString());
+                "Cannot get delete container address: " << event_data.ShortDebugString());
         }
 
         CHECK(container_lock.ReleaseLock(), "Failed to release container lock");
@@ -925,13 +924,13 @@ bool ContainerStorage::CheckOpenContainerForTimeouts() {
         ReadWriteLock* write_cache_lock = NULL;
         Container* check_write_container = NULL;
         CHECK(this->write_cache_.GetWriteCacheContainerByIndex(i, &check_write_container, &write_cache_lock),
-                "Failed to get write cache container");
+            "Failed to get write cache container");
         CHECK(write_cache_lock, "Write cache lock not set");
         CHECK(check_write_container, "Write container not set");
 
         ScopedReadWriteLock scoped_write_container_lock(write_cache_lock);
         CHECK(scoped_write_container_lock.AcquireWriteLock(),
-                "Failed to acquire write cache lock");
+            "Failed to acquire write cache lock");
 
         if (Storage::IsValidAddress(check_write_container->primary_id())) {
             // Commit any timed out container to disk.
@@ -970,7 +969,7 @@ bool ContainerStorage::TimeoutCommitRunner() {
 
 void ContainerStorage::RegisterStorage() {
     Storage::Factory().Register("container-storage",
-            &ContainerStorage::CreateStorage);
+        &ContainerStorage::CreateStorage);
 }
 
 Storage* ContainerStorage::CreateStorage() {
@@ -979,9 +978,9 @@ Storage* ContainerStorage::CreateStorage() {
 }
 
 ContainerStorage::ContainerStorage() : meta_data_cache_(this),
-        timeout_seconds_(kTimeoutSecondsDefault),
-        cache_(this),
-        write_cache_(this) {
+    timeout_seconds_(kTimeoutSecondsDefault),
+    cache_(this),
+    write_cache_(this) {
     this->container_size_ = Container::kDefaultContainerSize;
     this->meta_data_index_ = NULL;
     this->last_given_container_id_ = 0;
@@ -1033,8 +1032,8 @@ ContainerStorage::~ContainerStorage() {
 
 bool ContainerStorage::Init() {
     this->timeout_committer_ = new Thread<bool>(
-            NewRunnable(this, &ContainerStorage::TimeoutCommitRunner),
-            "timeout commit");
+        NewRunnable(this, &ContainerStorage::TimeoutCommitRunner),
+        "timeout commit");
     CHECK(this->timeout_committer_, "Failed to alloc timeout committer");
     return true;
 }
@@ -1171,7 +1170,7 @@ bool ContainerStorage::SetOption(const string& option_name, const string& option
     if (StartsWith(option_name, "alloc.")) {
         CHECK(this->allocator_, "allocator not set");
         CHECK(this->allocator_->SetOption(option_name.substr(strlen("alloc.")), option),
-                "Configuration failed: " << option_name << " - " << option);
+            "Configuration failed: " << option_name << " - " << option);
         return true;
     }
     ERROR("Illegal option: " << option_name);
@@ -1188,7 +1187,7 @@ bool ContainerStorage::Format(const ContainerFile& file, File* format_file) {
         superblock.set_uuid(file.uuid().ToString());
 
         CHECK(format_file->WriteSizedMessage(0, superblock, kSuperBlockSize, true) > 0,
-                "Failed to write superblock: " << superblock.DebugString());
+            "Failed to write superblock: " << superblock.DebugString());
     }
 
     if (preallocate_) {
@@ -1239,8 +1238,8 @@ bool ContainerStorage::Start(const StartContext& start_context, DedupSystem* sys
 
     if (info_lookup == LOOKUP_FOUND) {
         CHECK(this->container_size_ == log_data.container_size(),
-                "Container size mismatch (logged size " << log_data.container_size()
-                << ", configured size " << this->container_size_ << ")");
+            "Container size mismatch (logged size " << log_data.container_size()
+                                                    << ", configured size " << this->container_size_ << ")");
         this->last_given_container_id_ = log_data.last_given_container_id();
 
         if (!log_data.has_contains_superblock() || !log_data.contains_superblock()) {
@@ -1286,9 +1285,9 @@ bool ContainerStorage::Start(const StartContext& start_context, DedupSystem* sys
                 // files are not allowed to change their file size
                 if (log_data.file_size() > i && log_data.file(i).has_file_size()) {
                     CHECK(file_[i].file_size() == log_data.file(i).file_size(), "Illegal file size: " << file_[i].filename() <<
-                            ", reason file size doesn't match with old file size" <<
-                            ", configured file size " <<  file_[i].file_size() <<
-                            ", expected file size " << log_data.file(i).file_size());
+                        ", reason file size doesn't match with old file size" <<
+                        ", configured file size " <<  file_[i].file_size() <<
+                        ", expected file size " << log_data.file(i).file_size());
                 }
                 use_extend_feature = true;
             }
@@ -1300,12 +1299,12 @@ bool ContainerStorage::Start(const StartContext& start_context, DedupSystem* sys
                 ContainerSuperblockData superblock;
 
                 CHECK(tmp_file->ReadSizedMessage(0, &superblock, kSuperBlockSize, true),
-                        "Failed to read super block");
+                    "Failed to read super block");
 
                 if (log_data.file(i).has_uuid() && superblock.has_uuid()) {
                     CHECK(log_data.file(i).uuid() == superblock.uuid(), "Illegal container file uuid: " <<
-                            "stored uuid " << superblock.uuid() <<
-                            ", expected uuid " << log_data.file(i).uuid());
+                        "stored uuid " << superblock.uuid() <<
+                        ", expected uuid " << log_data.file(i).uuid());
                 }
                 Option<UUID> uuid = UUID::FromString(superblock.uuid());
                 CHECK(uuid.valid(), "Invalid uuid in super block: " << superblock.ShortDebugString());
@@ -1320,9 +1319,9 @@ bool ContainerStorage::Start(const StartContext& start_context, DedupSystem* sys
                     total_file_size -= kSuperBlockSize;
                 }
                 CHECK(total_file_size == file_[i].file_size(), "Illegal file size: " << file_[i].filename() <<
-                        ", reason file size not matching with pre-allocated on-disk size" <<
-                        ", expected file size " <<  file_[i].file_size() <<
-                        ", actual file size " << total_file_size);
+                    ", reason file size not matching with pre-allocated on-disk size" <<
+                    ", expected file size " <<  file_[i].file_size() <<
+                    ", actual file size " << total_file_size);
             }
 
             file_[i].Start(tmp_file.Get(), false);
@@ -1351,21 +1350,21 @@ bool ContainerStorage::Start(const StartContext& start_context, DedupSystem* sys
         if (!file_[i].file()) {
             // if the file existed before, we have a problem
             CHECK(log_data.file_size() <= i, "Error opening storage file: filename " << this->file_[i].filename() <<
-                    ", reason: File existed once, but cannot be opened");
+                ", reason: File existed once, but cannot be opened");
 
             if (!start_context.create() && start_context.force()) {
                 use_extend_feature = true;
                 CHECK(!use_comp_mode, "Extending is not possible in compatibility mode");
             }
             CHECK(start_context.create() || start_context.force(),
-                    "Error opening storage file: filename " << this->file_[i].filename());
+                "Error opening storage file: filename " << this->file_[i].filename());
             INFO("Creating new container data file " << this->file_[i].filename());
 
             uint64_t file_size = file_[i].file_size(); // explicit file size
             if (file_size == 0) {
                 int64_t default_size_per_file = size_to_assign / file_count_no_explicit_fs;
                 CHECK(default_size_per_file > 0, "Illegal container config: size to assign " << FormatStorageUnit(size_to_assign) <<
-                        ", files to assign to " << file_count_no_explicit_fs);
+                    ", files to assign to " << file_count_no_explicit_fs);
                 file_[i].set_file_size(default_size_per_file);
                 size_to_assign -= file_[i].file_size();
                 file_count_no_explicit_fs--;
@@ -1374,18 +1373,18 @@ bool ContainerStorage::Start(const StartContext& start_context, DedupSystem* sys
             }
             // validate file size
             CHECK(file_size % container_size_ == 0, "Size per file is not aligned with container size: " <<
-                    "filename " << file_[i].filename() <<
-                    ", size " << file_size <<
-                    ", container size " << container_size_);
+                "filename " << file_[i].filename() <<
+                ", size " << file_size <<
+                ", container size " << container_size_);
             uint64_t container_per_file = file_size / container_size_;
             CHECK(container_per_file % 8 == 0, "Containers per file must be devidable by 8: " <<
-                    "containers in file " << container_per_file <<
-                    ", file " << file_[i].filename() <<
-                    ", container file size " << file_size <<
-                    ", total size " << size_);
+                "containers in file " << container_per_file <<
+                ", file " << file_[i].filename() <<
+                ", container file size " << file_size <<
+                ", total size " << size_);
 
             CHECK(File::MakeParentDirectory(this->file_[i].filename(), start_context.dir_mode().mode()),
-                    "Failed to check parent directories");
+                "Failed to check parent directories");
 
             file_[i].set_uuid(UUID::Generate());
 
@@ -1398,10 +1397,10 @@ bool ContainerStorage::Start(const StartContext& start_context, DedupSystem* sys
             ScopedPtr<File> tmp_file(File::Open(this->file_[i].filename(), O_RDWR | O_LARGEFILE | O_SYNC, 0));
             CHECK(tmp_file.Get(), "Failed to open container file " << file_[i].filename());
             CHECK(chmod(this->file_[i].filename().c_str(), start_context.file_mode().mode()) == 0,
-                    "Failed to change file permissions: " << this->file_[i].filename());
+                "Failed to change file permissions: " << this->file_[i].filename());
             if (start_context.file_mode().gid() != -1) {
                 CHECK(chown(this->file_[i].filename().c_str(), -1, start_context.file_mode().gid()) == 0,
-                        "Failed to change file group: " << this->file_[i].filename());
+                    "Failed to change file group: " << this->file_[i].filename());
             }
 
             file_[i].Start(tmp_file.Release(), true);
@@ -1409,7 +1408,7 @@ bool ContainerStorage::Start(const StartContext& start_context, DedupSystem* sys
     }
 
     CHECK(size_to_assign == 0, "Illegal container configuration: total size " << FormatStorageUnit(size_) <<
-            ", not assigned size " << FormatStorageUnit(size_to_assign));
+        ", not assigned size " << FormatStorageUnit(size_to_assign));
 
     // we wait to dump the meta data until the formatting is done
     if (info_lookup == LOOKUP_NOT_FOUND && start_context.create()) {
@@ -1429,7 +1428,7 @@ bool ContainerStorage::Start(const StartContext& start_context, DedupSystem* sys
 
     if (this->idle_detector_) {
         CHECK(this->idle_detector_->RegisterIdleConsumer("container-storage", this),
-                "Cannot register container storage as idle tick consumer");
+            "Cannot register container storage as idle tick consumer");
     }
 
     CHECK(this->log_->RegisterConsumer("container-storage", this), "Cannot register container storage as log consumer");
@@ -1454,7 +1453,7 @@ bool ContainerStorage::Start(const StartContext& start_context, DedupSystem* sys
         // or the system is readonly and we don't care because there is no way that the container is overwritten.
     }
     INFO("Started container storage (startup time: " << startup_timer.GetTime() << "ms" <<
-            ", last given container id: " << this->last_given_container_id_ << ")");
+        ", last given container id: " << this->last_given_container_id_ << ")");
 
     had_been_started_ = true;
     return true;
@@ -1486,7 +1485,7 @@ bool ContainerStorage::Run() {
                 id = last_given_container_id_ - ophran_range;
             }
             DEBUG("Check for ophran chunks: low container id " << id << ", high container id " << last_given_container_id_);
-            for(;id <= last_given_container_id_; id++) {
+            for (; id <= last_given_container_id_; id++) {
                 TRACE("Check for ophrans in container: container id " << id);
                 Container container;
                 container.Init(id, container_size_);
@@ -1505,18 +1504,18 @@ bool ContainerStorage::Run() {
                             TRACE("Container item is deleted: " << item->DebugString());
                         } else if (item->original_id() != id) {
                             TRACE("Skip item: " << item->DebugString() <<
-                                    ", import container id " << id);
+                                ", import container id " << id);
                         } else {
                             event_data.add_chunk_fp(item->key(), item->key_size());
                         }
                     }
                     if (event_data.chunk_fp_size() > 0) {
                         DEBUG("Mark chunks as possible ophrans: " <<
-                                "container id " << id <<
-                                ", chunk count " << event_data.chunk_fp_size());
+                            "container id " << id <<
+                            ", chunk count " << event_data.chunk_fp_size());
 
                         CHECK(log_->CommitEvent(dedupv1::log::EVENT_TYPE_OPHRAN_CHUNKS, &event_data, NULL, NULL, NO_EC),
-                                "Cannot commit log entry: " << event_data.ShortDebugString());
+                            "Cannot commit log entry: " << event_data.ShortDebugString());
                     }
                 } else {
                     // some containers might be missing, but we do not care. This happens
@@ -1567,9 +1566,9 @@ bool ContainerStorage::Close() {
     for (vector<Container*>::iterator i = this->write_cache_.GetCache().begin(); i != this->write_cache_.GetCache().end(); i++) {
         Container* write_container = *i;
         if (write_container &&
-                write_container->primary_id() != 0 &&
-                write_container->primary_id() != Storage::ILLEGAL_STORAGE_ADDRESS &&
-                write_container->item_count() > 0) {
+            write_container->primary_id() != 0 &&
+            write_container->primary_id() != Storage::ILLEGAL_STORAGE_ADDRESS &&
+            write_container->item_count() > 0) {
             WARNING("Container " << write_container->primary_id() << " not committed during shutdown");
         }
     }
@@ -1654,9 +1653,9 @@ bool ContainerStorage::Stop(const dedupv1::StopContext& stop_context) {
     for (vector<Container*>::iterator i = this->write_cache_.GetCache().begin(); i != this->write_cache_.GetCache().end(); i++) {
         Container* write_container = *i;
         if (write_container &&
-                write_container->primary_id() != 0 &&
-                write_container->primary_id() != Storage::ILLEGAL_STORAGE_ADDRESS &&
-                write_container->item_count() > 0) {
+            write_container->primary_id() != 0 &&
+            write_container->primary_id() != Storage::ILLEGAL_STORAGE_ADDRESS &&
+            write_container->item_count() > 0) {
             TRACE("Shutdown commit for " << write_container->primary_id());
             tbb::concurrent_hash_map<uint64_t, ContainerStorageAddressData>::accessor a;
             if (!address_map.find(a, write_container->primary_id())) {
@@ -1679,7 +1678,7 @@ bool ContainerStorage::Stop(const dedupv1::StopContext& stop_context) {
         CHECK(this->allocator_->Stop(stop_context), "Cannot stop allocator");
     }
     CHECK(this->background_committer_.Stop(stop_context),
-            "Cannot stop background committer");
+        "Cannot stop background committer");
 
     if (state_ != CREATED) {
         this->state_ = STOPPED;
@@ -1753,7 +1752,7 @@ bool ContainerStorage::Flush(dedupv1::base::ErrorContext* ec) {
         ReadWriteLock* write_cache_lock = NULL;
         Container* check_write_container = NULL;
         CHECK(this->write_cache_.GetWriteCacheContainerByIndex(i, &check_write_container, &write_cache_lock),
-                "Failed to get write cache container: state " << state_);
+            "Failed to get write cache container: state " << state_);
         CHECK(write_cache_lock, "Write cache lock not set");
         CHECK(check_write_container, "Write container not set");
 
@@ -1790,7 +1789,7 @@ bool ContainerStorage::Flush(dedupv1::base::ErrorContext* ec) {
     TRACE("Wait until replay queue is empty");
     if (this->log_) {
         CHECK(this->log_->WaitUntilDirectReplayQueueEmpty(15),
-          "Failed to wait until direct replay queue was processed");
+            "Failed to wait until direct replay queue was processed");
     }
 
     return !failed;
@@ -1819,7 +1818,7 @@ alloc_result ContainerStorage::GetNewContainerId(Container* container) {
     event_data.mutable_address()->CopyFrom(address);
 
     CHECK_RETURN(this->log_->CommitEvent(dedupv1::log::EVENT_TYPE_CONTAINER_OPEN, &event_data, NULL, NULL, NO_EC),
-            ALLOC_ERROR, "Failed to commit container event: " << event_data.ShortDebugString());
+        ALLOC_ERROR, "Failed to commit container event: " << event_data.ShortDebugString());
 
     DEBUG("Open container: container id " << last_given_container_id << ", address " << DebugString(event_data.address()));
     return ALLOC_OK;
@@ -1828,7 +1827,7 @@ alloc_result ContainerStorage::GetNewContainerId(Container* container) {
 bool ContainerStorage::PrepareCommit(Container* container) {
     DCHECK(container, "Container not set");
     DCHECK(Storage::IsValidAddress(container->primary_id(), false),
-            "Container has no valid address: " << container->DebugString());
+        "Container has no valid address: " << container->DebugString());
 
     TRACE("Prepare commit: " << container->DebugString());
 
@@ -1841,7 +1840,7 @@ bool ContainerStorage::PrepareCommit(Container* container) {
     } else {
 
         TRACE("Hand over container: container " << container->DebugString() <<
-                ", address " << DebugString(a->second));
+            ", address " << DebugString(a->second));
 
         ContainerStorageAddressData address_data = a->second;
 
@@ -1859,7 +1858,7 @@ bool ContainerStorage::PrepareCommit(Container* container) {
         CHECK(lr != LOOKUP_ERROR, "Failed to check for cache line: container " << container->DebugString());
         if (lr == LOOKUP_NOT_FOUND && cache_entry.is_set()) {
             CHECK(this->cache_.CopyToReadCache(*container, &cache_entry),
-                    "Failed to copy container to read cache: " << container->DebugString());
+                "Failed to copy container to read cache: " << container->DebugString());
         } else {
             // LOOKUP_FOUND or cache entry not set
             // This is a strange situation and I don't know how this can happen
@@ -1889,7 +1888,7 @@ bool ContainerStorage::FailWriteCacheContainer(uint64_t address) {
     }
 
     CHECK(write_cache_.GetWriteCacheContainer(address, &write_cache_container, &write_cache_lock, true) == LOOKUP_FOUND,
-            "Failed to get write cache container: container id " << address);
+        "Failed to get write cache container: container id " << address);
     ScopedReadWriteLock scoped_write_container_lock(NULL);
     scoped_write_container_lock.SetLocked(write_cache_lock);
     CHECK(write_cache_container, "Write cache container not set");
@@ -1897,7 +1896,7 @@ bool ContainerStorage::FailWriteCacheContainer(uint64_t address) {
     write_cache_container->Reuse(Storage::ILLEGAL_STORAGE_ADDRESS);
 
     CHECK(scoped_write_container_lock.ReleaseLock(),
-            "Failed to release write container lock: " << scoped_write_container_lock.DebugString());
+        "Failed to release write container lock: " << scoped_write_container_lock.DebugString());
     return true;
 }
 
@@ -1906,8 +1905,8 @@ ContainerStorageSession::ContainerStorageSession(ContainerStorage* storage) {
 }
 
 bool ContainerStorageSession::WriteNew(const void* key, size_t key_size,
-        const void* data, size_t data_size, uint64_t* address,
-        ErrorContext* ec) {
+                                       const void* data, size_t data_size, uint64_t* address,
+                                       ErrorContext* ec) {
     ContainerStorage* c = this->storage_;
     ProfileTimer timer(storage_->stats_.total_write_time_);
 
@@ -1920,7 +1919,7 @@ bool ContainerStorageSession::WriteNew(const void* key, size_t key_size,
     // TODO(fermat): We could send the size of the chunk here to get an open container, which can store the chunk, if there is one left.
     // This way we get a defragmentation.
     CHECK(this->storage_->write_cache_.GetNextWriteCacheContainer(&write_container, &write_container_lock),
-            "Failed to get write container: key " << Fingerprinter::DebugString((const byte*) key, key_size));
+        "Failed to get write container: key " << Fingerprinter::DebugString((const byte *) key, key_size));
     CHECK(write_container, "Write container not set");
     CHECK(write_container_lock, "Write container lock not set");
     ScopedReadWriteLock scoped_write_container_lock(NULL);
@@ -1939,16 +1938,16 @@ bool ContainerStorageSession::WriteNew(const void* key, size_t key_size,
     }
 
     CHECK(scoped_write_container_lock.IsHeldForWrites(),
-            "Thread doesn't holds write container: lock: " <<
-            ", lock " << scoped_write_container_lock.DebugString() <<
-            ", key " << Fingerprinter::DebugString((const byte*) key, key_size));
+        "Thread doesn't holds write container: lock: " <<
+        ", lock " << scoped_write_container_lock.DebugString() <<
+        ", key " << Fingerprinter::DebugString((const byte *) key, key_size));
 
     if (write_container->IsFull(key_size, data_size)) {
         TRACE("Container full: " << write_container->DebugString());
 
         // we do not need to reset the container cache timeout, because it has been reseted a few moments ago (GetNextWriteCacheContainer)
         CHECK(c->PrepareCommit(write_container),
-                "Failed to prepare commit: " << write_container->DebugString());
+            "Failed to prepare commit: " << write_container->DebugString());
 
         // PrepareCommit has build a new container in cache, which is now an empty container
         if (!Storage::IsValidAddress(write_container->primary_id())) { // Write into new container
@@ -1966,21 +1965,21 @@ bool ContainerStorageSession::WriteNew(const void* key, size_t key_size,
     CHECK(scoped_write_container_lock.IsHeldForWrites(), "Thread doesn't holds write container lock");
     uint64_t container_id = write_container->primary_id();
     CHECK(container_id != 0 && container_id != Storage::EMPTY_DATA_STORAGE_ADDRESS && container_id != Storage::ILLEGAL_STORAGE_ADDRESS,
-            "Illegal container id: " << write_container->primary_id());
+        "Illegal container id: " << write_container->primary_id());
     *address = container_id;
 
-    TRACE("Write new key " << Fingerprinter::DebugString((byte*) key, key_size) << " to container " << container_id <<
-            ", data size " << data_size <<
-            ", active container data size " << write_container->active_data_size());
+    TRACE("Write new key " << Fingerprinter::DebugString((byte *) key, key_size) << " to container " << container_id <<
+        ", data size " << data_size <<
+        ", active container data size " << write_container->active_data_size());
 
-    CHECK(!write_container->IsFull(key_size, data_size), "Free Space assertion failed: fp " << Fingerprinter::DebugString((const byte*) key, key_size) << ", data size " << data_size << ", write container " << write_container->DebugString());
+    CHECK(!write_container->IsFull(key_size, data_size), "Free Space assertion failed: fp " << Fingerprinter::DebugString((const byte *) key, key_size) << ", data size " << data_size << ", write container " << write_container->DebugString());
 
     // Scope for add timer
     {
         ProfileTimer add_timer(this->storage_->stats_.add_time_);
-        CHECK(write_container->AddItem((byte*) key, key_size, (byte*) data, data_size,
+        CHECK(write_container->AddItem((byte *) key, key_size, (byte *) data, data_size,
                 c->compression_),
-                "Cannot add item: fp " << Fingerprinter::DebugString((const byte*) key, key_size) << ", data size " << data_size << ", write container " << write_container->DebugString());
+            "Cannot add item: fp " << Fingerprinter::DebugString((const byte *) key, key_size) << ", data size " << data_size << ", write container " << write_container->DebugString());
     }
     DCHECK(write_container->primary_id() == container_id, "Container id changed illegally");
     CHECK(scoped_write_container_lock.ReleaseLock(), "Failed to release write container lock: " << scoped_write_container_lock.DebugString());
@@ -2142,12 +2141,12 @@ string ContainerStorage::PrintProfile() {
 }
 
 bool ContainerStorageSession::DoDelete(
-        uint64_t container_id,
-        uint64_t primary_id,
-        const ContainerStorageAddressData& address,
-        const list<bytestring>& key_list,
-        CacheEntry* cache_entry,
-        ErrorContext* ec) {
+    uint64_t container_id,
+    uint64_t primary_id,
+    const ContainerStorageAddressData& address,
+    const list<bytestring>& key_list,
+    CacheEntry* cache_entry,
+    ErrorContext* ec) {
     ContainerStorage* c = this->storage_;
     DCHECK(c, "Container storage not set");
     DCHECK(cache_entry, "Cache entry not set");
@@ -2155,21 +2154,21 @@ bool ContainerStorageSession::DoDelete(
     // we can now re-acquire the container lock.
     // we know for sure that the primary id is the same as no one else was allowed to do changes on the container
 
-    ReadWriteLock* container_lock = NULL;    
+    ReadWriteLock* container_lock = NULL;
     std::pair<dedupv1::base::lookup_result, ContainerStorageAddressData> address2;
     address2 = this->storage_->LookupContainerAddressWait(container_id,
-            &container_lock,
-            true);
-    if(address2.first == LOOKUP_ERROR) {
+        &container_lock,
+        true);
+    if (address2.first == LOOKUP_ERROR) {
         ERROR("Failed to get address of container " << container_id);
         if (cache_entry->is_set()) {
             CHECK(cache_entry->lock()->ReleaseLock(), "Failed to release cache lock");
         }
         return false;
     }
-    if(address2.first == LOOKUP_NOT_FOUND) {
+    if (address2.first == LOOKUP_NOT_FOUND) {
         ERROR("Failed to get address of container " << container_id <<
-                ", reason: container not found");
+            ", reason: container not found");
         if (cache_entry->is_set()) {
             CHECK(cache_entry->lock()->ReleaseLock(), "Failed to release cache lock");
         }
@@ -2181,8 +2180,8 @@ bool ContainerStorageSession::DoDelete(
 
     if (address2.second.has_primary_id() && address2.second.primary_id() != primary_id) {
         ERROR("Illegal primary id: container id " << container_id <<
-                ", should be primary id " << primary_id <<
-                ", address " << address2.second.DebugString());
+            ", should be primary id " << primary_id <<
+            ", address " << address2.second.DebugString());
         if (cache_entry->is_set()) {
             CHECK(cache_entry->lock()->ReleaseLock(), "Failed to release cache lock");
         }
@@ -2190,7 +2189,7 @@ bool ContainerStorageSession::DoDelete(
     }
 
     Container container;
-    if(!container.Init(container_id, this->storage_->GetContainerSize())) {
+    if (!container.Init(container_id, this->storage_->GetContainerSize())) {
         ERROR("Failed to init container: container id " << container_id);
 
         if (cache_entry->is_set()) {
@@ -2206,8 +2205,8 @@ bool ContainerStorageSession::DoDelete(
     // read cache. This would lead to race conditions
 
     if (cache_entry->is_set()) {
-        CHECK(c->cache_.RemoveFromReadCache(primary_id, cache_entry), 
-                "Failed to remove container from read cache: container " << primary_id);
+        CHECK(c->cache_.RemoveFromReadCache(primary_id, cache_entry),
+            "Failed to remove container from read cache: container " << primary_id);
     }
     // if we held the cache entry lock before, we released it now
 
@@ -2227,7 +2226,7 @@ bool ContainerStorageSession::DoDelete(
         size_t key_size = i->size();
         TRACE("Delete item " << Fingerprinter::DebugString(key, key_size) << " from container " << container.DebugString() << " (read cache/disk)");
         CHECK(container.DeleteItem(key, key_size),
-                "Failed to delete container item: " << Fingerprinter::DebugString(key, key_size) << " from container " << container_id);
+            "Failed to delete container item: " << Fingerprinter::DebugString(key, key_size) << " from container " << container_id);
     }
     ContainerStorageAddressData new_container_address;
     ContainerStorageAddressData old_container_address = address;
@@ -2245,7 +2244,7 @@ bool ContainerStorageSession::DoDelete(
             size_t i = 0;
             while (scs == STORAGE_ADDRESS_NOT_COMMITED && i < (ContainerStorageBackgroundCommitter::kMaxThreads + 1)) {
                 CHECK(this->storage_->background_committer_.CommitFinishedConditionWaitTimeout(10) == TIMED_TRUE,
-                        "Failed to wait for container commit");
+                    "Failed to wait for container commit");
                 scs = this->storage_->IsCommitted(container.primary_id());
                 i++;
             }
@@ -2259,7 +2258,7 @@ bool ContainerStorageSession::DoDelete(
 
     CHECK(this->storage_->allocator_->OnNewContainer(container, false, &new_container_address), "Failed to get new container address");
     CHECK(this->storage_->WriteContainer(&container, new_container_address),
-            "Failed to write container " << container.DebugString());
+        "Failed to write container " << container.DebugString());
 
     ContainerMoveEventData event_data;
     event_data.set_container_id(container.primary_id());
@@ -2271,23 +2270,23 @@ bool ContainerStorageSession::DoDelete(
     event_data.set_old_item_count(old_item_count);
 
     INFO("Moved container " << container.DebugString() <<
-            ", old address " << ContainerStorage::DebugString(old_container_address) <<
-            ", new address " << ContainerStorage::DebugString(new_container_address));
+        ", old address " << ContainerStorage::DebugString(old_container_address) <<
+        ", new address " << ContainerStorage::DebugString(new_container_address));
 
     CHECK(scoped_container_lock.ReleaseLock(), "Failed to release container lock");
 
     // Commit data only when on critical lock are hold, due to DIRECT processing
     int64_t event_log_id = 0;
     CHECK(c->log_->CommitEvent(EVENT_TYPE_CONTAINER_MOVED, &event_data, &event_log_id, c, NO_EC),
-            "Failed to commit container move");
+        "Failed to commit container move");
 
     c->stats_.moved_container_++;
     return true;
 }
 
 bool ContainerStorageSession::Delete(uint64_t container_id,
-        const list<bytestring>& key_list,
-        ErrorContext* ec) {
+                                     const list<bytestring>& key_list,
+                                     ErrorContext* ec) {
     ProfileTimer timer(this->storage_->stats_.total_delete_time_);
     ContainerStorage* c = this->storage_;
     CHECK(c, "Container storage not set");
@@ -2296,7 +2295,7 @@ bool ContainerStorageSession::Delete(uint64_t container_id,
     ReadWriteLock* write_container_lock = NULL;
 
     CHECK(c->state_ == ContainerStorage::RUNNING || c->state_ == ContainerStorage::STARTED,
-            "Illegal state to delete data: " << c->state_);
+        "Illegal state to delete data: " << c->state_);
 
     TRACE("Delete storage entry: address " << container_id);
 
@@ -2312,7 +2311,7 @@ bool ContainerStorageSession::Delete(uint64_t container_id,
             size_t key_size = i->size();
             TRACE("Delete item " << Fingerprinter::DebugString(key, key_size) << " from container " << container_id << " (write cache)");
             CHECK(write_container->DeleteItem(key, i->size()),
-                    "Failed to delete container item: " << Fingerprinter::DebugString(key, key_size) << " from container " << container_id);
+                "Failed to delete container item: " << Fingerprinter::DebugString(key, key_size) << " from container " << container_id);
         }
         CHECK(scoped_write_cache_lock.ReleaseLock(), "Failed to release write container lock");
         return true;
@@ -2329,11 +2328,11 @@ bool ContainerStorageSession::Delete(uint64_t container_id,
     while (!has_access) {
 
         address = this->storage_->LookupContainerAddressWait(container_id,
-                &container_lock,
-                true);
+            &container_lock,
+            true);
         CHECK(address.first != LOOKUP_ERROR, "Failed to get address of container " << container_id);
         CHECK(address.first != LOOKUP_NOT_FOUND, "Failed to get address of container " << container_id <<
-                ", reason: container not found");
+            ", reason: container not found");
 
         if (address.second.has_primary_id()) {
             primary_id = address.second.primary_id();
@@ -2365,7 +2364,7 @@ bool ContainerStorageSession::Delete(uint64_t container_id,
     const Container* cached_container = NULL;
     CacheEntry cache_entry;
     lookup_result cache_lookup_result = storage_->GetReadCache()->CheckCache(primary_id, &cached_container, true,
-            true, &cache_entry);
+        true, &cache_entry);
 
     bool delete_result = true;
     if (cache_lookup_result == LOOKUP_ERROR) {
@@ -2386,7 +2385,7 @@ bool ContainerStorageSession::Delete(uint64_t container_id,
 }
 
 enum lookup_result ContainerStorageSession::ReadInContainer(const Container& container, const void* key,
-        size_t key_size, void* data, size_t* data_size) {
+                                                            size_t key_size, void* data, size_t* data_size) {
     this->storage_->stats_.reads_.fetch_and_increment();
 
     const ContainerItem* item = container.FindItem(key, key_size);
@@ -2405,22 +2404,22 @@ enum lookup_result ContainerStorageSession::ReadInContainer(const Container& con
             }
         }
         WARNING("Key not found in container: " <<
-                "container " << container.DebugString() <<
-                ", container items " << items_debug_string <<
-                ", key " << Fingerprinter::DebugString(static_cast<const byte*>(key), key_size));
+            "container " << container.DebugString() <<
+            ", container items " << items_debug_string <<
+            ", key " << Fingerprinter::DebugString(static_cast<const byte*>(key), key_size));
         return LOOKUP_NOT_FOUND;
     }
     CHECK_RETURN(!item->is_deleted(), LOOKUP_ERROR, "Found a deleted item: " << item->DebugString());
     CHECK_RETURN(item->raw_size() <= *data_size, LOOKUP_ERROR, "Data length error: " <<
-            "container " << container.DebugString() <<
-            ", item " << item->DebugString() <<
-            ", data size " << (*data_size));
+        "container " << container.DebugString() <<
+        ", item " << item->DebugString() <<
+        ", data size " << (*data_size));
     if (data) {
         CHECK_RETURN(container.CopyRawData(item, data, *data_size), LOOKUP_ERROR,
-                "Cannot copy data: " <<
-                "container " << container.DebugString() <<
-                ", item " << item->DebugString() <<
-                ", fp " << Fingerprinter::DebugString((const byte*) key, key_size));
+            "Cannot copy data: " <<
+            "container " << container.DebugString() <<
+            ", item " << item->DebugString() <<
+            ", fp " << Fingerprinter::DebugString((const byte *) key, key_size));
     }
     *data_size = item->raw_size();
 
@@ -2438,12 +2437,12 @@ enum lookup_result ContainerStorageSession::ReadInContainer(const Container& con
 }
 
 bool ContainerStorageSession::Read(uint64_t address, const void* key,
-        size_t key_size, void* data, size_t* data_size,
-        ErrorContext* ec) {
+                                   size_t key_size, void* data, size_t* data_size,
+                                   ErrorContext* ec) {
     ProfileTimer timer(this->storage_->stats_.total_read_time_);
 
     CHECK(this->storage_->state_ == ContainerStorage::RUNNING ||
-            this->storage_->state_ == ContainerStorage::STARTED, "Illegal state to read data: " << this->storage_->state_);
+        this->storage_->state_ == ContainerStorage::STARTED, "Illegal state to read data: " << this->storage_->state_);
 
     // Handle default first
     if (StorageSession::Read(address, key, key_size, data, data_size, ec)) {
@@ -2465,7 +2464,7 @@ bool ContainerStorageSession::Read(uint64_t address, const void* key,
         scoped_write_cache_lock.SetLocked(write_cache_lock);
 
         this->storage_->stats_.write_cache_hit_++;
-        TRACE("Read item " << Fingerprinter::DebugString((byte*) key, key_size) << " from container " << address << " (write cache)");
+        TRACE("Read item " << Fingerprinter::DebugString((byte *) key, key_size) << " from container " << address << " (write cache)");
 
         enum lookup_result r = this->ReadInContainer(*write_container, key, key_size, data, data_size);
         CHECK(r != LOOKUP_ERROR, "Failed to read in container: " << write_container->DebugString());
@@ -2479,7 +2478,7 @@ bool ContainerStorageSession::Read(uint64_t address, const void* key,
     const Container* cache_container = NULL;
     CacheEntry cache_entry;
     read_result = this->storage_->cache_.CheckCache(address, &cache_container, false /* we want update the cache*/,
-            true, &cache_entry);
+        true, &cache_entry);
     CHECK(read_result != LOOKUP_ERROR, "Read of container " << address << " failed: Cache check failed");
     if (read_result == LOOKUP_FOUND) {
         CHECK(cache_container, "Container not set");
@@ -2489,20 +2488,20 @@ bool ContainerStorageSession::Read(uint64_t address, const void* key,
 
         CHECK(cache_container->HasId(address), "Wrong active container: " << cache_container->DebugString() << ", address " << address);
 
-        TRACE("Read item " << Fingerprinter::DebugString((byte*) key, key_size) << " from container " << cache_container->DebugString() << " (read cache)");
+        TRACE("Read item " << Fingerprinter::DebugString((byte *) key, key_size) << " from container " << cache_container->DebugString() << " (read cache)");
 
         // We hold the cache entry lock, we can now also allocate the container lock
         enum lookup_result r = this->ReadInContainer(*cache_container, key, key_size, data, data_size);
         CHECK(r != LOOKUP_ERROR, "Failed to read in container: "
-                << "container " << cache_container->DebugString()
-                << ", key " << Fingerprinter::DebugString(key, key_size));
+            << "container " << cache_container->DebugString()
+            << ", key " << Fingerprinter::DebugString(key, key_size));
 
         CHECK(scoped_cache_lock.ReleaseLock(), "Failed to release cache lock");
         return r == LOOKUP_FOUND;
     }
     // read_resulkt == LOOKUP_NOT_FOUND => not found in read cache
     // cache lock might/should be set
-    TRACE("Read item " << Fingerprinter::DebugString((byte*) key, key_size) << " from container " << address << " (disk)");
+    TRACE("Read item " << Fingerprinter::DebugString((byte *) key, key_size) << " from container " << address << " (disk)");
 
     Container read_container;
     if (!read_container.Init(address, this->storage_->container_size_)) {
@@ -2547,8 +2546,8 @@ bool ContainerStorageSession::Read(uint64_t address, const void* key,
     CHECK(read_container.HasId(address), "Wrong active container: " << read_container.DebugString() << ", address " << address);
     enum lookup_result r2 = this->ReadInContainer(read_container, key, key_size, data, data_size);
     CHECK(r2 != LOOKUP_ERROR, "Failed to read in container: "
-            << "container " << read_container.DebugString()
-            << ", key " << Fingerprinter::DebugString(key, key_size));
+        << "container " << read_container.DebugString()
+        << ", key " << Fingerprinter::DebugString(key, key_size));
     return r2 == LOOKUP_FOUND;
 }
 
@@ -2574,7 +2573,7 @@ storage_commit_state ContainerStorage::IsCommittedWait(uint64_t address) {
         while (address_map.find(a, address)) {
             ignore_cache = true;
             TRACE("Address still in address map: container id " << address <<
-                    ", address " << a->second.ShortDebugString());
+                ", address " << a->second.ShortDebugString());
             a.release();
 
             dedupv1::base::ThreadUtil::Sleep(1);
@@ -2599,7 +2598,7 @@ storage_commit_state ContainerStorage::IsCommittedWait(uint64_t address) {
     bool found = false;
     if (!ignore_cache) {
         CHECK_RETURN(this->meta_data_cache_.Lookup(address, &found, &commit_state),
-                STORAGE_ADDRESS_ERROR, "Failed to lookup the meta data cache");
+            STORAGE_ADDRESS_ERROR, "Failed to lookup the meta data cache");
         if (found) {
             TRACE("Checked commit state: container id " << address << ", result " << commit_state << ", source cache");
             return commit_state;
@@ -2620,7 +2619,7 @@ storage_commit_state ContainerStorage::IsCommittedWait(uint64_t address) {
     }
 
     CHECK_RETURN(this->meta_data_cache_.Update(address, commit_state),
-            STORAGE_ADDRESS_ERROR, "Failed to update the meta data cache");
+        STORAGE_ADDRESS_ERROR, "Failed to update the meta data cache");
     if (commit_state == STORAGE_ADDRESS_COMMITED) {
         TRACE("Checked commit state: container id " << address << ", result " << commit_state << ", source index");
     }
@@ -2637,7 +2636,7 @@ storage_commit_state ContainerStorage::IsCommitted(uint64_t address) {
     enum storage_commit_state commit_state;
     bool found = false;
     CHECK_RETURN(this->meta_data_cache_.Lookup(address, &found, &commit_state),
-            STORAGE_ADDRESS_ERROR, "Failed to lookup the meta data cache");
+        STORAGE_ADDRESS_ERROR, "Failed to lookup the meta data cache");
     if (found) {
         TRACE("Checked commit state: container id " << address << ", result " << commit_state << ", source cache");
         if (commit_state != STORAGE_ADDRESS_COMMITED) {
@@ -2664,7 +2663,7 @@ storage_commit_state ContainerStorage::IsCommitted(uint64_t address) {
         }
     }
     CHECK_RETURN(this->meta_data_cache_.Update(address, commit_state),
-            STORAGE_ADDRESS_ERROR, "Failed to update the meta data cache");
+        STORAGE_ADDRESS_ERROR, "Failed to update the meta data cache");
     if (commit_state == STORAGE_ADDRESS_COMMITED) {
         TRACE("Checked commit state: container id " << address << ", result " << commit_state << ", source index");
     }
@@ -2672,8 +2671,8 @@ storage_commit_state ContainerStorage::IsCommitted(uint64_t address) {
 }
 
 bool ContainerStorage::LogReplay(dedupv1::log::event_type event_type,
-        const LogEventData& event_value,
-        const dedupv1::log::LogReplayContext& context) {
+                                 const LogEventData& event_value,
+                                 const dedupv1::log::LogReplayContext& context) {
     ProfileTimer timer(this->stats_.replay_time_);
     uint64_t container_id = 0;
     if (event_type == dedupv1::log::EVENT_TYPE_REPLAY_STOPPED) {
@@ -2683,8 +2682,8 @@ bool ContainerStorage::LogReplay(dedupv1::log::event_type event_type,
         container_id = event_data.container_id();
 
         DEBUG("Log Background Replay: " <<
-                "Container open: container id " << container_id <<
-                ", highest open container id " << highest_committed_container_id_);
+            "Container open: container id " << container_id <<
+            ", highest open container id " << highest_committed_container_id_);
 
         if (container_id >= highest_committed_container_id_) {
             CHECK(DumpMetaInfo(), "Log Write Failed");
@@ -2707,8 +2706,8 @@ bool ContainerStorage::LogReplay(dedupv1::log::event_type event_type,
         ContainerCommittedEventData event_data = event_value.container_committed_event();
 
         DEBUG("Log replay: " << Log::GetEventTypeName(event_type) <<
-                ", event " << event_data.ShortDebugString() <<
-                ", log id " << context.log_id());
+            ", event " << event_data.ShortDebugString() <<
+            ", log id " << context.log_id());
 
         ScopedReadWriteLock scoped_lock(&meta_data_lock_);
         CHECK(scoped_lock.AcquireWriteLock(), "Failed to acquire meta data lock");
@@ -2729,28 +2728,28 @@ bool ContainerStorage::LogReplay(dedupv1::log::event_type event_type,
             updated_address.set_log_id(context.log_id());
 
             DEBUG("Update meta data for container: container id " << container_id <<
-                    ", address " << updated_address.ShortDebugString());
+                ", address " << updated_address.ShortDebugString());
 
             DCHECK(IsValidAddressData(event_data.address()), "Invalid address data: " << event_data.ShortDebugString());
             CHECK(meta_data_index_->Put(&container_id, sizeof(container_id), updated_address),
-                    "Failed to update meta data index data: container id " << container_id <<
-                    ", address " << updated_address.ShortDebugString());
+                "Failed to update meta data index data: container id " << container_id <<
+                ", address " << updated_address.ShortDebugString());
             CHECK(this->meta_data_cache_.Update(container_id, STORAGE_ADDRESS_COMMITED), "Failed to update cache");
 
             CHECK(scoped_lock.ReleaseLock(), "Failed to release meta data lock");
         } else {
             TRACE("Meta data already up-to-date: container id " << container_id <<
-                    ", meta data " << address_data.ShortDebugString() <<
-                    ", event data " << event_data.ShortDebugString() <<
-                    ", log id " << context.log_id());
+                ", meta data " << address_data.ShortDebugString() <<
+                ", event data " << event_data.ShortDebugString() <<
+                ", log id " << context.log_id());
         }
     } else if (event_type == EVENT_TYPE_CONTAINER_MOVED && context.replay_mode() == EVENT_REPLAY_MODE_DIRTY_START) {
         ContainerMoveEventData event_data = event_value.container_moved_event();
         uint64_t container_id = event_data.container_id();
 
         DEBUG("Log replay: " << Log::GetEventTypeName(event_type) <<
-                ", event " << event_data.ShortDebugString() <<
-                ", log id " << context.log_id());
+            ", event " << event_data.ShortDebugString() <<
+            ", log id " << context.log_id());
 
         // Update index
         ScopedReadWriteLock scoped_lock(&meta_data_lock_);
@@ -2768,23 +2767,23 @@ bool ContainerStorage::LogReplay(dedupv1::log::event_type event_type,
 
             DCHECK(IsValidAddressData(updated_address), "Invalid address data: " << updated_address.ShortDebugString());
             CHECK(this->meta_data_index_->Put(&container_id, sizeof(container_id), updated_address),
-                    "Meta data update failed: " << container_id <<
-                    ", address " << DebugString(updated_address));
+                "Meta data update failed: " << container_id <<
+                ", address " << DebugString(updated_address));
 
             CHECK(scoped_lock.ReleaseLock(), "Failed to release meta data lock");
         } else {
             TRACE("Meta data already up-to-date: container id " << container_id <<
-                    ", meta data " << address_data.ShortDebugString() <<
-                    ", event data " << event_data.ShortDebugString() <<
-                    ", log id " << context.log_id());
+                ", meta data " << address_data.ShortDebugString() <<
+                ", event data " << event_data.ShortDebugString() <<
+                ", log id " << context.log_id());
         }
     } else if (event_type == EVENT_TYPE_CONTAINER_MERGED && context.replay_mode() == EVENT_REPLAY_MODE_DIRTY_START) {
         ContainerMergedEventData event_data = event_value.container_merged_event();
         uint64_t container_id = event_data.new_primary_id();
 
         DEBUG("Log replay: " << Log::GetEventTypeName(event_type) <<
-                ", event " << event_data.ShortDebugString() <<
-                ", log id " << context.log_id());
+            ", event " << event_data.ShortDebugString() <<
+            ", log id " << context.log_id());
 
         ScopedReadWriteLock scoped_lock(&meta_data_lock_);
         CHECK(scoped_lock.AcquireWriteLock(), "Failed to acquire meta data lock");
@@ -2803,13 +2802,13 @@ bool ContainerStorage::LogReplay(dedupv1::log::event_type event_type,
 
             DCHECK(IsValidAddressData(updated_address), "Invalid address data: " << updated_address.ShortDebugString());
             CHECK(this->meta_data_index_->Put(&container_id, sizeof(container_id), updated_address),
-                    "Meta data update failed: " << container_id <<
-                    ", address " << DebugString(updated_address));
+                "Meta data update failed: " << container_id <<
+                ", address " << DebugString(updated_address));
         } else {
             TRACE("Meta data already up-to-date: container id " << container_id <<
-                    ", meta data " << address_data.ShortDebugString() <<
-                    ", event data " << event_data.ShortDebugString() <<
-                    ", log id " << context.log_id());
+                ", meta data " << address_data.ShortDebugString() <<
+                ", event data " << event_data.ShortDebugString() <<
+                ", log id " << context.log_id());
         }
 
         // set the redirection pointer
@@ -2828,11 +2827,11 @@ bool ContainerStorage::LogReplay(dedupv1::log::event_type event_type,
                 TRACE("Redirect merged container " << id << ": primary id " << secondary_data_address.primary_id());
                 DCHECK(IsValidAddressData(secondary_data_address), "Invalid address data: " << secondary_data_address.ShortDebugString());
                 CHECK(this->meta_data_index_->Put(&id, sizeof(id), secondary_data_address),
-                        "Cannot write new container address: container id " << id);
+                    "Cannot write new container address: container id " << id);
             } else {
                 TRACE("Meta data already up-to-date: container id " << id <<
-                        ", meta data " << address_data.ShortDebugString() <<
-                        ", event data " << event_data.ShortDebugString());
+                    ", meta data " << address_data.ShortDebugString() <<
+                    ", event data " << event_data.ShortDebugString());
             }
         }
         for (int i = 0; i < event_data.unused_ids_size(); i++) {
@@ -2889,7 +2888,7 @@ bool ContainerStorage::LogReplay(dedupv1::log::event_type event_type,
 
         CHECK(scoped_lock.ReleaseLock(), "Failed to release meta data lock");
     } else if (event_type == dedupv1::log::EVENT_TYPE_REPLAY_STOPPED && context.replay_mode()
-            == dedupv1::log::EVENT_REPLAY_MODE_DIRECT) {
+               == dedupv1::log::EVENT_REPLAY_MODE_DIRECT) {
         ReplayStopEventData event_data = event_value.replay_stop_event();
 
         if (event_data.replay_type() == dedupv1::log::EVENT_REPLAY_MODE_DIRTY_START) {
@@ -2904,7 +2903,7 @@ bool ContainerStorage::LogReplay(dedupv1::log::event_type event_type,
     }
     if (this->allocator_) {
         CHECK(this->allocator_->LogReplay(event_type, event_value, context),
-                "Allocator failed to replay event");
+            "Allocator failed to replay event");
     }
 
     return true;
@@ -2926,9 +2925,9 @@ bool ContainerStorage::FinishDirtyLogReplay() {
             // Everything that relies on this container has to be later in the log and is therefore also
             // truncated
             WARNING("Remove container artifact from container meta data index: " << container_id <<
-                    ", address data " << address_data.ShortDebugString());
+                ", address data " << address_data.ShortDebugString());
             CHECK(this->meta_data_index_->Delete(&container_id, sizeof(container_id)),
-                    "Cannot delete unused container address: container id " << container_id);
+                "Cannot delete unused container address: container id " << container_id);
         }
     }
     opened_container_id_set_.clear();
@@ -2944,10 +2943,10 @@ void ContainerStorage::SetLastGivenContainerId(uint64_t a) {
 }
 
 bool ContainerStorage::FillMergedContainerEventData(
-        ContainerMergedEventData* event_data,
-        const Container& leader_container, const ContainerStorageAddressData& leader_address,
-        const Container& slave_container, const ContainerStorageAddressData& slave_address,
-        const ContainerStorageAddressData& new_container_address) {
+    ContainerMergedEventData* event_data,
+    const Container& leader_container, const ContainerStorageAddressData& leader_address,
+    const Container& slave_container, const ContainerStorageAddressData& slave_address,
+    const ContainerStorageAddressData& new_container_address) {
     DCHECK(event_data, "Event data not set");
     DCHECK(IsValidAddressData(leader_address), "Invalid leader address data: " << leader_address.ShortDebugString());
     DCHECK(IsValidAddressData(slave_address), "Invalid slave address data: " << slave_address.ShortDebugString());
@@ -2988,7 +2987,7 @@ bool ContainerStorage::TryMergeContainer(uint64_t container_id_1, uint64_t conta
     // TODO (dmeister): We want an good state even if the merge fails
 
     CHECK(container_id_1 != container_id_2,
-            "Illegal to merge a container with itself: container " << container_id_1);
+        "Illegal to merge a container with itself: container " << container_id_1);
 
     Container container1;
     CHECK(container1.Init(container_id_1, this->container_size_), "Failed to init container");
@@ -3004,16 +3003,16 @@ bool ContainerStorage::TryMergeContainer(uint64_t container_id_1, uint64_t conta
     lookup_result r = this->meta_data_index_->Lookup(&id, sizeof(uint64_t), &container_address1);
     CHECK(r == LOOKUP_FOUND, "Cannot get container address for container " << id);
     CHECK(container_address1.has_primary_id() == false, "Illegal merge candidate: " <<
-            "container " << container1.DebugString() <<
-            ", address " << container_address1.ShortDebugString());
+        "container " << container1.DebugString() <<
+        ", address " << container_address1.ShortDebugString());
 
     id = container2.primary_id();
     ContainerStorageAddressData container_address2;
     r = this->meta_data_index_->Lookup(&id, sizeof(uint64_t), &container_address2);
     CHECK(r == LOOKUP_FOUND, "Cannot get container address for container " << id);
     CHECK(container_address2.has_primary_id() == false, "Illegal merge candidate: " <<
-            "container " << container2.DebugString() <<
-            ", address " << container_address2.ShortDebugString());
+        "container " << container2.DebugString() <<
+        ", address " << container_address2.ShortDebugString());
 
     const Container* cached_container1 = NULL;
     CacheEntry cache_entry1;
@@ -3059,7 +3058,7 @@ bool ContainerStorage::TryMergeContainer(uint64_t container_id_1, uint64_t conta
     ScopedReadWriteLock container_lock2(this->GetContainerLock(container_id_2));
     if (container_lock2.Get() != container_lock1.Get()) {
         CHECK(container_lock2.TryAcquireWriteLock(&locked),
-                "Cannot acquire container write lock");
+            "Cannot acquire container write lock");
         if (!locked) {
             DEBUG("Container currently locked: container id " << container_id_1);
             if (cache_entry1.is_set()) {
@@ -3076,19 +3075,19 @@ bool ContainerStorage::TryMergeContainer(uint64_t container_id_1, uint64_t conta
     bool cache_remove_result1 = true;
     bool cache_remove_result2 = true;
     if (cache_lookup_result1 == LOOKUP_FOUND) {
-        cache_remove_result1 = this->cache_.RemoveFromReadCache(container1.primary_id(), &cache_entry1);   
+        cache_remove_result1 = this->cache_.RemoveFromReadCache(container1.primary_id(), &cache_entry1);
     }
     if (cache_lookup_result2 == LOOKUP_FOUND) {
-        cache_remove_result2 = this->cache_.RemoveFromReadCache(container2.primary_id(), &cache_entry2);   
+        cache_remove_result2 = this->cache_.RemoveFromReadCache(container2.primary_id(), &cache_entry2);
     }
 
     if (!cache_remove_result1) {
         ERROR("Failed to remove container data from cache: container id " << container1.primary_id());
-        return false; 
+        return false;
     }
     if (!cache_remove_result2) {
         ERROR("Failed to remove container data from cache: container id " << container2.primary_id());
-        return false; 
+        return false;
     }
     // regardless of the cache results, the caches locks are released at this time
 
@@ -3107,29 +3106,29 @@ bool ContainerStorage::TryMergeContainer(uint64_t container_id_1, uint64_t conta
     // read container and check if the ids are really the primary ids
     // if not the locks would protect the wrong id.
     CHECK(this->ReadContainerLocked(&container1, container_address1),
-            "Failed to read container id " << container_id_1 <<
-            ", container " << container1.primary_id());
+        "Failed to read container id " << container_id_1 <<
+        ", container " << container1.primary_id());
 
     // TODO (dmeister) You can also argue that this is more a abort situation than an error situation, but
     // anyways as the gc either does a delete or a merge from only a single thread, there should never be
     // a situation in which this check fails.
     CHECK(container1.primary_id() == container_id_1, "Container id mismatch: "
-            "container id " << container_id_1 <<
-            ", container " << container1.DebugString() <<
-            ", reason container id should be primary");
+        "container id " << container_id_1 <<
+        ", container " << container1.DebugString() <<
+        ", reason container id should be primary");
     CHECK(this->ReadContainerLocked(&container2, container_address2),
-            "Failed to read container id " << container_id_2 <<
-            ", container " << container2.primary_id());
+        "Failed to read container id " << container_id_2 <<
+        ", container " << container2.primary_id());
     CHECK(container2.primary_id() == container_id_2, "Container id mismatch: "
-            "container id " << container_id_2 <<
-            ", container " << container2.DebugString() <<
-            ", reason container id should be primary");
+        "container id " << container_id_2 <<
+        ", container " << container2.DebugString() <<
+        ", reason container id should be primary");
 
     // merge the two containers into the new container
     Container new_container;
     CHECK(new_container.Init(0, this->container_size_), "Failed to init container");
     CHECK(new_container.MergeContainer(container1, container2), "Failed to merge containers: " <<
-            container1.DebugString() << ", " << container2.DebugString());
+        container1.DebugString() << ", " << container2.DebugString());
 
     ContainerStorageAddressData new_container_address;
     enum alloc_result alloc_result = this->allocator_->OnNewContainer(new_container, false, &new_container_address);
@@ -3142,12 +3141,12 @@ bool ContainerStorage::TryMergeContainer(uint64_t container_id_1, uint64_t conta
     }
 
     INFO("Merging container: " << container1.DebugString() << "(" << DebugString(container_address1) << ")" <<
-            ", " << container2.DebugString() << "(" << DebugString(container_address2) << ")" <<
-            ", new container " << new_container.DebugString() << "(" << DebugString(new_container_address) << ")");
+        ", " << container2.DebugString() << "(" << DebugString(container_address2) << ")" <<
+        ", new container " << new_container.DebugString() << "(" << DebugString(new_container_address) << ")");
 
     CHECK(IsValidAddressData(new_container_address), "Invalid address data: " << new_container_address.ShortDebugString());
     CHECK(this->WriteContainer(&new_container, new_container_address),
-            "Failed to write container: " << new_container.DebugString());
+        "Failed to write container: " << new_container.DebugString());
 
     // the meta data index redirection is done after the log event commit
     // fill the data for the container merged log event
@@ -3162,9 +3161,9 @@ bool ContainerStorage::TryMergeContainer(uint64_t container_id_1, uint64_t conta
                 container1, container_address1, new_container_address), "Cannot fill merged container address");
     } else {
         ERROR("Illegal merged container id: " <<
-                "merged container " << new_container.DebugString() << "\n" <<
-                ", " << container1.DebugString() << "\n" <<
-                ", " << container2.DebugString());
+            "merged container " << new_container.DebugString() << "\n" <<
+            ", " << container1.DebugString() << "\n" <<
+            ", " << container2.DebugString());
         return false;
     }
 
@@ -3207,16 +3206,16 @@ bool ContainerStorage::TryMergeContainer(uint64_t container_id_1, uint64_t conta
     // illegal as we have not freed the old place.
     int64_t commit_log_id = 0;
     CHECK(this->log_->CommitEvent(EVENT_TYPE_CONTAINER_MERGED, &event_data, &commit_log_id, this, NO_EC),
-            "Cannot commit merge event data: " << event_data.ShortDebugString());
+        "Cannot commit merge event data: " << event_data.ShortDebugString());
 
     FAULT_POINT("container-storage.merge.before-gc");
 
     DEBUG("Merged container \n" << container1.DebugString() << " (" << DebugString(container_address1) << ")" <<
-            " and \n" << container2.DebugString() << " (" << DebugString(container_address2) << ")" <<
-            ", into \n" << new_container.DebugString() <<
-            ", new address " << DebugString(new_container_address) <<
-            ", log id " << commit_log_id <<
-            ", event data " << event_data.ShortDebugString());
+        " and \n" << container2.DebugString() << " (" << DebugString(container_address2) << ")" <<
+        ", into \n" << new_container.DebugString() <<
+        ", new address " << DebugString(new_container_address) <<
+        ", log id " << commit_log_id <<
+        ", event data " << event_data.ShortDebugString());
     this->stats_.merged_container_++;
 
     scoped_set_membership.RemoveAllFromSet();
@@ -3243,8 +3242,8 @@ bool ContainerStorage::TryDeleteContainer(uint64_t container_id, bool* aborted) 
     lookup_result r = this->meta_data_index_->Lookup(&id, sizeof(uint64_t), &container_address);
     CHECK(r == LOOKUP_FOUND, "Cannot get container address for container " << id);
     CHECK(container_address.has_primary_id() == false, "Illegal delete candidate: " <<
-            "container " << container.DebugString() <<
-            ", address " << container_address.ShortDebugString());
+        "container " << container.DebugString() <<
+        ", address " << container_address.ShortDebugString());
 
     const Container* cached_container = NULL;
     CacheEntry cache_entry;
@@ -3269,9 +3268,8 @@ bool ContainerStorage::TryDeleteContainer(uint64_t container_id, bool* aborted) 
 
     if (cache_lookup_result == LOOKUP_FOUND) {
         CHECK(this->cache_.RemoveFromReadCache(container.primary_id(), &cache_entry),
-                "Failed to remove container data from cache: " << container.primary_id());
+            "Failed to remove container data from cache: " << container.primary_id());
     }
-
 
     ScopedInMoveSetMembership scoped_set_membership(&in_move_set_, &in_move_set_lock_);
     if (!scoped_set_membership.Insert(container_id)) {
@@ -3284,11 +3282,11 @@ bool ContainerStorage::TryDeleteContainer(uint64_t container_id, bool* aborted) 
     // read container and check if the ids are really the primary ids
     // if not the locks would protect the wrong id.
     CHECK(this->ReadContainerLocked(&container, container_address),
-            "Failed to read container id " << container_id <<
-            ", container " << container.primary_id());
+        "Failed to read container id " << container_id <<
+        ", container " << container.primary_id());
     CHECK(container.primary_id() == container_id, "Container id mismatch: "
-            "container id " << container_id <<
-            ", container " << container.DebugString());
+        "container id " << container_id <<
+        ", container " << container.DebugString());
     CHECK(container.item_count() == 0, "Container is contains items: << " << container.DebugString());
 
     INFO("Delete container " << container.DebugString() << ", old address " << DebugString(container_address));
@@ -3304,13 +3302,13 @@ bool ContainerStorage::TryDeleteContainer(uint64_t container_id, bool* aborted) 
     FAULT_POINT("container-storage.delete.before-gc");
     if (this->gc_) {
         CHECK(this->gc_->OnDeleteContainer(container),
-                "Failed to report delete to gc: " << container.DebugString());
+            "Failed to report delete to gc: " << container.DebugString());
     }
 
     CHECK(container_lock.ReleaseLock(), "Cannot release container write lock");
 
     CHECK(this->log_->CommitEvent(EVENT_TYPE_CONTAINER_DELETED, &event_data, NULL, this, NO_EC),
-            "Cannot commit delete event data");
+        "Cannot commit delete event data");
     this->stats_.deleted_container_++;
 
     scoped_set_membership.RemoveAllFromSet();
@@ -3321,11 +3319,11 @@ bool ContainerStorage::TryDeleteContainer(uint64_t container_id, bool* aborted) 
 }
 
 enum lookup_result ContainerStorage::GetPrimaryId(uint64_t container_id,
-        uint64_t* primary_id,
-        dedupv1::base::ReadWriteLock** primary_container_lock,
-        bool acquire_write_lock) {
+                                                  uint64_t* primary_id,
+                                                  dedupv1::base::ReadWriteLock** primary_container_lock,
+                                                  bool acquire_write_lock) {
     pair<lookup_result, ContainerStorageAddressData> r =
-            this->LookupContainerAddressWait(container_id, primary_container_lock, acquire_write_lock);
+        this->LookupContainerAddressWait(container_id, primary_container_lock, acquire_write_lock);
     CHECK_RETURN(r.first != LOOKUP_ERROR, LOOKUP_ERROR, "Failed to lookup primary id");
     if (r.first == LOOKUP_NOT_FOUND) {
         return LOOKUP_NOT_FOUND;
@@ -3345,7 +3343,7 @@ dedupv1::log::Log* ContainerStorage::log() {
 #ifdef DEDUPV1_CORE_TEST
 void ContainerStorage::ClearData() {
     TRACE("Clear data for crash simulation");
-    
+
     clear_data_called_ = true;
     this->state_ = STOPPED;
     timeout_committer_should_stop_ = true;

@@ -26,9 +26,9 @@
 
 using dedupv1::base::TimedAverage;
 
-class TimedAverageTest: public testing::Test {
-    protected:
-        USE_LOGGING_EXPECTATION();
+class TimedAverageTest : public testing::Test {
+protected:
+    USE_LOGGING_EXPECTATION();
 };
 
 TEST_F(TimedAverageTest, Init)

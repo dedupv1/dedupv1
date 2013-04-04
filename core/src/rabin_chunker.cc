@@ -309,16 +309,16 @@ bool RabinChunkerSession::AcceptChunk(list<Chunk*>* chunks, const byte* data, ui
     Chunk* c = chunker_->cmc_->Acquire();
     CHECK(c, "Chunk not acquired");
     DCHECK(c->data(), "Chunk data not set");
-    DCHECK(c->max_size() >= this->overflow_chunk_data_pos_ + size, 
-            "Current chunk too large: overflow chunk size " << overflow_chunk_data_pos_ <<
-            ", size " << size <<
-            ", max size " << c->max_size());
-    DCHECK(this->overflow_chunk_data_pos_ + size > 0, 
-                "Current chunk has size zero: overflow chunk size " << overflow_chunk_data_pos_ <<
-                ", size " << size);
+    DCHECK(c->max_size() >= this->overflow_chunk_data_pos_ + size,
+        "Current chunk too large: overflow chunk size " << overflow_chunk_data_pos_ <<
+        ", size " << size <<
+        ", max size " << c->max_size());
+    DCHECK(this->overflow_chunk_data_pos_ + size > 0,
+        "Current chunk has size zero: overflow chunk size " << overflow_chunk_data_pos_ <<
+        ", size " << size);
     TRACE("Accept chunk: total size " << (overflow_chunk_data_pos_ + size) <<
-            ", overflow chunk size " << overflow_chunk_data_pos_ <<
-            ", direct size " << size);
+        ", overflow chunk size " << overflow_chunk_data_pos_ <<
+        ", direct size " << size);
 
     // The chunk data consists of the data from previous calls (overflow data) + the current data upto the offset "size"
     if (unlikely(overflow_chunk_data_pos_ > 0)) {
@@ -369,9 +369,9 @@ bool RabinChunkerSession::ChunkData(const byte* data,
     register const byte* current = data; // current data pointer, at the beginning at the beginning of the data set
     register const byte* chunk_data_end = data + size; // pointer denoting the end of the current data set
     register const byte* non_chunked_data = data; // pointer to the beginning of the area not already assigned to a finished chunk
-    
+
     // until we reached the end
-    while(unlikely(current < chunk_data_end)) {
+    while (unlikely(current < chunk_data_end)) {
         // we determine how much data should be processed maximally
         uint32_t todo = (chunk_data_end - current);
         unsigned int count_to_max = chunker_->max_chunk_ - overflow_chunk_data_pos_;
@@ -391,22 +391,22 @@ bool RabinChunkerSession::ChunkData(const byte* data,
         }
 
         TRACE("Total size " << size <<
-            ", bytes to end " << static_cast<int>(chunk_data_end - current) << 
+            ", bytes to end " << static_cast<int>(chunk_data_end - current) <<
             ", todo size " << todo <<
-            ", overflow chunk size " << overflow_chunk_data_pos_ << 
-            ", count to max " << count_to_max << 
+            ", overflow chunk size " << overflow_chunk_data_pos_ <<
+            ", count to max " << count_to_max <<
             ", count to min " << count_to_min);
-        
+
         register const byte* end = current + todo; // end of current processing block
         current += count_to_min; // skip these
-        
-        for (;current < end; current++) {
+
+        for (; current < end; current++) {
             UpdateWindowFingerprint(*current);
             // breakmark is suffix of fingerprint and current chunk is larger then the minimal size
             register bool is_breakmark = (this->fingerprint_ & chunker_->breakmark_) == chunker_->breakmark_;
             if (unlikely(is_breakmark)) {
                 current++; // move to next value, break is not moving current
-                CHECK(AcceptChunk(chunks, non_chunked_data, current - non_chunked_data), 
+                CHECK(AcceptChunk(chunks, non_chunked_data, current - non_chunked_data),
                     "Failed to accept chunk: reason breakmark");
                 non_chunked_data = current;
                 break;
@@ -416,7 +416,7 @@ bool RabinChunkerSession::ChunkData(const byte* data,
         TRACE("Reached end inner loop: size " << size << ", todo size " << todo << ", count to max " << count_to_max);
         if (unlikely(current == end) && likely(current != non_chunked_data) && unlikely(todo == count_to_max)) {
             this->chunker_->stats_.size_forced_chunks_++;
-            CHECK(AcceptChunk(chunks, non_chunked_data, current - non_chunked_data), 
+            CHECK(AcceptChunk(chunks, non_chunked_data, current - non_chunked_data),
                 "Failed to accept chunk: reason size" <<
                 ", count to max " << count_to_max <<
                 ", non chunked size " << static_cast<uint64_t>(current - non_chunked_data));
@@ -446,7 +446,7 @@ RabinChunkerSession::~RabinChunkerSession() {
 
 void RabinChunkerSession::UpdateFingerprint(byte c) {
     this->fingerprint_ = chunker_->FingerprintAppendByte(this->fingerprint_, c);
-}///
+} // /
 
 bool RabinChunkerSession::Clear() {
     fingerprint_ = 0; // current fingerprint

@@ -182,14 +182,13 @@ string VolumeMonitorAdapterRequest::WriteVolume(Dedupv1dVolumeInfo* info, Dedupv
         sstr << "\"source id\": \"" << fast_copy_job.value().src_volume_id() << "\"," << std::endl;
         sstr << "\"source start offset\": " << fast_copy_job.value().src_start_offset() << "," << std::endl;
         sstr << "\"target start offset\": " << fast_copy_job.value().target_start_offset() << "," << std::endl;
-		if (fast_copy_job.value().job_failed()) {
-			sstr << "\"state\": \"failed\"," << std::endl;
-		} else {
-			sstr << "\"state\": \"running\"," << std::endl;
-		}
+        if (fast_copy_job.value().job_failed()) {
+            sstr << "\"state\": \"failed\"," << std::endl;
+        } else {
+            sstr << "\"state\": \"running\"," << std::endl;
+        }
         sstr << "\"size\": " << fast_copy_job.value().size() << "," << std::endl;
         sstr << "\"current\": " << fast_copy_job.value().current_offset() << std::endl;
-
 
         sstr << "}";
     }

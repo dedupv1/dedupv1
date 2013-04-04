@@ -360,7 +360,7 @@ TEST_F(RabinChunkerTest, Performance) {
     ASSERT_EQ(65536, fread(data, sizeof(byte), 64 * 1024, file));
 
     size_t pos = 0;
-    while(pos < data_size) {
+    while (pos < data_size) {
         size_t size = 64 * 1024;
         if (data_size - pos < size) {
             size = data_size - pos;
@@ -371,26 +371,26 @@ TEST_F(RabinChunkerTest, Performance) {
 
     // pre allocate chunks
     list<Chunk*> chunks;
-    for(int i = 0; i <= (data_size /( 4 * 1024)); i++) {
+    for (int i = 0; i <= (data_size / (4 * 1024)); i++) {
         Chunk* c = cmc->Acquire();
         ASSERT_TRUE(c);
         chunks.push_back(c);
     }
     list<Chunk*>::iterator i;
-    for(i = chunks.begin(); i != chunks.end(); i++) {
+    for (i = chunks.begin(); i != chunks.end(); i++) {
         ASSERT_TRUE(cmc->Release(*i));
     }
     chunks.clear();
 
     tbb::tick_count start_time = tbb::tick_count::now();
 
-    for(int i = 0; i < repeat_count; i++) {
+    for (int i = 0; i < repeat_count; i++) {
         INFO("Repeat " << i);
         ChunkerSession* session = chunker->CreateSession();
         ASSERT_TRUE(session);
 
         pos = 0;
-        while(pos < data_size) {
+        while (pos < data_size) {
             size_t size = 256 * 1024;
             if (data_size - pos < size) {
                 size = data_size - pos;
@@ -404,7 +404,7 @@ TEST_F(RabinChunkerTest, Performance) {
         session = NULL;
 
         list<Chunk*>::iterator ci;
-        for(ci = chunks.begin(); ci != chunks.end(); ci++) {
+        for (ci = chunks.begin(); ci != chunks.end(); ci++) {
             ASSERT_TRUE(cmc->Release(*ci));
         }
         chunks.clear();
@@ -424,7 +424,7 @@ TEST_F(RabinChunkerTest, Performance) {
 
 INSTANTIATE_TEST_CASE_P(RabinChunker,
     ChunkerTest,
-    ::testing::Values("rabin", 
+    ::testing::Values("rabin",
         "rabin;avg-chunk-size=4K;min-chunk-size=1K;max-chunk-size=16K",
         "rabin;avg-chunk-size=16K;min-chunk-size=4K;max-chunk-size=64K"));
 }

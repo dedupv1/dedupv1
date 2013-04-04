@@ -416,7 +416,7 @@ string Inspect::ShowLog(uint64_t log_id) {
 
     LogEventData event_data;
     CHECK_RETURN_JSON(event_data.ParseFromArray(log_value.data(), log_value.size()),
-            "Failed to parse log value");
+        "Failed to parse log value");
 
     enum event_type event_type = static_cast<enum event_type>(event_data.event_type());
     stringstream sstr;
@@ -446,9 +446,9 @@ string Inspect::ShowLog(uint64_t log_id) {
                 sstr << ",";
             }
             sstr << Fingerprinter::DebugString(data.chunk_fp(i).data(), data.chunk_fp(i).size()) << std::endl;
-            }
-         sstr << "]" << std::endl;
-         sstr << "}";
+        }
+        sstr << "]" << std::endl;
+        sstr << "}";
 
     } else if (event_type == EVENT_TYPE_CONTAINER_MERGED) {
         ContainerMergedEventData data = event_data.container_merged_event();

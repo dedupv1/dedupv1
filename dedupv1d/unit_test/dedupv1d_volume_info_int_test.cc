@@ -197,10 +197,10 @@ TEST_F(Dedupv1dVolumeInfoIntegrationTest, AttachWithOwnChunking) {
 TEST_F(Dedupv1dVolumeInfoIntegrationTest, WriteDetach) {
     ASSERT_TRUE(ds->Start(dedupv1::StartContext())) << "Cannot start application";
     ASSERT_TRUE(ds->Run());
-    
+
     ThreadUtil::Sleep(1);
-    
-    ASSERT_TRUE(ds->log_replayer()->Stop(dedupv1::StopContext())); // stop the log replayer. We manually replay the log. 
+
+    ASSERT_TRUE(ds->log_replayer()->Stop(dedupv1::StopContext())); // stop the log replayer. We manually replay the log.
 
     list <pair <string, string> > options;
     options.push_back( make_pair("id", "1"));

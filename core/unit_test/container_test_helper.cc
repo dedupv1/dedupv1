@@ -81,7 +81,7 @@ bytestring ContainerTestHelper::fingerprint(int i) {
     CHECK_RETURN(this->state_, bytestring(), "SetUp not called");
     CHECK_RETURN(i >= 0 && i < static_cast<int>(this->test_data_count_), bytestring(), "Illegal index: " << i << ", count " << this->test_data_count_);
     bytestring s;
-    byte* fp_pointer = (byte*) &(this->fp_[i]);
+    byte* fp_pointer = (byte *) &(this->fp_[i]);
     size_t fp_size = sizeof(this->fp_[i]);
     s.assign(fp_pointer, fp_size);
     return s;
@@ -112,40 +112,40 @@ bool ContainerTestHelper::WriteDefaultData(DedupSystem* system, int offset, int 
     CHECK(storage, "Storage not set");
     StorageSession* s = storage->CreateSession();
     CHECK(s, "Storage session not set");
-    
+
     bool r = WriteDefaultData(s, system->chunk_index(), offset, count);
     CHECK(s->Close(), "Cannot close storage session");
     return r;
 }
 
-bool ContainerTestHelper::WriteDefaultData(StorageSession* s, ChunkIndex* chunk_index, int offset, int count) {    
+bool ContainerTestHelper::WriteDefaultData(StorageSession* s, ChunkIndex* chunk_index, int offset, int count) {
     for (int i = offset; i < (offset + count); i++) {
         byte* d = this->data(i);
         CHECK(d, "Date not set");
         CHECK(s->WriteNew(&this->fp_[i], sizeof(this->fp_[i]), d, this->test_data_size_, &this->addresses_[i], NO_EC),
             "Write " << i << " failed");
 
-        if (chunk_index != NULL) {    
+        if (chunk_index != NULL) {
             ChunkMapping mapping(
                 reinterpret_cast<const byte*>(&this->fp_[i]), sizeof(this->fp_[i]));
             mapping.set_data_address(this->addresses_[i]);
             CHECK(chunk_index->Put(mapping, NO_EC), "Failed to add chunk mapping");
         }
         DEBUG("Wrote index " << i << ", container id " << this->addresses_[i]);
-    }    
+    }
 
     return true;
 }
 
-void  ContainerTestHelper::LoadContainerDataIntoChunkIndex(DedupSystem* system) {
+void ContainerTestHelper::LoadContainerDataIntoChunkIndex(DedupSystem* system) {
     set<uint64_t> container_set;
 
-    for(int i = 0; i < test_data_count(); i++) {
+    for (int i = 0; i < test_data_count(); i++) {
         container_set.insert(data_address(i));
     }
 
     set<uint64_t>::iterator i;
-    for(i = container_set.begin(); i != container_set.end(); i++) {
+    for (i = container_set.begin(); i != container_set.end(); i++) {
         system->chunk_index()->LoadContainerIntoCache(*i, NO_EC);
     }
 }

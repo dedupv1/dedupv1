@@ -341,7 +341,7 @@ bool MemoryBitmapContainerStorageAllocator::Close() {
 }
 
 bool MemoryBitmapContainerStorageAllocator::MarkAddressUsed(const ContainerStorageAddressData& address,
-        bool is_crash_replay) {
+                                                            bool is_crash_replay) {
     int file_index = address.file_index();
     CHECK(file_index >= 0 && file_index < file_.size(), "Illegal file index: " << address.ShortDebugString());
 
@@ -363,8 +363,8 @@ bool MemoryBitmapContainerStorageAllocator::MarkAddressUsed(const ContainerStora
     }
 
     DEBUG("Mark area as used: file " << file_index <<
-            ", bit_offset " << bit_offset <<
-            ", file free count " << (file_[file_index].bitmap_->clean_bits()));
+        ", bit_offset " << bit_offset <<
+        ", file free count " << (file_[file_index].bitmap_->clean_bits()));
 
     CHECK(file_[file_index].bitmap_->set(bit_offset), "Could not set bit " << bit_offset << " of bitmap " << file_index);
 
@@ -373,7 +373,7 @@ bool MemoryBitmapContainerStorageAllocator::MarkAddressUsed(const ContainerStora
 }
 
 bool MemoryBitmapContainerStorageAllocator::FreeAddress(const ContainerStorageAddressData& address,
-        bool is_crash_replay) {
+                                                        bool is_crash_replay) {
     DCHECK(log_, "Log not set");
 
     int file_index = address.file_index();
@@ -408,7 +408,7 @@ bool MemoryBitmapContainerStorageAllocator::FreeAddress(const ContainerStorageAd
 }
 
 dedupv1::base::Option<bool> MemoryBitmapContainerStorageAllocator::IsAddressFree(
-        const ContainerStorageAddressData& address) {
+    const ContainerStorageAddressData& address) {
     int file_index = address.file_index();
     CHECK(file_index >= 0 && file_index < file_.size(), "Illegal file index: " << address.ShortDebugString());
 
@@ -448,9 +448,9 @@ bool MemoryBitmapContainerStorageAllocator::PersistPage(int file_index, int item
 
     Option<bool> r = file_[file_index].bitmap_->StorePage(page);
     CHECK(r.valid(), "Could not store page " << page <<
-            ", index " << item_index <<
-             ", file " << file_index <<
-             ", page size " << file_[file_index].bitmap_->page_size());
+        ", index " << item_index <<
+        ", file " << file_index <<
+        ", page size " << file_[file_index].bitmap_->page_size());
     if (r.value()) {
         stats_.persist_count_++;
     }
@@ -463,7 +463,7 @@ bool MemoryBitmapContainerStorageAllocator::SearchFreeAddress(int file_index, Co
     DCHECK(file_index >= 0 && file_index < file_.size(), "Illegal file index");
 
     Option<size_t> pos = file_[file_index].bitmap_->find_next_unset(file_[file_index].last_free_pos_,
-            file_[file_index].last_free_pos_);
+        file_[file_index].last_free_pos_);
     CHECK(pos.valid(), "Could not find free position in bitmap " << file_index << " (Is it full?)");
     CHECK(file_[file_index].bitmap_->set(pos.value()), "Could not set clear found pos " << pos.value() << " if bitmap " << file_index);
     free_count_--;
@@ -552,14 +552,14 @@ string MemoryBitmapContainerStorageAllocator::PrintTrace() {
 }
 
 bool MemoryBitmapContainerStorageAllocator::OnAbortContainer(const Container& container,
-        const ContainerStorageAddressData& address) {
+                                                             const ContainerStorageAddressData& address) {
     ScopedReadWriteLock scoped_lock(&lock_);
     scoped_lock.AcquireReadLock();
 
     ProfileTimer alloc_timer(this->stats_.alloc_time_);
 
     DEBUG("Abort container " << container.DebugString() <<
-            ", address " << address.file_index() << ":" << address.file_offset());
+        ", address " << address.file_index() << ":" << address.file_offset());
     CHECK(FreeAddress(address, false), "Failed to free address " << address.ShortDebugString());
     return true;
 }
@@ -583,7 +583,7 @@ bool MemoryBitmapContainerStorageAllocator::EnsurePagePersisted(const ContainerS
 }
 
 bool MemoryBitmapContainerStorageAllocator::LogReplay(dedupv1::log::event_type event_type,
-        const LogEventData& event_value, const dedupv1::log::LogReplayContext& context) {
+                                                      const LogEventData& event_value, const dedupv1::log::LogReplayContext& context) {
     ProfileTimer timer(this->stats_.replay_time_);
     if (context.replay_mode() == dedupv1::log::EVENT_REPLAY_MODE_REPLAY_BG) {
         // no crash
@@ -592,29 +592,29 @@ bool MemoryBitmapContainerStorageAllocator::LogReplay(dedupv1::log::event_type e
             ContainerOpenedEventData event_data = event_value.container_opened_event();
 
             CHECK(EnsurePagePersisted(event_data.address()),
-                    "Failed to ensure persistence of page");
+                "Failed to ensure persistence of page");
 
         } else if (event_type == dedupv1::log::EVENT_TYPE_CONTAINER_DELETED) {
             ContainerDeletedEventData event_data = event_value.container_deleted_event();
 
             CHECK(EnsurePagePersisted(event_data.address()),
-                    "Failed to ensure persistence of page");
+                "Failed to ensure persistence of page");
         } else if (event_type == dedupv1::log::EVENT_TYPE_CONTAINER_MERGED) {
             ContainerMergedEventData event_data = event_value.container_merged_event();
 
             CHECK(EnsurePagePersisted(event_data.first_address()),
-                    "Failed to ensure persistence of page");
+                "Failed to ensure persistence of page");
             CHECK(EnsurePagePersisted(event_data.second_address()),
-                    "Failed to ensure persistence of page");
+                "Failed to ensure persistence of page");
             CHECK(EnsurePagePersisted(event_data.new_address()),
-                    "Failed to ensure persistence of page");
+                "Failed to ensure persistence of page");
         } else if (event_type == dedupv1::log::EVENT_TYPE_CONTAINER_MOVED) {
             ContainerMoveEventData event_data = event_value.container_moved_event();
 
             CHECK(EnsurePagePersisted(event_data.old_address()),
-                    "Failed to ensure persistence of page");
+                "Failed to ensure persistence of page");
             CHECK(EnsurePagePersisted(event_data.new_address()),
-                    "Failed to ensure persistence of page");
+                "Failed to ensure persistence of page");
         }
     } else if (context.replay_mode() == dedupv1::log::EVENT_REPLAY_MODE_DIRTY_START) {
         // crash!!!
@@ -624,35 +624,35 @@ bool MemoryBitmapContainerStorageAllocator::LogReplay(dedupv1::log::event_type e
             ContainerCommittedEventData event_data = event_value.container_committed_event();
 
             CHECK(MarkAddressUsed(event_data.address(), true),
-                    "Failed to mark address as used: " << event_data.ShortDebugString());
+                "Failed to mark address as used: " << event_data.ShortDebugString());
         } else if (event_type == dedupv1::log::EVENT_TYPE_CONTAINER_DELETED) {
             ContainerDeletedEventData event_data = event_value.container_deleted_event();
 
             CHECK(FreeAddress(event_data.address(), true), "Failed to free address: " <<
-                    event_data.ShortDebugString());
+                event_data.ShortDebugString());
         } else if (event_type == dedupv1::log::EVENT_TYPE_CONTAINER_MERGED) {
             ContainerMergedEventData event_data = event_value.container_merged_event();
 
             CHECK(FreeAddress(event_data.first_address(), true), "Failed to free address: " <<
-                    event_data.ShortDebugString());
+                event_data.ShortDebugString());
             CHECK(FreeAddress(event_data.second_address(), true), "Failed to free address: " <<
-                    event_data.ShortDebugString());
+                event_data.ShortDebugString());
             CHECK(MarkAddressUsed(event_data.new_address(), true),
-                    "Failed to mark address as used: " << event_data.ShortDebugString());
+                "Failed to mark address as used: " << event_data.ShortDebugString());
         } else if (event_type == dedupv1::log::EVENT_TYPE_CONTAINER_MOVED) {
             ContainerMoveEventData event_data = event_value.container_moved_event();
 
             CHECK(FreeAddress(event_data.old_address(), true), "Failed to free address: " <<
-                    event_data.ShortDebugString());
+                event_data.ShortDebugString());
             CHECK(MarkAddressUsed(event_data.new_address(), true),
-                    "Failed to mark address as used: " << event_data.ShortDebugString());
+                "Failed to mark address as used: " << event_data.ShortDebugString());
         }
     }
     return true;
 }
 
 enum alloc_result MemoryBitmapContainerStorageAllocator::OnNewContainer(const Container& container,
-        bool is_new_container, ContainerStorageAddressData* new_address) {
+                                                                        bool is_new_container, ContainerStorageAddressData* new_address) {
     ScopedReadWriteLock scoped_lock(&lock_);
     scoped_lock.AcquireReadLock();
     DCHECK_RETURN(new_address, ALLOC_ERROR, "new_adresss not set");
@@ -668,7 +668,7 @@ enum alloc_result MemoryBitmapContainerStorageAllocator::OnNewContainer(const Co
 
         ScopedLock file_lock(file_locks_.Get(file_index));
         CHECK_RETURN(file_lock.AcquireLock(), ALLOC_ERROR, "Failed to acquire file lock: file index " << file_index <<
-                ", file count " << file_.size());
+            ", file count " << file_.size());
 
         TRACE("Test file: " << file_index << ", free count " << file_[file_index].bitmap_->clean_bits());
 
@@ -676,7 +676,7 @@ enum alloc_result MemoryBitmapContainerStorageAllocator::OnNewContainer(const Co
         // This avoid being locked in a situation where there is no space left, but tons of gc-able containers, but we fail to free the space
         // because of the last free slot is taken
         bool file_is_full = ((file_[file_index].bitmap_->clean_bits() <= 1) && (is_new_container
-                || (file_[file_index].bitmap_->clean_bits() == 0)));
+                                                                                || (file_[file_index].bitmap_->clean_bits() == 0)));
 
         if (file_is_full) {
             CHECK_RETURN(file_lock.ReleaseLock(), ALLOC_ERROR, "Failed to release file lock");
@@ -694,7 +694,7 @@ enum alloc_result MemoryBitmapContainerStorageAllocator::OnNewContainer(const Co
         return ALLOC_FULL;
     }
     DEBUG("Found free address: container " << container.DebugString() <<
-            ", address " << new_address->ShortDebugString());
+        ", address " << new_address->ShortDebugString());
 
     return ALLOC_OK;
 }
@@ -708,14 +708,14 @@ bool MemoryBitmapContainerStorageAllocator::OnMerge(const ContainerMergedEventDa
     DEBUG("Merge container " << data.ShortDebugString());
 
     CHECK(!(data.first_address().file_index() == data.new_address().file_index() &&
-                    data.first_address().file_offset() == data.new_address().file_offset()) ||
-            !(data.second_address().file_index() && data.new_address().file_index() &&
-                    data.second_address().file_offset() && data.new_address().file_offset()),
-            "Illegal merge: " << data.ShortDebugString());
+            data.first_address().file_offset() == data.new_address().file_offset()) ||
+        !(data.second_address().file_index() && data.new_address().file_index() &&
+          data.second_address().file_offset() && data.new_address().file_offset()),
+        "Illegal merge: " << data.ShortDebugString());
 
-    CHECK(FreeAddress(data.first_address(), false), "Failed to free address " << data.first_address().ShortDebugString());FAULT_POINT("container-storage.alloc.merge.after-first-free");
+    CHECK(FreeAddress(data.first_address(), false), "Failed to free address " << data.first_address().ShortDebugString()); FAULT_POINT("container-storage.alloc.merge.after-first-free");
 
-    CHECK(FreeAddress(data.second_address(), false), "Failed to free address " << data.second_address().ShortDebugString());FAULT_POINT("container-storage.alloc.merge.after-second-free");
+    CHECK(FreeAddress(data.second_address(), false), "Failed to free address " << data.second_address().ShortDebugString()); FAULT_POINT("container-storage.alloc.merge.after-second-free");
     return true;
 }
 
@@ -737,8 +737,8 @@ bool MemoryBitmapContainerStorageAllocator::OnMove(const ContainerMoveEventData&
     FAULT_POINT("container-storage.alloc2.move.pre");
     DEBUG("Move container " << data.ShortDebugString());
     CHECK(!(data.old_address().file_index() == data.new_address().file_index() &&
-                    data.old_address().file_offset() == data.new_address().file_offset()),
-            "Illegal move: " << data.ShortDebugString());
+            data.old_address().file_offset() == data.new_address().file_offset()),
+        "Illegal move: " << data.ShortDebugString());
     CHECK(FreeAddress(data.old_address(), false), "Failed to free address " << data.old_address().ShortDebugString());
     return true;
 }
@@ -749,7 +749,7 @@ void MemoryBitmapContainerStorageAllocator::ClearData() {
         this->persistent_bitmap_->Close();
         this->persistent_bitmap_ = NULL;
     }
-    for (int i=0; i < file_.size(); i++) {
+    for (int i = 0; i < file_.size(); i++) {
         delete file_[i].bitmap_;
     }
     file_.clear();

@@ -217,8 +217,8 @@ bool HashEntry::AssignValue(const Message& message) {
 }
 
 enum put_result HashEntry::CompareAndSwap(const Message& message,
-        const Message& compare_message,
-        Message* result_message) {
+                                          const Message& compare_message,
+                                          Message* result_message) {
     byte* compare_buffer = new byte[compare_message.ByteSize()];
     if (!compare_buffer) {
         ERROR("Failed to alloc data");
@@ -370,50 +370,50 @@ error:
 }
 
 enum put_result HashIndex::CompareAndSwap(const void* key, size_t key_size,
-        const Message& message,
-        const Message& compare_message,
-        Message* result_message) {
+                                          const Message& message,
+                                          const Message& compare_message,
+                                          Message* result_message) {
     int found = false;
-       unsigned int bucket_id = 0, sub_bucket_id = 0;
-       unsigned int lock_index = 0;
-       ReadWriteLock* lock = NULL;
-       HashEntry* entry = NULL;
-       HashEntry** sub_bucket = NULL;
-       uint32_t hash_value = 0;
-       enum put_result result = PUT_ERROR;
+    unsigned int bucket_id = 0, sub_bucket_id = 0;
+    unsigned int lock_index = 0;
+    ReadWriteLock* lock = NULL;
+    HashEntry* entry = NULL;
+    HashEntry** sub_bucket = NULL;
+    uint32_t hash_value = 0;
+    enum put_result result = PUT_ERROR;
 
-       CHECK_RETURN(this->buckets, PUT_ERROR, "Index not started");
+    CHECK_RETURN(this->buckets, PUT_ERROR, "Index not started");
 
-       murmur_hash3_x86_32(key, key_size, 0, &hash_value);
-       bucket_id = hash_value % this->bucket_count;
-       lock_index = bucket_id % this->lock_count;
-       lock = this->lock.Get(lock_index);
-       CHECK_RETURN(lock->AcquireWriteLockWithStatistics(&this->statistics.wrlock_free,
-               &this->statistics.wrlock_busy), PUT_ERROR, "Lock failed");
+    murmur_hash3_x86_32(key, key_size, 0, &hash_value);
+    bucket_id = hash_value % this->bucket_count;
+    lock_index = bucket_id % this->lock_count;
+    lock = this->lock.Get(lock_index);
+    CHECK_RETURN(lock->AcquireWriteLockWithStatistics(&this->statistics.wrlock_free,
+            &this->statistics.wrlock_busy), PUT_ERROR, "Lock failed");
 
-       sub_bucket = this->buckets[bucket_id];
-       sub_bucket_id = (hash_value >> 16) % this->sub_bucket_count;
-       entry = sub_bucket[sub_bucket_id];
-       while (entry) {
-           if (raw_compare(entry->key, entry->key_size, key, key_size) == 0) {
-               result = entry->CompareAndSwap(message, compare_message, result_message);
-               CHECK_GOTO(result != PUT_ERROR, "Failed to compare-and-swap data");
-               found = true;
-           }
-           entry = entry->next;
-       }
+    sub_bucket = this->buckets[bucket_id];
+    sub_bucket_id = (hash_value >> 16) % this->sub_bucket_count;
+    entry = sub_bucket[sub_bucket_id];
+    while (entry) {
+        if (raw_compare(entry->key, entry->key_size, key, key_size) == 0) {
+            result = entry->CompareAndSwap(message, compare_message, result_message);
+            CHECK_GOTO(result != PUT_ERROR, "Failed to compare-and-swap data");
+            found = true;
+        }
+        entry = entry->next;
+    }
 
-       if (!found) {
-           /* No match found */
-           ERROR("Failed to find entry in hash index");
-           result = PUT_ERROR;
-       }
-       CHECK_RETURN(lock->ReleaseLock(), PUT_ERROR, "Unlock failed");
+    if (!found) {
+        /* No match found */
+        ERROR("Failed to find entry in hash index");
+        result = PUT_ERROR;
+    }
+    CHECK_RETURN(lock->ReleaseLock(), PUT_ERROR, "Unlock failed");
 
-       return result;
-   error:
-       CHECK_RETURN(lock->ReleaseLock(), PUT_ERROR, "Unlock failed");
-       return PUT_ERROR;
+    return result;
+error:
+    CHECK_RETURN(lock->ReleaseLock(), PUT_ERROR, "Unlock failed");
+    return PUT_ERROR;
 }
 
 delete_result HashIndex::Delete(const void* key, size_t key_size) {
@@ -427,7 +427,6 @@ delete_result HashIndex::Delete(const void* key, size_t key_size) {
 
     CHECK_RETURN(this->buckets, DELETE_ERROR, "Index not started");
 
-    
     murmur_hash3_x86_32(key, key_size, 0, &hash_value);
     bucket_id = hash_value % this->bucket_count;
     lock_index = bucket_id % this->lock_count;
@@ -502,8 +501,6 @@ string HashIndex::PrintLockStatistics() {
     sstr << "}";
     return sstr.str();
 }
-
-
 
 }
 }

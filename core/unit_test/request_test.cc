@@ -31,10 +31,10 @@ namespace dedupv1 {
 class RequestTest : public testing::Test {
 protected:
     USE_LOGGING_EXPECTATION();
-    
+
     Request* request_;
     byte* buffer_;
-    
+
     virtual void SetUp() {
         request_ = NULL;
         buffer_ = new byte[64 * 1024];
@@ -51,7 +51,6 @@ protected:
     }
 };
 
-
 TEST_F(RequestTest, Init) {
     request_ = new Request(REQUEST_READ, 0, 0, 64 * 1024, buffer_, 64 * 1024);
     ASSERT_TRUE(request_);
@@ -66,20 +65,20 @@ TEST_F(RequestTest, DebugString) {
 
 TEST_F(RequestTest, IsValid) {
     EXPECT_LOGGING(dedupv1::test::ERROR).Times(2);
-        
+
     request_ = new Request(REQUEST_READ, 0, 0, 64 * 1024, buffer_, 64 * 1024);
     ASSERT_TRUE(request_);
     ASSERT_TRUE(request_->IsValid());
     delete request_;
     request_ = NULL;
-    
+
     // Illegal offset
     request_ = new Request(REQUEST_READ, 0, 17, 1024, buffer_, 64 * 1024);
     ASSERT_TRUE(request_);
     ASSERT_FALSE(request_->IsValid());
     delete request_;
     request_ = NULL;
-    
+
     // Illegal size
     request_ = new Request(REQUEST_READ, 0, 0, 4711, buffer_, 64 * 1024);
     ASSERT_TRUE(request_);

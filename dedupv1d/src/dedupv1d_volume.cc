@@ -111,14 +111,14 @@ bool Dedupv1dVolume::Start(DedupSystem* system) {
     CHECK(info_store_, "Info store not set");
 
     CHECK(this->logical_size() % this->block_size_ == 0,
-            "The logical size " << this->logical_size() << " is no multiple of the sector size " << this->block_size_);
+        "The logical size " << this->logical_size() << " is no multiple of the sector size " << this->block_size_);
 
     this->block_count_ = this->volume()->GetLogicalSize() / this->block_size();
     CHECK(this->block_count() > 0, "Volume must have at least one block");
 
     CHECK(this->volume_.SetOption("session-count", ToString(this->command_thread_count_ * 2)), "Failed to set session count");
     CHECK(this->handle()->SetOption("device-name", device_name()),
-            "Cannot set default device name " << device_name()); // set default device-name
+        "Cannot set default device name " << device_name()); // set default device-name
     CHECK(this->volume()->Start(system, this->maintenance_mode()), "Cannot start volume: base volume " << volume()->DebugString());
 
     CHECK(this->command_handler()->Start(this, info_store_), "Cannot start command handler");
@@ -164,45 +164,45 @@ bool Dedupv1dVolume::ParseFrom(const VolumeInfoData& volume_info) {
     CHECK(this->state() == DEDUPV1D_VOLUME_STATE_CREATED, "Illegal state: " << this->state());
 
     CHECK(this->SetOption("id", ToString(volume_info.volume_id())),
-            "Failed to set id");
+        "Failed to set id");
     CHECK(this->SetOption("logical-size", ToString(volume_info.logical_size())),
-            "Failed to set logical size");
+        "Failed to set logical size");
 
     if (volume_info.has_device_name()) {
         CHECK(this->SetOption("device-name", ToString(volume_info.device_name())),
-                "Failed to set device name");
+            "Failed to set device name");
     }
     if (volume_info.has_command_thread_count()) {
         CHECK(this->SetOption("threads", ToString(volume_info.command_thread_count())),
-                "Failed to set thread count");
+            "Failed to set thread count");
     }
     if (volume_info.has_sector_size()) {
         CHECK(this->SetOption("sector-size", ToString(volume_info.sector_size())),
-                "Failed to set sector size");
+            "Failed to set sector size");
     }
     for (int i = 0; i < volume_info.groups_size(); i++) {
         CHECK(this->SetOption("group", volume_info.groups(i)),
-                "Failed to set group");
+            "Failed to set group");
     }
     for (int i = 0; i < volume_info.targets_size(); i++) {
         CHECK(this->SetOption("target",volume_info.targets(i)),
-                "Failed to set target");
+            "Failed to set target");
     }
     if (volume_info.has_state()) {
         if (volume_info.state() == VOLUME_STATE_MAINTENANCE) {
             CHECK(this->SetOption("maintenance", ToString(true)),
-                    "Failed to set maintenance mode");
+                "Failed to set maintenance mode");
         }
     }
     for (int i = 0; i < volume_info.filter_chain_options_size(); i++) {
         CHECK(this->SetOption(volume_info.filter_chain_options(i).option_name(),
                 volume_info.filter_chain_options(i).option()),
-                "Failed to set filter chain option");
+            "Failed to set filter chain option");
     }
     for (int i = 0; i < volume_info.chunking_options_size(); i++) {
         CHECK(this->SetOption(volume_info.chunking_options(i).option_name(),
                 volume_info.chunking_options(i).option()),
-                "Failed to set chunking option");
+            "Failed to set chunking option");
     }
     return true;
 }
@@ -293,7 +293,7 @@ bool Dedupv1dVolume::Runner(int thread_index) {
 
     ScopedReadWriteLock scoped_lock(&this->lock_);
     CHECK(scoped_lock.AcquireReadLock(), "Failed to acquire volume lock: " <<
-            "volume " << DebugString());
+        "volume " << DebugString());
 
     bool failed = false;
     CommandHandlerSession* chs = this->command_handler()->CreateSession(thread_index);
@@ -310,10 +310,10 @@ bool Dedupv1dVolume::Runner(int thread_index) {
         if (!throttleState.valid()) {
             ERROR("Failed to throttle volume: " << this->DebugString());
             failed = true;
-        } else if(throttleState.value()) {
+        } else if (throttleState.value()) {
             DEBUG("Throttle command handler thread: " <<
-                    "volume " << DebugString() <<
-                    ", thread id " << thread_index);
+                "volume " << DebugString() <<
+                ", thread id " << thread_index);
         } else {
             if (!this->handle()->HandleProcessCommand(chs)) {
                 ERROR("Failed to process next SCST command: volume " << this->DebugString());
@@ -322,7 +322,7 @@ bool Dedupv1dVolume::Runner(int thread_index) {
         }
         // re-acquire before state check
         CHECK(scoped_lock.AcquireReadLock(),
-                "Failed to acquire volume lock: volume " << this->DebugString());
+            "Failed to acquire volume lock: volume " << this->DebugString());
     }
     CHECK(scoped_lock.ReleaseLock(), "Failed to release volume lock: volume " << this->DebugString());
     if (chs) {
@@ -335,8 +335,8 @@ bool Dedupv1dVolume::Runner(int thread_index) {
         (void) scoped_lock.ReleaseLock();
     }
     DEBUG("Exit dedupv1 command thread: volume " << this->DebugString() <<
-            ", thread index " << thread_index <<
-            ", success " << ToString(!failed));
+        ", thread index " << thread_index <<
+        ", success " << ToString(!failed));
     return !failed;
 }
 
@@ -345,7 +345,7 @@ bool Dedupv1dVolume::Run() {
     CHECK(scoped_lock.AcquireWriteLock(), "Failed to acquire volume lock");
 
     CHECK(this->state() == DEDUPV1D_VOLUME_STATE_STARTED || this->state() == DEDUPV1D_VOLUME_STATE_STOPPED,
-            "Illegal state: state " << this->state());
+        "Illegal state: state " << this->state());
 
     DEBUG("Run volume " << this->DebugString());
 
@@ -359,8 +359,8 @@ bool Dedupv1dVolume::Run() {
     this->command_handler_threads_.resize(command_thread_count_);
     for (uint16_t i = 0; i < command_thread_count_; i++) {
         this->command_handler_threads_[i] = new Thread<bool>(
-                NewRunnable(this, &Dedupv1dVolume::Runner, static_cast<int>(i)),
-                this->device_name() + " " + ToString(i));
+            NewRunnable(this, &Dedupv1dVolume::Runner, static_cast<int>(i)),
+            this->device_name() + " " + ToString(i));
         CHECK(this->command_handler_threads_[i], "Failed to create command thread " << i);
     }
 
@@ -368,7 +368,7 @@ bool Dedupv1dVolume::Run() {
 
     for (uint16_t i = 0; i < this->command_handler_threads_.size(); i++) {
         CHECK(this->command_handler_threads_[i]->Start(),
-                "Cannot submit command thread");
+            "Cannot submit command thread");
     }
     CHECK(scoped_lock.ReleaseLock(), "Failed to release volume lock");
 
@@ -415,8 +415,8 @@ bool Dedupv1dVolume::ChangeLogicalSize(uint64_t new_logical_size) {
     CHECK(scoped_lock.AcquireWriteLock(), "Failed to acquire volume lock");
 
     DEBUG("Volume changed logical size: " <<
-            "volume " << this->DebugString() <<
-            ", new logical size " << new_logical_size);
+        "volume " << this->DebugString() <<
+        ", new logical size " << new_logical_size);
 
     CHECK(logical_size() <= new_logical_size, "Cannot reduce logical size of a volume: " << DebugString());
 
@@ -427,7 +427,7 @@ bool Dedupv1dVolume::ChangeLogicalSize(uint64_t new_logical_size) {
 
     if (handle_.is_registered()) {
         CHECK(this->handle_.NotifyDeviceCapacityChanged(),
-                "Failed to notify initiators about capacity change");
+            "Failed to notify initiators about capacity change");
     }
     CHECK(scoped_lock.ReleaseLock(), "Failed to release volume lock");
     return true;
@@ -487,8 +487,8 @@ bool Dedupv1dVolume::ChangeMaintenanceMode(bool maintaince_mode) {
     CHECK(scoped_lock.AcquireWriteLock(), "Failed to acquire volume lock");
 
     DEBUG("Volume changed maintenance mode: " <<
-            "volume " << this->DebugString() <<
-            ", new maintenance mode " << ToString(maintaince_mode));
+        "volume " << this->DebugString() <<
+        ", new maintenance mode " << ToString(maintaince_mode));
 
     if (maintenance_mode() == maintaince_mode) {
         // already in that mode, nothing has to change
@@ -496,7 +496,7 @@ bool Dedupv1dVolume::ChangeMaintenanceMode(bool maintaince_mode) {
     }
 
     CHECK(this->state() != DEDUPV1D_VOLUME_STATE_FAILED,
-            "Volume is in failure state: " << this->DebugString());
+        "Volume is in failure state: " << this->DebugString());
 
     this->maintenance_mode_ = maintaince_mode;
     CHECK(volume_.ChangeMaintenanceMode(maintaince_mode), "Failed to change maintenance mode");
@@ -693,10 +693,10 @@ uint64_t Dedupv1dVolume::logical_size() const {
 string Dedupv1dVolume::DebugString() const {
     stringstream sstr;
     sstr << "[Volume: id " << this->id() <<
-            ", name " << this->device_name() <<
-            ", size " << this->logical_size() <<
-            ", sector size " << this->block_size() <<
-            ", sessions " << this->session_count();
+    ", name " << this->device_name() <<
+    ", size " << this->logical_size() <<
+    ", sector size " << this->block_size() <<
+    ", sessions " << this->session_count();
 
     sstr << ", groups [";
     for (std::vector< std::pair<std::string, uint64_t> >::const_iterator i = groups_.begin(); i != groups_.end(); i++) {
@@ -715,8 +715,8 @@ string Dedupv1dVolume::DebugString() const {
         sstr << i->first << ":" << i->second;
     }
     sstr << "]"
-            ", state " + ToString(this->state()) +
-            ", maintenance mode " + (this->maintenance_mode() ? "maintenance" : "running") + "]";
+    ", state " + ToString(this->state()) +
+    ", maintenance mode " + (this->maintenance_mode() ? "maintenance" : "running") + "]";
 
     return sstr.str();
 }
@@ -739,13 +739,13 @@ bool Dedupv1dVolume::SerializeTo(VolumeInfoData* data) const {
     for (i = this->groups().begin(); i != this->groups().end(); i++) {
         string group_lun_pair;
         CHECK(JoinGroupOption(i->first, i->second, &group_lun_pair),
-                "Failed to join group lun pair");
+            "Failed to join group lun pair");
         data->add_groups(group_lun_pair);
     }
     for (i = this->targets().begin(); i != this->targets().end(); i++) {
         string target_lun_pair;
         CHECK(JoinGroupOption(i->first, i->second, &target_lun_pair),
-                "Failed to join target lun pair");
+            "Failed to join target lun pair");
         data->add_targets(target_lun_pair);
     }
 
@@ -788,8 +788,8 @@ dedupv1::base::Option<bool> Dedupv1dVolume::Throttle(int thread_id, int thread_c
 
         if (threads_to_hold > stats_.throttled_thread_count_) {
             DEBUG("Response time throttle: average response time " << average_response_time <<
-                    ", threads to throttle " << threads_to_hold <<
-                    ", throttled thread count " << stats_.throttled_thread_count_);
+                ", threads to throttle " << threads_to_hold <<
+                ", throttled thread count " << stats_.throttled_thread_count_);
             sleep(average_response_time / 100.0); // sleep ten times as long as the average response time
         }
     }
@@ -803,10 +803,10 @@ dedupv1::base::Option<bool> Dedupv1dVolume::Throttle(int thread_id, int thread_c
 }
 
 ScsiResult Dedupv1dVolume::MakeRequest(dedupv1::request_type rw,
-        uint64_t offset,
-        uint64_t size,
-        byte* buffer,
-        ErrorContext* ec) {
+                                       uint64_t offset,
+                                       uint64_t size,
+                                       byte* buffer,
+                                       ErrorContext* ec) {
     if (maintenance_mode()) {
         // return ERROR if in maintenance mode, but that should not happen anyway.
         // The error code says that the LUN is not ready and manual intervention is necessary
@@ -883,7 +883,7 @@ std::string Dedupv1dVolume::PrintLockStatistics() {
 std::string Dedupv1dVolume::PrintTrace() {
     stringstream sstr;
     sstr << "{" << std::endl;
-    sstr << "\"throttled thread count\": " << stats_.throttled_thread_count_<< "," << std::endl;
+    sstr << "\"throttled thread count\": " << stats_.throttled_thread_count_ << "," << std::endl;
     sstr << "\"commands\": " << ch_.PrintTrace() << std::endl;
     sstr << "}" << std::endl;
     return sstr.str();

@@ -36,8 +36,8 @@ namespace dedupv1 {
 namespace blockindex {
 
 BlockIndexBackgroundCommitter::BlockIndexBackgroundCommitter(
-        BlockIndex* block_index,
-        bool stop_mode) {
+    BlockIndex* block_index,
+    bool stop_mode) {
     this->block_index_ = block_index; // this call might be early. the object should not do more with the block_index than store the pointer
     this->state_ = CREATED;
     thread_count_ = 0;
@@ -126,7 +126,7 @@ bool BlockIndexBackgroundCommitter::Stop(const dedupv1::StopContext& stop_contex
     }
     CHECK(scoped_lock.ReleaseLock(), "Failed to release block index bg lock");
 
-    bool failed=false;
+    bool failed = false;
     for (int i = 0; i < threads_.size(); i++) {
         if (threads_[i]) {
             bool thread_result = false;

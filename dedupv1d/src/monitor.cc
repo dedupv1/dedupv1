@@ -220,7 +220,7 @@ MonitorAdapter* MonitorSystem::FindAdapter(const string& monitor_type) {
 
 static int monitor_request_send_response(struct MHD_Connection* connection, unsigned int status_code, const char* content) {
     int ret = 0;
-    struct MHD_Response* response = MHD_create_response_from_data(strlen(content),(void*) content, false, true);
+    struct MHD_Response* response = MHD_create_response_from_data(strlen(content),(void *) content, false, true);
     MHD_add_response_header(response, "Content-Type", "text/plain");
     ret = MHD_queue_response(connection, status_code, response);
     MHD_destroy_response(response);
@@ -267,7 +267,7 @@ int MonitorSystem::AccessCallback(void *cls, const struct sockaddr *addr, sockle
     if (addr->sa_family != AF_INET) {
         return MHD_NO;
     }
-    struct sockaddr_in* addr_in = (struct sockaddr_in*) addr;
+    struct sockaddr_in* addr_in = (struct sockaddr_in *) addr;
     char buffer[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &addr_in->sin_addr, buffer, INET_ADDRSTRLEN);
 
@@ -288,7 +288,7 @@ ssize_t MonitorRequest::RequestCallback(void *cls, uint64_t pos, char *buf, size
 
     ProfileTimer timer(mr->monitor_system_->stats_.timing_);
     mr->monitor_system_->stats_.call_count_++;
-    
+
     ssize_t ret = mr->request()->PerformRequest(pos, buf, max);
 
     if (ret < 0) {
@@ -334,7 +334,7 @@ std::vector<std::string> MonitorSystem::GetMonitorNames() {
 }
 
 int MonitorSystem::RequestCallback(void* cls,struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **con_cls) {
-    int ret= MHD_NO;
+    int ret = MHD_NO;
     MonitorSystem* m = reinterpret_cast<MonitorSystem*>(cls);
     if (m) {
         ret = m->DoRequestCallback(connection, url, method, version, upload_data, upload_data_size, con_cls);
@@ -382,9 +382,9 @@ int MonitorSystem::DoRequestCallback(struct MHD_Connection *connection, const ch
         &MonitorRequest::RequestCallbackFree);
     CHECK_RETURN(scoped_lock.ReleaseLock(), MHD_NO, "Unlock monitor lock failed");
 
-    if (response == NULL)  {
+    if (response == NULL) {
         ERROR("Failed to create response");
-	return MHD_NO;
+        return MHD_NO;
     }
 
     string content_type = adapter->GetContentType();
@@ -456,7 +456,7 @@ bool MonitorSystem::Start(const dedupv1::StartContext& start_context) {
                 MHD_OPTION_END);
         } else {
             this->http_server_ = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, this->port_,
-                MonitorSystem::AccessCallback, this, &MonitorSystem::RequestCallback, this, 
+                MonitorSystem::AccessCallback, this, &MonitorSystem::RequestCallback, this,
                 MHD_OPTION_EXTERNAL_LOGGER, &MonitorSystem::MHDLogHandler, NULL,
                 MHD_OPTION_END);
         }

@@ -199,7 +199,7 @@ Dedupv1d::Dedupv1d() :
 
 bool Dedupv1d::Init() {
     CHECK(this->threads_.SetOption("size", ToString(kDefaultThreadpoolSize)),
-            "Cannot set threadpool size to default value");
+        "Cannot set threadpool size to default value");
 
     this->dedup_system_ = new DedupSystem();
     CHECK(this->dedup_system_, "Cannot create dedup system");
@@ -239,13 +239,13 @@ bool Dedupv1d::WriteDirtyState(const dedupv1::FileMode& file_mode, bool dirty, b
     if (dirty_file_exists.value()) {
         // create copy
         CHECK(File::CopyFile(this->daemon_dirtyfile(), dirtyfile_backup_name, file_mode.mode()),
-                "Failed to copy dirty file");
+            "Failed to copy dirty file");
         tmp_file_created = true;
 
         if (!dirty_tmp_file_exists.value() && file_mode.gid() != -1) {
             // change backup file owner only if the file is new
             CHECK(chown(dirtyfile_backup_name.c_str(), -1, file_mode.gid()) == 0,
-                    "Failed to change file group: " << dirtyfile_backup_name);
+                "Failed to change file group: " << dirtyfile_backup_name);
         }
     }
 
@@ -261,7 +261,7 @@ bool Dedupv1d::WriteDirtyState(const dedupv1::FileMode& file_mode, bool dirty, b
     DEBUG("Write dirty state: " << dirty_data.ShortDebugString());
 
     CHECK(dirty_file->WriteSizedMessage(0, dirty_data, 8 * 4096, true) > 0,
-            "Failed to write dirty file with data " << dirty_data.ShortDebugString());
+        "Failed to write dirty file with data " << dirty_data.ShortDebugString());
     CHECK(dirty_file->Sync(), "Failed to sync dirty file");
     CHECK(dirty_file->Close(), "Failed to close dirty file");
     dirty_file = NULL;
@@ -269,7 +269,7 @@ bool Dedupv1d::WriteDirtyState(const dedupv1::FileMode& file_mode, bool dirty, b
     if (!dirty_file_exists.value() && file_mode.gid() != -1) {
         // Only try to change file owner if the file is created at first
         CHECK(chown(this->daemon_dirtyfile().c_str(), -1, file_mode.gid()) == 0,
-                "Failed to change file group: " << this->daemon_dirtyfile());
+            "Failed to change file group: " << this->daemon_dirtyfile());
     }
 
     // no everything is ok, we can delete the .tmp file
@@ -419,8 +419,8 @@ bool Dedupv1d::Start(const StartContext& preliminary_start_context, bool no_log_
 
     if (memory_parachute_size_ > 0) {
         CHECK(dedupv1::base::memory::RegisterMemoryParachute(
-                        memory_parachute_size_),
-                "Registering new handler failed");
+                memory_parachute_size_),
+            "Registering new handler failed");
         CHECK(dedupv1::base::memory::AddMemoryParachuteListener(this), "Failed to add the listener");
     }
 
@@ -432,7 +432,7 @@ bool Dedupv1d::Start(const StartContext& preliminary_start_context, bool no_log_
 
         // use custom group
         CHECK(GetStartContextFileModes(&start_context_, this->daemon_group_),
-                "Failed to get start context file modes for group " << this->daemon_group_);
+            "Failed to get start context file modes for group " << this->daemon_group_);
     }
 
     Option<bool> dirty_file_exists = dedupv1::base::File::Exists(this->daemon_dirtyfile());
@@ -441,7 +441,7 @@ bool Dedupv1d::Start(const StartContext& preliminary_start_context, bool no_log_
     if (start_context_.create()) {
         if (dirty_file_exists.value()) {
             ERROR("System already initialized: " << "dirty file name " << this->daemon_dirtyfile_
-                    << ", reason dirty file exists in create mode");
+                                                 << ", reason dirty file exists in create mode");
 
             if (!start_context_.force()) {
                 return false;
@@ -449,7 +449,7 @@ bool Dedupv1d::Start(const StartContext& preliminary_start_context, bool no_log_
         }
         // dirty file does not exists (or we force it)
         CHECK(this->WriteDirtyState(start_context_.file_mode(), true, false),
-                "Failed to write new dirty state file");
+            "Failed to write new dirty state file");
     } else if (!start_context_.create()) {
         if (unlikely(!dirty_file_exists.value())) {
             ERROR("System not initialized: " << "dirty file name " << this->daemon_dirtyfile_);
@@ -459,7 +459,7 @@ bool Dedupv1d::Start(const StartContext& preliminary_start_context, bool no_log_
             } else {
                 // rescue the state
                 CHECK(this->WriteDirtyState(start_context_.file_mode(), true, false),
-                        "Failed to write new dirty state file");
+                    "Failed to write new dirty state file");
             }
         } else {
             // dirty file exists (normal case)
@@ -480,7 +480,7 @@ bool Dedupv1d::Start(const StartContext& preliminary_start_context, bool no_log_
                 }
                 if (dirty_state.value().has_revision() && dirty_state.value().revision() != DEDUPV1_REVISION_STR) {
                     INFO("Daemon version change: old revision: " << dirty_state.value().revision() << ", current revision "
-                            << DEDUPV1_REVISION_STR);
+                                                                 << DEDUPV1_REVISION_STR);
                 }
                 if (!this->start_context_.dirty() && !this->start_context_.create()) {
                     // here we may set the state back to clean, but we prevent this if the state has explicitly set to dirty before
@@ -500,7 +500,7 @@ bool Dedupv1d::Start(const StartContext& preliminary_start_context, bool no_log_
 
             // write that the system is dirty
             CHECK(this->WriteDirtyState(start_context_.file_mode(), true, false),
-                    "Failed to write new dirty state file");
+                "Failed to write new dirty state file");
         }
     }
 
@@ -511,51 +511,51 @@ bool Dedupv1d::Start(const StartContext& preliminary_start_context, bool no_log_
 
     if (this->monitor_config_["profile"] == MONITOR_ENABLED) {
         CHECK(this->monitor_->Add("profile", new dedupv1d::monitor::ProfileMonitorAdapter(this)),
-                "Cannot add profile monitor");
+            "Cannot add profile monitor");
     }
     if (this->monitor_config_["lock"] == MONITOR_ENABLED) {
         CHECK(this->monitor_->Add("lock", new dedupv1d::monitor::LockMonitorAdapter(this)),
-                "Cannot add lock monitor");
+            "Cannot add lock monitor");
     }
     if (this->monitor_config_["stats"] == MONITOR_ENABLED) {
         CHECK(this->monitor_->Add("stats", new dedupv1d::monitor::StatsMonitorAdapter(this)),
-                "Cannot add stats monitor");
+            "Cannot add stats monitor");
     }
     if (this->monitor_config_["trace"] == MONITOR_ENABLED) {
         CHECK(this->monitor_->Add("trace", new dedupv1d::monitor::TraceMonitorAdapter(this)),
-                "Cannot add trace monitor");
+            "Cannot add trace monitor");
     }
     if (this->monitor_config_["status"] == MONITOR_ENABLED) {
         CHECK(this->monitor_->Add("status", new dedupv1d::monitor::StatusMonitorAdapter(this)),
-                "Cannot add status monitor");
+            "Cannot add status monitor");
     }
     if (this->monitor_config_["config"] == MONITOR_ENABLED) {
         CHECK(this->monitor_->Add("config", new dedupv1d::monitor::ConfigMonitorAdapter(this)),
-                "Cannot add config monitor");
+            "Cannot add config monitor");
     }
     if (this->monitor_config_["log"] == MONITOR_ENABLED) {
         CHECK(this->monitor_->Add("log", new dedupv1d::monitor::LogMonitorAdapter(this)),
-                "Cannot add log monitor");
+            "Cannot add log monitor");
     }
     if (this->monitor_config_["volume"] == MONITOR_ENABLED) {
         CHECK(this->monitor_->Add("volume", new dedupv1d::monitor::VolumeMonitorAdapter(this)),
-                "Cannot add volume monitor");
+            "Cannot add volume monitor");
     }
     if (this->monitor_config_["target"] == MONITOR_ENABLED) {
         CHECK(this->monitor_->Add("target", new dedupv1d::monitor::TargetMonitorAdapter(this)),
-                "Cannot add target monitor");
+            "Cannot add target monitor");
     }
     if (this->monitor_config_["group"] == MONITOR_ENABLED) {
         CHECK(this->monitor_->Add("group", new dedupv1d::monitor::GroupMonitorAdapter(this)),
-                "Cannot add group monitor");
+            "Cannot add group monitor");
     }
     if (this->monitor_config_["user"] == MONITOR_ENABLED) {
         CHECK(this->monitor_->Add("user", new dedupv1d::monitor::UserMonitorAdapter(this)),
-                "Cannot add user monitor");
+            "Cannot add user monitor");
     }
     if (this->monitor_config_["version"] == MONITOR_ENABLED) {
         CHECK(this->monitor_->Add("version", new dedupv1d::monitor::VersionMonitorAdapter()),
-                "Cannot add version monitor");
+            "Cannot add version monitor");
     }
     if (this->monitor_config_["inspect"] == MONITOR_ENABLED) {
         CHECK(this->monitor_->Add("inspect", new dedupv1d::monitor::InspectMonitorAdapter(this)), "Cannot add inspect monitor");
@@ -571,7 +571,7 @@ bool Dedupv1d::Start(const StartContext& preliminary_start_context, bool no_log_
     }
     if (this->monitor_config_["container-gc"] == MONITOR_ENABLED) {
         CHECK(this->monitor_->Add("container-gc", new dedupv1d::monitor::ContainerGCMonitorAdapter(this)),
-                "Cannot add container gc monitor");
+            "Cannot add container gc monitor");
     }
     if (this->monitor_config_["logging"] == MONITOR_ENABLED) {
         CHECK(this->monitor_->Add("logging", new dedupv1d::monitor::LoggingMonitorAdapter()), "Cannot add logging monitor");
@@ -590,7 +590,7 @@ bool Dedupv1d::Start(const StartContext& preliminary_start_context, bool no_log_
     }
     if (this->monitor_config_["sun"] == MONITOR_ENABLED) {
         CHECK(this->monitor_->Add("sun", new dedupv1d::monitor::SunMonitorAdapter()),
-                "Cannot add sun monitor");
+            "Cannot add sun monitor");
     }
     CHECK(this->monitor_->Start(start_context_), "Cannot start monitor");
 
@@ -605,11 +605,11 @@ bool Dedupv1d::Start(const StartContext& preliminary_start_context, bool no_log_
     }
     if (this->target_info_) {
         CHECK(this->target_info_->Start(start_context_, volume_info_, user_info_),
-                "Cannot start target info");
+            "Cannot start target info");
     }
     if (this->user_info_) {
         CHECK(this->user_info_->Start(start_context_),
-                "Cannot start user info");
+            "Cannot start user info");
     }
     if (this->volume_info_) {
         CHECK(this->volume_info_->Start(start_context_, this->group_info_, this->target_info_, this->dedup_system_), "Cannot start volume info");
@@ -635,8 +635,8 @@ bool Dedupv1d::Start(const StartContext& preliminary_start_context, bool no_log_
 
     // start the log replayer after the log replay
     CHECK(this->log_replayer_->Start(this->dedup_system_->log(),
-                    this->dedup_system_->idle_detector()),
-            "Cannot start log replayer");
+            this->dedup_system_->idle_detector()),
+        "Cannot start log replayer");
 
     // essentially here we are accepting a changed configuration
     CHECK(this->WriteDirtyState(start_context_.file_mode(), true, false), "Failed to set dirty state");
@@ -658,12 +658,12 @@ bool Dedupv1d::Run() {
 
     ScheduleOptions options(this->stats_persist_interval_);
     CHECK(scheduler_.Submit("stats", options, NewCallback(this, &Dedupv1d::ScheduledPersistStatistics)),
-            "Failed to submit scheduled task");
+        "Failed to submit scheduled task");
 
     if (this->uptime_log_interval_ > 0) {
         ScheduleOptions log_options(this->uptime_log_interval_);
         CHECK(scheduler_.Submit("stats-log", log_options, NewCallback(this, &Dedupv1d::ScheduledLogUptime)),
-                "Failed to submit scheduled task");
+            "Failed to submit scheduled task");
     }
 
     CHECK(this->log_replayer_->Run(), "Cannot run log replayer");
@@ -823,13 +823,13 @@ bool Dedupv1d::SetOption(const string& option_name, const string& option) {
         return true;
     }
     if (option_name == "daemon.core-dump") {
-        Option<bool> d = To<bool> (option);
+        Option<bool> d = To<bool>(option);
         CHECK(d.valid(), "Illegal core dump: " << option);
         this->dump_state_ = d.value();
         return true;
     }
     if (option_name == "daemon.memory-parachute") {
-        Option<bool> b = To<bool> (option);
+        Option<bool> b = To<bool>(option);
         if (b.valid()) {
             if (!b.value()) {
                 this->memory_parachute_size_ = 0;
@@ -856,7 +856,7 @@ bool Dedupv1d::SetOption(const string& option_name, const string& option) {
         std::map<std::string, enum monitor_config_state>::iterator i = this->monitor_config_.find(monitor_name);
         if (i != this->monitor_config_.end()) {
             CHECK(To<bool>(option).valid(), "Illegal option: " << option);
-            bool monitor_state = To<bool> (option).value();
+            bool monitor_state = To<bool>(option).value();
             this->monitor_config_[monitor_name] = (monitor_state ? MONITOR_ENABLED : MONITOR_DISABLED);
         } else {
             // pass to monitor system
@@ -911,7 +911,7 @@ bool Dedupv1d::SetOption(const string& option_name, const string& option) {
         return this->volume_info_->SetOption(option_name, option);
     }
     if (option_name == "stats.persist-interval") {
-        Option<double> d = To<double> (option);
+        Option<double> d = To<double>(option);
         CHECK(d.valid(), "Illegal persist interval: " << option);
         CHECK(d.value() >= 1.0, "Illegal persist interval: " << option);
         this->stats_persist_interval_ = d.value();
@@ -922,14 +922,14 @@ bool Dedupv1d::SetOption(const string& option_name, const string& option) {
         return true;
     }
     if (option_name == "update.log-interval") {
-        Option<bool> b = To<bool> (option);
+        Option<bool> b = To<bool>(option);
         if (b.valid()) {
             if (!b.value()) {
                 this->uptime_log_interval_ = 0;
             }
             return true;
         }
-        Option<double> d = To<double> (option);
+        Option<double> d = To<double>(option);
         CHECK(d.valid(), "Illegal log interval: " << option);
         CHECK(d.value() >= 1.0, "Illegal log interval: " << option);
         this->uptime_log_interval_ = d.value();
@@ -1077,11 +1077,11 @@ bool Dedupv1d::PersistStatistics() {
 
     if (dedup_system_) {
         CHECK(dedup_system_->PersistStatistics("dedupv1", &this->persistent_stats_),
-                "Failed to persist dedup system stats");
+            "Failed to persist dedup system stats");
     }
     if (volume_info_) {
         CHECK(volume_info_->PersistStatistics("volume-info", &this->persistent_stats_),
-                "Failed to persist volume info stats");
+            "Failed to persist volume info stats");
     }
     return true;
 }
@@ -1097,11 +1097,11 @@ bool Dedupv1d::RestoreStatistics() {
 
     if (dedup_system_) {
         CHECK(dedup_system_->RestoreStatistics("dedupv1", &this->persistent_stats_),
-                "Failed to restore dedup system stats");
+            "Failed to restore dedup system stats");
     }
     if (volume_info_) {
         CHECK(volume_info_->RestoreStatistics("volume-info", &this->persistent_stats_),
-                "Failed to restore volume info stats");
+            "Failed to restore volume info stats");
     }
     return true;
 }

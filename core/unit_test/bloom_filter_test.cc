@@ -35,7 +35,7 @@ namespace filter {
 INSTANTIATE_TEST_CASE_P(BloomFilter,
     FilterTest,
     ::testing::Values("bloom-filter;size=1024;filename=work/bf",
-      "bloom-filter;size=1M;filename=work/bf"));
+        "bloom-filter;size=1M;filename=work/bf"));
 
 INSTANTIATE_TEST_CASE_P(BloomFilter,
     DedupSystemTest,

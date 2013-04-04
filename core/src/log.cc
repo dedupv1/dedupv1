@@ -109,20 +109,20 @@ const uint32_t Log::kDefaultLogEntryWidth = 1000;
 /**
  * A log consumer that prints out progress reports during the replay
  */
-class FullReplayLogConsumer: public LogConsumer {
-    private:
-        int64_t replay_id_at_start;
-        int64_t log_id_at_start;
-        int last_full_percent_progress;
-        tick_count start_time;
-    public:
-        /**
-         * Constructor
-         */
-        FullReplayLogConsumer(int64_t replay_id_at_start, int64_t log_id_at_start);
+class FullReplayLogConsumer : public LogConsumer {
+private:
+    int64_t replay_id_at_start;
+    int64_t log_id_at_start;
+    int last_full_percent_progress;
+    tick_count start_time;
+public:
+    /**
+     * Constructor
+     */
+    FullReplayLogConsumer(int64_t replay_id_at_start, int64_t log_id_at_start);
 
-        bool LogReplay(dedupv1::log::event_type event_type, const LogEventData& data,
-                const dedupv1::log::LogReplayContext& context);
+    bool LogReplay(dedupv1::log::event_type event_type, const LogEventData& data,
+                   const dedupv1::log::LogReplayContext& context);
 };
 
 Log::Log() :
@@ -153,7 +153,7 @@ Log::Log() :
 
 Log::Statistics::Statistics() :
     average_commit_latency_(256), average_read_event_latency_(256), average_replay_events_latency_(256),
-            average_replayed_events_per_step_(256), average_ack_latency_(256) {
+    average_replayed_events_per_step_(256), average_ack_latency_(256) {
     this->event_count_ = 0;
     this->throttle_count_ = 0;
     this->multi_entry_event_count_ = 0;
@@ -172,7 +172,7 @@ bool Log::Init() {
 }
 
 IDBasedIndex* Log::CreateDefaultLogData() {
-    IDBasedIndex* index = dynamic_cast<IDBasedIndex*> (Index::Factory().Create(Log::kDefaultLogIndexType));
+    IDBasedIndex* index = dynamic_cast<IDBasedIndex*>(Index::Factory().Create(Log::kDefaultLogIndexType));
     CHECK_RETURN(index, NULL, "Cannot create log data store");
     return index;
 }
@@ -190,7 +190,7 @@ bool Log::SetOption(const string& option_name, const string& option) {
         return true;
     } else if (option_name == "delayed-replay-thread-prio") {
         CHECK(To<int>(option).valid(), "Illegal option " << option);
-        size_t c = To<int> (option).value();
+        size_t c = To<int>(option).value();
         CHECK(c >= 0 && c <= 30, "Illegal delayed-replay-thread-prio");
         this->direct_replay_thread_prio_ = c;
         return true;
@@ -225,7 +225,7 @@ bool Log::SetOption(const string& option_name, const string& option) {
         CHECK(this->log_data_ == NULL, "Log data already set");
         Index* index = Index::Factory().Create(option);
         CHECK(index != NULL, "Failed to create index type: " << option);
-        this->log_data_ = dynamic_cast<IDBasedIndex*> (index);
+        this->log_data_ = dynamic_cast<IDBasedIndex*>(index);
         if (this->log_data_ == NULL) {
             if (!index->Close()) {
                 WARNING("Failed to close index");
@@ -242,7 +242,7 @@ bool Log::SetOption(const string& option_name, const string& option) {
         return true;
     } else if (StartsWith(option_name, "throttle.")) {
         CHECK(this->throttling_.SetOption(option_name.substr(strlen("throttle.")), option),
-                "Failed to configure log throttling");
+            "Failed to configure log throttling");
         return true;
     } else if (StartsWith(option_name, "info.")) {
         CHECK(this->log_info_store_.SetOption(option_name.substr(strlen("info.")), option), "Failed to configure log info store");
@@ -269,9 +269,9 @@ bool Log::Start(const StartContext& start_context, dedupv1::DedupSystem* system)
 
     CHECK(info_lookup != LOOKUP_ERROR, "Failed to read meta info");
     CHECK(!(info_lookup == LOOKUP_NOT_FOUND && !start_context.create()),
-            "Failed to lookup meta info in non-create startup mode");
+        "Failed to lookup meta info in non-create startup mode");
     CHECK(!(info_lookup == LOOKUP_FOUND && start_context.create()),
-            "Found meta info in create mode, please clean up first");
+        "Found meta info in create mode, please clean up first");
 
     readonly_ = start_context.readonly();
     if (this->log_data_ == NULL) {
@@ -283,7 +283,7 @@ bool Log::Start(const StartContext& start_context, dedupv1::DedupSystem* system)
     // We prefer the first method
     if (max_log_size_) {
         CHECK(this->log_data_->SetOption("size", ToString(max_log_size_)),
-                "Illegal size: max log size " << max_log_size_);
+            "Illegal size: max log size " << max_log_size_);
     }
 
     // We use this method to assign the default so that we are able to
@@ -300,7 +300,7 @@ bool Log::Start(const StartContext& start_context, dedupv1::DedupSystem* system)
         }
     }
     CHECK(this->log_data_->SetOption("width", ToString(this->max_log_entry_width_)),
-            "Failed to set default width: entry width " << max_log_entry_width_);
+        "Failed to set default width: entry width " << max_log_entry_width_);
 
     CHECK(this->log_data_->IsPersistent(), "Log should be persistent");
     CHECK(this->log_data_->Start(start_context), "Cannot start log data");
@@ -311,15 +311,15 @@ bool Log::Start(const StartContext& start_context, dedupv1::DedupSystem* system)
         this->replay_id_ = replayID_data.replay_id();
         if (state_data.has_limit_id()) {
             CHECK(this->log_data_->GetLimitId() == state_data.limit_id(),
-                    "Limit id mismatch: " <<
-                    "configured " << this->log_data_->GetLimitId() <<
-                    ", stored " << state_data.limit_id());
+                "Limit id mismatch: " <<
+                "configured " << this->log_data_->GetLimitId() <<
+                ", stored " << state_data.limit_id());
         }
         if (state_data.has_log_entry_width()) {
             CHECK(max_log_entry_width_ == state_data.log_entry_width(),
-                    "Log entry width mismatch: " <<
-                    "configured " << max_log_entry_width_ <<
-                    ", stored " << state_data.log_entry_width());
+                "Log entry width mismatch: " <<
+                "configured " << max_log_entry_width_ <<
+                ", stored " << state_data.log_entry_width());
         }
         if (start_context.has_crashed()) {
             DEBUG("Searching actual log id after replay");
@@ -337,7 +337,7 @@ bool Log::Start(const StartContext& start_context, dedupv1::DedupSystem* system)
     // init replay thread
     if (this->direct_replay_thread_prio_ > 0) {
         CHECK(this->replay_thread_.SetPriority(direct_replay_thread_prio_),
-                "Failed to set replay thread priority");
+            "Failed to set replay thread priority");
     }
 
     this->state_ = LOG_STATE_STARTED;
@@ -346,12 +346,12 @@ bool Log::Start(const StartContext& start_context, dedupv1::DedupSystem* system)
         // We want to make sure that there is at least one entry in the log
         // after the start of the log finished
         CHECK(this->CommitEvent(EVENT_TYPE_LOG_NEW, NULL, NULL, NULL, NO_EC),
-                "Failed to commit new log event");
+            "Failed to commit new log event");
     }
     this->wasStarted_ = true;
     last_directly_replayed_log_id_ = log_id_ - 1;
     this->last_fully_written_log_id_ = this->log_id_ - 1;
-    
+
     INFO("Started log: replay id " << this->replay_id_ << ", log id " << this->log_id_);
     return true;
 }
@@ -363,16 +363,16 @@ bool Log::Run() {
 
     this->replay_event_queue_.clear(); // Clear
     CHECK(this->replay_thread_.Start(),
-            "Failed to start replay thread");
+        "Failed to start replay thread");
     this->state_ = LOG_STATE_RUNNING;
     CHECK(replay_thread_start_barrier_.Wait(), "Failed to wait for replay thread");
 
     ScopedLock scoped_lock(&direct_replay_queue_empty_lock_);
     CHECK(scoped_lock.AcquireLock(),
-            "Failed to acquire direct replay empty queue condition lock");
+        "Failed to acquire direct replay empty queue condition lock");
 
     CHECK(direct_replay_queue_empty_condition_.ConditionWait(&direct_replay_queue_empty_lock_),
-            "Failed to wait for direct replay empty queue condition");
+        "Failed to wait for direct replay empty queue condition");
 
     return true;
 }
@@ -463,7 +463,7 @@ bool Log::ReplayDirectReplayEntry(const LogReplayEntry& replay_entry) {
             LogReplayContext replay_context(EVENT_REPLAY_MODE_DIRECT, replay_entry.log_id());
             if (!this->PublishEvent(replay_context, replay_entry.event_type(), replay_entry.event_value())) {
                 ERROR("Failed to publish event (direct): event type " << Log::GetEventTypeName(
-                                replay_entry.event_type()));
+                        replay_entry.event_type()));
                 return false;
             }
         }
@@ -494,8 +494,8 @@ bool Log::ReplayLoop() {
 
                 if (!ReplayDirectReplayEntry(replay_entry)) {
                     ERROR("Failed to replay direct replay: " << replay_entry.DebugString() <<
-                            " last directly replayed log id " << last_directly_replayed_log_id_ <<
-                            " last replayed log id " << replay_id_);
+                        " last directly replayed log id " << last_directly_replayed_log_id_ <<
+                        " last replayed log id " << replay_id_);
                 }
                 last_directly_replayed_log_id_ += replay_entry.log_id_count();
                 consider_queue = false;
@@ -529,7 +529,7 @@ bool Log::ReplayLoop() {
             } else {
                 // replay entry set
                 TRACE("Pop replay event: " << replay_entry.DebugString() << ", last directly replayed log id "
-                        << last_directly_replayed_log_id_);
+                                           << last_directly_replayed_log_id_);
 
                 if (last_directly_replayed_log_id_ + 1 == replay_entry.log_id()) {
                     // this item is the next
@@ -537,13 +537,13 @@ bool Log::ReplayLoop() {
                     TRACE("Replay event (direct): " << replay_entry.DebugString());
                     if (!ReplayDirectReplayEntry(replay_entry)) {
                         ERROR("Failed to replay direct replay: " << replay_entry.DebugString() <<
-                                 " last directly replayed log id " << last_directly_replayed_log_id_ <<
-                                 " last replayed log id " << replay_id_);
+                            " last directly replayed log id " << last_directly_replayed_log_id_ <<
+                            " last replayed log id " << replay_id_);
                     }
                     last_directly_replayed_log_id_ += replay_entry.log_id_count();
                 } else if (last_directly_replayed_log_id_ >= replay_entry.log_id()) {
                     WARNING("Illegal last directly replayed log id: " << last_directly_replayed_log_id_
-                            << ", replay entry " << replay_entry.DebugString());
+                                                                      << ", replay entry " << replay_entry.DebugString());
                 } else {
                     TRACE("Place event in delayed event map: " << replay_entry.DebugString());
                     delayed_entry_map[replay_entry.log_id()] = replay_entry;
@@ -556,7 +556,7 @@ bool Log::ReplayLoop() {
 }
 
 bool Log::WriteNextEntry(const LogEventData& event_data, int64_t* log_id_given, uint32_t* log_id_count,
-        dedupv1::base::ErrorContext* ec) {
+                         dedupv1::base::ErrorContext* ec) {
     CHECK(this->log_data_, "Log data not set");
 
     uint32_t id_count = 1;
@@ -592,7 +592,7 @@ bool Log::WriteNextEntry(const LogEventData& event_data, int64_t* log_id_given, 
             }
             // It is not possible to perform that operation now
             ERROR("Log full: " << "log id " << this->log_id_ << ", replay id " << this->replay_id_ << ", limit "
-                    << this->log_data_->GetLimitId());
+                               << this->log_data_->GetLimitId());
             return false;
         }
 
@@ -615,12 +615,11 @@ bool Log::WriteNextEntry(const LogEventData& event_data, int64_t* log_id_given, 
     }
     if (!this->WriteEntry(id, id_count, event_data)) {
         ERROR("Failed to write log entry: " << "id " << id << ", partial count " << id_count << ", entry "
-                << FriendlySubstr(event_data.ShortDebugString(), 0, 256, " ..."));
+                                            << FriendlySubstr(event_data.ShortDebugString(), 0, 256, " ..."));
         spin_mutex::scoped_lock l(this->lock_);
         in_progress_log_id_set_.erase(id);
         return false;
     }
-
 
     spin_mutex::scoped_lock l(this->lock_);
 
@@ -642,7 +641,7 @@ bool Log::WriteNextEntry(const LogEventData& event_data, int64_t* log_id_given, 
 Option<bool> Log::CheckLogId() {
     int64_t next_read_id = this->replay_id_;
     int64_t max_check_id = std::min(this->log_id_ + this->log_id_update_intervall_, replay_id_
-            + this->log_data_->GetLimitId());
+        + this->log_data_->GetLimitId());
     int64_t real_log_id = 0;
     bool found_any_element = false;
     int64_t real_replay_id = max_check_id;
@@ -670,7 +669,7 @@ Option<bool> Log::CheckLogId() {
 
                 // update last fully written log id
                 if (event_data.has_last_fully_written_log_id() && (event_data.last_fully_written_log_id()
-                        > last_fully_written_id)) {
+                                                                   > last_fully_written_id)) {
                     last_fully_written_id = event_data.last_fully_written_log_id();
                 }
                 CHECK(event_data.log_id() == next_read_id, "Log event with illegal id found: log id " << event_data.log_id() << ", expected log id " << next_read_id);
@@ -688,33 +687,33 @@ Option<bool> Log::CheckLogId() {
                         int64_t entry_pos = GetLogPositionFromId(entry_id);
                         result = this->ReadEntryRaw(entry_pos, &inner_event_data);
                         CHECK(result != LOOKUP_ERROR, "Error reading partition " << read_part <<
-                                ", id " << entry_id <<
-                                ", position " << entry_pos << " of log id " << next_read_id << " at position " << next_read_posistion);
+                            ", id " << entry_id <<
+                            ", position " << entry_pos << " of log id " << next_read_id << " at position " << next_read_posistion);
                         if (result == LOOKUP_NOT_FOUND) {
                             INFO("Could not find partition " << read_part << ", id " << entry_id << ", position "
-                                    << entry_pos << " of log id " << next_read_id << " at position "
-                                    << next_read_posistion);
+                                                             << entry_pos << " of log id " << next_read_id << " at position "
+                                                             << next_read_posistion);
                             error = true;
                         } else {
                             // LOOKUP_FOUND
                             CHECK(inner_event_data.has_log_id(), "Partition " << read_part << ", id " << entry_id << ", position " << entry_pos << " of event " << next_read_id << " at Position " << next_read_posistion << " had no log_id");
                             if (inner_event_data.log_id() < replay_id_) {
                                 INFO("Partition " << read_part << ", id " << entry_id << ", position " << entry_pos
-                                        << " of log id " << next_read_id << " at position " << next_read_posistion
-                                        << " has to old log_id: " << inner_event_data.log_id()
-                                        << " while replay id is " << replay_id_);
+                                                  << " of log id " << next_read_id << " at position " << next_read_posistion
+                                                  << " has to old log_id: " << inner_event_data.log_id()
+                                                  << " while replay id is " << replay_id_);
                                 error = true;
                             } else {
                                 CHECK(inner_event_data.log_id() == entry_id, "Partition " << read_part <<
-                                        ", id " << entry_id << ", position " << entry_pos << " of log id " << next_read_id << " at position " << next_read_posistion << " had illegal log_id " << inner_event_data.log_id());
+                                    ", id " << entry_id << ", position " << entry_pos << " of log id " << next_read_id << " at position " << next_read_posistion << " had illegal log_id " << inner_event_data.log_id());
                                 CHECK(inner_event_data.has_partial_count(), "Partition " << read_part <<
-                                        ", id " << entry_id << ", position " << entry_pos << " of log id " << next_read_id << " at position " << next_read_posistion << " has no partial count.");
+                                    ", id " << entry_id << ", position " << entry_pos << " of log id " << next_read_id << " at position " << next_read_posistion << " has no partial count.");
                                 CHECK(inner_event_data.has_partial_index(), "Partition " << read_part <<
-                                        ", id " << entry_id << ", position " << entry_pos << " of log id " << next_read_id << " at position " << next_read_posistion << " has no partial index.");
+                                    ", id " << entry_id << ", position " << entry_pos << " of log id " << next_read_id << " at position " << next_read_posistion << " has no partial index.");
                                 CHECK(inner_event_data.partial_count() == event_data.partial_count(),
-                                        "Partition " << read_part << ", id " << entry_id << ", position " << entry_pos << " of log id " << next_read_id << " at position " << next_read_posistion << " had partial count " << inner_event_data.partial_count() << " but should have " << event_data.partial_count());
+                                    "Partition " << read_part << ", id " << entry_id << ", position " << entry_pos << " of log id " << next_read_id << " at position " << next_read_posistion << " had partial count " << inner_event_data.partial_count() << " but should have " << event_data.partial_count());
                                 CHECK(inner_event_data.partial_index() == read_part, "Partition " << read_part <<
-                                        ", id " << entry_id << ", position " << entry_pos << " of log id " << next_read_id << " at position " << next_read_posistion << " had partial index " << inner_event_data.partial_index() << " but should have " << read_part);
+                                    ", id " << entry_id << ", position " << entry_pos << " of log id " << next_read_id << " at position " << next_read_posistion << " had partial index " << inner_event_data.partial_index() << " but should have " << read_part);
                             }
                         }
                         read_part++;
@@ -726,7 +725,7 @@ Option<bool> Log::CheckLogId() {
                             clear_ids.push_back(next_read_id + i);
                         }
                     }
-                    next_read_id += event_data.partial_count() - 1; //-1, so i can use a general next_read_id++ at the end of the loop
+                    next_read_id += event_data.partial_count() - 1; // -1, so i can use a general next_read_id++ at the end of the loop
                 }
             } else {
                 clear_ids.push_back(next_read_id); // TODO (dmeister) To we clear ids or positions???
@@ -759,16 +758,16 @@ Option<bool> Log::CheckLogId() {
 
     if (likely(real_log_id > this->log_id_)) {
         INFO("Corresponding to database we can use " << real_log_id << " as next log id, the saved next log id was "
-                << this->log_id_ << ". Will use the one from database.");
+                                                     << this->log_id_ << ". Will use the one from database.");
         PersistLogID(real_log_id);
         this->log_id_ = real_log_id;
     } else if (unlikely(real_log_id < this->log_id_)) {
         // In this case we keep the existing log_id, as there could be direct replayed events in this area. We just inform.
         INFO("Corresponding to database we can use " << real_log_id << " as next log id, the saved next log id was "
-                << this->log_id_ << ". Will use the saved next log id.");
+                                                     << this->log_id_ << ". Will use the saved next log id.");
     } else {
         INFO("Corresponding to database we can use " << real_log_id << " as next log id, the saved next log id was "
-                << this->log_id_ << ". As both are same, we use this value.");
+                                                     << this->log_id_ << ". As both are same, we use this value.");
     }
 
     if (real_replay_id > this->log_id_) {
@@ -778,7 +777,7 @@ Option<bool> Log::CheckLogId() {
     }
     if (unlikely(real_replay_id > this->replay_id_)) {
         INFO("Changing replay id from " << this->replay_id_ << " to " << real_replay_id
-                << " as there were some places at the beginning, which we have not to replay.");
+                                        << " as there were some places at the beginning, which we have not to replay.");
         PersistReplayID(real_replay_id);
         this->replay_id_ = real_replay_id;
     }
@@ -801,13 +800,13 @@ bool Log::WriteEntry(int64_t first_id, int64_t id_count, const LogEventData& log
     DCHECK(this->log_data_, "Log data not set");
     ProfileTimer timer(this->stats_.write_time_);
 
-    TRACE("Write log entry: type " << Log::GetEventTypeName(static_cast<enum event_type> (log_event.event_type()))
-            << ", event value " << FriendlySubstr(log_event.ShortDebugString(), 0, 256, "...") << ", first id "
-            << first_id << ", first position " << this->GetLogPositionFromId(first_id) << ", count " << id_count);
+    TRACE("Write log entry: type " << Log::GetEventTypeName(static_cast<enum event_type>(log_event.event_type()))
+                                   << ", event value " << FriendlySubstr(log_event.ShortDebugString(), 0, 256, "...") << ", first id "
+                                   << first_id << ", first position " << this->GetLogPositionFromId(first_id) << ", count " << id_count);
 
     bytestring buffer;
     CHECK(SerializeMessageToString(log_event, &buffer),
-            "Failed to serialize log event: " << log_event.ShortDebugString());
+        "Failed to serialize log event: " << log_event.ShortDebugString());
 
     int64_t local_last_fully_committed_log_id = last_fully_written_log_id_;
     LogEntryData event_data;
@@ -831,7 +830,7 @@ bool Log::WriteEntry(int64_t first_id, int64_t id_count, const LogEventData& log
 
         int64_t position = this->GetLogPositionFromId(first_id + i);
         TRACE("Putting to position " << position << ": " << "log id " << first_id << ", entry " << FriendlySubstr(
-                        event_data.ShortDebugString(), 0, 64, "..."));
+                event_data.ShortDebugString(), 0, 64, "..."));
         enum put_result r = this->log_data_->Put(&position, sizeof(position), event_data);
         CHECK(r != PUT_ERROR, "Failed to write log data: " << event_data.ShortDebugString());
         event_value_pos += partial_value_size;
@@ -854,7 +853,7 @@ enum lookup_result Log::ReadEntryRaw(int64_t position, LogEntryData* data) {
 
     enum lookup_result result = this->log_data_->Lookup(&position, sizeof(position), data);
     CHECK_RETURN(result != LOOKUP_ERROR, LOOKUP_ERROR,
-            "Error reading log entry: position " << position);
+        "Error reading log entry: position " << position);
     if (result == LOOKUP_NOT_FOUND) {
         return result;
     }
@@ -870,8 +869,8 @@ Log::log_read Log::ReadEntry(int64_t id, LogEntryData* log_entry, bytestring* lo
     TRACE("Reading id " << id << " from position " << pos);
     enum lookup_result result = this->ReadEntryRaw(pos, &event_data);
     CHECK_RETURN(result != LOOKUP_ERROR, LOG_READ_ERROR, "Error reading log entry: " <<
-            "log id " << id <<
-            ", log position " << pos);
+        "log id " << id <<
+        ", log position " << pos);
     if (result == LOOKUP_NOT_FOUND) {
         // No log entry at that position
         WARNING("Illegal log entry at position " << id << " (next used log id is " << this->log_id_ << ")");
@@ -887,12 +886,12 @@ Log::log_read Log::ReadEntry(int64_t id, LogEntryData* log_entry, bytestring* lo
     }
 
     TRACE("Read log entry " << " current id " << id << ", current position " << pos << ", partial index "
-            << event_data.partial_index() << ", partial count " << event_data.partial_count());
+                            << event_data.partial_index() << ", partial count " << event_data.partial_count());
 
     if (event_data.has_partial_count()) { // we checked before that it is the first
         TRACE("Log entry has " << event_data.partial_count() << " elements: " << "current log id " << id
-                << ", position " << pos);
-        log_value->append(reinterpret_cast<const byte*> (event_data.value().data()), event_data.value().size());
+                               << ", position " << pos);
+        log_value->append(reinterpret_cast<const byte*>(event_data.value().data()), event_data.value().size());
         if (partial_count) {
             *partial_count = event_data.partial_count();
         }
@@ -903,28 +902,28 @@ Log::log_read Log::ReadEntry(int64_t id, LogEntryData* log_entry, bytestring* lo
             LogEntryData event_data;
             enum lookup_result result = this->log_data_->Lookup(&position_key, sizeof(position_key), &event_data);
             CHECK_RETURN(result == LOOKUP_FOUND, LOG_READ_ERROR, "Failed to find partial log data: " <<
-                    "position key " << position_key <<
-                    ", partial index " << i <<
-                    ", partial count " << event_partial_count <<
-                    ", log id " << id <<
-                    ", log position " << pos <<
-                    ", result " << (result == LOOKUP_NOT_FOUND ? "not found" : "error"));
+                "position key " << position_key <<
+                ", partial index " << i <<
+                ", partial count " << event_partial_count <<
+                ", log id " << id <<
+                ", log position " << pos <<
+                ", result " << (result == LOOKUP_NOT_FOUND ? "not found" : "error"));
 
             CHECK_RETURN(event_data.has_partial_index() && event_data.partial_index() == i, LOG_READ_ERROR,
-                    "Illegal partial index: " <<
-                    "position " << position_key <<
-                    ", i " << i <<
-                    ", partial index " << event_data.partial_index() <<
-                    ", partial count " << event_data.partial_count() <<
-                    ", log id " << event_data.log_id());
+                "Illegal partial index: " <<
+                "position " << position_key <<
+                ", i " << i <<
+                ", partial index " << event_data.partial_index() <<
+                ", partial count " << event_data.partial_count() <<
+                ", log id " << event_data.log_id());
 
-            log_value->append(reinterpret_cast<const byte*> (event_data.value().data()), event_data.value().size());
+            log_value->append(reinterpret_cast<const byte*>(event_data.value().data()), event_data.value().size());
         }
     } else {
         if (partial_count) {
             *partial_count = 1;
         }
-        log_value->append(reinterpret_cast<const byte*> (event_data.value().data()), event_data.value().size());
+        log_value->append(reinterpret_cast<const byte*>(event_data.value().data()), event_data.value().size());
     }
     return LOG_READ_OK;
 }
@@ -942,7 +941,7 @@ bool Log::Close() {
             consumer_names.push_back(i->name());
         }
         WARNING("Log should not close with consumers: [" << Join(consumer_names.begin(), consumer_names.end(), ", ")
-                << "]");
+                                                         << "]");
     }
 
     DEBUG("Closing log: replay id " << this->replay_id_ << ", log id " << this->log_id_);
@@ -978,7 +977,7 @@ namespace {
  * Fill the correct sub field of the log event data
  */
 bool FillEventData(LogEventData* event_data, const EventTypeInfo& event_type_info,
-        const google::protobuf::Message* message) {
+                   const google::protobuf::Message* message) {
     DCHECK(event_data, "Event data not set");
 
     int field_nummer = event_type_info.event_data_message_field();
@@ -991,9 +990,9 @@ bool FillEventData(LogEventData* event_data, const EventTypeInfo& event_type_inf
     const FieldDescriptor* field = event_data->GetDescriptor()->FindFieldByNumber(field_nummer);
     DCHECK(field, "Failed to find field data");
     DCHECK(field->message_type()->name() == message->GetTypeName(), "Type name mismatch: "
-            "field " << field->DebugString() <<
-            ", type " << field->message_type()->DebugString() <<
-            ", message type " << message->GetTypeName());
+        "field " << field->DebugString() <<
+        ", type " << field->message_type()->DebugString() <<
+        ", message type " << message->GetTypeName());
 
     Message* type_message = event_data->GetReflection()->MutableMessage(event_data, field);
     DCHECK(type_message, "Type message not set");
@@ -1003,7 +1002,7 @@ bool FillEventData(LogEventData* event_data, const EventTypeInfo& event_type_inf
 }
 
 bool Log::CommitEvent(enum event_type event_type, const google::protobuf::Message* message, int64_t* commit_log_id,
-        LogAckConsumer* ack, dedupv1::base::ErrorContext* ec) {
+                      LogAckConsumer* ack, dedupv1::base::ErrorContext* ec) {
     CHECK(!readonly_, "Log is in readonly mode");
     CHECK(IsStarted(), "Log not started"); // it is important that events can be committed after stop
 
@@ -1021,14 +1020,14 @@ bool Log::CommitEvent(enum event_type event_type, const google::protobuf::Messag
     uint32_t current_log_id_count = 0;
 
     TRACE("Prepare commit: " << Log::GetEventTypeName(event_type) << ", event value " << (message ? FriendlySubstr(
-                            message->ShortDebugString(), 0, 256, " ...") : "null") << ", event size " << (message ? message->ByteSize()
-                    : 0));
+                                                                                              message->ShortDebugString(), 0, 256, " ...") : "null") << ", event size " << (message ? message->ByteSize()
+                                                                                                                                                                            : 0));
 
     const EventTypeInfo& event_type_info(EventTypeInfo::GetInfo(event_type));
     LogEventData event_data;
     CHECK(FillEventData(&event_data, EventTypeInfo::GetInfo(event_type), message),
-            "Failed to get event data " << event_type <<
-            ", event value " << (message ? message->ShortDebugString() : "null"));
+        "Failed to get event data " << event_type <<
+        ", event value " << (message ? message->ShortDebugString() : "null"));
 
     if (event_type_info.is_persistent()) {
         event_data.set_event_type(event_type);
@@ -1047,20 +1046,21 @@ bool Log::CommitEvent(enum event_type event_type, const google::protobuf::Messag
             return false;
         }
         DEBUG("Committed event: " << "event log id " << current_log_id << ", entry count " << current_log_id_count
-                << ", type " << Log::GetEventTypeName(event_type) << ", event value " << (message ? FriendlySubstr(
-                                message->ShortDebugString(), 0, 256, " ...") : "null") << ", event size "
-                << (message ? message->ByteSize() : 0));
+                                  << ", type " << Log::GetEventTypeName(event_type) << ", event value " << (message ? FriendlySubstr(
+                                                                                          message->ShortDebugString(), 0, 256, " ...") : "null") << ", event size "
+                                  << (message ? message->ByteSize() : 0));
         if (commit_log_id) {
             *commit_log_id = current_log_id;
         }
-    }FAULT_POINT("log.commit.before-ack");
+    }
+    FAULT_POINT("log.commit.before-ack");
     LogReplayContext replay_context(EVENT_REPLAY_MODE_DIRECT, current_log_id);
 
     if (ack) {
         tbb::tick_count ack_start_tick = tbb::tick_count::now();
         CHECK(ack->LogAck(event_type, message, replay_context), "Failed to acknowledge log event: " <<
-                "event type " << Log::GetEventTypeName(event_type) <<
-                ", message " << (message ? message->ShortDebugString() : ""));
+            "event type " << Log::GetEventTypeName(event_type) <<
+            ", message " << (message ? message->ShortDebugString() : ""));
         tbb::tick_count ack_end_tick = tbb::tick_count::now();
         this->stats_.average_ack_latency_.Add((ack_end_tick - ack_start_tick).seconds() * 1000);
     } else {
@@ -1073,13 +1073,13 @@ bool Log::CommitEvent(enum event_type event_type, const google::protobuf::Messag
     if (this->state_ != LOG_STATE_RUNNING) {
         if (!this->PublishEvent(replay_context, event_type, event_data)) {
             WARNING("Cannot publish event: " << "event type " << Log::GetEventTypeName(event_type) << ", event data "
-                    << event_data.ShortDebugString());
+                                             << event_data.ShortDebugString());
         }
     } else if (event_type == EVENT_TYPE_LOG_EMPTY) {
         // Log empty events should (for some reason I do not remeber) be replayed outside the replay thread
         if (!this->PublishEvent(replay_context, event_type, event_data)) {
             WARNING("Cannot publish event: " << "event type " << Log::GetEventTypeName(event_type) << ", event data "
-                    << event_data.ShortDebugString());
+                                             << event_data.ShortDebugString());
         }
         // However, we inform the replay thread about the event so that the thread can managed its state correctly
         LogReplayEntry replay_entry(current_log_id, event_type, event_data, false, current_log_id_count);
@@ -1141,7 +1141,7 @@ bool Log::UnregisterConsumer(const string& consumer_name) {
 
     // waiting until empty
     CHECK(this->WaitUntilDirectReplayQueueEmpty(0),
-            "Failed to wait until direct replay finished");
+        "Failed to wait until direct replay finished");
 
     // acquire the lock for writing without setting of lock into the
     // write lock waiting state.
@@ -1164,12 +1164,12 @@ bool Log::UnregisterConsumer(const string& consumer_name) {
 }
 
 bool Log::PublishEvent(const LogReplayContext& replay_context, enum event_type event_type,
-        const LogEventData& event_data) {
+                       const LogEventData& event_data) {
     ProfileTimer timer(this->stats_.publish_time_);
     bool success = true;
 
     TRACE("Publish event: " << Log::GetEventTypeName(event_type) << ", replay mode " << Log::GetReplayModeName(
-                    replay_context.replay_mode()) << ", event log id " << replay_context.log_id());
+            replay_context.replay_mode()) << ", event log id " << replay_context.log_id());
 
     spin_rw_mutex::scoped_lock l(this->consumer_list_lock_, false);
     list<LogConsumerListEntry>::iterator i;
@@ -1182,16 +1182,16 @@ bool Log::PublishEvent(const LogReplayContext& replay_context, enum event_type e
         // the direct replay thread is used which is usually the case, but
         // I am not happy with this code
         if (replay_context.replay_mode() == EVENT_REPLAY_MODE_DIRECT && this->state_ == LOG_STATE_RUNNING && event_type
-                != EVENT_TYPE_LOG_EMPTY) {
+            != EVENT_TYPE_LOG_EMPTY) {
             direct_replay_state_.SetConsumer(i->name());
         }
 
         const string& consumer_name(i->name());
         if (!consumer->LogReplay(event_type, event_data, replay_context)) {
             WARNING("Replay failed: " << Log::GetEventTypeName(event_type) <<
-                    ", log consumer " << consumer_name <<
-                    ", log id " << replay_context.log_id() <<
-                    ", replay mode " << Log::GetReplayModeName(replay_context.replay_mode()));
+                ", log consumer " << consumer_name <<
+                ", log id " << replay_context.log_id() <<
+                ", replay mode " << Log::GetReplayModeName(replay_context.replay_mode()));
             success = false;
         }
     }
@@ -1205,9 +1205,9 @@ bool Log::ReplayStart(enum replay_mode replay_mode, bool is_full_replay, bool co
     CHECK(!is_replaying_, "Log is already replaying");
 
     INFO("Started replay: mode " << GetReplayModeName(replay_mode) <<
-            ", is full replay " << ToString(is_full_replay) <<
-            ", replay id " << replay_id_ <<
-            ", log id " << log_id_);
+        ", is full replay " << ToString(is_full_replay) <<
+        ", replay id " << replay_id_ <<
+        ", log id " << log_id_);
 
     if (commit_replay_event) {
         spin_mutex::scoped_lock l(this->lock_);
@@ -1218,7 +1218,7 @@ bool Log::ReplayStart(enum replay_mode replay_mode, bool is_full_replay, bool co
         l.release();
 
         CHECK(this->CommitEvent(EVENT_TYPE_REPLAY_STARTED, &event_data, NULL, NULL, NO_EC),
-                "Cannot commit replay started event");
+            "Cannot commit replay started event");
     }
     this->is_replaying_ = true;
 
@@ -1226,15 +1226,15 @@ bool Log::ReplayStart(enum replay_mode replay_mode, bool is_full_replay, bool co
 }
 
 log_replay_result Log::Replay(enum replay_mode replay_mode, uint32_t number_to_replay, uint64_t* replayed_log_id,
-        uint32_t* number_replayed) {
+                              uint32_t* number_replayed) {
     // We divide the problem in three tasks:
     // 0.) Some initialization...
     // 1.) Process Events
     // 2.) Delete Events (if Background run)
 
     // Initialization
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////
     CHECK_RETURN(replay_mode != EVENT_REPLAY_MODE_DIRECT, LOG_REPLAY_ERROR, "Illegal replay mode");
 
     if (number_replayed) {
@@ -1255,17 +1255,17 @@ log_replay_result Log::Replay(enum replay_mode replay_mode, uint32_t number_to_r
     int64_t current_replay_id = this->replay_id_;
 
     DEBUG("Shall replay " << number_to_replay << " elements in mode " << replay_mode << " beginning with id "
-            << current_replay_id << ", log id is " << current_log_id << ", last fully written log id is "
-            << current_last_fully_written_log_id << ", last empty log id " << current_last_empty_log_id);
+                          << current_replay_id << ", log id is " << current_log_id << ", last fully written log id is "
+                          << current_last_fully_written_log_id << ", last empty log id " << current_last_empty_log_id);
 
     if (replayed_log_id) {
         // set the replay id as soon as possible
         *replayed_log_id = replay_id_;
     }
 
-    //Process the events
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Process the events
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////
     int32_t processed_entries = 0;
     int64_t last_processed_id = current_replay_id;
     log_replay_result result = LOG_REPLAY_OK;
@@ -1276,7 +1276,7 @@ log_replay_result Log::Replay(enum replay_mode replay_mode, uint32_t number_to_r
     event_type new_type = EVENT_TYPE_NONE;
 
     bool log_empty = ((next_replay_id == current_log_id) || ((next_replay_id == current_last_empty_log_id)
-            && (next_replay_id + 1 == current_log_id)) || (next_replay_id > current_last_fully_written_log_id));
+                                                             && (next_replay_id + 1 == current_log_id)) || (next_replay_id > current_last_fully_written_log_id));
     if (log_empty) {
         TRACE("No elements to replay");
         return LOG_REPLAY_NO_MORE_EVENTS;
@@ -1289,18 +1289,18 @@ log_replay_result Log::Replay(enum replay_mode replay_mode, uint32_t number_to_r
 
     tbb::tick_count start_tick = tbb::tick_count::now();
     ProfileTimer timer(this->stats_.replay_time_);
-    
+
     enum Log::log_read read_result = LOG_READ_OK;
     if (!is_last_read_event_data_valid_) {
         read_result = this->ReadEvent(next_replay_id, &last_read_partial_count_, &last_read_event_data_);
     }
     if (read_result == LOG_READ_OK) {
-        old_type = static_cast<enum event_type> (last_read_event_data_.event_type());
+        old_type = static_cast<enum event_type>(last_read_event_data_.event_type());
         new_type = old_type;
     }
 
     while (!log_empty && (read_result == LOG_READ_OK) && (result = LOG_REPLAY_OK) && (old_type == new_type)
-            && (processed_entries < number_to_replay)) {
+           && (processed_entries < number_to_replay)) {
         TRACE("Will try to publish " << last_processed_id);
         LogReplayContext replay_context(replay_mode, next_replay_id);
         is_last_read_event_data_valid_ = false;
@@ -1309,7 +1309,7 @@ log_replay_result Log::Replay(enum replay_mode replay_mode, uint32_t number_to_r
         timer_publish.stop();
         if (!publish_result) {
             ERROR("Failed to publish event: " << entry.ShortDebugString() << ", event id " << next_replay_id
-                    << ", replay mode " << Log::GetReplayModeName(replay_mode));
+                                              << ", replay mode " << Log::GetReplayModeName(replay_mode));
             result = LOG_REPLAY_ERROR;
         } else {
             DEBUG("Replayed log event " << next_replay_id);
@@ -1321,15 +1321,15 @@ log_replay_result Log::Replay(enum replay_mode replay_mode, uint32_t number_to_r
             processed_entries++;
 
             DEBUG("Check empty state: next replay id " << next_replay_id <<
-                 ", current log id " << current_log_id <<
-                 ", current last empty log id " << current_last_empty_log_id <<
-                 ", current last fully written log id " << current_last_fully_written_log_id);
+                ", current log id " << current_log_id <<
+                ", current last empty log id " << current_last_empty_log_id <<
+                ", current last fully written log id " << current_last_fully_written_log_id);
             log_empty = ((next_replay_id == current_log_id) || ((next_replay_id == current_last_empty_log_id)
-                    && (next_replay_id + 1 == current_log_id)) || (next_replay_id > current_last_fully_written_log_id));
+                                                                && (next_replay_id + 1 == current_log_id)) || (next_replay_id > current_last_fully_written_log_id));
             if (!log_empty) {
                 ProfileTimer timer_read(this->stats_.replay_read_time_);
                 read_result = this->ReadEvent(next_replay_id, &last_read_partial_count_, &last_read_event_data_);
-                new_type = static_cast<enum event_type> (last_read_event_data_.event_type());
+                new_type = static_cast<enum event_type>(last_read_event_data_.event_type());
                 is_last_read_event_data_valid_ = true;
             }
         }
@@ -1338,15 +1338,15 @@ log_replay_result Log::Replay(enum replay_mode replay_mode, uint32_t number_to_r
     if (read_result != LOG_READ_OK) {
         is_last_read_event_data_valid_ = false;
         ERROR("Error while reading event " << next_replay_id << ", result was " << read_result <<
-                ", current log id is " << current_log_id << ", current last fully written id is " <<
-                current_last_fully_written_log_id << ", current last empty log id is " << current_last_empty_log_id);
+            ", current log id is " << current_log_id << ", current last fully written id is " <<
+            current_last_fully_written_log_id << ", current last empty log id is " << current_last_empty_log_id);
         result = LOG_REPLAY_ERROR;
     }
 
     TRACE("After publishing " << processed_entries << " events next replay is " << next_replay_id << ", last processed id is " << last_processed_id);
-    //Delete events
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Delete events
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////////////////////////////////
     if ((replay_mode == EVENT_REPLAY_MODE_REPLAY_BG) && (next_replay_id != current_replay_id)) {
         // We persist the replay ID only when replaying in Background mode, not during Dirty Restart.
         if (log_empty) {
@@ -1359,14 +1359,14 @@ log_replay_result Log::Replay(enum replay_mode replay_mode, uint32_t number_to_r
             l2.release();
             current_last_fully_written_log_id = this->last_fully_written_log_id_;
             log_empty = ((next_replay_id == current_log_id) || ((next_replay_id == current_last_empty_log_id)
-                    && (next_replay_id + 1 == current_log_id)) || (next_replay_id > current_last_fully_written_log_id));
+                                                                && (next_replay_id + 1 == current_log_id)) || (next_replay_id > current_last_fully_written_log_id));
         }
         if (log_empty) {
             is_last_read_event_data_valid_ = false;
             TRACE("Will commit empty event");
             int64_t empty_log_id = 0;
             CHECK_RETURN(this->CommitEvent(EVENT_TYPE_LOG_EMPTY, NULL, &empty_log_id, NULL, NO_EC),
-                    LOG_REPLAY_ERROR, "Cannot commit log empty event");
+                LOG_REPLAY_ERROR, "Cannot commit log empty event");
             DEBUG("Write empty log event to id " << empty_log_id);
             // it is not probable to run into race conditions here, but so we are on the save side
             spin_mutex::scoped_lock l(this->lock_);
@@ -1429,11 +1429,11 @@ Log::log_read Log::ReadEvent(int64_t replay_log_id, uint32_t* partial_count, Log
                 ERROR("Illegal event data: " << event_data->ShortDebugString() << ", log id " << replay_log_id);
                 read_result = LOG_READ_ERROR;
             }
-            event_type event_type = static_cast<enum event_type> (event_data->event_type());
+            event_type event_type = static_cast<enum event_type>(event_data->event_type());
 
             DEBUG("Read event from log: " << "event " << FriendlySubstr(event_data->ShortDebugString(), 0, 256, " ...")
-                    << ", event type " << GetEventTypeName(event_type) << ", id " << replay_log_id
-                    << ", last persisted replay id " << this->replay_id_ << ", partial count " << local_partial_count);
+                                          << ", event type " << GetEventTypeName(event_type) << ", id " << replay_log_id
+                                          << ", last persisted replay id " << this->replay_id_ << ", partial count " << local_partial_count);
         }
     }
 
@@ -1457,15 +1457,15 @@ bool Log::ReplayStop(enum replay_mode replay_mode, bool success, bool commit_rep
         l.release(); // should not call CommitEvent with lock held
 
         CHECK(this->CommitEvent(EVENT_TYPE_REPLAY_STOPPED, &event_data, NULL, NULL, NO_EC),
-                "Cannot commit event: " << event_data.ShortDebugString());
+            "Cannot commit event: " << event_data.ShortDebugString());
     }
 
     this->is_replaying_ = false;
-    
+
     INFO("Stopped replay: mode " << GetReplayModeName(replay_mode) <<
-            ", success " << ToString(success) <<
-            ", replay id " << replay_id_ <<
-            ", log id " << log_id_);
+        ", success " << ToString(success) <<
+        ", replay id " << replay_id_ <<
+        ", log id " << log_id_);
 
     // note here that the log id and replay id logged in the replay stopped event might differ from the
     // version dumped into the meta data index
@@ -1483,16 +1483,16 @@ bool Log::WaitUntilDirectReplayQueueEmpty(uint32_t timeout) {
     DEBUG("Wait until direct replay queue empty event: timeout " << timeout);
     ScopedLock scoped_lock(&direct_replay_queue_empty_lock_);
     CHECK(scoped_lock.AcquireLock(),
-            "Failed to acquire direct replay empty queue condition lock");
+        "Failed to acquire direct replay empty queue condition lock");
 
     if (timeout == 0) {
         CHECK(direct_replay_queue_empty_condition_.ConditionWait(&direct_replay_queue_empty_lock_),
-                "Failed to wait for direct replay empty queue condition");
+            "Failed to wait for direct replay empty queue condition");
     } else {
         dedupv1::base::timed_bool b =
-                direct_replay_queue_empty_condition_.ConditionWaitTimeout(&direct_replay_queue_empty_lock_, timeout);
+            direct_replay_queue_empty_condition_.ConditionWaitTimeout(&direct_replay_queue_empty_lock_, timeout);
         CHECK(b != dedupv1::base::TIMED_FALSE,
-                "Failed to wait for direct replay empty queue condition");
+            "Failed to wait for direct replay empty queue condition");
         if (b == dedupv1::base::TIMED_TIMEOUT) {
             DEBUG("Timeout while waiting for empty direct replay lock");
         }
@@ -1505,48 +1505,48 @@ bool Log::WaitUntilDirectReplayQueueEmpty(uint32_t timeout) {
 
 string Log::GetEventTypeName(enum event_type event_type) {
     switch (event_type) {
-        case EVENT_TYPE_CONTAINER_OPEN:
-            return "Container Open";
-        case EVENT_TYPE_CONTAINER_COMMIT_FAILED:
-            return "Container Commit Failed";
-        case EVENT_TYPE_CONTAINER_COMMITED:
-            return "Container Committed";
-        case EVENT_TYPE_CONTAINER_MERGED:
-            return "Container Merged";
-        case EVENT_TYPE_CONTAINER_MOVED:
-            return "Container Moved";
-        case EVENT_TYPE_CONTAINER_DELETED:
-            return "Container Deleted";
-        case EVENT_TYPE_BLOCK_MAPPING_DELETED:
-            return "Block Mapping Deleted";
-        case EVENT_TYPE_BLOCK_MAPPING_WRITE_FAILED:
-            return "Block Mapping Write Failed";
-        case EVENT_TYPE_BLOCK_MAPPING_WRITTEN:
-            return "Block Mapping Written";
-        case EVENT_TYPE_REPLAY_STARTED:
-            return "Replay Started";
-        case EVENT_TYPE_REPLAY_STOPPED:
-            return "Replay Stopped";
-        case EVENT_TYPE_REPLAY_COMMIT:
-            return "Replay Commit";
-        case EVENT_TYPE_LOG_EMPTY:
-            return "Log Empty";
-        case EVENT_TYPE_LOG_NEW:
-            return "Log New";
-        case EVENT_TYPE_VOLUME_ATTACH:
-            return "Volume Attached";
-        case EVENT_TYPE_VOLUME_DETACH:
-            return "Volume Detached";
-        case EVENT_TYPE_SYSTEM_START:
-            return "System Start";
-        case EVENT_TYPE_SYSTEM_RUN:
-            return "System Run";
-        case EVENT_TYPE_LOG_BARRIER:
-            return "Log Barrier";
-        case EVENT_TYPE_OPHRAN_CHUNKS:
-            return "Ophran Chunks";
-        default:
-            return "Unknown event type (" + ToString(event_type) + ")";
+    case EVENT_TYPE_CONTAINER_OPEN:
+        return "Container Open";
+    case EVENT_TYPE_CONTAINER_COMMIT_FAILED:
+        return "Container Commit Failed";
+    case EVENT_TYPE_CONTAINER_COMMITED:
+        return "Container Committed";
+    case EVENT_TYPE_CONTAINER_MERGED:
+        return "Container Merged";
+    case EVENT_TYPE_CONTAINER_MOVED:
+        return "Container Moved";
+    case EVENT_TYPE_CONTAINER_DELETED:
+        return "Container Deleted";
+    case EVENT_TYPE_BLOCK_MAPPING_DELETED:
+        return "Block Mapping Deleted";
+    case EVENT_TYPE_BLOCK_MAPPING_WRITE_FAILED:
+        return "Block Mapping Write Failed";
+    case EVENT_TYPE_BLOCK_MAPPING_WRITTEN:
+        return "Block Mapping Written";
+    case EVENT_TYPE_REPLAY_STARTED:
+        return "Replay Started";
+    case EVENT_TYPE_REPLAY_STOPPED:
+        return "Replay Stopped";
+    case EVENT_TYPE_REPLAY_COMMIT:
+        return "Replay Commit";
+    case EVENT_TYPE_LOG_EMPTY:
+        return "Log Empty";
+    case EVENT_TYPE_LOG_NEW:
+        return "Log New";
+    case EVENT_TYPE_VOLUME_ATTACH:
+        return "Volume Attached";
+    case EVENT_TYPE_VOLUME_DETACH:
+        return "Volume Detached";
+    case EVENT_TYPE_SYSTEM_START:
+        return "System Start";
+    case EVENT_TYPE_SYSTEM_RUN:
+        return "System Run";
+    case EVENT_TYPE_LOG_BARRIER:
+        return "Log Barrier";
+    case EVENT_TYPE_OPHRAN_CHUNKS:
+        return "Ophran Chunks";
+    default:
+        return "Unknown event type (" + ToString(event_type) + ")";
     }
 }
 
@@ -1570,7 +1570,7 @@ bool Log::PersistLogID(int64_t logID) {
     LogLogIDData logID_data;
     logID_data.set_log_id(logID);
     CHECK(log_info_store_.PersistInfo("logID", logID_data),
-            "Failed to persist log id in log info data: " << logID_data.ShortDebugString());
+        "Failed to persist log id in log info data: " << logID_data.ShortDebugString());
     return true;
 }
 
@@ -1578,14 +1578,15 @@ bool Log::PersistReplayID(int64_t replayID) {
     LogReplayIDData replayID_data;
     replayID_data.set_replay_id(replayID);
     CHECK(log_info_store_.PersistInfo("replayID", replayID_data),
-            "Failed to persist replay id in log info data: " << replayID_data.ShortDebugString());
+        "Failed to persist replay id in log info data: " << replayID_data.ShortDebugString());
     return true;
 }
 
 bool Log::DumpMetaInfo() {
 #ifdef DEDUPV1_CORE_TEST
-    if (!this->log_data_)
-    return true;
+    if (!this->log_data_) {
+        return true;
+    }
 #endif
     DCHECK(this->log_data_, "Log database not set");
 
@@ -1593,7 +1594,7 @@ bool Log::DumpMetaInfo() {
     logState.set_limit_id(this->log_data_->GetLimitId());
     logState.set_log_entry_width(this->max_log_entry_width_);
     CHECK(this->log_info_store_.PersistInfo("state", logState),
-            "Failed to persist state in log info data: " << logState.ShortDebugString());
+        "Failed to persist state in log info data: " << logState.ShortDebugString());
 
     PersistLogID(this->log_id_);
     PersistReplayID(this->replay_id_);
@@ -1688,12 +1689,12 @@ bool Log::PerformDirtyReplay() {
                 // do we know that that log event was written correctly? If not, than it is the result of the crash and it is ok
                 if (replay_log_id <= last_fully_written_log_id_) {
                     ERROR("Error during log replay: replayed id " << replay_log_id << ", log id " << this->log_id()
-                            << ", last fully written log id at startup " << last_fully_written_log_id_);
+                                                                  << ", last fully written log id at startup " << last_fully_written_log_id_);
                     failed = true;
                 } else {
                     INFO("Replay failed, but is not fully written log entry (that may happen after crashes): "
-                            << "replayed id " << replay_log_id << ", log id " << this->log_id()
-                            << ", last fully written log id at startup " << this->last_fully_written_log_id_);
+                        << "replayed id " << replay_log_id << ", log id " << this->log_id()
+                        << ", last fully written log id at startup " << this->last_fully_written_log_id_);
                 }
             }
         }
@@ -1833,17 +1834,17 @@ string Log::PrintProfile() {
     sstr << "\"average commit latency\": " << this->stats_.average_commit_latency_.GetAverage() << "," << std::endl;
     sstr << "\"average ack latency\": " << this->stats_.average_ack_latency_.GetAverage() << "," << std::endl;
     sstr << "\"average read event latency\": " << this->stats_.average_read_event_latency_.GetAverage() << ","
-            << std::endl;
+         << std::endl;
     sstr << "\"average replay events latency\": " << this->stats_.average_replay_events_latency_.GetAverage() << ","
-            << std::endl;
+         << std::endl;
     sstr << "\"average replayed events per replay\": " << this->stats_.average_replayed_events_per_step_.GetAverage()
-            << "," << std::endl;
+         << "," << std::endl;
     for (int i = 0; i < EVENT_TYPE_NEXT_ID; i++) {
         if (this->stats_.replayed_events_by_type_[i] > 0) {
             sstr << "\"average replay events latency type " << i << "\": "
-                    << this->stats_.average_replay_events_latency_by_type_[i].GetAverage() << "," << std::endl;
+                 << this->stats_.average_replay_events_latency_by_type_[i].GetAverage() << "," << std::endl;
             sstr << "\"average replayed events per replay type " << i << "\": "
-                    << this->stats_.average_replayed_events_per_step_by_type_[i].GetAverage() << "," << std::endl;
+                 << this->stats_.average_replayed_events_per_step_by_type_[i].GetAverage() << "," << std::endl;
         }
     }
     sstr << "\"write time\": " << this->stats_.write_time_.GetSum() << "," << std::endl;
@@ -1876,8 +1877,6 @@ void Log::ClearData() {
 bool Log::PerformFullReplayBackgroundMode(bool write_boundary_events) {
     bool failed = false;
 
-
-
     FullReplayLogConsumer consumer(this->replay_id(), this->log_id());
     // we should take care that the log consumer is unregistered even in case of errors
     CHECK(this->RegisterConsumer("replay", &consumer), "Failed to register replay consumer");
@@ -1887,7 +1886,7 @@ bool Log::PerformFullReplayBackgroundMode(bool write_boundary_events) {
         failed = true;
     }
 
-   // We wait here for the direct replay queue to prevent an early stop because the log has hit the
+    // We wait here for the direct replay queue to prevent an early stop because the log has hit the
     // direct replay queue head
     if (!WaitUntilDirectReplayQueueEmpty(0)) {
         ERROR("Failed to wait for an empty direct replay queue");
@@ -1956,7 +1955,7 @@ FullReplayLogConsumer::FullReplayLogConsumer(int64_t replay_id_at_start, int64_t
 }
 
 bool FullReplayLogConsumer::LogReplay(dedupv1::log::event_type event_type, const LogEventData& data,
-        const dedupv1::log::LogReplayContext& context) {
+                                      const dedupv1::log::LogReplayContext& context) {
     // we are only interested in background events
     if (context.replay_mode() == dedupv1::log::EVENT_REPLAY_MODE_DIRECT) {
         return true;
@@ -1974,7 +1973,7 @@ bool FullReplayLogConsumer::LogReplay(dedupv1::log::event_type event_type, const
         this->last_full_percent_progress = ratio; // implicit cast
         if (last_full_percent_progress >= 0.0 && last_full_percent_progress <= 100.0) {
             INFO("Replayed " << this->last_full_percent_progress << "% of log, running time " << run_time.seconds()
-                    << "s, mode " << Log::GetReplayModeName(context.replay_mode()));
+                             << "s, mode " << Log::GetReplayModeName(context.replay_mode()));
         }
     }
     return true;
@@ -1988,7 +1987,7 @@ LogReplayEntry::LogReplayEntry() {
 }
 
 LogReplayEntry::LogReplayEntry(uint64_t log_id, enum event_type event_type, const LogEventData& event_value,
-        bool failed, uint32_t log_id_count) {
+                               bool failed, uint32_t log_id_count) {
     this->log_id_ = log_id;
     this->event_type_ = event_type;
     this->event_value_ = event_value;

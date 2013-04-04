@@ -163,51 +163,51 @@ bool Dedupv1dVolumeFastCopy::FastCopyThreadRunner() {
 
                 if (!ProcessFastCopyStep(&fastcopy_data)) {
                     WARNING("Failed to process fastcopy step: " << fastcopy_data.ShortDebugString());
-					          fastcopy_data.set_job_failed(true);
+                    fastcopy_data.set_job_failed(true);
                 }
-                    // ok
-                    if (fastcopy_data.current_offset() == fastcopy_data.size()) {
-                        // FastCopy finished
+                // ok
+                if (fastcopy_data.current_offset() == fastcopy_data.size()) {
+                    // FastCopy finished
 
-                        DEBUG("Finished fastcopy operation: " << fastcopy_data.ShortDebugString());
-                        fastcopy_map_.erase(target_id);
+                    DEBUG("Finished fastcopy operation: " << fastcopy_data.ShortDebugString());
+                    fastcopy_map_.erase(target_id);
 
-                        CHECK(lock_.AcquireLock(), "Failed to acquire lock");
+                    CHECK(lock_.AcquireLock(), "Failed to acquire lock");
 
-                        // delete entry in the source map
-                        pair<multimap<uint32_t, uint32_t>::iterator, multimap<uint32_t, uint32_t>::iterator> r
-                            = this->source_map_.equal_range(fastcopy_data.src_volume_id());
-                        multimap<uint32_t, uint32_t>::iterator i = r.first;
-                        while (i != r.second) {
-                            uint32_t target_id = i->second;
+                    // delete entry in the source map
+                    pair<multimap<uint32_t, uint32_t>::iterator, multimap<uint32_t, uint32_t>::iterator> r
+                        = this->source_map_.equal_range(fastcopy_data.src_volume_id());
+                    multimap<uint32_t, uint32_t>::iterator i = r.first;
+                    while (i != r.second) {
+                        uint32_t target_id = i->second;
 
-                            multimap<uint32_t, uint32_t>::iterator erase_iter = i++;
-                            if (target_id == fastcopy_data.target_volume_id()) {
-                                this->source_map_.erase(erase_iter);
-                                break;
-                            }
+                        multimap<uint32_t, uint32_t>::iterator erase_iter = i++;
+                        if (target_id == fastcopy_data.target_volume_id()) {
+                            this->source_map_.erase(erase_iter);
+                            break;
                         }
-
-                        if (!lock_.ReleaseLock()) {
-                            ERROR("Failed to release lock");
-                        }
-
-                        CHECK(DeleteFromFastCopyData(target_id), "Failed to delete fastcopy data: target id " << target_id <<
-                            ", fastcopy data " << fastcopy_data_.DebugString());
-
-                        CHECK(PersistFastCopyData(), "Failed to persist fastcopy data");
-                    } else {
-                        fastcopy_map_.insert(a,target_id);
-                        a->second = fastcopy_data;
-                        a.release();
-
-                        CHECK(UpdateFastCopyData(fastcopy_data), "Failed to update fastcopy data: " << fastcopy_data.DebugString() <<
-                            ", fastcopy data " << fastcopy_data_.DebugString());
-
-                        CHECK(PersistFastCopyData(), "Failed to persist fastcopy data");
-                        fastcopy_queue_.push(target_id); // not finished, re schedule
                     }
-                
+
+                    if (!lock_.ReleaseLock()) {
+                        ERROR("Failed to release lock");
+                    }
+
+                    CHECK(DeleteFromFastCopyData(target_id), "Failed to delete fastcopy data: target id " << target_id <<
+                        ", fastcopy data " << fastcopy_data_.DebugString());
+
+                    CHECK(PersistFastCopyData(), "Failed to persist fastcopy data");
+                } else {
+                    fastcopy_map_.insert(a,target_id);
+                    a->second = fastcopy_data;
+                    a.release();
+
+                    CHECK(UpdateFastCopyData(fastcopy_data), "Failed to update fastcopy data: " << fastcopy_data.DebugString() <<
+                        ", fastcopy data " << fastcopy_data_.DebugString());
+
+                    CHECK(PersistFastCopyData(), "Failed to persist fastcopy data");
+                    fastcopy_queue_.push(target_id); // not finished, re schedule
+                }
+
             }
         }
         CHECK(lock_.AcquireLock(), "Failed to acquire lock");

@@ -130,7 +130,7 @@ bool Dedupv1Checker::Initialize(const std::string& filename) {
     StartContext start_context(StartContext::NON_CREATE, StartContext::CLEAN, StartContext::FORCE);
 
     CHECK(system_->Start(start_context, true), // no log replay, we wait for the log check
-            "Failed to start dedupv1 system");
+        "Failed to start dedupv1 system");
 
     CHECK(system_->dedup_system()->idle_detector()->ForceBusy(true), "Could not force busy");
 
@@ -310,7 +310,7 @@ bool Dedupv1Checker::ReadBlockIndex() {
 
             // here we have problems with fingerprints shorter than 64-bit
             // but then we would have much more problems
-            uint64_t prefix = *reinterpret_cast<const uint64_t*> (item.fingerprint());
+            uint64_t prefix = *reinterpret_cast<const uint64_t*>(item.fingerprint());
 
             // We only have a look at chunks fitting the actual pass
             if ((prefix & this->pass_bitmask_) == this->actual_run_pass_) {
@@ -327,12 +327,12 @@ bool Dedupv1Checker::ReadBlockIndex() {
                 lookup_result result = chunk_index->Lookup(&mapping, false, NO_EC);
                 if (result != LOOKUP_FOUND) {
                     WARNING("Block mapping not found in chunk index: " << "chunk mapping " << mapping.DebugString()
-                            << ", block mapping " << block_mapping.DebugString() << " result: " << result);
+                                                                       << ", block mapping " << block_mapping.DebugString() << " result: " << result);
                     reported_errors_++;
                 } else {
                     if (mapping.data_address() != item.data_address()) {
                         WARNING("Data address mismatch: chunk mapping " << mapping.DebugString()
-                                << ", block mapping item " << item.DebugString());
+                                                                        << ", block mapping item " << item.DebugString());
                         reported_errors_++;
                     }
                 }
@@ -343,7 +343,7 @@ bool Dedupv1Checker::ReadBlockIndex() {
                 if (usage_count_prefix_map_[prefix].usage_count < INT32_MAX) {
                     usage_count_prefix_map_[prefix].usage_count++;
                     DEBUG("Update block index usage count for fp prefix: " << ToHexString(&prefix, sizeof(prefix))
-                            << ", usage count " << usage_count_prefix_map_[prefix].usage_count);
+                                                                           << ", usage count " << usage_count_prefix_map_[prefix].usage_count);
                 }
             }
         }
@@ -358,13 +358,13 @@ bool Dedupv1Checker::ReadBlockIndex() {
     CHECK(lr != LOOKUP_ERROR, "Failed to iterator over block index");
     if (processed_block_count != persistent_block_index->GetItemCount()) {
         WARNING("Processed block mapping: " << processed_block_count << ", item in block index "
-                << persistent_block_index->GetItemCount());
+                                            << persistent_block_index->GetItemCount());
     }
     return true;
 }
 
 bool Dedupv1Checker::CheckContainerItem(ChunkIndex* chunk_index, Fingerprinter* fp_gen, Container* container,
-        const ContainerItem* item) {
+                                        const ContainerItem* item) {
     DCHECK(item, "Item not set");
     DCHECK(fp_gen, "Fingerprinter not set");
     DCHECK(chunk_index, "Chunk index not set");
@@ -375,7 +375,7 @@ bool Dedupv1Checker::CheckContainerItem(ChunkIndex* chunk_index, Fingerprinter* 
     CHECK(result != LOOKUP_ERROR, "Failed to lookup chunk mapping: " << mapping.DebugString());
     if (result != LOOKUP_FOUND) {
         WARNING("Container item not found in chunk index: " << "item " << item->DebugString() << ", chunk "
-                << mapping.DebugString() << ", result: " << result);
+                                                            << mapping.DebugString() << ", result: " << result);
 
         // We are able to repair this by adding the mapping to the index, but
         // until we have no way to fix the usage count, this would not help.
@@ -386,12 +386,12 @@ bool Dedupv1Checker::CheckContainerItem(ChunkIndex* chunk_index, Fingerprinter* 
 
     if (mapping.data_address() != item->original_id()) {
         WARNING("Data address incorrect: " << "container item " << item->DebugString() << ", chunk mapping "
-                << mapping.DebugString());
+                                           << mapping.DebugString());
         if (repair_) {
             // We can repair this by correcting the data address
             mapping.set_data_address(item->original_id());
             CHECK(chunk_index->PutPersistentIndex(mapping, true, false, NO_EC),
-                    "Failed to chunk mapping with incorrect data address: " << mapping.DebugString());
+                "Failed to chunk mapping with incorrect data address: " << mapping.DebugString());
             fixed_errors_++;
         }
         reported_errors_++;
@@ -402,13 +402,13 @@ bool Dedupv1Checker::CheckContainerItem(ChunkIndex* chunk_index, Fingerprinter* 
     byte chunk_data_buffer[chunk_data_buffer_size];
 
     CHECK(container->CopyRawData(item, chunk_data_buffer, chunk_data_buffer_size),
-            "Failed to copy item data: " << item->DebugString());
+        "Failed to copy item data: " << item->DebugString());
 
     byte fp[fp_gen->GetFingerprintSize()];
     memset(fp, 0, fp_gen->GetFingerprintSize());
     size_t fp_size = fp_gen->GetFingerprintSize();
     CHECK(fp_gen->Fingerprint(chunk_data_buffer, item->raw_size(), fp, &fp_size),
-            "Failed to calculate fingerprint: item " << item->DebugString());
+        "Failed to calculate fingerprint: item " << item->DebugString());
 
     if (raw_compare(fp, fp_size, item->key(), item->key_size()) != 0) {
         WARNING("Fingerprint mismatch: " << item->DebugString() << ", calculated data fingerprint: " << ToHexString(fp,
@@ -425,7 +425,7 @@ bool Dedupv1Checker::ReadChunkIndex() {
     DCHECK(chunk_index, "Chunk index not set");
     Storage* tmp_storage = dedup_system_->storage();
     DCHECK(tmp_storage, "Dedup System storage NULL");
-    ContainerStorage* storage = dynamic_cast<ContainerStorage*> (tmp_storage);
+    ContainerStorage* storage = dynamic_cast<ContainerStorage*>(tmp_storage);
     DCHECK(storage, "Storage was not a container storage while restoring");
 
     IndexIterator* i = chunk_index->CreatePersistentIterator();
@@ -458,23 +458,24 @@ bool Dedupv1Checker::ReadChunkIndex() {
             // currently used. jkaiser proposed and block-based counting
             // scheme that is able to save some IOs.
             if ((usage_count_prefix_map_[prefix].usage_count > INT32_MIN)
-                    && (usage_count_prefix_map_[prefix].usage_count < INT32_MAX)) {
+                && (usage_count_prefix_map_[prefix].usage_count < INT32_MAX)) {
                 TRACE("Will try to decrease usage count " << prefix << " from "
-                        << usage_count_prefix_map_[prefix].usage_count << " by " << chunk_mapping.usage_count());
+                                                          << usage_count_prefix_map_[prefix].usage_count << " by " << chunk_mapping.usage_count());
                 if ((((int64_t) usage_count_prefix_map_[prefix].usage_count) - chunk_mapping.usage_count())
-                        <= INT32_MIN) {
+                    <= INT32_MIN) {
                     usage_count_prefix_map_[prefix].usage_count = INT32_MIN;
                 } else {
                     usage_count_prefix_map_[prefix].usage_count -= chunk_mapping.usage_count();
                 }
             }
-            if (usage_count_prefix_map_[prefix].usage_chunks < UINT8_MAX)
+            if (usage_count_prefix_map_[prefix].usage_chunks < UINT8_MAX) {
                 usage_count_prefix_map_[prefix].usage_chunks++;
+            }
 
             // check if it is a gc candidate
             if (chunk_mapping.usage_count() == 0) {
                 Option<bool> o = dedup_system_->garbage_collector()->IsGCCandidate(chunk_data.data_address(), fp,
-                        fp_size);
+                    fp_size);
                 CHECK(o.valid(), "Failed to check gc candidate state" << ": " << chunk_mapping.DebugString());
 
                 if (o.value() == false) {
@@ -486,7 +487,7 @@ bool Dedupv1Checker::ReadChunkIndex() {
                         std::multimap<uint64_t, dedupv1::chunkindex::ChunkMapping> gc_chunks;
                         gc_chunks.insert(make_pair(chunk_data.data_address(), chunk_mapping));
                         CHECK(dedup_system_->garbage_collector()->Put(gc_chunks, true),
-                                "Failed to repair gc candidate state: " << chunk_mapping.DebugString());
+                            "Failed to repair gc candidate state: " << chunk_mapping.DebugString());
                         fixed_errors_++;
                         DEBUG("Unused chunk is now a gc candidate: " << chunk_mapping.DebugString());
                     }
@@ -499,16 +500,16 @@ bool Dedupv1Checker::ReadChunkIndex() {
             CHECK(read_result != LOOKUP_ERROR, "Failed to read container " << chunk_mapping.data_address());
             if (read_result == LOOKUP_NOT_FOUND) {
                 WARNING("Failed to find container for chunk mapping: " << "chunk mapping "
-                        << chunk_mapping.DebugString() << ", container " << container.DebugString());
+                                                                       << chunk_mapping.DebugString() << ", container " << container.DebugString());
                 reported_errors_++;
             }
             // read_result == LOOKUP_FOUND
 
             ContainerItem* item = container.FindItem(chunk_mapping.fingerprint(), chunk_mapping.fingerprint_size(),
-                    true);
+                true);
             if (item == NULL) {
                 WARNING("Failed to find chunk in container for chunk mapping: " << "chunk mapping "
-                        << chunk_mapping.DebugString() << ", container " << container.DebugString());
+                                                                                << chunk_mapping.DebugString() << ", container " << container.DebugString());
                 reported_errors_++;
             }
         } else {
@@ -537,10 +538,10 @@ bool Dedupv1Checker::CheckUsageCount() {
 
     unordered_map<uint64_t, usage_data>::iterator i;
 
-    for (i = usage_count_prefix_map_.begin(); i != usage_count_prefix_map_.end();) {
+    for (i = usage_count_prefix_map_.begin(); i != usage_count_prefix_map_.end(); ) {
         TRACE("Process fp prefix: " << ToHexString(&i->first, sizeof(i->first))
-                << ", differ block index usage count - chunk index usage count is " << i->second.usage_count
-                << " using chunks is " << i->second.usage_chunks);
+                                    << ", differ block index usage count - chunk index usage count is " << i->second.usage_count
+                                    << " using chunks is " << i->second.usage_chunks);
 
         if (i->second.usage_count == 0) {
             usage_count_prefix_map_.erase(i++);
@@ -550,8 +551,8 @@ bool Dedupv1Checker::CheckUsageCount() {
                 usage_count_prefix_map_.erase(i++);
             } else {
                 WARNING("Illegal usage count for fp prefix: " << ToHexString(&i->first, sizeof(i->first))
-                        << ", chunk index usage count differs from block index usage count by "
-                        << i->second.usage_count << ", used chunks " << static_cast<int>(i->second.usage_chunks));
+                                                              << ", chunk index usage count differs from block index usage count by "
+                                                              << i->second.usage_count << ", used chunks " << static_cast<int>(i->second.usage_chunks));
                 if (i->second.usage_count == INT32_MIN) {
                     underrun_prefix_map_[i->first] = i->second.usage_chunks;
                     usage_count_prefix_map_.erase(i++);
@@ -572,7 +573,7 @@ bool Dedupv1Checker::CheckUsageCount() {
     }
 
     DCHECK(usage_count_prefix_map_.empty(), "usage_count_prefix_map_ has " << usage_count_prefix_map_.size()
-            << " Elements left (had to be 0)");
+                                                                           << " Elements left (had to be 0)");
 
     if (!repair_) {
         underrun_prefix_map_.clear();
@@ -580,12 +581,12 @@ bool Dedupv1Checker::CheckUsageCount() {
     }
 
     DEBUG("Pass " << (actual_run_pass_ + 1) << " of " << run_passes_ << ": "
-            << overrun_prefix_map_.size() << " overruns, " << underrun_prefix_map_.size() << " underruns, "
-            << error_prefix_map_.size() << " usage count errors");
+                  << overrun_prefix_map_.size() << " overruns, " << underrun_prefix_map_.size() << " underruns, "
+                  << error_prefix_map_.size() << " usage count errors");
     bool run_now = (overrun_prefix_map_.size() > 1000) || (underrun_prefix_map_.size() > 1000)
-            || (error_prefix_map_.size() > 1000);
+                   || (error_prefix_map_.size() > 1000);
     bool run_before_end = (overrun_prefix_map_.size() > 0) || (underrun_prefix_map_.size() > 0)
-            || (error_prefix_map_.size() > 0);
+                          || (error_prefix_map_.size() > 0);
     if (run_now || (((actual_run_pass_ + 1) == run_passes_) && run_before_end)) {
         CHECK(RepairChunkCount(), "Error while repairing Chunk Count");
     }
@@ -604,9 +605,9 @@ bool Dedupv1Checker::RepairChunkCount() {
     CHECK(persistent_block_index, "Persistent Block Index NULL");
 
     DEBUG("Will repair chunk counts in pass " << actual_run_pass_ << " with Elements in prefix maps: "
-            << overrun_prefix_map_.size() << " Overrun, " << underrun_prefix_map_.size() << " Underrun and "
-            << error_prefix_map_.size() << " Error. Until now we have " << reported_errors_ << " reported and "
-            << fixed_errors_ << " fixed errors.");
+                                              << overrun_prefix_map_.size() << " Overrun, " << underrun_prefix_map_.size() << " Underrun and "
+                                              << error_prefix_map_.size() << " Error. Until now we have " << reported_errors_ << " reported and "
+                                              << fixed_errors_ << " fixed errors.");
 
     // Initialize relevant_chunks, so that there is an entry for each prefix, we need to have a deeper look on.
     unordered_map<uint64_t, map<bytestring, uint64_t> > relevant_chunks;
@@ -617,12 +618,12 @@ bool Dedupv1Checker::RepairChunkCount() {
         relevant_chunks[run_iterator->first];
     }
     if (repair_) {
-        for (run_iterator = underrun_prefix_map_.begin(); run_iterator != underrun_prefix_map_.end();) {
+        for (run_iterator = underrun_prefix_map_.begin(); run_iterator != underrun_prefix_map_.end(); ) {
             // This way I create an entry in relevant_chunks, so I can check later if a prefix is relevant
             relevant_chunks[run_iterator->first];
             underrun_prefix_map_.erase(run_iterator++);
         }
-        for (error_iterator = error_prefix_map_.begin(); error_iterator != error_prefix_map_.end();) {
+        for (error_iterator = error_prefix_map_.begin(); error_iterator != error_prefix_map_.end(); ) {
             // This way I create an entry in relevant_chunks, so I can check later if a prefix is relevant
             if (error_iterator->second.usage_chunks > 1) {
                 relevant_chunks[error_iterator->first];
@@ -649,7 +650,7 @@ bool Dedupv1Checker::RepairChunkCount() {
             list<BlockMappingItem>::iterator j;
             for (j = block_mapping.items().begin(); j != block_mapping.items().end(); j++) {
                 BlockMappingItem& item = *j;
-                uint64_t prefix = *reinterpret_cast<const uint64_t*> (item.fingerprint());
+                uint64_t prefix = *reinterpret_cast<const uint64_t*>(item.fingerprint());
                 if (relevant_chunks.count(prefix) > 0) {
                     relevant_chunks[prefix][item.fingerprint_string()]++;
                 }
@@ -690,7 +691,7 @@ bool Dedupv1Checker::RepairChunkCount() {
                         reported_errors_++;
                         overrun_prefix_map_.erase(prefix);
                         WARNING("Illegal usage count for fp prefix: " << ToHexString(prefix)
-                                << ", chunk index usage count differs from block index usage count in deep check");
+                                                                      << ", chunk index usage count differs from block index usage count in deep check");
                     }
                     if (repair_) {
                         change_usages[chunk_mapping.fingerprint_string()] = read_usage;
@@ -709,7 +710,7 @@ bool Dedupv1Checker::RepairChunkCount() {
                 ChunkMapping chunk_mapping(fp, fp_size);
                 CHECK(chunk_mapping.UnserializeFrom(chunk_data, false), "Failed to process chunk mapping data: " << chunk_data.ShortDebugString());
                 change_usages[chunk_mapping.fingerprint_string()] = chunk_mapping.usage_count()
-                        + error_prefix_map_[prefix].usage_count;
+                                                                    + error_prefix_map_[prefix].usage_count;
                 error_prefix_map_.erase(prefix);
                 fixed_errors_++;
                 DEBUG("Repaired usage count of chunk " << chunk_mapping.DebugString());
@@ -734,7 +735,7 @@ bool Dedupv1Checker::RepairChunkCount() {
             }
         }
         CHECK(dedup_system_->garbage_collector()->Put(gc_chunks, true),
-                "Failed to repair gc candidate states");
+            "Failed to repair gc candidate states");
         // We could make a DCHECK of the next three...
         CHECK(overrun_prefix_map_.size() == 0, " Overrun prefix map has still " << overrun_prefix_map_.size() << " Entries");
         CHECK(underrun_prefix_map_.size() == 0, " Underrun prefix map has still " << underrun_prefix_map_.size() << " Entries");
@@ -742,7 +743,7 @@ bool Dedupv1Checker::RepairChunkCount() {
     }
 
     INFO("After repair usage count in pass " << (actual_run_pass_ + 1) << " of " << run_passes_ << " we have "
-            << reported_errors_ << " reported and " << fixed_errors_ << " fixed errors");
+                                             << reported_errors_ << " reported and " << fixed_errors_ << " fixed errors");
     return true;
 }
 
@@ -752,7 +753,7 @@ bool Dedupv1Checker::ReadContainerData() {
     DCHECK(chunk_index, "Chunk index not set");
     Storage* tmp_storage = dedup_system_->storage();
     DCHECK(tmp_storage, "Dedup System storage NULL");
-    ContainerStorage* storage = dynamic_cast<ContainerStorage*> (tmp_storage);
+    ContainerStorage* storage = dynamic_cast<ContainerStorage*>(tmp_storage);
     DCHECK(storage, "Storage was not a container storage while restoring");
     Fingerprinter* fp_gen = Fingerprinter::Factory().Create(dedup_system_->content_storage()->fingerprinter_name());
     CHECK(fp_gen, "Failed to create fingerprinter");
@@ -806,7 +807,7 @@ bool Dedupv1Checker::ReadContainerData() {
 
         if (container_address.has_primary_id()) {
             WARNING("Container id expected to be primary: " << "address " << container_address.ShortDebugString()
-                    << ", container id " << container_id);
+                                                            << ", container id " << container_id);
             reported_errors_++;
         }
         // here we have the address of the primary container id
@@ -815,17 +816,17 @@ bool Dedupv1Checker::ReadContainerData() {
         CHECK(address_check.valid(), "Address check failed: " << container_id << ", address " << container_address.DebugString())
         if (address_check.value()) {
             WARNING("Address of container is declared as free: " << "address " << container_address.ShortDebugString()
-                    << ", container id " << container_id);
+                                                                 << ", container id " << container_id);
             reported_errors_++;
         }
 
         std::map<uint32_t, google::sparse_hash_map<uint64_t, uint64_t> >::iterator i =
-                container_address_inverse_map_.find(container_address.file_index());
+            container_address_inverse_map_.find(container_address.file_index());
         if (i != container_address_inverse_map_.end()) {
             google::sparse_hash_map<uint64_t, uint64_t>::iterator j = i->second.find(container_address.file_offset());
             if (j != i->second.end()) {
                 WARNING("Address " << container_address.ShortDebugString() << " already used: " << "container id "
-                        << container_id << ", collision container id " << j->second);
+                                   << container_id << ", collision container id " << j->second);
                 reported_errors_++;
             }
         }
@@ -843,25 +844,25 @@ bool Dedupv1Checker::ReadContainerData() {
             reported_errors_++;
         } else if (read_result == LOOKUP_NOT_FOUND) {
             WARNING("Inconsistent container meta data: container " << container_id << " not found, address "
-                    << container_address.ShortDebugString());
+                                                                   << container_address.ShortDebugString());
             reported_errors_++;
         } else {
             DEBUG("Read container " << container.DebugString());
 
             if (container_id != container.primary_id()) {
                 pair<lookup_result, ContainerStorageAddressData> address1 = storage->LookupContainerAddress(
-                        container.primary_id(), NULL, false);
+                    container.primary_id(), NULL, false);
                 pair<lookup_result, ContainerStorageAddressData> address2 = storage->LookupContainerAddress(
-                        container_id, NULL, false);
+                    container_id, NULL, false);
                 CHECK(address1.first != LOOKUP_ERROR, "Failed to lookup container address");
                 CHECK(address2.first != LOOKUP_ERROR, "Failed to lookup container address");
 
                 WARNING("Unexpected primary container id: container " << container.DebugString()
-                        << ", expected primary id " << container_id << ", address container " << container.primary_id()
-                        << ", "
-                        << (address1.first == LOOKUP_FOUND ? address1.second.ShortDebugString() : "<not found>")
-                        << ", address container " << container_id << ", "
-                        << (address2.first == LOOKUP_FOUND ? address2.second.ShortDebugString() : "<not found>"));
+                                                                      << ", expected primary id " << container_id << ", address container " << container.primary_id()
+                                                                      << ", "
+                                                                      << (address1.first == LOOKUP_FOUND ? address1.second.ShortDebugString() : "<not found>")
+                                                                      << ", address container " << container_id << ", "
+                                                                      << (address2.first == LOOKUP_FOUND ? address2.second.ShortDebugString() : "<not found>"));
                 reported_errors_++;
             }
             int matched_ids = 0;
@@ -879,7 +880,7 @@ bool Dedupv1Checker::ReadContainerData() {
             }
             if (matched_ids != container.secondary_ids().size()) {
                 WARNING("There are unmatched secondary ids: " << container.DebugString() << ", matched id count "
-                        << matched_ids << ", expected secondary ids: [" << dedupv1::base::strutil::Join(
+                                                              << matched_ids << ", expected secondary ids: [" << dedupv1::base::strutil::Join(
                         redirecting_iter->second.begin(), redirecting_iter->second.end(), ", ") << "]");
                 reported_errors_++;
             }
@@ -891,7 +892,7 @@ bool Dedupv1Checker::ReadContainerData() {
 
                 if (!item->is_deleted()) {
                     CHECK(CheckContainerItem(chunk_index, fp_gen, &container, item),
-                            "Failed to check container item: item " << item->DebugString());
+                        "Failed to check container item: item " << item->DebugString());
                 }
             }
         }
@@ -920,7 +921,7 @@ bool Dedupv1Checker::Close() {
 }
 
 bool Dedupv1Checker::set_passes(const uint32_t passes) {
-    CHECK(passes <= (2^15), "Maximum number of supported passes is 2^15");
+    CHECK(passes <= (2 ^ 15), "Maximum number of supported passes is 2^15");
     int length = bits(passes);
     uint32_t tmp_passes = 1 << length;
     if (passes > tmp_passes) {

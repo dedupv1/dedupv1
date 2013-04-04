@@ -101,7 +101,7 @@ bool Index::SetOption(const string& option_name, const string& option) {
 }
 
 bool PersistentIndex::SetOption(const string& option_name, const string& option) {
-  (void) option;
+    (void) option;
     // no persistent index should fail if configured with one of
     // these options even if they do not make any use of it.
     if (option_name == "sync" ||
@@ -146,43 +146,43 @@ std::string Index::PrintTrace() {
 }
 
 put_result Index::PutIfAbsent(const void* key, size_t key_size,
-        const Message& message) {
+                              const Message& message) {
     ERROR("Index doesn't support put-if-absent operations.");
     return PUT_ERROR;
 }
 
 enum put_result Index::RawPutIfAbsent(
-                const void* key, size_t key_size,
-                const void* value, size_t value_size) {
+    const void* key, size_t key_size,
+    const void* value, size_t value_size) {
     ERROR("Index doesn't support raw usage");
     return PUT_ERROR;
 }
 
 enum put_result Index::RawPut(
-        const void* key, size_t key_size,
-        const void* value, size_t value_size) {
+    const void* key, size_t key_size,
+    const void* value, size_t value_size) {
     ERROR("Index doesn't support raw usage");
     return PUT_ERROR;
 }
 
 enum lookup_result Index::RawLookup(const void* key, size_t key_size,
-        void* value, size_t* value_size) {
+                                    void* value, size_t* value_size) {
     ERROR("Index doesn't support raw usage");
     return LOOKUP_ERROR;
 }
 
 enum put_result Index::CompareAndSwap(const void* key, size_t key_size,
-        const google::protobuf::Message& message,
-        const google::protobuf::Message& compare_message,
-        google::protobuf::Message* result_message) {
+                                      const google::protobuf::Message& message,
+                                      const google::protobuf::Message& compare_message,
+                                      google::protobuf::Message* result_message) {
     ERROR("Index doesn't support compare-and-swap");
     return PUT_ERROR;
 }
 
 enum lookup_result PersistentIndex::LookupDirty(const void* key, size_t key_size,
-        enum cache_lookup_method cache_lookup_type,
-        enum cache_dirty_mode dirty_mode,
-        google::protobuf::Message* message) {
+                                                enum cache_lookup_method cache_lookup_type,
+                                                enum cache_dirty_mode dirty_mode,
+                                                google::protobuf::Message* message) {
     if (cache_lookup_type == CACHE_LOOKUP_ONLY) {
         return LOOKUP_NOT_FOUND;
     }
@@ -190,22 +190,22 @@ enum lookup_result PersistentIndex::LookupDirty(const void* key, size_t key_size
 }
 
 enum put_result PersistentIndex::PutDirty(const void* key, size_t key_size,
-            const google::protobuf::Message& message, bool pin) {
+                                          const google::protobuf::Message& message, bool pin) {
     CHECK_RETURN(!pin, PUT_ERROR, "Index doesn't support pinning");
     return Put(key, key_size, message);
 }
 
 enum put_result Index::RawPutBatch(
-        const std::vector<std::tr1::tuple<bytestring, bytestring> >& data) {
+    const std::vector<std::tr1::tuple<bytestring, bytestring> >& data) {
 
     std::vector<std::tr1::tuple<bytestring, bytestring> >::const_iterator i;
     for (i = data.begin(); i != data.end(); i++) {
         put_result r = RawPut(
-                std::tr1::get<0>(*i).data(),
-                std::tr1::get<0>(*i).size(),
-                std::tr1::get<1>(*i).data(),
-                std::tr1::get<1>(*i).size()
-        );
+            std::tr1::get<0>(*i).data(),
+            std::tr1::get<0>(*i).size(),
+            std::tr1::get<1>(*i).data(),
+            std::tr1::get<1>(*i).size()
+            );
         if (r == PUT_ERROR) {
             return r;
         }
@@ -214,13 +214,13 @@ enum put_result Index::RawPutBatch(
 }
 
 enum put_result Index::PutBatch(
-        const std::vector<std::tr1::tuple<bytestring, const google::protobuf::Message*> >& data) {
+    const std::vector<std::tr1::tuple<bytestring, const google::protobuf::Message*> >& data) {
     std::vector<std::tr1::tuple<bytestring, const google::protobuf::Message*> >::const_iterator i;
     for (i = data.begin(); i != data.end(); i++) {
         put_result r = Put(
-                std::tr1::get<0>(*i).data(),
-                std::tr1::get<0>(*i).size(),
-                *(std::tr1::get<1>(*i)));
+            std::tr1::get<0>(*i).data(),
+            std::tr1::get<0>(*i).size(),
+            *(std::tr1::get<1>(*i)));
         if (r == PUT_ERROR) {
             return r;
         }
@@ -250,9 +250,9 @@ uint64_t PersistentIndex::GetEstimatedMaxCacheItemCount() {
 }
 
 bool PersistentIndex::TryPersistDirtyItem(
-        uint32_t max_batch_size,
-        uint64_t* resume_handle,
-        bool* persisted) {
+    uint32_t max_batch_size,
+    uint64_t* resume_handle,
+    bool* persisted) {
     DCHECK(persisted, "Persisted not set");
     *persisted = false;
     return true;

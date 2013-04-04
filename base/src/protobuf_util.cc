@@ -200,12 +200,12 @@ Option<size_t> ParseSizedMessage(::google::protobuf::Message* message, const voi
     // Note: Any games to use ParseFromArray directly to avoid the construction of the CodedInputStream are
     // useless, because ParseFromArray internally constructs an CodedInputStream
 
-    ::google::protobuf::io::CodedInputStream input((byte*) value, max_value_size);
+    ::google::protobuf::io::CodedInputStream input((byte *) value, max_value_size);
     input.PushLimit(max_value_size);
 
     uint32_t data_size = 0;
     CHECK(input.ReadVarint32(&data_size), "Cannot read size data: max value size: " << max_value_size);
-    
+
     ::google::protobuf::io::CodedInputStream::Limit data_limit = input.PushLimit(data_size);
     CHECK(message->ParseFromCodedStream(&input), "Failed to parse data: " <<
         "data " << (max_value_size < 256 ? ToHexString(value, max_value_size) :  ToHexString(value, 256) + "...") <<

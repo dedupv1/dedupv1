@@ -100,7 +100,7 @@ protected:
             // session may be freed by resource management system, but here it is not
             delete session;
         }
-        session = NULL; 
+        session = NULL;
     }
 };
 

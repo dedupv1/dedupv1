@@ -82,7 +82,7 @@ const string CommandHandler::kProductName("DEDUPV1");
 LOGGER("CommandHandler");
 
 CommandErrorReport::CommandErrorReport(std::time_t time, int opcode, uint64_t sector,
-        const dedupv1::scsi::ScsiResult& result, const std::string& details) {
+                                       const dedupv1::scsi::ScsiResult& result, const std::string& details) {
     time_ = time;
     sector_ = sector;
     result_ = result;
@@ -271,7 +271,7 @@ bool CommandErrorReport::ParseFrom(const CommandErrorReportData& data) {
     sector_ = data.sector();
 
     result_ = ScsiResult((enum dedupv1::scsi::scsi_result) data.result().result(),
-            (enum dedupv1::scsi::scsi_sense_key) data.result().sense_key(), data.result().asc(), data.result().ascq());
+        (enum dedupv1::scsi::scsi_sense_key) data.result().sense_key(), data.result().asc(), data.result().ascq());
     return true;
 }
 
@@ -355,35 +355,35 @@ bool CommandHandler::AddErrorReport(int opcode, uint64_t sector, const dedupv1::
 string CommandHandler::GetTaskMgmtFunctionName(uint32_t fn) {
     switch (fn) {
 #ifndef NO_SCST
-        case SCST_ABORT_TASK:
-            return "Abort Task";
-        case SCST_ABORT_TASK_SET:
-            return "Abort Task Set";
-        case SCST_CLEAR_ACA:
-            return "Clear ACA";
-        case SCST_CLEAR_TASK_SET:
-            return "Clear Task Set";
-        case SCST_LUN_RESET:
-            return "LUN Reset";
-        case SCST_TARGET_RESET:
-            return "Target Reset";
-        case SCST_NEXUS_LOSS_SESS:
-            return "Nexus Loss Session";
-        case SCST_ABORT_ALL_TASKS_SESS:
-            return "Abort All Tasks Session";
-        case SCST_NEXUS_LOSS:
-            return "Nexus Loss";
-        case SCST_ABORT_ALL_TASKS:
-            return "Abort All Tasks";
-        case SCST_UNREG_SESS_TM:
-            return "Unreg Session Task";
+    case SCST_ABORT_TASK:
+        return "Abort Task";
+    case SCST_ABORT_TASK_SET:
+        return "Abort Task Set";
+    case SCST_CLEAR_ACA:
+        return "Clear ACA";
+    case SCST_CLEAR_TASK_SET:
+        return "Clear Task Set";
+    case SCST_LUN_RESET:
+        return "LUN Reset";
+    case SCST_TARGET_RESET:
+        return "Target Reset";
+    case SCST_NEXUS_LOSS_SESS:
+        return "Nexus Loss Session";
+    case SCST_ABORT_ALL_TASKS_SESS:
+        return "Abort All Tasks Session";
+    case SCST_NEXUS_LOSS:
+        return "Nexus Loss";
+    case SCST_ABORT_ALL_TASKS:
+        return "Abort All Tasks";
+    case SCST_UNREG_SESS_TM:
+        return "Unreg Session Task";
 #ifdef SCST_PR_ABORT_ALL
-        case SCST_PR_ABORT_ALL:
-            return "PR Abort All";
+    case SCST_PR_ABORT_ALL:
+        return "PR Abort All";
 #endif
 #endif
-        default:
-            return "Unknown Task (" + ToString(fn) + ")";
+    default:
+        return "Unknown Task (" + ToString(fn) + ")";
     }
     return "";
 }
@@ -448,11 +448,11 @@ int CommandHandlerSession::TaskMgmt(uint32_t cmd_h, uint64_t sess_h, struct scst
         } else if (tm->fn == SCST_ABORT_TASK) {
             DEBUG("Abort command " << tm->cmd_h_to_abort);
             std::string trace = ch->PrintTrace();
-            std::string statistics = ch ->PrintStatistics();
+            std::string statistics = ch->PrintStatistics();
             WARNING("Session " << session.value().DebugString() << ": Task Management " << CommandHandler::GetTaskMgmtFunctionName(tm->fn) << "\nStatistics:\n" << statistics << "\nTrace:\n" << trace);
         } else {
             std::string trace = ch->PrintTrace();
-            std::string statistics = ch ->PrintStatistics();
+            std::string statistics = ch->PrintStatistics();
             WARNING("Session " << session.value().DebugString() << ": Task Management " << CommandHandler::GetTaskMgmtFunctionName(tm->fn) << "\nStatistics:\n" << statistics << "\nTrace:\n" << trace);
         }
     }
@@ -461,90 +461,91 @@ int CommandHandlerSession::TaskMgmt(uint32_t cmd_h, uint64_t sess_h, struct scst
 #endif
 
 static const char* opcode_names[255] = {
-/* 00 NOLINT */"TEST UNIT READY",
-/* 01 NOLINT */"REZERO UNIT", NULL,
-/* 03 NOLINT */"REQUEST SENSE",
-/* 04 NOLINT */"FORMAT UNIT",
-/* 05 NOLINT */"READ BLOCK LIMITS", NULL,
-/* 07 NOLINT */"REASSIGN BLOCKS",
-/* 08 NOLINT */"READ (6)", NULL,
-/* 0A NOLINT */"WRITE (6)",
-/* 0B NOLINT */"SEEK (6)", NULL, NULL, NULL,
-/* 0F NOLINT */"READ REVERSE",
-/* 10 NOLINT */"WRITE FILEMARKS",
-/* 11 NOLINT */"SPACE (6)",
-/* 12 NOLINT */"INQUIRY", NULL,
-/* 14 NOLINT */"RECOVER BUFFERED DATA",
-/* 15 NOLINT */"MODE SELECT (6)",
-/* 16 NOLINT */"RESERVE (6)",
-/* 17 NOLINT */"RELEASE (6)",
-/* 18 NOLINT */"COPY",
-/* 19 NOLINT */"ERASE",
-/* 1A NOLINT */"MODE SENSE (6)",
-/* 1B NOLINT */"START/STOP UNIT",
-/* 1C NOLINT */"RECEIVE DIAGNOSTIC RESULTS",
-/* 1D NOLINT */"SEND DIAGNOSTIC",
-/* 1E NOLINT */"PREVENT/ALLOW MEDIUM REMOVAL", NULL, NULL, NULL, NULL,
-/* 23 NOLINT */"READ FORMAT CAPACITIES (MMC)", NULL,
-/* 25 NOLINT */"READ CAPACITY (10)", NULL, NULL,
-/* 28 NOLINT */"READ (10)", NULL,
-/* 2A NOLINT */"WRITE (10)",
-/* 2B NOLINT */"SEEK (10)", NULL, NULL,
-/* 2E NOLINT */"WRITE AND VERIFY",
-/* 2F NOLINT */"VERIFY (10)",
-/* 30 NOLINT */"SEARCH DATA HIGH",
-/* 31 NOLINT */"SEARCH DATA EQUAL",
-/* 32 NOLINT */"SEARCH DATA LOW",
-/* 33 NOLINT */"SET LIMITS (10)",
-/* 34 NOLINT */"PRE-FETCH",
-/* 35 NOLINT */"SYNCHRONIZE CACHE (10)",
-/* 36 NOLINT */"LOCK/UNLOCK CACHE",
-/* 37 NOLINT */"READ DEFECT DATA", NULL,
-/* 39 NOLINT */"COMPARE",
-/* 3A NOLINT */"COPY AND VERIFY",
-/* 3B NOLINT */"WRITE BUFFER",
-/* 3C NOLINT */"READ BUFFER", NULL,
-/* 3E NOLINT */"READ LONG",
-/* 3F NOLINT */"WRITE LONG",
-/* 40 NOLINT */"CHANGE DEFINITION",
-/* 41 NOLINT */"WRITE SAME", NULL, NULL, NULL,
-/* 45 NOLINT */NULL, NULL, NULL, NULL, NULL,
-/* 4A NOLINT */NULL, NULL,
-/* 4C NOLINT */"LOG SELECT",
-/* 4D NOLINT */"LOG SENSE", NULL, NULL,
-/* 50 NOLINT */"XDWRITE",
-/* 51 NOLINT */"XPWRITE",
-/* 52 NOLINT */"XDREAD", NULL, NULL,
-/* 55 NOLINT */"MODE SELECT (10)",
-/* 56 NOLINT */"RESERVE (10)",
-/* 57 NOLINT */"RELEASE (10)", NULL, NULL,
-/* 5A NOLINT */"MODE SENSE (10)", NULL, NULL, NULL,
-/* 5E NOLINT */"PERSISTENT RESERVE IN",
-/* 5F NOLINT */"PERSISTENT RESERVE OUT", NULL, NULL, NULL, NULL, NULL,
-/* 65 NOLINT */NULL, NULL, NULL, NULL, NULL,
-/* 6A NOLINT */NULL, NULL, NULL, NULL, NULL, NULL,
-/* 70 NOLINT */NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-/* 80 NOLINT */"XDWRITE EXTENDED", NULL,
-/* 82 NOLINT */"REGENERATE", NULL, NULL,
-/* 85 NOLINT */"ATA COMMAND PASS THROUGH(16)", NULL, NULL,
-/* 88 NOLINT */"READ (16)", NULL,
-/* 8A NOLINT */"WRITE (16)", NULL, NULL, NULL, NULL,
-/* 8F NOLINT */"VERIFY (16)",
-/* 90 NOLINT */NULL,
-/* 91 NOLINT */"SYNCHRONIZE CACHE (16)", NULL, NULL, NULL,
-/* 95 NOLINT */NULL, NULL, NULL, NULL, NULL,
-/* 9A NOLINT */NULL, NULL, NULL, NULL,
-/* 9E NOLINT */"READ CAPACITY (16)", NULL,
-/* A0 NOLINT */"REPORT LUNS", NULL, NULL,
-/* A3 NOLINT */"REPORT SUPPORTED OPCODES", NULL,
-/* A5 NOLINT */"MOVE MEDIUM", NULL, NULL,
-/* A8 NOLINT */"READ (12)", NULL,
-/* AA NOLINT */"WRITE (12)", NULL, NULL, NULL, NULL,
-/* AF NOLINT */"VERIFY (12)",
-/* B0 NOLINT */NULL, NULL, NULL,
-/* B3 NOLINT */"SET LIMITS (12)",
-/* B4 NOLINT */"READ ELEMENT STATUS", NULL, NULL,
-/* B7 NOLINT */"READ DEFECT DATA (12)" };
+/* 00 NOLINT */ "TEST UNIT READY",
+/* 01 NOLINT */ "REZERO UNIT", NULL,
+/* 03 NOLINT */ "REQUEST SENSE",
+/* 04 NOLINT */ "FORMAT UNIT",
+/* 05 NOLINT */ "READ BLOCK LIMITS", NULL,
+/* 07 NOLINT */ "REASSIGN BLOCKS",
+/* 08 NOLINT */ "READ (6)", NULL,
+/* 0A NOLINT */ "WRITE (6)",
+/* 0B NOLINT */ "SEEK (6)", NULL, NULL, NULL,
+/* 0F NOLINT */ "READ REVERSE",
+/* 10 NOLINT */ "WRITE FILEMARKS",
+/* 11 NOLINT */ "SPACE (6)",
+/* 12 NOLINT */ "INQUIRY", NULL,
+/* 14 NOLINT */ "RECOVER BUFFERED DATA",
+/* 15 NOLINT */ "MODE SELECT (6)",
+/* 16 NOLINT */ "RESERVE (6)",
+/* 17 NOLINT */ "RELEASE (6)",
+/* 18 NOLINT */ "COPY",
+/* 19 NOLINT */ "ERASE",
+/* 1A NOLINT */ "MODE SENSE (6)",
+/* 1B NOLINT */ "START/STOP UNIT",
+/* 1C NOLINT */ "RECEIVE DIAGNOSTIC RESULTS",
+/* 1D NOLINT */ "SEND DIAGNOSTIC",
+/* 1E NOLINT */ "PREVENT/ALLOW MEDIUM REMOVAL", NULL, NULL, NULL, NULL,
+/* 23 NOLINT */ "READ FORMAT CAPACITIES (MMC)", NULL,
+/* 25 NOLINT */ "READ CAPACITY (10)", NULL, NULL,
+/* 28 NOLINT */ "READ (10)", NULL,
+/* 2A NOLINT */ "WRITE (10)",
+/* 2B NOLINT */ "SEEK (10)", NULL, NULL,
+/* 2E NOLINT */ "WRITE AND VERIFY",
+/* 2F NOLINT */ "VERIFY (10)",
+/* 30 NOLINT */ "SEARCH DATA HIGH",
+/* 31 NOLINT */ "SEARCH DATA EQUAL",
+/* 32 NOLINT */ "SEARCH DATA LOW",
+/* 33 NOLINT */ "SET LIMITS (10)",
+/* 34 NOLINT */ "PRE-FETCH",
+/* 35 NOLINT */ "SYNCHRONIZE CACHE (10)",
+/* 36 NOLINT */ "LOCK/UNLOCK CACHE",
+/* 37 NOLINT */ "READ DEFECT DATA", NULL,
+/* 39 NOLINT */ "COMPARE",
+/* 3A NOLINT */ "COPY AND VERIFY",
+/* 3B NOLINT */ "WRITE BUFFER",
+/* 3C NOLINT */ "READ BUFFER", NULL,
+/* 3E NOLINT */ "READ LONG",
+/* 3F NOLINT */ "WRITE LONG",
+/* 40 NOLINT */ "CHANGE DEFINITION",
+/* 41 NOLINT */ "WRITE SAME", NULL, NULL, NULL,
+/* 45 NOLINT */ NULL, NULL, NULL, NULL, NULL,
+/* 4A NOLINT */ NULL, NULL,
+/* 4C NOLINT */ "LOG SELECT",
+/* 4D NOLINT */ "LOG SENSE", NULL, NULL,
+/* 50 NOLINT */ "XDWRITE",
+/* 51 NOLINT */ "XPWRITE",
+/* 52 NOLINT */ "XDREAD", NULL, NULL,
+/* 55 NOLINT */ "MODE SELECT (10)",
+/* 56 NOLINT */ "RESERVE (10)",
+/* 57 NOLINT */ "RELEASE (10)", NULL, NULL,
+/* 5A NOLINT */ "MODE SENSE (10)", NULL, NULL, NULL,
+/* 5E NOLINT */ "PERSISTENT RESERVE IN",
+/* 5F NOLINT */ "PERSISTENT RESERVE OUT", NULL, NULL, NULL, NULL, NULL,
+/* 65 NOLINT */ NULL, NULL, NULL, NULL, NULL,
+/* 6A NOLINT */ NULL, NULL, NULL, NULL, NULL, NULL,
+/* 70 NOLINT */ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+/* 80 NOLINT */ "XDWRITE EXTENDED", NULL,
+/* 82 NOLINT */ "REGENERATE", NULL, NULL,
+/* 85 NOLINT */ "ATA COMMAND PASS THROUGH(16)", NULL, NULL,
+/* 88 NOLINT */ "READ (16)", NULL,
+/* 8A NOLINT */ "WRITE (16)", NULL, NULL, NULL, NULL,
+/* 8F NOLINT */ "VERIFY (16)",
+/* 90 NOLINT */ NULL,
+/* 91 NOLINT */ "SYNCHRONIZE CACHE (16)", NULL, NULL, NULL,
+/* 95 NOLINT */ NULL, NULL, NULL, NULL, NULL,
+/* 9A NOLINT */ NULL, NULL, NULL, NULL,
+/* 9E NOLINT */ "READ CAPACITY (16)", NULL,
+/* A0 NOLINT */ "REPORT LUNS", NULL, NULL,
+/* A3 NOLINT */ "REPORT SUPPORTED OPCODES", NULL,
+/* A5 NOLINT */ "MOVE MEDIUM", NULL, NULL,
+/* A8 NOLINT */ "READ (12)", NULL,
+/* AA NOLINT */ "WRITE (12)", NULL, NULL, NULL, NULL,
+/* AF NOLINT */ "VERIFY (12)",
+/* B0 NOLINT */ NULL, NULL, NULL,
+/* B3 NOLINT */ "SET LIMITS (12)",
+/* B4 NOLINT */ "READ ELEMENT STATUS", NULL, NULL,
+/* B7 NOLINT */ "READ DEFECT DATA (12)"
+};
 
 string CommandHandler::GetOpcodeName(byte opcode) {
     const char* opcode_name = NULL;
@@ -554,7 +555,7 @@ string CommandHandler::GetOpcodeName(byte opcode) {
     if (opcode_name) {
         return opcode_name;
     }
-    return "Opcode 0x" + ToHexString(static_cast<int> (opcode));
+    return "Opcode 0x" + ToHexString(static_cast<int>(opcode));
 }
 
 #ifndef NO_SCST
@@ -563,26 +564,26 @@ dedupv1::scsi::ScsiResult CommandHandlerSession::ExtractOffset(struct scst_user_
     uint64_t lba = 0;
     uint64_t off = 0;
     switch (opcode) {
-        case READ_6:
-        case WRITE_6:
-            lba = (((uint64_t) cmd->cdb[1] & 0x1f) << 16) + ((uint64_t) cmd->cdb[2] << 8) + ((uint64_t) cmd->cdb[3]
-                    << 0);
-            break;
-        case READ_10:
-        case WRITE_10:
-        case VERIFY_10:
-            lba = ((uint64_t) cmd->cdb[2] << 24) + ((uint64_t) cmd->cdb[3] << 16) + ((uint64_t) cmd->cdb[4] << 8)
-                    + ((uint64_t) cmd->cdb[5] << 0);
-            break;
-        case READ_16:
-        case WRITE_16:
-        case VERIFY_16:
-            lba = ((uint64_t) cmd->cdb[2] << 56) + ((uint64_t) cmd->cdb[3] << 48) + ((uint64_t) cmd->cdb[4] << 40)
-                    + ((uint64_t) cmd->cdb[5] << 32) + ((uint64_t) cmd->cdb[6] << 24) + ((uint64_t) cmd->cdb[7] << 16)
-                    + ((uint64_t) cmd->cdb[8] << 8) + ((uint64_t) cmd->cdb[9] << 0);
-            break;
-        default:
-            return ScsiResult::kIllegalMessage;
+    case READ_6:
+    case WRITE_6:
+        lba = (((uint64_t) cmd->cdb[1] & 0x1f) << 16) + ((uint64_t) cmd->cdb[2] << 8) + ((uint64_t) cmd->cdb[3]
+                                                                                         << 0);
+        break;
+    case READ_10:
+    case WRITE_10:
+    case VERIFY_10:
+        lba = ((uint64_t) cmd->cdb[2] << 24) + ((uint64_t) cmd->cdb[3] << 16) + ((uint64_t) cmd->cdb[4] << 8)
+              + ((uint64_t) cmd->cdb[5] << 0);
+        break;
+    case READ_16:
+    case WRITE_16:
+    case VERIFY_16:
+        lba = ((uint64_t) cmd->cdb[2] << 56) + ((uint64_t) cmd->cdb[3] << 48) + ((uint64_t) cmd->cdb[4] << 40)
+              + ((uint64_t) cmd->cdb[5] << 32) + ((uint64_t) cmd->cdb[6] << 24) + ((uint64_t) cmd->cdb[7] << 16)
+              + ((uint64_t) cmd->cdb[8] << 8) + ((uint64_t) cmd->cdb[9] << 0);
+        break;
+    default:
+        return ScsiResult::kIllegalMessage;
 
     }
     off = lba << ch->GetVolume()->block_shift();
@@ -591,7 +592,7 @@ dedupv1::scsi::ScsiResult CommandHandlerSession::ExtractOffset(struct scst_user_
 }
 
 dedupv1::scsi::ScsiResult CommandHandlerSession::ExecuteVerify(struct scst_user_scsi_cmd_exec* cmd, uint64_t offset,
-        uint64_t size) {
+                                                               uint64_t size) {
     // TODO(fermat): We have to ensure here that the data in the verify area is synchronized, so the accessed containers have to be written to storage.
     CommandHandler* ch = this->GetCommandHandler();
 
@@ -600,7 +601,7 @@ dedupv1::scsi::ScsiResult CommandHandlerSession::ExecuteVerify(struct scst_user_
 
     DEBUG("Verify offset " << offset << ", size " << size << ", byte check " << ToString(byte_check));
 
-    byte* application_buffer = (byte*) cmd->pbuf;
+    byte* application_buffer = (byte *) cmd->pbuf;
     byte* own_buffer = NULL;
     own_buffer = new byte[size];
     CHECK_RETURN(own_buffer, ScsiResult::kDefaultNotReady, "Memalloc failed");
@@ -609,9 +610,9 @@ dedupv1::scsi::ScsiResult CommandHandlerSession::ExecuteVerify(struct scst_user_
     ScsiResult result = ch->GetVolume()->MakeRequest(REQUEST_READ, offset, size, own_buffer, &ec);
     if (!result) {
         ERROR("Reading data for verification failed: offset " << offset <<
-                ", size " << size <<
-                ", volume " << this->ch->volume_->DebugString() <<
-                ", error " << result.DebugString());
+            ", size " << size <<
+            ", volume " << this->ch->volume_->DebugString() <<
+            ", error " << result.DebugString());
         return result;
     }
     // reading was ok
@@ -628,19 +629,19 @@ dedupv1::scsi::ScsiResult CommandHandlerSession::ExecuteVerify(struct scst_user_
 }
 
 dedupv1::scsi::ScsiResult CommandHandlerSession::ExecuteRead(struct scst_user_scsi_cmd_exec* cmd, uint64_t offset,
-        uint64_t size) {
+                                                             uint64_t size) {
     CommandHandler* ch = this->GetCommandHandler();
 
     DEBUG("Read offset " << offset << ", size " << size);
     ErrorContext ec;
 
-    byte* buffer = (byte*) cmd->pbuf;
+    byte* buffer = (byte *) cmd->pbuf;
     ScsiResult result = ch->GetVolume()->MakeRequest(REQUEST_READ, offset, size, buffer, &ec);
     if (!result) {
         ERROR("Execute read failed: offset " << offset <<
-                ", size " << size <<
-                ", volume " << this->ch->volume_->DebugString() <<
-                ", error " << result.DebugString());
+            ", size " << size <<
+            ", volume " << this->ch->volume_->DebugString() <<
+            ", error " << result.DebugString());
         return result;
     }
     if (!ch->stats_.UpdateRead(size)) {
@@ -653,7 +654,7 @@ dedupv1::scsi::ScsiResult CommandHandlerSession::ExecuteRead(struct scst_user_sc
 }
 
 dedupv1::scsi::ScsiResult CommandHandlerSession::ExecuteWrite(struct scst_user_scsi_cmd_exec* cmd, uint64_t offset,
-        uint64_t size) {
+                                                              uint64_t size) {
     tbb::tick_count start_tick_ = tbb::tick_count::now();
     byte* buffer = NULL;
     CommandHandler* ch = this->GetCommandHandler();
@@ -664,14 +665,14 @@ dedupv1::scsi::ScsiResult CommandHandlerSession::ExecuteWrite(struct scst_user_s
 
     ErrorContext ec;
 
-    buffer = (byte*) cmd->pbuf;
+    buffer = (byte *) cmd->pbuf;
     DEBUG("Write offset " << offset << ", size " << size);
     ScsiResult result = ch->GetVolume()->MakeRequest(REQUEST_WRITE, offset, size, buffer, &ec);
     if (!result) {
         ERROR("Execute write failed: offset " << offset <<
-                ", size " << size <<
-                ", volume " << this->ch->volume_->DebugString() <<
-                ", error " << result.DebugString());
+            ", size " << size <<
+            ", volume " << this->ch->volume_->DebugString() <<
+            ", error " << result.DebugString());
         tbb::tick_count end_tick = tbb::tick_count::now();
         this->ch->response_time_write_average_.Add((end_tick - start_tick_).seconds() * 1000);
         return result;
@@ -687,7 +688,7 @@ dedupv1::scsi::ScsiResult CommandHandlerSession::ExecuteWrite(struct scst_user_s
 }
 
 dedupv1::scsi::ScsiResult CommandHandlerSession::ExecuteSynchronizeCache(struct scst_user_scsi_cmd_exec* cmd,
-        struct scst_user_scsi_cmd_reply_exec* reply) {
+                                                                         struct scst_user_scsi_cmd_reply_exec* reply) {
 
     bool sync_nv = cmd->cdb[1] & 0x04;
     bool immed = cmd->cdb[1] & 0x02;
@@ -696,30 +697,30 @@ dedupv1::scsi::ScsiResult CommandHandlerSession::ExecuteSynchronizeCache(struct 
     uint32_t block_numbers = 0;
     if (cmd->cdb[0] == SYNCHRONIZE_CACHE) {
         logical_block_address = 0;
-        logical_block_address += static_cast<uint64_t> (cmd->cdb[2]) << 24;
-        logical_block_address += static_cast<uint64_t> (cmd->cdb[3]) << 16;
-        logical_block_address += static_cast<uint64_t> (cmd->cdb[4]) << 8;
-        logical_block_address += static_cast<uint64_t> (cmd->cdb[5]) << 0;
+        logical_block_address += static_cast<uint64_t>(cmd->cdb[2]) << 24;
+        logical_block_address += static_cast<uint64_t>(cmd->cdb[3]) << 16;
+        logical_block_address += static_cast<uint64_t>(cmd->cdb[4]) << 8;
+        logical_block_address += static_cast<uint64_t>(cmd->cdb[5]) << 0;
         group_number = cmd->cdb[6];
         block_numbers = 0;
-        block_numbers += static_cast<uint32_t> (cmd->cdb[7]) << 8;
-        block_numbers += static_cast<uint32_t> (cmd->cdb[8]) << 0;
+        block_numbers += static_cast<uint32_t>(cmd->cdb[7]) << 8;
+        block_numbers += static_cast<uint32_t>(cmd->cdb[8]) << 0;
     } else if (cmd->cdb[0] == SYNCHRONIZE_CACHE_16) {
         // 16 byte variant
         logical_block_address = 0;
-        logical_block_address += static_cast<uint64_t> (cmd->cdb[2]) << 56;
-        logical_block_address += static_cast<uint64_t> (cmd->cdb[3]) << 48;
-        logical_block_address += static_cast<uint64_t> (cmd->cdb[4]) << 40;
-        logical_block_address += static_cast<uint64_t> (cmd->cdb[5]) << 32;
-        logical_block_address += static_cast<uint64_t> (cmd->cdb[6]) << 24;
-        logical_block_address += static_cast<uint64_t> (cmd->cdb[7]) << 16;
-        logical_block_address += static_cast<uint64_t> (cmd->cdb[8]) << 8;
-        logical_block_address += static_cast<uint64_t> (cmd->cdb[9]) << 0;
+        logical_block_address += static_cast<uint64_t>(cmd->cdb[2]) << 56;
+        logical_block_address += static_cast<uint64_t>(cmd->cdb[3]) << 48;
+        logical_block_address += static_cast<uint64_t>(cmd->cdb[4]) << 40;
+        logical_block_address += static_cast<uint64_t>(cmd->cdb[5]) << 32;
+        logical_block_address += static_cast<uint64_t>(cmd->cdb[6]) << 24;
+        logical_block_address += static_cast<uint64_t>(cmd->cdb[7]) << 16;
+        logical_block_address += static_cast<uint64_t>(cmd->cdb[8]) << 8;
+        logical_block_address += static_cast<uint64_t>(cmd->cdb[9]) << 0;
         block_numbers = 0;
-        block_numbers += static_cast<uint32_t> (cmd->cdb[10]) << 24;
-        block_numbers += static_cast<uint32_t> (cmd->cdb[11]) << 16;
-        block_numbers += static_cast<uint32_t> (cmd->cdb[12]) << 8;
-        block_numbers += static_cast<uint32_t> (cmd->cdb[13]) << 0;
+        block_numbers += static_cast<uint32_t>(cmd->cdb[10]) << 24;
+        block_numbers += static_cast<uint32_t>(cmd->cdb[11]) << 16;
+        block_numbers += static_cast<uint32_t>(cmd->cdb[12]) << 8;
+        block_numbers += static_cast<uint32_t>(cmd->cdb[13]) << 0;
         group_number = cmd->cdb[14];
     } else {
         ERROR("Illegal request: cdb op code " << cmd->cdb[1]);
@@ -727,10 +728,10 @@ dedupv1::scsi::ScsiResult CommandHandlerSession::ExecuteSynchronizeCache(struct 
     }
 
     DEBUG("Synchronize Cache: sync " << dedupv1::base::strutil::ToString(sync_nv) <<
-            ", immed " << dedupv1::base::strutil::ToString(immed) <<
-            ", logical_block_address " << logical_block_address <<
-            ", group number " << group_number <<
-            ", block numbers " << block_numbers);
+        ", immed " << dedupv1::base::strutil::ToString(immed) <<
+        ", logical_block_address " << logical_block_address <<
+        ", group number " << group_number <<
+        ", block numbers " << block_numbers);
 
     if (immed) {
         // we do not support the immed bit
@@ -741,7 +742,7 @@ dedupv1::scsi::ScsiResult CommandHandlerSession::ExecuteSynchronizeCache(struct 
 }
 
 dedupv1::scsi::ScsiResult CommandHandlerSession::ExecuteReadCapacity16(struct scst_user_scsi_cmd_exec* cmd,
-        struct scst_user_scsi_cmd_reply_exec* reply) {
+                                                                       struct scst_user_scsi_cmd_reply_exec* reply) {
     CHECK_RETURN(ch, ScsiResult::kIllegalMessage, "Command handler not set");
     CHECK_RETURN(cmd, ScsiResult::kIllegalMessage, "Command not set");
     CHECK_RETURN(cmd->pbuf, ScsiResult::kIllegalMessage, "Command buffer not set");
@@ -749,7 +750,7 @@ dedupv1::scsi::ScsiResult CommandHandlerSession::ExecuteReadCapacity16(struct sc
 
     uint32_t block_size = ch->volume_->block_size();
     uint64_t blocks = ch->volume_->block_count();
-    byte* result_buffer = (byte*) cmd->pbuf;
+    byte* result_buffer = (byte *) cmd->pbuf;
 
     uint64_t logical_block_address;
     memcpy(&logical_block_address, &cmd->cdb[2], sizeof(logical_block_address));
@@ -758,11 +759,11 @@ dedupv1::scsi::ScsiResult CommandHandlerSession::ExecuteReadCapacity16(struct sc
     bool pmi_set = (cmd->cdb[14] & 1);
 
     DEBUG("Read Capacity (16): lba " << logical_block_address <<
-            ", allocation length " << allocation_length <<
-            ", pmi " << dedupv1::base::strutil::ToString(pmi_set) <<
-            ", logical size " << ch->volume_->logical_size() <<
-            ", blocks " << blocks <<
-            "," << block_size);
+        ", allocation length " << allocation_length <<
+        ", pmi " << dedupv1::base::strutil::ToString(pmi_set) <<
+        ", logical size " << ch->volume_->logical_size() <<
+        ", blocks " << blocks <<
+        "," << block_size);
 
     int len = 32;
     byte buffer[32];
@@ -790,7 +791,7 @@ dedupv1::scsi::ScsiResult CommandHandlerSession::ExecuteReadCapacity16(struct sc
 }
 
 dedupv1::scsi::ScsiResult CommandHandlerSession::ExecuteReadCapacity(struct scst_user_scsi_cmd_exec* cmd,
-        struct scst_user_scsi_cmd_reply_exec* reply) {
+                                                                     struct scst_user_scsi_cmd_reply_exec* reply) {
     DCHECK_RETURN(ch, ScsiResult::kIllegalMessage, "Command handler not set");
     DCHECK_RETURN(cmd, ScsiResult::kIllegalMessage, "Command not set");
     DCHECK_RETURN(reply, ScsiResult::kIllegalMessage, "Reply not set");
@@ -800,7 +801,7 @@ dedupv1::scsi::ScsiResult CommandHandlerSession::ExecuteReadCapacity(struct scst
 
     uint32_t block_size = ch->volume_->block_size();
     uint64_t blocks = ch->volume_->block_count();
-    byte* result_buffer = (byte*) cmd->pbuf;
+    byte* result_buffer = (byte *) cmd->pbuf;
 
     uint32_t logical_block_address;
     memcpy(&logical_block_address, &cmd->cdb[2], sizeof(logical_block_address));
@@ -808,10 +809,10 @@ dedupv1::scsi::ScsiResult CommandHandlerSession::ExecuteReadCapacity(struct scst
     bool overflow = (blocks >> 32);
 
     DEBUG("Read Capacity: lba " << logical_block_address <<
-            ", pmi " << dedupv1::base::strutil::ToString(pmi_set) <<
-            ", logical size " << ch->volume_->logical_size() <<
-            ", blocks " << blocks << (overflow ? " (overflow)" : "") <<
-            ", block size " << block_size);
+        ", pmi " << dedupv1::base::strutil::ToString(pmi_set) <<
+        ", logical size " << ch->volume_->logical_size() <<
+        ", blocks " << blocks << (overflow ? " (overflow)" : "") <<
+        ", block size " << block_size);
 
     int len = 8;
     byte buffer[8];
@@ -900,7 +901,7 @@ size_t ModeSenseInformationExceptionsPage(byte* buffer) {
 }
 
 dedupv1::scsi::ScsiResult CommandHandlerSession::ExecuteModeSense(struct scst_user_scsi_cmd_exec* cmd,
-        struct scst_user_scsi_cmd_reply_exec* reply) {
+                                                                  struct scst_user_scsi_cmd_reply_exec* reply) {
 
     CHECK_RETURN(ch, ScsiResult::kIllegalMessage, "Command handler not set");
     CHECK_RETURN(cmd, ScsiResult::kIllegalMessage, "Command not set");
@@ -909,7 +910,7 @@ dedupv1::scsi::ScsiResult CommandHandlerSession::ExecuteModeSense(struct scst_us
 
     byte buffer[1024];
     memset(buffer, 0, 1024);
-    byte* result_buffer = (byte*) cmd->pbuf;
+    byte* result_buffer = (byte *) cmd->pbuf;
 
     bool dbd = cmd->cdb[1] & 0x04;
     int pc = (cmd->cdb[2] & 0xC0) >> 6; // bits 6 and 7
@@ -917,10 +918,10 @@ dedupv1::scsi::ScsiResult CommandHandlerSession::ExecuteModeSense(struct scst_us
     int subpage_code = cmd->cdb[3];
 
     DEBUG("Mode sense: dbd " << dedupv1::base::strutil::ToString(dbd) <<
-            ", pc 0x" << std::hex << pc <<
-            ", page code 0x" << std::hex << page_code <<
-            ", sub page code 0x" << std::hex << subpage_code <<
-            ", buffer length " << std::dec << cmd->bufflen);
+        ", pc 0x" << std::hex << pc <<
+        ", page code 0x" << std::hex << page_code <<
+        ", sub page code 0x" << std::hex << subpage_code <<
+        ", buffer length " << std::dec << cmd->bufflen);
 
     if (pc == 0x03) {
         // Saved values are not supported
@@ -977,7 +978,7 @@ dedupv1::scsi::ScsiResult CommandHandlerSession::ExecuteModeSense(struct scst_us
         offset += ModeSenseInformationExceptionsPage(buffer + offset);
     } else {
         WARNING("Unsupported sense page: page code 0x" << std::hex << page_code <<
-                ", sub page code 0x" << std::hex << subpage_code);
+            ", sub page code 0x" << std::hex << subpage_code);
         return ScsiResult(SCSI_CHECK_CONDITION, SCSI_KEY_ILLEGAL_REQUEST, 0x24, 0x00);
     }
 
@@ -993,14 +994,14 @@ dedupv1::scsi::ScsiResult CommandHandlerSession::ExecuteModeSense(struct scst_us
 }
 
 dedupv1::scsi::ScsiResult CommandHandlerSession::ExecuteInquiry(struct scst_user_scsi_cmd_exec* cmd,
-        struct scst_user_scsi_cmd_reply_exec* reply) {
+                                                                struct scst_user_scsi_cmd_reply_exec* reply) {
     CHECK_RETURN(cmd, ScsiResult::kIllegalMessage, "Command not set");
     CHECK_RETURN(reply, ScsiResult::kIllegalMessage, "Reply not set");
     CHECK_RETURN(cmd->pbuf, ScsiResult::kIllegalMessage, "Result buffer not set");
 
     byte buffer[96];
     memset(buffer, 0, 96);
-    byte* result_buffer = (byte*) cmd->pbuf;
+    byte* result_buffer = (byte *) cmd->pbuf;
     int len = 0;
 
     bool evpd = cmd->cdb[1] & 1;
@@ -1008,8 +1009,8 @@ dedupv1::scsi::ScsiResult CommandHandlerSession::ExecuteInquiry(struct scst_user
     byte page_code = cmd->cdb[2];
 
     DEBUG("Inquiry: evpd " << dedupv1::base::strutil::ToString(evpd) <<
-            ", cmddt " << dedupv1::base::strutil::ToString(cmddt) <<
-            ", page code 0x" << std::hex << static_cast<int>(page_code));
+        ", cmddt " << dedupv1::base::strutil::ToString(cmddt) <<
+        ", page code 0x" << std::hex << static_cast<int>(page_code));
 
     if (evpd && cmddt) {
         return ScsiResult(SCSI_CHECK_CONDITION, SCSI_KEY_ILLEGAL_REQUEST, 0x24, 0x00);
@@ -1122,9 +1123,9 @@ bool CommandHandlerSession::SetScsiError(struct scst_user_scsi_cmd_reply_parse* 
     CHECK(reply->psense_buffer, "Reply sense buffer not set");
 
     DEBUG("Set SCSI sense: " << result.DebugString() <<
-            ", volume " << this->ch->volume_->DebugString());
+        ", volume " << this->ch->volume_->DebugString());
 
-    byte* buffer = (byte*) reply->psense_buffer;
+    byte* buffer = (byte *) reply->psense_buffer;
     Option<size_t> s = result.SerializeTo(buffer, 18);
     CHECK(s.valid(), "Failed to serialize scsi result: " << result.DebugString());
     reply->sense_len = s.value();
@@ -1137,9 +1138,9 @@ bool CommandHandlerSession::SetScsiError(struct scst_user_scsi_cmd_reply_exec* r
     CHECK(reply->psense_buffer, "Reply sense buffer not set");
 
     DEBUG("Set SCSI sense: " << result.DebugString() <<
-            ", volume " << this->ch->volume_->DebugString());
+        ", volume " << this->ch->volume_->DebugString());
 
-    byte* buffer = (byte*) reply->psense_buffer;
+    byte* buffer = (byte *) reply->psense_buffer;
     Option<size_t> s = result.SerializeTo(buffer, 18);
     CHECK(s.valid(), "Failed to serialize scsi result: " << result.DebugString());
     reply->sense_len = s.value();
@@ -1148,7 +1149,7 @@ bool CommandHandlerSession::SetScsiError(struct scst_user_scsi_cmd_reply_exec* r
 }
 
 void CommandHandlerSession::ExecuteSCSICommand(uint32_t cmd_h, uint64_t sess_h, struct scst_user_scsi_cmd_exec* cmd,
-        struct scst_user_scsi_cmd_reply_exec* reply) {
+                                               struct scst_user_scsi_cmd_reply_exec* reply) {
 
     tbb::tick_count start_tick_ = tbb::tick_count::now();
 
@@ -1195,7 +1196,7 @@ void CommandHandlerSession::ExecuteSCSICommand(uint32_t cmd_h, uint64_t sess_h, 
         if (a->second.try_pop(unit_attention_result)) {
 
             INFO("Found unit attention: " << unit_attention_result.DebugString() <<
-                    ", session " << sess_h);
+                ", session " << sess_h);
             // there are unit attention messages for this session
             result = unit_attention_result;
             result_set = true;
@@ -1206,95 +1207,95 @@ void CommandHandlerSession::ExecuteSCSICommand(uint32_t cmd_h, uint64_t sess_h, 
     }
     if (!result_set) {
         switch (opcode) {
-            case WRITE_6:
-            case WRITE_10:
-            case WRITE_12:
-            case WRITE_16:
-                if (volume->maintenance_mode()) {
-                    result = ScsiResult::kNotReadyManualIntervention;
-                    result_set = true;
+        case WRITE_6:
+        case WRITE_10:
+        case WRITE_12:
+        case WRITE_16:
+            if (volume->maintenance_mode()) {
+                result = ScsiResult::kNotReadyManualIntervention;
+                result_set = true;
+            } else {
+                offset = 0;
+                result = this->ExtractOffset(cmd, &offset);
+                if (!result) {
+                    ERROR("Failed to extract offset");
                 } else {
-                    offset = 0;
-                    result = this->ExtractOffset(cmd, &offset);
-                    if (!result) {
-                        ERROR("Failed to extract offset");
-                    } else {
-                        size = cmd->bufflen;
-                        result = this->ExecuteWrite(cmd, offset, size);
+                    size = cmd->bufflen;
+                    result = this->ExecuteWrite(cmd, offset, size);
+                }
+            }
+            break;
+        case READ_6:
+        case READ_10:
+        case READ_12:
+        case READ_16:
+            if (volume->maintenance_mode()) {
+                result = ScsiResult::kNotReadyManualIntervention;
+                result_set = true;
+            } else {
+                offset = 0;
+                result = this->ExtractOffset(cmd, &offset);
+                if (!result) {
+                    ERROR("Failed to extract offset");
+                } else {
+                    size = cmd->bufflen;
+                    result = this->ExecuteRead(cmd, offset, size);
+                    if (result) {
+                        reply->resp_data_len = size;
                     }
                 }
-                break;
-            case READ_6:
-            case READ_10:
-            case READ_12:
-            case READ_16:
-                if (volume->maintenance_mode()) {
-                    result = ScsiResult::kNotReadyManualIntervention;
-                    result_set = true;
+            }
+            break;
+        case VERIFY_10:
+        case VERIFY_16:
+            if (volume->maintenance_mode()) {
+                result = ScsiResult::kNotReadyManualIntervention;
+                result_set = true;
+            } else {
+                offset = 0;
+                result = this->ExtractOffset(cmd, &offset);
+                if (!result) {
+                    ERROR("Failed to extract offset");
                 } else {
-                    offset = 0;
-                    result = this->ExtractOffset(cmd, &offset);
-                    if (!result) {
-                        ERROR("Failed to extract offset");
-                    } else {
-                        size = cmd->bufflen;
-                        result = this->ExecuteRead(cmd, offset, size);
-                        if (result) {
-                            reply->resp_data_len = size;
-                        }
-                    }
+                    size = cmd->bufflen;
+                    result = this->ExecuteVerify(cmd, offset, size);
                 }
-                break;
-            case VERIFY_10:
-            case VERIFY_16:
-                if (volume->maintenance_mode()) {
-                    result = ScsiResult::kNotReadyManualIntervention;
-                    result_set = true;
-                } else {
-                    offset = 0;
-                    result = this->ExtractOffset(cmd, &offset);
-                    if (!result) {
-                        ERROR("Failed to extract offset");
-                    } else {
-                        size = cmd->bufflen;
-                        result = this->ExecuteVerify(cmd, offset, size);
-                    }
-                }
-                break;
-            case SYNCHRONIZE_CACHE:
-            case SYNCHRONIZE_CACHE_16:
-                if (volume->maintenance_mode()) {
-                    result = ScsiResult::kNotReadyManualIntervention;
-                    result_set = true;
-                } else {
-                    result = this->ExecuteSynchronizeCache(cmd, reply);
-                }
-                break;
-            case INQUIRY:
-                result = this->ExecuteInquiry(cmd, reply);
-                break;
-            case READ_CAPACITY:
-                result = this->ExecuteReadCapacity(cmd, reply);
-                break;
-            case READ_CAPACITY_16:
-                result = this->ExecuteReadCapacity16(cmd, reply);
-                break;
-            case TEST_UNIT_READY:
-                if (volume->maintenance_mode()) {
-                    result = ScsiResult::kNotReadyManualIntervention;
-                    result_set = true;
-                } else {
-                    // do nothing, the default value is ok
-                }
-                break;
-            case MODE_SENSE:
-                result = this->ExecuteModeSense(cmd, reply);
-                break;
-            default:
-                INFO("Unknown opcode " << CommandHandler::GetOpcodeName(opcode))
-                ;
-                result = ScsiResult(SCSI_CHECK_CONDITION, SCSI_KEY_ILLEGAL_REQUEST, 0x20, 0x00);
-                break;
+            }
+            break;
+        case SYNCHRONIZE_CACHE:
+        case SYNCHRONIZE_CACHE_16:
+            if (volume->maintenance_mode()) {
+                result = ScsiResult::kNotReadyManualIntervention;
+                result_set = true;
+            } else {
+                result = this->ExecuteSynchronizeCache(cmd, reply);
+            }
+            break;
+        case INQUIRY:
+            result = this->ExecuteInquiry(cmd, reply);
+            break;
+        case READ_CAPACITY:
+            result = this->ExecuteReadCapacity(cmd, reply);
+            break;
+        case READ_CAPACITY_16:
+            result = this->ExecuteReadCapacity16(cmd, reply);
+            break;
+        case TEST_UNIT_READY:
+            if (volume->maintenance_mode()) {
+                result = ScsiResult::kNotReadyManualIntervention;
+                result_set = true;
+            } else {
+                // do nothing, the default value is ok
+            }
+            break;
+        case MODE_SENSE:
+            result = this->ExecuteModeSense(cmd, reply);
+            break;
+        default:
+            INFO("Unknown opcode " << CommandHandler::GetOpcodeName(opcode))
+            ;
+            result = ScsiResult(SCSI_CHECK_CONDITION, SCSI_KEY_ILLEGAL_REQUEST, 0x20, 0x00);
+            break;
         }
     }
     if (!result && result.sense_key() != SCSI_KEY_ILLEGAL_REQUEST) {
@@ -1308,7 +1309,7 @@ void CommandHandlerSession::ExecuteSCSICommand(uint32_t cmd_h, uint64_t sess_h, 
     this->ch->response_time_average_.Add(used_time);
     if (used_time > 100.0) {
         // TODO(fermat): remove Warning, it is for testing only
-        uint64_t used_time_ms = static_cast<uint64_t> (used_time);
+        uint64_t used_time_ms = static_cast<uint64_t>(used_time);
         DEBUG("Long Running request found. It took " << ToHexString(&used_time_ms, sizeof(used_time_ms)) << "ms and had opcode " << ToHexString(opcode));
     }
 
@@ -1327,7 +1328,7 @@ void CommandHandlerSession::ExecuteSCSICommand(uint32_t cmd_h, uint64_t sess_h, 
 }
 
 bool CommandHandlerSession::AllocMem(uint32_t cmd_h, uint64_t sess_h, struct scst_user_scsi_cmd_alloc_mem* cmd,
-        struct scst_user_scsi_cmd_reply_alloc_mem* reply) {
+                                     struct scst_user_scsi_cmd_reply_alloc_mem* reply) {
     DCHECK(cmd, "cmd not set");
     DCHECK(reply, "reply not set");
 
@@ -1346,7 +1347,7 @@ bool CommandHandlerSession::AllocMem(uint32_t cmd_h, uint64_t sess_h, struct scs
 
 bool CommandHandlerSession::OnFreeMemory(uint32_t cmd_h, uint64_t sess_h, struct scst_user_scsi_on_free_cmd* cmd) {
     if (!cmd->buffer_cached && cmd->pbuf) {
-        void* buffer = (void*) cmd->pbuf;
+        void* buffer = (void *) cmd->pbuf;
         TRACE("Free buffer");
         free(buffer);
     }
@@ -1354,7 +1355,7 @@ bool CommandHandlerSession::OnFreeMemory(uint32_t cmd_h, uint64_t sess_h, struct
 }
 
 void CommandHandlerSession::OnParse(uint32_t cmd_h, uint64_t sess_h, struct scst_user_scsi_cmd_parse* cmd,
-        struct scst_user_scsi_cmd_reply_parse* reply) {
+                                    struct scst_user_scsi_cmd_reply_parse* reply) {
     if (cmd == NULL || reply == NULL) {
         ERROR("Command or reply not set");
         return;
@@ -1367,32 +1368,32 @@ void CommandHandlerSession::OnParse(uint32_t cmd_h, uint64_t sess_h, struct scst
         int len = 0;
         byte opcode = cmd->cdb[0];
         switch (opcode) {
-            case WRITE_6:
-            case WRITE_10:
-            case WRITE_12:
-            case WRITE_16:
-            case READ_6:
-            case READ_10:
-            case READ_12:
-            case READ_16:
-            case VERIFY_10:
-            case VERIFY_16:
-            case SYNCHRONIZE_CACHE:
-            case SYNCHRONIZE_CACHE_16:
-            case INQUIRY:
-            case READ_CAPACITY:
-            case READ_CAPACITY_16:
-            case TEST_UNIT_READY:
-            case MODE_SENSE:
-                len = cmd->cdb_len;
-                if (len > 256) {
-                    len = 256;
-                }
-                WARNING("Parsing error for known command: " << ToHexString(cmd->cdb, len))
-                ;
-                break;
-            default:
-                DEBUG("Unhandled opcode " << CommandHandler::GetOpcodeName(opcode));
+        case WRITE_6:
+        case WRITE_10:
+        case WRITE_12:
+        case WRITE_16:
+        case READ_6:
+        case READ_10:
+        case READ_12:
+        case READ_16:
+        case VERIFY_10:
+        case VERIFY_16:
+        case SYNCHRONIZE_CACHE:
+        case SYNCHRONIZE_CACHE_16:
+        case INQUIRY:
+        case READ_CAPACITY:
+        case READ_CAPACITY_16:
+        case TEST_UNIT_READY:
+        case MODE_SENSE:
+            len = cmd->cdb_len;
+            if (len > 256) {
+                len = 256;
+            }
+            WARNING("Parsing error for known command: " << ToHexString(cmd->cdb, len))
+            ;
+            break;
+        default:
+            DEBUG("Unhandled opcode " << CommandHandler::GetOpcodeName(opcode));
         }
     }
 
@@ -1401,10 +1402,10 @@ void CommandHandlerSession::OnParse(uint32_t cmd_h, uint64_t sess_h, struct scst
 }
 
 bool CommandHandlerSession::OnFreeCachedMemory(uint32_t cmd_h, uint64_t sess_h,
-        struct scst_user_on_cached_mem_free* cmd) {
+                                               struct scst_user_on_cached_mem_free* cmd) {
     void* buffer = NULL;
 
-    buffer = (void*) cmd->pbuf;
+    buffer = (void *) cmd->pbuf;
     TRACE("Free cached buffer");
     free(buffer);
     this->ch->stats_.memory_release_count_++;

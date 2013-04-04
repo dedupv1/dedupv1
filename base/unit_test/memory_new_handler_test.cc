@@ -104,11 +104,10 @@ TEST_F(NewHandlerTest, AllocateMuchMemory) {
     struct rlimit old_limit;
     memset(&old_limit, 0, sizeof(old_limit));
 
-
     ASSERT_EQ(getrlimit(RLIMIT_AS, &old_limit), 0);
     memcpy(&limit, &old_limit, sizeof(old_limit));
     limit.rlim_cur = 300 * 1024 * 1024;
-    ASSERT_EQ(setrlimit(RLIMIT_AS, &limit), 0);  
+    ASSERT_EQ(setrlimit(RLIMIT_AS, &limit), 0);
 
     dedupv1::base::memory::RegisterMemoryParachute(128 * 1024 * 1024);
 
@@ -132,6 +131,6 @@ TEST_F(NewHandlerTest, AllocateMuchMemory) {
         delete[] region;
     }
     regions.clear();
-    
-    ASSERT_EQ(setrlimit(RLIMIT_AS, &old_limit), 0);  
+
+    ASSERT_EQ(setrlimit(RLIMIT_AS, &old_limit), 0);
 }

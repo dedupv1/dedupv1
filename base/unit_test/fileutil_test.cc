@@ -35,22 +35,22 @@ using dedupv1::base::File;
 using dedupv1::base::Option;
 LOGGER("FileUtilTest");
 
-class FileUtilTest: public testing::Test {
-    protected:
-        USE_LOGGING_EXPECTATION();
+class FileUtilTest : public testing::Test {
+protected:
+    USE_LOGGING_EXPECTATION();
 
-        File* file;
+    File* file;
 
-        virtual void SetUp() {
-            this->file = NULL;
+    virtual void SetUp() {
+        this->file = NULL;
+    }
+
+    virtual void TearDown() {
+        if (file) {
+            ASSERT_TRUE(file->Close());
         }
-
-        virtual void TearDown() {
-            if (file) {
-                ASSERT_TRUE(file->Close());
-            }
-        }
-    };
+    }
+};
 
 TEST_F(FileUtilTest, Open)
 {

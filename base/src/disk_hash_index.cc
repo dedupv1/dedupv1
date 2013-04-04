@@ -155,18 +155,18 @@ bool DiskHashIndex::SetOption(const string& option_name, const string& option) {
     }
     if (option_name == "sync") {
         if (option == "unsafe") {
-          sync_ = false;
-          lazy_sync_ = false;
-          return true;
+            sync_ = false;
+            lazy_sync_ = false;
+            return true;
         }
         CHECK(To<bool>(option).valid(), "Illegal option " << option);
-        this->sync_ = To<bool> (option).value();
+        this->sync_ = To<bool>(option).value();
         lazy_sync_ = !sync_;
         return true;
     }
     if (option_name == "max-fill-ratio") {
         CHECK(To<double>(option).valid(), "Illegal option " << option);
-        this->estimated_max_fill_ratio_ = To<double> (option).value();
+        this->estimated_max_fill_ratio_ = To<double>(option).value();
         CHECK(this->estimated_max_fill_ratio_ > 0, "Illegal option " << option);
         CHECK(this->estimated_max_fill_ratio_ <= 1, "Illegal option " << option);
         return true;
@@ -197,22 +197,22 @@ bool DiskHashIndex::SetOption(const string& option_name, const string& option) {
     }
     if (option_name == "max-key-size") {
         CHECK(To<size_t>(option).valid(), "Illegal option " << option);
-        this->max_key_size_ = To<size_t> (option).value();
+        this->max_key_size_ = To<size_t>(option).value();
         return true;
     }
     if (option_name == "max-value-size") {
         CHECK(To<size_t>(option).valid(), "Illegal option " << option);
-        this->max_value_size_ = To<size_t> (option).value();
+        this->max_value_size_ = To<size_t>(option).value();
         return true;
     }
     if (option_name == "checksum") {
         CHECK(To<bool>(option).valid(), "Illegal option " << option);
-        this->crc_ = To<bool> (option).value();
+        this->crc_ = To<bool>(option).value();
         return true;
     }
     if (option_name == "estimated-max-fill-ratio") {
         CHECK(To<double>(option).valid(), "Illegal option " << option);
-        this->estimated_max_fill_ratio_ = To<double> (option).value();
+        this->estimated_max_fill_ratio_ = To<double>(option).value();
         CHECK(this->estimated_max_fill_ratio_ <= 0, "Illegal estimated max fill ratio: " << this->estimated_max_fill_ratio_);
         CHECK(this->estimated_max_fill_ratio_ >= 1, "Illegal estimated max fill ratio: " << this->estimated_max_fill_ratio_);
         return true;
@@ -236,10 +236,10 @@ bool DiskHashIndex::SetOption(const string& option_name, const string& option) {
     if (option_name == "write-cache") {
         CHECK(this->write_back_cache_ == NULL, "Write back cache already created");
         CHECK(To<bool>(option).valid(), "Illegal option " << option);
-        if (To<bool> (option).value()) {
+        if (To<bool>(option).value()) {
             Index* index = Index::Factory().Create("tc-mem-hash");
             CHECK(index, "Failed to create write back cache index type tc-mem-hash");
-            this->write_back_cache_ = static_cast<TCMemHashIndex*> (index);
+            this->write_back_cache_ = static_cast<TCMemHashIndex*>(index);
         }
         return true;
     }
@@ -260,7 +260,7 @@ bool DiskHashIndex::SetOption(const string& option_name, const string& option) {
     if (StartsWith(option_name, "write-cache.")) {
         CHECK(this->write_back_cache_ != NULL, "Write back cache not created");
         CHECK(this->write_back_cache_->SetOption(option_name.substr(strlen("write-cache.")), option),
-                "Write back cache configuration failed");
+            "Write back cache configuration failed");
         return true;
     }
     // transactions
@@ -270,7 +270,7 @@ bool DiskHashIndex::SetOption(const string& option_name, const string& option) {
             CHECK(this->trans_system_, "Failed to alloc transaction system");
         }
         CHECK(this->trans_system_->SetOption(option_name.substr(strlen("transactions.")), option),
-                "Transaction system configuration failed");
+            "Transaction system configuration failed");
         return true;
     }
     return PersistentIndex::SetOption(option_name, option);
@@ -292,7 +292,7 @@ bool DiskHashIndex::DumpData() {
     }
 
     CHECK(this->info_file_->WriteSizedMessage(0, logfile_data, 4096, crc_) >= logfile_data.ByteSize(),
-            "Cannot write disk hash index log file: " << logfile_data.ShortDebugString());
+        "Cannot write disk hash index log file: " << logfile_data.ShortDebugString());
     CHECK(this->info_file_->Sync(), "Failed to sync info data: " << logfile_data.ShortDebugString());
     return true;
 }
@@ -304,27 +304,27 @@ bool DiskHashIndex::ReadDumpData() {
     CHECK(filesize.valid(), "Failed to get the file size");
     DiskHashIndexLogfileData logfile_data;
     CHECK(this->info_file_->ReadSizedMessage(0, &logfile_data, filesize.value(), crc_),
-            "Cannot read disk hash index index log data");
+        "Cannot read disk hash index index log data");
 
     DEBUG("Reading dump data: " << logfile_data.ShortDebugString());
 
     CHECK(this->page_size_ == logfile_data.page_size(),
-            "Page size mismatch: " <<
-            "stored " << logfile_data.page_size() <<
-            ", configured " << this->page_size_);
+        "Page size mismatch: " <<
+        "stored " << logfile_data.page_size() <<
+        ", configured " << this->page_size_);
     CHECK(this->size_ == logfile_data.size(), "Size mismatch: " <<
-            "stored " << logfile_data.size() <<
-            ", configured " << this->size_);
+        "stored " << logfile_data.size() <<
+        ", configured " << this->size_);
     CHECK(this->filename_.size() == logfile_data.filename_size(), "File count mismatch: " <<
-            "stored " << logfile_data.filename_size() <<
-            ", configured " << this->filename_.size());
+        "stored " << logfile_data.filename_size() <<
+        ", configured " << this->filename_.size());
 
     // TODO (dmeister) The renaming of files is forbidden. The uuid approach as used
     // by the storage files are better
     for (size_t i = 0; i < this->filename_.size(); i++) {
         CHECK(this->filename_[i] == logfile_data.filename(i), "File name mismatch: " <<
-                "stored " << logfile_data.filename(i) <<
-                ", configured " << this->filename_[i]);
+            "stored " << logfile_data.filename(i) <<
+            ", configured " << this->filename_[i]);
     }
 
     if (logfile_data.has_overflow_area() && logfile_data.overflow_area()) {
@@ -357,21 +357,21 @@ bool DiskHashIndex::Start(const StartContext& start_context) {
     }
 
     DEBUG("Starting disk-hash index: page size " << page_size_ <<
-            ", size " << size_ <<
-            ", file count " << filename_.size());
+        ", size " << size_ <<
+        ", file count " << filename_.size());
 
     if (!sync_ && !lazy_sync_) {
-      WARNING("Unsafe sync configuration: Data loss after crash possible");
+        WARNING("Unsafe sync configuration: Data loss after crash possible");
     } else {
-      if (this->trans_system_ == NULL) {
-        INFO("Auto configure transaction system");
-        this->trans_system_ = new internal::DiskHashIndexTransactionSystem(this);
-        CHECK(this->trans_system_, "Failed to alloc transaction system");
+        if (this->trans_system_ == NULL) {
+            INFO("Auto configure transaction system");
+            this->trans_system_ = new internal::DiskHashIndexTransactionSystem(this);
+            CHECK(this->trans_system_, "Failed to alloc transaction system");
 
-        for (size_t i = 0; i < this->filename_.size(); i++) {
-            CHECK(this->trans_system_->SetOption("filename", filename_[i] + "_trans"), "Failed to auto-configure transaction system");
+            for (size_t i = 0; i < this->filename_.size(); i++) {
+                CHECK(this->trans_system_->SetOption("filename", filename_[i] + "_trans"), "Failed to auto-configure transaction system");
+            }
         }
-      }
     }
 
     this->bucket_count_ = this->size_ / (this->page_size_);
@@ -401,15 +401,15 @@ bool DiskHashIndex::Start(const StartContext& start_context) {
             INFO("Creating index file " << this->filename_[i]);
 
             CHECK(File::MakeParentDirectory(this->filename_[i], start_context.dir_mode().mode()),
-                    "Failed to check parent directories");
+                "Failed to check parent directories");
             files_created = true;
             tmp_file = File::Open(this->filename_[i], O_RDWR | O_CREAT | O_EXCL | O_LARGEFILE,
-                    start_context.file_mode().mode());
+                start_context.file_mode().mode());
             CHECK(tmp_file, "Error opening storage file: " << this->filename_[i] << ", message " << strerror(errno));
 
             if (start_context.file_mode().gid() != -1) {
                 CHECK(chown(this->filename_[i].c_str(), -1, start_context.file_mode().gid()) == 0,
-                        "Failed to change file group: " << this->filename_[i]);
+                    "Failed to change file group: " << this->filename_[i]);
             }
 
             CHECK(tmp_file->Fallocate(0, file_size), "Error allocating index file " << this->filename_[i]);
@@ -429,7 +429,7 @@ bool DiskHashIndex::Start(const StartContext& start_context) {
     }
 
     CHECK(File::MakeParentDirectory(this->info_filename_, start_context.dir_mode().mode()),
-            "Failed to check parent directories");
+        "Failed to check parent directories");
 
     this->info_file_ = File::Open(this->info_filename_, O_RDWR, 0);
     if (!this->info_file_) {
@@ -463,20 +463,20 @@ bool DiskHashIndex::Start(const StartContext& start_context) {
         cache_lines_.resize(page_locks_count_);
         for (int i = 0; i < page_locks_count_; i++) {
             CacheLine* cache_line = new CacheLine(i, max_cache_page_count_ / page_locks_count_, max_cache_item_count_
-                    / page_locks_count_);
+                / page_locks_count_);
             cache_lines_[i] = cache_line;
         }
         statistics_.write_cache_free_page_count_ = max_cache_page_count_;
     }
 
     if (trans_system_) {
-      CHECK(this->trans_system_->SetOption("page-size", ToString(this->page_size() * 2)),
+        CHECK(this->trans_system_->SetOption("page-size", ToString(this->page_size() * 2)),
             "Failed to set page size");
 
-      // if files are created, there should be no restoring of old transactions
-      // this is a hack because we cannot rely on the fact that the create mode is only use once or during restoring
-      // operations
-      CHECK(this->trans_system_->Start(start_context, !files_created), "Failed to start transaction system");
+        // if files are created, there should be no restoring of old transactions
+        // this is a hack because we cannot rely on the fact that the create mode is only use once or during restoring
+        // operations
+        CHECK(this->trans_system_->Start(start_context, !files_created), "Failed to start transaction system");
     }
     this->state_ = STARTED;
     return true;
@@ -493,7 +493,7 @@ uint64_t DiskHashIndex::GetBucket(const void* key, size_t key_size) {
 
 File* DiskHashIndex::GetFile(uint32_t file_index) {
     DCHECK_RETURN(file_index < this->file_.size(), NULL,
-            "Illegal file index: " << file_index << ", file count " << this->file_.size());
+        "Illegal file index: " << file_index << ", file count " << this->file_.size());
     return this->file_[file_index];
 }
 
@@ -517,7 +517,7 @@ void DiskHashIndex::GetFileIndex(uint64_t bucket_id, uint32_t* file_index, uint3
 }
 
 lookup_result DiskHashIndex::InternalLookup(const void* key, size_t key_size, Message* message,
-        enum cache_lookup_method cache_lookup_type, enum cache_dirty_mode dirty_mode) {
+                                            enum cache_lookup_method cache_lookup_type, enum cache_dirty_mode dirty_mode) {
     DCHECK_RETURN(key, LOOKUP_ERROR, "Key not set");
     DCHECK_RETURN(key_size <= this->max_key_size_, LOOKUP_ERROR, "Illegal key size: key size " << key_size);
     DCHECK_RETURN(cache_lookup_type != CACHE_LOOKUP_ONLY, LOOKUP_ERROR, "Cache only lookup handled in LookupDirtyOnly");
@@ -534,15 +534,15 @@ lookup_result DiskHashIndex::InternalLookup(const void* key, size_t key_size, Me
     CHECK_RETURN(file, LOOKUP_ERROR, "File is not open");
 
     DEBUG("Lookup entry " << ToHexString(key, key_size) <<
-            ", dirty mode " << ToString(dirty_mode) <<
-            ", bucket id " << bucket_id <<
-            ", cache line " << cache_index);
+        ", dirty mode " << ToString(dirty_mode) <<
+        ", bucket id " << bucket_id <<
+        ", cache line " << cache_index);
 
     // We have to acquire a write lock here because we want to update the cache later
     ScopedReadWriteLock scoped_lock(this->page_locks_.Get(cache_index));
     CHECK_RETURN(scoped_lock.AcquireWriteLockWithStatistics(&this->statistics_.lock_free_,
-                    &this->statistics_.lock_busy_), LOOKUP_ERROR,
-            "Lock failed: lock index " << cache_index << ", lock " << scoped_lock.DebugString());
+            &this->statistics_.lock_busy_), LOOKUP_ERROR,
+        "Lock failed: lock index " << cache_index << ", lock " << scoped_lock.DebugString());
 
     DiskHashCachePage cache_page(bucket_id, this->page_size_, max_key_size_, max_value_size_);
     lookup_result write_back_result = LOOKUP_NOT_FOUND;
@@ -553,16 +553,16 @@ lookup_result DiskHashIndex::InternalLookup(const void* key, size_t key_size, Me
         CacheLine* cache_line = cache_lines_[cache_index];
         write_back_result = ReadFromWriteBackCache(cache_line, &cache_page);
         CHECK_RETURN(write_back_result != LOOKUP_ERROR, LOOKUP_ERROR, "Failed to check write back cache: "
-                << "key " << ToHexString(key, key_size));
+            << "key " << ToHexString(key, key_size));
         if (write_back_result == LOOKUP_FOUND) {
             // there is data from this page available in the cache
             bool is_dirty = false;
             result = cache_page.Search(key, key_size, message, &is_dirty, NULL);
             CHECK_RETURN(result != LOOKUP_ERROR, LOOKUP_ERROR,
-                    "Hash index page search failed : " <<
-                    "page " << cache_page.DebugString() <<
-                    ", key " << ToHexString(key, key_size) <<
-                    ", file index " << file_index);
+                "Hash index page search failed : " <<
+                "page " << cache_page.DebugString() <<
+                ", key " << ToHexString(key, key_size) <<
+                ", file index " << file_index);
             if (result == LOOKUP_FOUND && is_dirty && dirty_mode == CACHE_ONLY_CLEAN) {
                 // we found the item, but it is dirty and we don't want this here
                 result = LOOKUP_NOT_FOUND;
@@ -591,10 +591,10 @@ lookup_result DiskHashIndex::InternalLookup(const void* key, size_t key_size, Me
         result = page.Search(key, key_size, message);
 
         CHECK_RETURN(result != LOOKUP_ERROR, LOOKUP_ERROR,
-                "Hash index page search failed : " <<
-                "page " << page.DebugString() <<
-                ", key " << ToHexString(key, key_size) <<
-                ", file index " << file_index);
+            "Hash index page search failed : " <<
+            "page " << page.DebugString() <<
+            ", key " << ToHexString(key, key_size) <<
+            ", file index " << file_index);
 
         // we cache the data as non-dirty if possible
         // Note: We don't overwrite dirty data here
@@ -604,7 +604,7 @@ lookup_result DiskHashIndex::InternalLookup(const void* key, size_t key_size, Me
             cache_line->current_cache_item_count_++;
             cache_page.Update(key, key_size, *message, false, false, false);
             CHECK_RETURN(CopyToWriteBackCache(cache_line, &cache_page), LOOKUP_ERROR,
-                    "Failed to put data to write back cache");
+                "Failed to put data to write back cache");
         }
     }
 
@@ -617,7 +617,7 @@ lookup_result DiskHashIndex::Lookup(const void* key, size_t key_size, Message* m
 }
 
 lookup_result DiskHashIndex::LookupDirty(const void* key, size_t key_size, enum cache_lookup_method cache_lookup_type,
-        enum cache_dirty_mode dirty_mode, Message* message) {
+                                         enum cache_dirty_mode dirty_mode, Message* message) {
     if (cache_lookup_type == CACHE_LOOKUP_ONLY) {
         return LookupCacheOnly(key, key_size, dirty_mode, message);
     }
@@ -625,7 +625,7 @@ lookup_result DiskHashIndex::LookupDirty(const void* key, size_t key_size, enum 
 }
 
 lookup_result DiskHashIndex::LookupCacheOnly(const void* key, size_t key_size, enum cache_dirty_mode dirty_mode,
-        google::protobuf::Message* message) {
+                                             google::protobuf::Message* message) {
     DCHECK_RETURN(key, LOOKUP_ERROR, "Key not set");
     DCHECK_RETURN(key_size <= this->max_key_size_, LOOKUP_ERROR, "Illegal key size: key size " << key_size);
     CHECK_RETURN(this->state_ == STARTED, LOOKUP_ERROR, "Index not started");
@@ -644,21 +644,21 @@ lookup_result DiskHashIndex::LookupCacheOnly(const void* key, size_t key_size, e
 
     ScopedReadWriteLock scoped_lock(this->page_locks_.Get(cache_index));
     CHECK_RETURN(scoped_lock.AcquireReadLockWithStatistics(&this->statistics_.lock_free_,
-                    &this->statistics_.lock_busy_), LOOKUP_ERROR,
-            "Lock failed: lock index " << cache_index << ", lock " << scoped_lock.DebugString());
+            &this->statistics_.lock_busy_), LOOKUP_ERROR,
+        "Lock failed: lock index " << cache_index << ", lock " << scoped_lock.DebugString());
 
     lookup_result write_back_result = ReadFromWriteBackCache(cache_line, &cache_page);
     CHECK_RETURN(write_back_result != LOOKUP_ERROR, LOOKUP_ERROR, "Failed to check write back cache: "
-            << "key " << ToHexString(key, key_size));
+        << "key " << ToHexString(key, key_size));
 
     lookup_result result = LOOKUP_NOT_FOUND;
     if (write_back_result == LOOKUP_FOUND) {
         bool is_dirty = false;
         result = cache_page.Search(key, key_size, message, &is_dirty, NULL);
         CHECK_RETURN(result != LOOKUP_ERROR, LOOKUP_ERROR,
-                "Hash index page search failed : " <<
-                "page " << cache_page.DebugString() <<
-                ", key " << ToHexString(key, key_size));
+            "Hash index page search failed : " <<
+            "page " << cache_page.DebugString() <<
+            ", key " << ToHexString(key, key_size));
         if (dirty_mode == CACHE_ONLY_CLEAN && is_dirty) {
             result = LOOKUP_NOT_FOUND;
         }
@@ -679,7 +679,7 @@ bool DiskHashIndex::DropAllPinned() {
     for (int cache_line_id = 0; cache_line_id < this->page_locks_count_; cache_line_id++) {
         ScopedReadWriteLock scoped_lock(this->page_locks_.Get(cache_line_id));
         CHECK(scoped_lock.AcquireWriteLockWithStatistics(&this->statistics_.lock_free_,
-                        &this->statistics_.lock_busy_), "Lock failed");
+                &this->statistics_.lock_busy_), "Lock failed");
 
         CacheLine* cache_line = this->cache_lines_[cache_line_id];
 
@@ -697,7 +697,7 @@ bool DiskHashIndex::DropAllPinned() {
                 CHECK(cache_page.DropAllPinned(), "Failed to drop all pinned items in page: " << cache_page.DebugString());
 
                 CHECK_RETURN(CopyToWriteBackCache(cache_line, &cache_page), LOOKUP_ERROR,
-                        "Failed to put data to write back cache");
+                    "Failed to put data to write back cache");
             } else {
                 // a clean page cannot have a pinned item
             }
@@ -712,7 +712,7 @@ bool DiskHashIndex::PersistAllDirty() {
     for (int cache_line_id = 0; cache_line_id < this->page_locks_count_; cache_line_id++) {
         ScopedReadWriteLock scoped_lock(this->page_locks_.Get(cache_line_id));
         CHECK(scoped_lock.AcquireWriteLockWithStatistics(&this->statistics_.lock_free_,
-                        &this->statistics_.lock_busy_), "Lock failed");
+                &this->statistics_.lock_busy_), "Lock failed");
 
         CacheLine* cache_line = this->cache_lines_[cache_line_id];
 
@@ -740,16 +740,16 @@ bool DiskHashIndex::PersistAllDirty() {
 
                 lookup_result write_back_result = ReadFromWriteBackCache(cache_line, &cache_page);
                 CHECK(write_back_result == LOOKUP_FOUND, "Failed to check write back cache: "
-                        << cache_page.DebugString());
+                    << cache_page.DebugString());
 
                 uint32_t pinned_item_count = 0;
                 uint32_t merged_item_count = 0;
                 uint32_t merged_new_item_count = 0;
 
-                CHECK(page.MergeWithCache(&cache_page ,
-                                &pinned_item_count,
-                                &merged_item_count,
-                                &merged_new_item_count), "Failed to merge with cache: " << page.DebugString());
+                CHECK(page.MergeWithCache(&cache_page,
+                        &pinned_item_count,
+                        &merged_item_count,
+                        &merged_new_item_count), "Failed to merge with cache: " << page.DebugString());
 
                 CHECK(transaction.Start(file_index, page), "Failed to start transaction: " << page.DebugString());
 
@@ -758,7 +758,7 @@ bool DiskHashIndex::PersistAllDirty() {
 
                 statistics_.write_cache_persisted_page_count_++;
                 CHECK(CopyToWriteBackCache(cache_line, &cache_page),
-                        "Failed to put data to write back cache: " << page.DebugString());
+                    "Failed to put data to write back cache: " << page.DebugString());
             } else {
                 // a clean page cannot have a pinned item
             }
@@ -812,9 +812,9 @@ put_result DiskHashIndex::InternalPut(const void* key, size_t key_size, const Me
     DCHECK_RETURN(file, PUT_ERROR, "File not set");
 
     DEBUG("Put item: key " << ToHexString(key, key_size) <<
-            ", keep " << ToString(keep) <<
-            ", bucket id " << bucket_id <<
-            ", cache line " << cache_index);
+        ", keep " << ToString(keep) <<
+        ", bucket id " << bucket_id <<
+        ", cache line " << cache_index);
 
     byte buffer[this->page_size_];
     memset(buffer, 0, this->page_size_);
@@ -825,13 +825,13 @@ put_result DiskHashIndex::InternalPut(const void* key, size_t key_size, const Me
     ProfileTimer lock_timer(this->statistics_.update_time_lock_wait_);
     ScopedReadWriteLock scoped_lock(this->page_locks_.Get(cache_index));
     CHECK_RETURN(scoped_lock.AcquireWriteLockWithStatistics(&this->statistics_.lock_free_,
-                    &this->statistics_.lock_busy_), PUT_ERROR, "Lock failed");
+            &this->statistics_.lock_busy_), PUT_ERROR, "Lock failed");
     lock_timer.stop();
 
     ProfileTimer page_timer(this->statistics_.update_time_page_read_);
     CHECK_RETURN(page.Read(file), PUT_ERROR,
-            "Hash index page read failed: " << page.DebugString() <<
-            "key " << ToHexString(key, key_size));
+        "Hash index page read failed: " << page.DebugString() <<
+        "key " << ToHexString(key, key_size));
     page_timer.stop();
 
     DiskHashIndexTransaction transaction(this->trans_system_, page);
@@ -844,7 +844,7 @@ put_result DiskHashIndex::InternalPut(const void* key, size_t key_size, const Me
         ProfileTimer cache_read_timer(this->statistics_.update_time_cache_read_);
         write_back_result = ReadFromWriteBackCache(cache_line, &cache_page);
         CHECK_RETURN(write_back_result != LOOKUP_ERROR, PUT_ERROR, "Failed to check write back cache: "
-                << "key " << ToHexString(key, key_size));
+            << "key " << ToHexString(key, key_size));
         cache_read_timer.stop();
 
         int item_count_before = cache_page.item_count();
@@ -860,10 +860,10 @@ put_result DiskHashIndex::InternalPut(const void* key, size_t key_size, const Me
             uint32_t merged_new_item_count = 0;
 
             CHECK_RETURN(page.MergeWithCache(&cache_page,
-                            NULL,
-                            NULL,
-                            &merged_new_item_count), PUT_ERROR,
-                    "Failed to merge with cache: " << page.DebugString());
+                    NULL,
+                    NULL,
+                    &merged_new_item_count), PUT_ERROR,
+                "Failed to merge with cache: " << page.DebugString());
 
             // item counts are updated in page.Update
             if (merged_new_item_count > 0) {
@@ -879,17 +879,17 @@ put_result DiskHashIndex::InternalPut(const void* key, size_t key_size, const Me
         // Only write it to disk if we changed something
         ProfileTimer transaction_start_timer(this->statistics_.update_time_transaction_start_);
         CHECK_RETURN(transaction.Start(file_index, page), PUT_ERROR,
-                "Failed to start transaction: " <<
-                "key " << ToHexString(key, key_size) << ", message " << message.ShortDebugString());
+            "Failed to start transaction: " <<
+            "key " << ToHexString(key, key_size) << ", message " << message.ShortDebugString());
         transaction_start_timer.stop();
 
         ProfileTimer page_write_timer(this->statistics_.update_time_page_write_);
         CHECK_RETURN(page.Write(file), PUT_ERROR, "Hash index page write failed: " <<
-                "key " << ToHexString(key, key_size) << ", message " << message.ShortDebugString());
+            "key " << ToHexString(key, key_size) << ", message " << message.ShortDebugString());
 
         ProfileTimer commit_timer(this->statistics_.update_time_commit_);
         CHECK_RETURN(transaction.Commit(), PUT_ERROR, "Commit failed: " <<
-                "key " << ToHexString(key, key_size) << ", message " << message.ShortDebugString());
+            "key " << ToHexString(key, key_size) << ", message " << message.ShortDebugString());
         commit_timer.stop();
 
         if (write_back_cache_) {
@@ -899,12 +899,12 @@ put_result DiskHashIndex::InternalPut(const void* key, size_t key_size, const Me
             }
             statistics_.write_cache_persisted_page_count_++;
             CHECK_RETURN(CopyToWriteBackCache(cache_line, &cache_page), PUT_ERROR,
-                    "Failed to put data to write back cache");
+                "Failed to put data to write back cache");
         }
     }
 
     CHECK_RETURN(scoped_lock.ReleaseLock(), PUT_ERROR, "Unlock failed: " <<
-            "key " << ToHexString(key, key_size) << ", message " << message.ShortDebugString());
+        "key " << ToHexString(key, key_size) << ", message " << message.ShortDebugString());
     return result;
 }
 
@@ -928,18 +928,18 @@ enum lookup_result DiskHashIndex::ChangePinningState(const void* key, size_t key
     CacheLine* cache_line = cache_lines_[cache_index];
 
     DEBUG("Pin: key " << ToHexString(key, key_size) <<
-            ", bucket id " << bucket_id <<
-            ", cache line id " << cache_index <<
-            ", new pin state " << ToString(new_pin_state));
+        ", bucket id " << bucket_id <<
+        ", cache line id " << cache_index <<
+        ", new pin state " << ToString(new_pin_state));
 
     DiskHashCachePage cache_page(bucket_id, page_size_, max_key_size_, max_value_size_);
     ScopedReadWriteLock scoped_lock(this->page_locks_.Get(cache_index));
     CHECK_RETURN(scoped_lock.AcquireWriteLockWithStatistics(&this->statistics_.lock_free_,
-                    &this->statistics_.lock_busy_), LOOKUP_ERROR, "Lock failed: page lock " << cache_index);
+            &this->statistics_.lock_busy_), LOOKUP_ERROR, "Lock failed: page lock " << cache_index);
 
     lookup_result write_back_check_result = IsWriteBackPageDirty(bucket_id);
     CHECK_RETURN(write_back_check_result != LOOKUP_ERROR, LOOKUP_ERROR, "Failed to check write back cache: "
-            << "key " << ToHexString(key, key_size));
+        << "key " << ToHexString(key, key_size));
     if (write_back_check_result == LOOKUP_NOT_FOUND) {
         // not dirty
         TRACE("Change Pinning State not possible, because key " << ToHexString(key, key_size) << " is not dirty.");
@@ -948,14 +948,14 @@ enum lookup_result DiskHashIndex::ChangePinningState(const void* key, size_t key
 
     lookup_result write_back_result = ReadFromWriteBackCache(cache_line, &cache_page);
     CHECK_RETURN(write_back_result == LOOKUP_FOUND, LOOKUP_ERROR, "Failed to check write back cache: "
-            << "key " << ToHexString(key, key_size));
+        << "key " << ToHexString(key, key_size));
 
     lookup_result lr = cache_page.ChangePinningState(key, key_size, new_pin_state);
     CHECK_RETURN(lr != LOOKUP_ERROR, LOOKUP_ERROR, "Failed to merge with cache");
 
     if (lr == LOOKUP_FOUND) {
         CHECK_RETURN(CopyToWriteBackCache(cache_line, &cache_page), LOOKUP_ERROR,
-                "Failed to put data to write back cache");
+            "Failed to put data to write back cache");
     }
 
     CHECK_RETURN(scoped_lock.ReleaseLock(), LOOKUP_ERROR, "Unlock failed");
@@ -979,8 +979,8 @@ put_result DiskHashIndex::EnsurePersistent(const void* key, size_t key_size, boo
     CacheLine* cache_line = cache_lines_[cache_index];
 
     DEBUG("Ensure persistence: key " << ToHexString(key, key_size) <<
-            ", bucket id " << bucket_id <<
-            ", cache line id " << cache_index);
+        ", bucket id " << bucket_id <<
+        ", cache line id " << cache_index);
 
     byte buffer[this->page_size_];
     memset(buffer, 0, this->page_size_);
@@ -989,11 +989,11 @@ put_result DiskHashIndex::EnsurePersistent(const void* key, size_t key_size, boo
     DiskHashCachePage cache_page(bucket_id, page_size_, max_key_size_, max_value_size_);
     ScopedReadWriteLock scoped_lock(this->page_locks_.Get(cache_index));
     CHECK_RETURN(scoped_lock.AcquireWriteLockWithStatistics(&this->statistics_.lock_free_,
-                    &this->statistics_.lock_busy_), PUT_ERROR, "Lock failed: page lock " << cache_index);
+            &this->statistics_.lock_busy_), PUT_ERROR, "Lock failed: page lock " << cache_index);
 
     lookup_result write_back_check_result = IsWriteBackPageDirty(bucket_id);
     CHECK_RETURN(write_back_check_result != LOOKUP_ERROR, PUT_ERROR, "Failed to check write back cache: "
-            << "key " << ToHexString(key, key_size));
+        << "key " << ToHexString(key, key_size));
     if (write_back_check_result == LOOKUP_NOT_FOUND) {
         // not dirty
         TRACE("Cache page not dirty: bucket id " << bucket_id);
@@ -1002,7 +1002,7 @@ put_result DiskHashIndex::EnsurePersistent(const void* key, size_t key_size, boo
 
     lookup_result write_back_result = ReadFromWriteBackCache(cache_line, &cache_page);
     CHECK_RETURN(write_back_result == LOOKUP_FOUND, PUT_ERROR, "Failed to check write back cache: "
-            << "key " << ToHexString(key, key_size));
+        << "key " << ToHexString(key, key_size));
 
     bool is_dirty = false;
     bool is_pinned = false;
@@ -1011,18 +1011,18 @@ put_result DiskHashIndex::EnsurePersistent(const void* key, size_t key_size, boo
     if (search_result == LOOKUP_NOT_FOUND) {
         // we don't have a dirty version of the item
         TRACE("Cache item is not in dirty cache page: " << cache_page.DebugString() <<
-                ", key " << ToHexString(key, key_size));
+            ", key " << ToHexString(key, key_size));
         return PUT_KEEP;
     }
     if (!is_dirty) {
         // we don't have a dirty version of the item
         TRACE("Cache item is not dirty: " << cache_page.DebugString() <<
-                ", key " << ToHexString(key, key_size));
+            ", key " << ToHexString(key, key_size));
         return PUT_KEEP;
     }
     if (is_pinned) {
         TRACE("Cache item still pinned: " << cache_page.DebugString() <<
-                ", key " << ToHexString(key, key_size));
+            ", key " << ToHexString(key, key_size));
         if (pinned) {
             *pinned = true;
         }
@@ -1040,23 +1040,23 @@ put_result DiskHashIndex::EnsurePersistent(const void* key, size_t key_size, boo
     uint32_t merged_new_item_count = 0;
 
     CHECK_RETURN(page.MergeWithCache(&cache_page,
-                    &pinned_item_count,
-                    &merged_item_count,
-                    &merged_new_item_count), PUT_ERROR, "Failed to merge with cache: " << page.DebugString());
+            &pinned_item_count,
+            &merged_item_count,
+            &merged_new_item_count), PUT_ERROR, "Failed to merge with cache: " << page.DebugString());
 
     dirty_item_count_ -= merged_new_item_count;
 
     CHECK_RETURN(transaction.Start(file_index, page), PUT_ERROR, "Failed to start transaction: " <<
-            "key " << ToHexString(key, key_size) <<
-            ", page item count " << page.item_count());
+        "key " << ToHexString(key, key_size) <<
+        ", page item count " << page.item_count());
 
     CHECK_RETURN(page.Write(file), PUT_ERROR, "Hash index page write failed: " <<
-            "key " << ToHexString(key, key_size));
+        "key " << ToHexString(key, key_size));
     CHECK_RETURN(transaction.Commit(), PUT_ERROR, "Commit failed");
 
     statistics_.write_cache_persisted_page_count_++;
     CHECK_RETURN(CopyToWriteBackCache(cache_line, &cache_page), PUT_ERROR,
-            "Failed to put data to write back cache");
+        "Failed to put data to write back cache");
 
     CHECK_RETURN(scoped_lock.ReleaseLock(), PUT_ERROR, "Unlock failed");
     if (pinned) {
@@ -1080,33 +1080,33 @@ put_result DiskHashIndex::PutDirty(const void* key, size_t key_size, const Messa
     CacheLine* cache_line = cache_lines_[cache_index];
 
     DEBUG("Put item (dirty): key " << ToHexString(key, key_size) <<
-            ", pin " << ToString(pin) <<
-            ", bucket id " << bucket_id <<
-            ", cache line " << cache_index);
+        ", pin " << ToString(pin) <<
+        ", bucket id " << bucket_id <<
+        ", cache line " << cache_index);
 
     DiskHashCachePage cache_page(bucket_id, this->page_size_, max_key_size_, max_value_size_);
 
     ProfileTimer lock_timer(this->statistics_.update_time_lock_wait_);
     ScopedReadWriteLock scoped_lock(this->page_locks_.Get(cache_index));
     CHECK_RETURN(scoped_lock.AcquireWriteLockWithStatistics(&this->statistics_.lock_free_,
-                    &this->statistics_.lock_busy_), PUT_ERROR, "Lock failed: page lock " << cache_index);
+            &this->statistics_.lock_busy_), PUT_ERROR, "Lock failed: page lock " << cache_index);
     lock_timer.stop();
 
     ProfileTimer cache_read_timer(this->statistics_.update_time_cache_read_);
     lookup_result write_back_result = ReadFromWriteBackCache(cache_line, &cache_page);
     CHECK_RETURN(write_back_result != LOOKUP_ERROR, PUT_ERROR, "Failed to check write back cache: key " << ToHexString(key, key_size) <<
-            ", pin " << ToString(pin) <<
-            ", bucket id " << bucket_id <<
-            ", cache line " << cache_index);
+        ", pin " << ToString(pin) <<
+        ", bucket id " << bucket_id <<
+        ", cache line " << cache_index);
     cache_read_timer.stop();
 
     bool was_dirty = cache_page.is_dirty();
     uint32_t item_count_before = cache_page.item_count();
     put_result result = cache_page.Update(key, key_size, message, false, true, pin);
     CHECK_RETURN(result, PUT_ERROR, "Hash index page update failed: key " << ToHexString(key, key_size) <<
-            ", pin " << ToString(pin) <<
-            ", bucket id " << bucket_id <<
-            ", cache line " << cache_index);
+        ", pin " << ToString(pin) <<
+        ", bucket id " << bucket_id <<
+        ", cache line " << cache_index);
 
     if (item_count_before != cache_page.item_count()) {
         cache_line->current_cache_item_count_++;
@@ -1118,10 +1118,10 @@ put_result DiskHashIndex::PutDirty(const void* key, size_t key_size, const Messa
     }
 
     CHECK_RETURN(CopyToWriteBackCache(cache_line, &cache_page), PUT_ERROR,
-            "Failed to put data to write back cache: key " << ToHexString(key, key_size) <<
-            ", pin " << ToString(pin) <<
-            ", bucket id " << bucket_id <<
-            ", cache line " << cache_index);
+        "Failed to put data to write back cache: key " << ToHexString(key, key_size) <<
+        ", pin " << ToString(pin) <<
+        ", bucket id " << bucket_id <<
+        ", cache line " << cache_index);
     CHECK_RETURN(scoped_lock.ReleaseLock(), PUT_ERROR, "Unlock failed");
     return result;
 }
@@ -1145,7 +1145,7 @@ delete_result DiskHashIndex::Delete(const void* key, size_t key_size) {
 
     ScopedReadWriteLock scoped_lock(this->page_locks_.Get(cache_index));
     CHECK_RETURN(scoped_lock.AcquireWriteLockWithStatistics(&this->statistics_.lock_free_,
-                    &this->statistics_.lock_busy_), DELETE_ERROR, "Lock failed");
+            &this->statistics_.lock_busy_), DELETE_ERROR, "Lock failed");
 
     // we need to read back to old page from disk for the transaction system
     CHECK_RETURN(page.Read(file), DELETE_ERROR, "Hash index page read failed");
@@ -1159,13 +1159,13 @@ delete_result DiskHashIndex::Delete(const void* key, size_t key_size) {
 
         write_back_result = ReadFromWriteBackCache(cache_line, &cache_page);
         CHECK_RETURN(write_back_result != LOOKUP_ERROR, DELETE_ERROR, "Failed to check write back cache: "
-                << "key " << ToHexString(key, key_size));
+            << "key " << ToHexString(key, key_size));
 
         delete_result cache_delete_result = DELETE_NOT_FOUND;
         if (write_back_result == LOOKUP_FOUND) {
             cache_delete_result = cache_page.Delete(key, key_size);
             CHECK_RETURN(cache_delete_result != DELETE_ERROR, DELETE_ERROR,
-                    "Failed to delete key from cache page");
+                "Failed to delete key from cache page");
 
             if (cache_page.item_count() > 0) {
                 uint32_t pinned_item_count = 0;
@@ -1173,9 +1173,9 @@ delete_result DiskHashIndex::Delete(const void* key, size_t key_size) {
                 uint32_t merged_new_item_count = 0;
 
                 CHECK_RETURN(page.MergeWithCache(&cache_page,
-                                &pinned_item_count,
-                                &merged_item_count,
-                                &merged_new_item_count), DELETE_ERROR, "Failed to merge with cache: " << page.DebugString());
+                        &pinned_item_count,
+                        &merged_item_count,
+                        &merged_new_item_count), DELETE_ERROR, "Failed to merge with cache: " << page.DebugString());
 
                 dirty_item_count_ -= merged_new_item_count;
             }
@@ -1192,7 +1192,7 @@ delete_result DiskHashIndex::Delete(const void* key, size_t key_size) {
             cache_line->current_cache_item_count_--;
         }
         CHECK_RETURN(CopyToWriteBackCache(cache_line, &cache_page), DELETE_ERROR,
-                "Failed to put data to write back cache");
+            "Failed to put data to write back cache");
     } else {
         result = page.Delete(key, key_size);
         CHECK_RETURN(result != DELETE_ERROR, DELETE_ERROR, "Hash index page delete failed");
@@ -1217,19 +1217,19 @@ lookup_result DiskHashIndex::IsWriteBackPageDirty(uint64_t bucket_id) {
     unordered_map<uint64_t, uint32_t>::iterator i = cache_line->cache_page_map_.find(bucket_id);
     if (i == cache_line->cache_page_map_.end()) {
         TRACE("Check dirty state: " <<
-                "cache line id " << cache_line_id <<
-                ", bucket id " << bucket_id << ", bucket id not found");
+            "cache line id " << cache_line_id <<
+            ", bucket id " << bucket_id << ", bucket id not found");
         return LOOKUP_NOT_FOUND;
     }
     uint32_t cache_id = i->second;
     bool d = cache_line->bucket_dirty_state_[cache_id];
     if (d) {
         TRACE("Check dirty state: bucket id " << bucket_id << ", cache line id " << cache_line_id <<
-                ", cache id " << cache_id << ", dirty true");
+            ", cache id " << cache_id << ", dirty true");
         return LOOKUP_FOUND;
     }
     TRACE("Check dirty state: bucket id " << bucket_id << ", cache line id " << cache_line_id <<
-            ", cache id " << cache_id << ", dirty false");
+        ", cache id " << cache_id << ", dirty false");
     return LOOKUP_NOT_FOUND;
 }
 
@@ -1242,8 +1242,8 @@ lookup_result DiskHashIndex::ReadFromWriteBackCache(CacheLine* cache_line, DiskH
     unordered_map<uint64_t, uint32_t>::iterator i = cache_line->cache_page_map_.find(page->bucket_id());
     if (i == cache_line->cache_page_map_.end()) {
         TRACE("Page not found in cache: " <<
-                "page " << page->DebugString() <<
-                ", cache line id " << cache_line->cache_line_id_);
+            "page " << page->DebugString() <<
+            ", cache line id " << cache_line->cache_line_id_);
 
         return LOOKUP_NOT_FOUND;
         // lock auto released
@@ -1253,7 +1253,7 @@ lookup_result DiskHashIndex::ReadFromWriteBackCache(CacheLine* cache_line, DiskH
 
     size_t buf_size = page->raw_buffer_size();
     lookup_result lr = write_back_cache_->RawLookup(&cache_map_id, sizeof(cache_map_id), page->mutable_raw_buffer(),
-            &buf_size);
+        &buf_size);
     if (lr == LOOKUP_ERROR && buf_size > page->raw_buffer_size()) {
         // the buffer was to small
         page->RaiseBuffer(buf_size);
@@ -1261,11 +1261,11 @@ lookup_result DiskHashIndex::ReadFromWriteBackCache(CacheLine* cache_line, DiskH
     }
     CHECK_RETURN(lr != LOOKUP_ERROR, LOOKUP_ERROR, "Failed to lookup page in write-back cache: " << page->DebugString());
     DCHECK_RETURN(lr == LOOKUP_FOUND, LOOKUP_ERROR,
-            "Failed to find page: " <<
-            "cache map id " << cache_map_id <<
-            ", cache line id " << cache_line->cache_line_id_ <<
-            ", cache id " << cache_id <<
-            ", bucket id " << page->bucket_id());
+        "Failed to find page: " <<
+        "cache map id " << cache_map_id <<
+        ", cache line id " << cache_line->cache_line_id_ <<
+        ", cache id " << cache_id <<
+        ", bucket id " << page->bucket_id());
     page->ParseData();
 
     page->set_dirty(cache_line->bucket_dirty_state_[cache_id]);
@@ -1273,10 +1273,10 @@ lookup_result DiskHashIndex::ReadFromWriteBackCache(CacheLine* cache_line, DiskH
     cache_line->bucket_cache_state_[cache_id] = true; // it is used
 
     TRACE("Read page from cache: " <<
-            "page " << page->DebugString() <<
-            ", cache map id " << cache_map_id <<
-            ", cache line id " << cache_line->cache_line_id_ <<
-            ", cache id " << cache_id);
+        "page " << page->DebugString() <<
+        ", cache map id " << cache_map_id <<
+        ", cache line id " << cache_line->cache_line_id_ <<
+        ", cache id " << cache_id);
 
     return LOOKUP_FOUND;
 }
@@ -1309,15 +1309,15 @@ bool DiskHashIndex::WriteBackCachePage(CacheLine* cache_line, DiskHashCachePage*
     uint32_t merged_new_item_count = 0;
 
     CHECK(page.MergeWithCache(cache_page,
-                    &pinned_item_count,
-                    &merged_item_count,
-                    &merged_new_item_count), "Failed to merge with cache: " << page.DebugString());
+            &pinned_item_count,
+            &merged_item_count,
+            &merged_new_item_count), "Failed to merge with cache: " << page.DebugString());
 
     dirty_item_count_ -= merged_new_item_count;
 
     ProfileTimer transaction_start_timer(this->statistics_.update_time_transaction_start_);
     CHECK(transaction.Start(file_index, page),
-            "Failed to start transaction");
+        "Failed to start transaction");
     transaction_start_timer.stop();
 
     ProfileTimer page_write_timer(this->statistics_.update_time_page_write_);
@@ -1325,81 +1325,81 @@ bool DiskHashIndex::WriteBackCachePage(CacheLine* cache_line, DiskHashCachePage*
 
     ProfileTimer commit_timer(this->statistics_.update_time_commit_);
     CHECK(transaction.Commit(), "Commit failed");
-    
+
     statistics_.write_cache_persisted_page_count_++;
     if (!cache_page->is_dirty() && merged_item_count > 0) {
-      // remove this page from the dirty page tree
-      ClearBucketDirtyState(cache_page->bucket_id());
+        // remove this page from the dirty page tree
+        ClearBucketDirtyState(cache_page->bucket_id());
     }
 
     return true;
 }
 
-void DiskHashIndex::MarkBucketAsDirty(uint64_t bucket_id, 
-    uint32_t cache_line_id, 
-    uint32_t cache_id) {
-  TRACE("Mark bucket as dirty: bucket " << bucket_id);
-  spin_mutex::scoped_lock l(dirty_page_map_lock_);
+void DiskHashIndex::MarkBucketAsDirty(uint64_t bucket_id,
+                                      uint32_t cache_line_id,
+                                      uint32_t cache_id) {
+    TRACE("Mark bucket as dirty: bucket " << bucket_id);
+    spin_mutex::scoped_lock l(dirty_page_map_lock_);
 
-  dirty_page_map_[bucket_id] = make_pair(cache_line_id, cache_id);
+    dirty_page_map_[bucket_id] = make_pair(cache_line_id, cache_id);
 }
 
 void DiskHashIndex::ClearBucketDirtyState(uint64_t bucket_id) {
-  TRACE("Clear bucket diry state: bucket " << bucket_id);
-  spin_mutex::scoped_lock l(dirty_page_map_lock_);
+    TRACE("Clear bucket diry state: bucket " << bucket_id);
+    spin_mutex::scoped_lock l(dirty_page_map_lock_);
 
-  dirty_page_map_.erase(bucket_id);
+    dirty_page_map_.erase(bucket_id);
 }
 
 bool DiskHashIndex::IsBucketDirty(uint64_t bucket_id, uint32_t* cache_line_id, uint32_t* cache_id) {
-  spin_mutex::scoped_lock l(dirty_page_map_lock_);
+    spin_mutex::scoped_lock l(dirty_page_map_lock_);
 
-  std::map<uint64_t, pair<uint32_t, uint32_t> >::iterator i;
-  i = dirty_page_map_.find(bucket_id);
-  if (i != dirty_page_map_.end()) {
-    if (cache_line_id) {
-      *cache_line_id = i->second.first;
+    std::map<uint64_t, pair<uint32_t, uint32_t> >::iterator i;
+    i = dirty_page_map_.find(bucket_id);
+    if (i != dirty_page_map_.end()) {
+        if (cache_line_id) {
+            *cache_line_id = i->second.first;
+        }
+        if (cache_id) {
+            *cache_id = i->second.second;
+        }
+        return true;
+    } else {
+        return false;
     }
-    if (cache_id) {
-      *cache_id = i->second.second;
-    }
-    return true;
-  } else {
-    return false;
-  }
 }
 
 bool DiskHashIndex::GetNextDirtyBucket(uint64_t current_bucket_id,
-        uint64_t* next_bucket_id,
-        uint32_t* cache_line_id,
-        uint32_t* cache_id)
+                                       uint64_t* next_bucket_id,
+                                       uint32_t* cache_line_id,
+                                       uint32_t* cache_id)
 {
-  spin_mutex::scoped_lock l(dirty_page_map_lock_);
-  if (dirty_page_map_.empty()) {
-    return false;
-  }
-  std::map<uint64_t, pair<uint32_t, uint32_t> >::iterator i;
-  
-  i = dirty_page_map_.upper_bound(current_bucket_id);
-  if (i == dirty_page_map_.end()) {
-    // no higher bucket => wrap
-    i = dirty_page_map_.begin();
-  }
-  if (next_bucket_id) {
-     *next_bucket_id = i->first;
-  }
-  if (cache_line_id) {
-    *cache_line_id = i->second.first;
-  }
-  if (cache_id) {
-    *cache_id = i->second.second;
-  }
-  return true;
+    spin_mutex::scoped_lock l(dirty_page_map_lock_);
+    if (dirty_page_map_.empty()) {
+        return false;
+    }
+    std::map<uint64_t, pair<uint32_t, uint32_t> >::iterator i;
+
+    i = dirty_page_map_.upper_bound(current_bucket_id);
+    if (i == dirty_page_map_.end()) {
+        // no higher bucket => wrap
+        i = dirty_page_map_.begin();
+    }
+    if (next_bucket_id) {
+        *next_bucket_id = i->first;
+    }
+    if (cache_line_id) {
+        *cache_line_id = i->second.first;
+    }
+    if (cache_id) {
+        *cache_id = i->second.second;
+    }
+    return true;
 }
 
-bool DiskHashIndex::TryPersistDirtyItem(uint32_t max_batch_size, 
-    uint64_t* resume_handle, 
-    bool* persisted) {
+bool DiskHashIndex::TryPersistDirtyItem(uint32_t max_batch_size,
+                                        uint64_t* resume_handle,
+                                        bool* persisted) {
     DCHECK(persisted, "Persisted not set");
 
     if (write_back_cache_ == NULL) {
@@ -1409,18 +1409,18 @@ bool DiskHashIndex::TryPersistDirtyItem(uint32_t max_batch_size,
 
     uint64_t dirty_bucket_id = 0;
     if (resume_handle) {
-      dirty_bucket_id = *resume_handle;
+        dirty_bucket_id = *resume_handle;
     }
     unsigned int cache_index = 0;
-    for (int i = 0; i < max_batch_size;i++) {
+    for (int i = 0; i < max_batch_size; i++) {
         uint32_t cache_line_id;
         uint32_t cache_id;
         if (!GetNextDirtyBucket(dirty_bucket_id, &dirty_bucket_id, &cache_line_id,
-              &cache_id)) {
-          // no dirty bucket
-          DEBUG("Found no dirty bucket");
-          *persisted  = false;
-          return true;
+                &cache_id)) {
+            // no dirty bucket
+            DEBUG("Found no dirty bucket");
+            *persisted  = false;
+            return true;
         }
         DEBUG("Found dirty bucket: bucket id " << dirty_bucket_id <<
             ", cache line id " << cache_line_id <<
@@ -1429,36 +1429,36 @@ bool DiskHashIndex::TryPersistDirtyItem(uint32_t max_batch_size,
 
         ScopedReadWriteLock scoped_lock(this->page_locks_.Get(cache_index));
         CHECK(scoped_lock.AcquireWriteLockWithStatistics(&this->statistics_.lock_free_,
-                        &this->statistics_.lock_busy_), "Lock failed: page lock " << cache_index);
+                &this->statistics_.lock_busy_), "Lock failed: page lock " << cache_index);
 
         DiskHashCachePage cache_page(0, page_size_, max_key_size_, max_value_size_);
 
         uint64_t cache_map_id = cache_line->GetCacheMapId(cache_id);
         size_t buf_size = cache_page.raw_buffer_size();
         lookup_result lr = write_back_cache_->RawLookup(&cache_map_id, sizeof(cache_map_id),
-                cache_page.mutable_raw_buffer(), &buf_size);
+            cache_page.mutable_raw_buffer(), &buf_size);
         CHECK(lr != LOOKUP_ERROR, "Failed to lookup page in write-back cache: " << cache_map_id);
         DCHECK(lr == LOOKUP_FOUND, "Failed to find page: " <<
-                "cache map id " << cache_map_id <<
-                ", cache line id " << cache_line->cache_line_id_ <<
-                ", cache id " << cache_id);
+            "cache map id " << cache_map_id <<
+            ", cache line id " << cache_line->cache_line_id_ <<
+            ", cache id " << cache_id);
         cache_page.ParseData();
         cache_page.set_dirty(cache_line->bucket_dirty_state_[cache_id]);
         cache_page.set_pinned(cache_line->bucket_pinned_state_[cache_id]);
         TRACE("Found cache map entry: " << cache_page.DebugString() << ", size " << buf_size);
 
         if (cache_page.is_dirty()) {
-          TRACE("Persist cache item: " <<
-              "cache line id " << cache_line->cache_line_id_ <<
-              ", cache id " << cache_id <<
-              ", dirty item count " << dirty_item_count_);
+            TRACE("Persist cache item: " <<
+                "cache line id " << cache_line->cache_line_id_ <<
+                ", cache id " << cache_id <<
+                ", dirty item count " << dirty_item_count_);
 
-          CHECK(WriteBackCachePage(cache_line, &cache_page), "Failed to write back cache page: " <<
+            CHECK(WriteBackCachePage(cache_line, &cache_page), "Failed to write back cache page: " <<
                 "cache line id " << cache_line->cache_line_id_ <<
                 ", cache id " << cache_id <<
                 ", cache page " << cache_page.DebugString());
 
-          CHECK_RETURN(CopyToWriteBackCache(cache_line, &cache_page), PUT_ERROR,
+            CHECK_RETURN(CopyToWriteBackCache(cache_line, &cache_page), PUT_ERROR,
                 "Failed to put data to write back cache");
         }
 
@@ -1466,7 +1466,7 @@ bool DiskHashIndex::TryPersistDirtyItem(uint32_t max_batch_size,
         CHECK(scoped_lock.ReleaseLock(), "Unlock failed");
     }
     if (resume_handle) {
-      *resume_handle = dirty_bucket_id;
+        *resume_handle = dirty_bucket_id;
     }
     return true;
 }
@@ -1479,13 +1479,13 @@ bool DiskHashIndex::EvictCacheItem(CacheLine* cache_line, uint32_t cache_id, boo
     uint64_t cache_map_id = cache_line->GetCacheMapId(cache_id);
     size_t buf_size = cache_page.raw_buffer_size();
     lookup_result lr = write_back_cache_->RawLookup(&cache_map_id, sizeof(cache_map_id),
-            cache_page.mutable_raw_buffer(), &buf_size);
+        cache_page.mutable_raw_buffer(), &buf_size);
     CHECK(lr != LOOKUP_ERROR, "Failed to lookup page in write-back cache: " << cache_map_id);
     DCHECK(lr == LOOKUP_FOUND, "Failed to find page: " <<
-            "cache map id " << cache_map_id <<
-            ", cache line id " << cache_line->cache_line_id_ <<
-            ", cache id " << cache_id);
-    cache_page.ParseData();    
+        "cache map id " << cache_map_id <<
+        ", cache line id " << cache_line->cache_line_id_ <<
+        ", cache id " << cache_id);
+    cache_page.ParseData();
     cache_page.set_dirty(cache_line->bucket_dirty_state_[cache_id]);
     cache_page.set_pinned(cache_line->bucket_pinned_state_[cache_id]);
     TRACE("Found cache map entry: " << cache_page.DebugString() << ", size " << buf_size);
@@ -1493,15 +1493,15 @@ bool DiskHashIndex::EvictCacheItem(CacheLine* cache_line, uint32_t cache_id, boo
     uint64_t bucket_id = cache_page.bucket_id();
 
     TRACE("Evict cache item: " <<
-            "cache line id " << cache_line->cache_line_id_ <<
-            ", cache id " << cache_id <<
-            ", bucket id " << bucket_id <<
-            ", dirty " << ToString(dirty));
+        "cache line id " << cache_line->cache_line_id_ <<
+        ", cache id " << cache_id <<
+        ", bucket id " << bucket_id <<
+        ", dirty " << ToString(dirty));
     if (dirty) {
         CHECK(WriteBackCachePage(cache_line, &cache_page), "Failed to write back cache page: " <<
-                "cache line id " << cache_line->cache_line_id_ <<
-                ", cache id " << cache_id <<
-                ", cache page " << cache_page.DebugString());
+            "cache line id " << cache_line->cache_line_id_ <<
+            ", cache id " << cache_id <<
+            ", cache page " << cache_page.DebugString());
 
         statistics_.write_cache_dirty_evict_count_++;
         statistics_.write_cache_dirty_page_count_--;
@@ -1509,7 +1509,7 @@ bool DiskHashIndex::EvictCacheItem(CacheLine* cache_line, uint32_t cache_id, boo
     statistics_.write_cache_evict_count_++;
 
     CHECK(write_back_cache_->Delete(&cache_map_id, sizeof(cache_map_id)) != DELETE_ERROR,
-            "Failed to evict page from write cache");
+        "Failed to evict page from write cache");
 
     cache_line->bucket_free_state_[cache_id] = true;
     cache_line->bucket_dirty_state_[cache_id] = false;
@@ -1533,11 +1533,11 @@ dedupv1::base::Option<bool> DiskHashIndex::CacheLine::SearchDirtyPage(uint32_t* 
     DCHECK(cache_id, "Cache id not set");
 
     TRACE("Search dirty cache page: " <<
-            "cache line id " << cache_line_id_ <<
-            ", start victim id " << next_dirty_search_cache_victim_);
+        "cache line id " << cache_line_id_ <<
+        ", start victim id " << next_dirty_search_cache_victim_);
     uint32_t try_counter = max_cache_page_count_;
     uint32_t pinned_page_count = 0;
-    for (;;) {
+    for (;; ) {
         next_dirty_search_cache_victim_++;
         if (next_dirty_search_cache_victim_ == max_cache_page_count_) {
             next_dirty_search_cache_victim_ = 0;
@@ -1553,10 +1553,10 @@ dedupv1::base::Option<bool> DiskHashIndex::CacheLine::SearchDirtyPage(uint32_t* 
             // There must be something wrong
             if (try_counter == 0) {
                 TRACE("Checked all pages. Failed to find a page to evict: " <<
-                        "cache line id " << DebugString() <<
-                        ", end cache victim " << next_dirty_search_cache_victim_ <<
-                        ", pinned page count " << pinned_page_count <<
-                        ", max page count " << max_cache_page_count_);
+                    "cache line id " << DebugString() <<
+                    ", end cache victim " << next_dirty_search_cache_victim_ <<
+                    ", pinned page count " << pinned_page_count <<
+                    ", max page count " << max_cache_page_count_);
                 return make_option(false);
             }
         } else if (!bucket_dirty_state_[next_dirty_search_cache_victim_]) {
@@ -1567,10 +1567,10 @@ dedupv1::base::Option<bool> DiskHashIndex::CacheLine::SearchDirtyPage(uint32_t* 
             // There must be something wrong
             if (try_counter == 0) {
                 TRACE("Checked all pages. Failed to find a page to evict: " <<
-                        "cache line id " << DebugString() <<
-                        ", end cache victim " << next_dirty_search_cache_victim_ <<
-                        ", pinned page count " << pinned_page_count <<
-                        ", max page count " << max_cache_page_count_);
+                    "cache line id " << DebugString() <<
+                    ", end cache victim " << next_dirty_search_cache_victim_ <<
+                    ", pinned page count " << pinned_page_count <<
+                    ", max page count " << max_cache_page_count_);
                 return make_option(false);
             }
         } else {
@@ -1589,23 +1589,23 @@ bool DiskHashIndex::CacheLine::SearchEvictPage(uint32_t* cache_id) {
     DCHECK(cache_id, "Cache id not set");
 
     TRACE("Search cache page to evict: " <<
-            "cache line id " << cache_line_id_ <<
-            ", start victim id " << next_cache_victim_);
+        "cache line id " << cache_line_id_ <<
+        ", start victim id " << next_cache_victim_);
     uint32_t try_counter = max_cache_page_count_;
     uint32_t pinned_page_count = 0;
     uint32_t ref_page_count = 0;
     uint32_t dirty_page_count = 0;
-    for (;;) {
+    for (;; ) {
         next_cache_victim_++;
         if (next_cache_victim_ == max_cache_page_count_) {
             next_cache_victim_ = 0;
         }
         TRACE("Search cache page for eviction: "
-                "cache line id " << cache_line_id_ <<
-                ", cache id " << next_cache_victim_ <<
-                ", pin state " << ToString(bucket_pinned_state_[next_cache_victim_]) <<
-                ", dirty state " << ToString(bucket_dirty_state_[next_cache_victim_]) <<
-                ", cache state " << ToString(bucket_cache_state_[next_cache_victim_]) << "/" << ToString(bucket_cache_state2_[next_cache_victim_]));
+            "cache line id " << cache_line_id_ <<
+            ", cache id " << next_cache_victim_ <<
+            ", pin state " << ToString(bucket_pinned_state_[next_cache_victim_]) <<
+            ", dirty state " << ToString(bucket_dirty_state_[next_cache_victim_]) <<
+            ", cache state " << ToString(bucket_cache_state_[next_cache_victim_]) << "/" << ToString(bucket_cache_state2_[next_cache_victim_]));
         if (bucket_pinned_state_[next_cache_victim_]) {
             pinned_page_count++;
 
@@ -1616,12 +1616,12 @@ bool DiskHashIndex::CacheLine::SearchEvictPage(uint32_t* cache_id) {
             // We scanned the cache states four times and havn't found a page to use
             // There must be something wrong
             CHECK(try_counter > 0,
-                    "Checked all pages. Failed to find a page to evict: " <<
-                    "cache line id " << DebugString() <<
-                    ", pinned page count " << pinned_page_count <<
-                    ", ref page count " << ref_page_count <<
-                    ", dirty page count " << dirty_page_count <<
-                    ", max page count " << max_cache_page_count_);
+                "Checked all pages. Failed to find a page to evict: " <<
+                "cache line id " << DebugString() <<
+                ", pinned page count " << pinned_page_count <<
+                ", ref page count " << ref_page_count <<
+                ", dirty page count " << dirty_page_count <<
+                ", max page count " << max_cache_page_count_);
         } else {
             if (bucket_cache_state_[next_cache_victim_]) {
                 // reset state
@@ -1640,12 +1640,12 @@ bool DiskHashIndex::CacheLine::SearchEvictPage(uint32_t* cache_id) {
                 // We scanned the cache states four times and havn't found a page to use
                 // There must be something wrong
                 CHECK(try_counter > 0,
-                        "Checked all pages. Failed to find a page to evict: " <<
-                        "cache line id " << DebugString() <<
-                        ", pinned page count " << pinned_page_count <<
-                        ", ref page count " << ref_page_count <<
-                        ", dirty page count " << dirty_page_count <<
-                        ", max page count " << max_cache_page_count_);
+                    "Checked all pages. Failed to find a page to evict: " <<
+                    "cache line id " << DebugString() <<
+                    ", pinned page count " << pinned_page_count <<
+                    ", ref page count " << ref_page_count <<
+                    ", dirty page count " << dirty_page_count <<
+                    ", max page count " << max_cache_page_count_);
                 try_counter--;
             } else {
                 *cache_id = next_cache_victim_;
@@ -1661,30 +1661,30 @@ bool DiskHashIndex::CacheLine::SearchFreePage(uint32_t* cache_id) {
     DCHECK(cache_id, "Cache id not set");
 
     TRACE("Search free page: " <<
-            "cache line id " << cache_line_id_ <<
-            ", start victim id " << next_cache_victim_ <<
-            ", cache page count " << max_cache_page_count_);
+        "cache line id " << cache_line_id_ <<
+        ", start victim id " << next_cache_victim_ <<
+        ", cache page count " << max_cache_page_count_);
     int32_t try_counter = max_cache_page_count_;
-    for (;;) {
+    for (;; ) {
         next_cache_victim_++;
         if (unlikely(next_cache_victim_ == max_cache_page_count_)) {
             next_cache_victim_ = 0;
         }
         TRACE("Search free page: " <<
-                "victim " << next_cache_victim_ <<
-                ", free state " << bucket_free_state_[next_cache_victim_]);
+            "victim " << next_cache_victim_ <<
+            ", free state " << bucket_free_state_[next_cache_victim_]);
 
         if (bucket_free_state_[next_cache_victim_]) {
             // free => We found our place
             TRACE("Found free page: " <<
-                    "victim " << next_cache_victim_);
+                "victim " << next_cache_victim_);
             *cache_id = next_cache_victim_;
             return true;
         } else {
             try_counter--;
             CHECK(try_counter >= 0,
-                    "Checked all pages. Failed to find free page: " <<
-                    "cache line id " << cache_line_id_);
+                "Checked all pages. Failed to find free page: " <<
+                "cache line id " << cache_line_id_);
         }
     }
     ERROR("Here are dragons");
@@ -1703,8 +1703,8 @@ bool DiskHashIndex::CopyToWriteBackCache(CacheLine* cache_line, internal::DiskHa
     DCHECK(write_back_cache_, "Write back cache not set");
 
     TRACE("Copy page to write-back cache: " <<
-            "cache line id " << cache_line->DebugString() <<
-            ", page " << page->DebugString());
+        "cache line id " << cache_line->DebugString() <<
+        ", page " << page->DebugString());
 
     uint32_t cache_id = 0;
     std::tr1::unordered_map<uint64_t, uint32_t>::iterator i = cache_line->cache_page_map_.find(page->bucket_id());
@@ -1712,9 +1712,9 @@ bool DiskHashIndex::CopyToWriteBackCache(CacheLine* cache_line, internal::DiskHa
     if (i == cache_line->cache_page_map_.end()) {
         // ok, it is not there yet
         TRACE("Page not found in cache: " <<
-                "page " << page->DebugString() <<
-                ", active cache items " << cache_line->current_cache_item_count_ <<
-                ", active cache pages " << cache_line->current_cache_page_count_);
+            "page " << page->DebugString() <<
+            ", active cache items " << cache_line->current_cache_item_count_ <<
+            ", active cache pages " << cache_line->current_cache_page_count_);
 
         // check if cache is full
         if (!cache_line->IsCacheFull()) {
@@ -1722,10 +1722,10 @@ bool DiskHashIndex::CopyToWriteBackCache(CacheLine* cache_line, internal::DiskHa
             ProfileTimer timer(this->statistics_.cache_search_free_page_time_);
             // there are still free elements
             CHECK(cache_line->SearchFreePage(&cache_id),
-                    "Failed to find free page: "<<
-                    "cache line id " << cache_line->cache_line_id_ <<
-                    ", cache page count " << cache_line->current_cache_page_count_ <<
-                    ", max cache page count " << cache_line->max_cache_page_count_);
+                "Failed to find free page: " <<
+                "cache line id " << cache_line->cache_line_id_ <<
+                ", cache page count " << cache_line->current_cache_page_count_ <<
+                ", max cache page count " << cache_line->max_cache_page_count_);
             cache_line->current_cache_page_count_++;
 
             statistics_.write_cache_free_page_count_--;
@@ -1733,17 +1733,17 @@ bool DiskHashIndex::CopyToWriteBackCache(CacheLine* cache_line, internal::DiskHa
         } else {
             ProfileTimer evict_search_timer(this->statistics_.cache_search_evict_page_time_);
             CHECK(cache_line->SearchEvictPage(&cache_id),
-                    "Failed to find a page to evict: " <<
-                    "page " << page->DebugString() <<
-                    ", cache line id " << cache_line->cache_line_id_);
+                "Failed to find a page to evict: " <<
+                "page " << page->DebugString() <<
+                ", cache line id " << cache_line->cache_line_id_);
             evict_search_timer.stop();
 
             bool dirty = cache_line->bucket_dirty_state_[cache_id];
             CHECK(EvictCacheItem(cache_line, cache_id, dirty),
-                    "Failed to persist dirty cache page: " <<
-                    "page " << page->DebugString() <<
-                    ", cache line id " << cache_line->cache_line_id_ <<
-                    ", cache id " << cache_id);
+                "Failed to persist dirty cache page: " <<
+                "page " << page->DebugString() <<
+                ", cache line id " << cache_line->cache_line_id_ <<
+                ", cache id " << cache_id);
             if (dirty) {
                 was_dirty = true;
             }
@@ -1767,24 +1767,24 @@ bool DiskHashIndex::CopyToWriteBackCache(CacheLine* cache_line, internal::DiskHa
 
     uint64_t cache_map_id = cache_line->GetCacheMapId(cache_id);
     TRACE("Update cache: " <<
-            page->DebugString() <<
-            ", cache map id " << cache_map_id <<
-            ", cache line id " << cache_line->cache_line_id_ <<
-            ", cache id " << cache_id <<
-            ", cache page size " << page->used_size() <<
-            ", cache page was dirty " << ToHexString(was_dirty));
+        page->DebugString() <<
+        ", cache map id " << cache_map_id <<
+        ", cache line id " << cache_line->cache_line_id_ <<
+        ", cache id " << cache_id <<
+        ", cache page size " << page->used_size() <<
+        ", cache page was dirty " << ToHexString(was_dirty));
 
     page->Store();
     DCHECK(page->used_size() <= page_size_, "Illegal page used size: " <<
-            page->DebugString() <<
-            ", used size " << page->used_size() <<
-            ", page size " << page_size_);
+        page->DebugString() <<
+        ", used size " << page->used_size() <<
+        ", page size " << page_size_);
     put_result pr = write_back_cache_->RawPut(&cache_map_id, sizeof(cache_map_id), page->raw_buffer(),
-            page->used_size());
+        page->used_size());
     CHECK(pr != PUT_ERROR, "Failed to put write back page: " << page->DebugString());
 
     if (page->is_dirty() && page->is_pinned()) {
-      MarkBucketAsDirty(page->bucket_id(), cache_line->cache_line_id_, cache_id); 
+        MarkBucketAsDirty(page->bucket_id(), cache_line->cache_line_id_, cache_id);
     }
     return true;
 }
@@ -1844,7 +1844,7 @@ string DiskHashIndex::PrintTrace() {
 
         if (statistics_.write_cache_hit_count_ + statistics_.write_cache_miss_count_ > 0) {
             double hit_rate = (1.0 * statistics_.write_cache_hit_count_) / (1.0 * (statistics_.write_cache_hit_count_
-                    + statistics_.write_cache_miss_count_));
+                                                                                   + statistics_.write_cache_miss_count_));
             sstr << "\"hit ratio\": " << hit_rate << ",";
         } else {
             sstr << "\"hit ratio\": null,";
@@ -1900,7 +1900,7 @@ string DiskHashIndex::PrintProfile() {
     sstr << "\"update time page read\": " << this->statistics_.update_time_page_read_.GetSum() << "," << std::endl;
     sstr << "\"update time page update\": " << this->statistics_.update_time_page_update_.GetSum() << "," << std::endl;
     sstr << "\"update time transaction start\": " << this->statistics_.update_time_transaction_start_.GetSum() << ","
-            << std::endl;
+         << std::endl;
     sstr << "\"update time page write\": " << this->statistics_.update_time_page_write_.GetSum() << "," << std::endl;
     sstr << "\"update time commit\": " << this->statistics_.update_time_commit_.GetSum() << "," << std::endl;
     sstr << "\"delete time\": " << this->statistics_.delete_time_.GetSum() << "," << std::endl;
@@ -1914,15 +1914,15 @@ string DiskHashIndex::PrintProfile() {
     if (write_back_cache_) {
         sstr << "\"write cache read time\": " << this->statistics_.write_cache_read_time_.GetSum() << "," << std::endl;
         sstr << "\"write cache update time\": " << this->statistics_.write_cache_update_time_.GetSum() << ","
-                << std::endl;
+             << std::endl;
         sstr << "\"write cache data\": " << this->write_back_cache_->PrintProfile() << "," << std::endl;
 
         sstr << "\"update time cache read\": " << this->statistics_.update_time_cache_read_.GetSum() << ","
-                << std::endl;
+             << std::endl;
         sstr << "\"write cache evict search time\": " << this->statistics_.cache_search_evict_page_time_.GetSum()
-                << "," << std::endl;
+             << "," << std::endl;
         sstr << "\"write cache free search time\": " << this->statistics_.cache_search_free_page_time_.GetSum() << ","
-                << std::endl;
+             << std::endl;
     }
     sstr << "\"write disk time\": " << this->statistics_.write_disk_time_.GetSum() << "," << std::endl;
     sstr << "\"read disk time\": " << this->statistics_.read_disk_time_.GetSum() << std::endl;
@@ -2027,35 +2027,35 @@ lookup_result DiskHashPage::Search(const void* key, size_t key_size, Message* me
     DCHECK_RETURN(data_buffer_, LOOKUP_ERROR, "Data buffer not set");
 
     TRACE("Search bucket: bucket " << bucket_id_ << ", key " << ToHexString(key, key_size) <<
-            ", items " << this->item_count_ << (this->overflow_ ? ", overflow mode " : ""));
+        ", items " << this->item_count_ << (this->overflow_ ? ", overflow mode " : ""));
 
     DiskHashEntry entry(this->index_->max_key_size(), this->index_->max_value_size());
     for (uint32_t i = 0; i < this->item_count(); i++) {
         uint32_t offset = i * entry.entry_data_size();
         DCHECK_RETURN(entry.entry_data_size() <= this->data_buffer_size_ - offset,
-                LOOKUP_ERROR,
-                "entry data size " << entry.entry_data_size() <<
-                "available size " << this->data_buffer_size_ - offset);
+            LOOKUP_ERROR,
+            "entry data size " << entry.entry_data_size() <<
+            "available size " << this->data_buffer_size_ - offset);
         CHECK_RETURN(entry.ParseFrom(this->data_buffer_ + offset, entry.entry_data_size()),
-                LOOKUP_ERROR,
-                "Failed to parse entry data: " <<
-                "offset " << offset <<
-                ", bucket page " << this->DebugString() <<
-                ", bucket data " << ToHexString(data_buffer_, data_buffer_size_));
+            LOOKUP_ERROR,
+            "Failed to parse entry data: " <<
+            "offset " << offset <<
+            ", bucket page " << this->DebugString() <<
+            ", bucket data " << ToHexString(data_buffer_, data_buffer_size_));
         TRACE("Found: i " << i << ": " << entry.DebugString() << ", offset " << offset);
         if (raw_compare(entry.key(), entry.key_size(), key, key_size) == 0) {
             /* Found it */
             if (likely(message != NULL)) {
                 CHECK_RETURN(message->ParseFromArray(entry.value(), entry.value_size()),
-                        LOOKUP_ERROR, "Failed to parse message: " <<
-                        "key " << ToHexString(key, key_size) <<
-                        ", value " << ToHexString(entry.value(), entry.value_size()) <<
-                        ", size " << entry.value_size() <<
-                        ", entry " << entry.DebugString() <<
-                        ", bucket page " << this->DebugString() <<
-                        ", bucket data " << ToHexString(buffer_, buffer_size_) <<
-                        ", raw page data " << page_data_.ShortDebugString() <<
-                        ", message " << message->InitializationErrorString());
+                    LOOKUP_ERROR, "Failed to parse message: " <<
+                    "key " << ToHexString(key, key_size) <<
+                    ", value " << ToHexString(entry.value(), entry.value_size()) <<
+                    ", size " << entry.value_size() <<
+                    ", entry " << entry.DebugString() <<
+                    ", bucket page " << this->DebugString() <<
+                    ", bucket data " << ToHexString(buffer_, buffer_size_) <<
+                    ", raw page data " << page_data_.ShortDebugString() <<
+                    ", message " << message->InitializationErrorString());
             }
             return LOOKUP_FOUND;
         }
@@ -2078,15 +2078,15 @@ delete_result DiskHashPage::Delete(const void* key, unsigned int key_size) {
     for (uint32_t i = 0; i < this->item_count(); i++) {
         uint32_t offset = i * entry.entry_data_size();
         DCHECK_RETURN(entry.entry_data_size() <= this->data_buffer_size_ - offset,
-                DELETE_ERROR,
-                "entry data size " << entry.entry_data_size() <<
-                "available size " << this->data_buffer_size_ - offset);
+            DELETE_ERROR,
+            "entry data size " << entry.entry_data_size() <<
+            "available size " << this->data_buffer_size_ - offset);
         CHECK_RETURN(entry.ParseFrom(this->data_buffer_ + offset, entry.entry_data_size()),
-                DELETE_ERROR,
-                "Failed to parse entry data: " <<
-                "offset " << offset <<
-                ", bucket page " << this->DebugString() <<
-                ", bucket data " << ToHexString(data_buffer_, data_buffer_size_));
+            DELETE_ERROR,
+            "Failed to parse entry data: " <<
+            "offset " << offset <<
+            ", bucket page " << this->DebugString() <<
+            ", bucket data " << ToHexString(data_buffer_, data_buffer_size_));
         TRACE("Found: i " << i << ": " << entry.DebugString() << ", offset " << offset);
         if (raw_compare(entry.key(), entry.key_size(), key, key_size) == 0) {
             // Found key
@@ -2095,11 +2095,11 @@ delete_result DiskHashPage::Delete(const void* key, unsigned int key_size) {
             if (i != this->item_count_ - 1) {
                 uint32_t last_offset = (this->item_count_ - 1) * entry.entry_data_size();
                 DCHECK_RETURN(offset + entry.entry_data_size() <= last_offset, DELETE_ERROR,
-                        "Copy overlapping: index " << i << ", item count " << this->item_count_);
+                    "Copy overlapping: index " << i << ", item count " << this->item_count_);
                 DCHECK_RETURN(last_offset + entry.entry_data_size() <= data_buffer_size_, DELETE_ERROR, "Illegal offset");
                 memcpy(this->data_buffer_ + offset, this->data_buffer_ + last_offset, entry.entry_data_size());
             }
-            //this->index_->item_count_--;
+            // this->index_->item_count_--;
 
             this->item_count_--;
             this->index_->total_item_count_--;
@@ -2128,25 +2128,25 @@ put_result DiskHashPage::Update(const void* key, size_t key_size, const Message&
     CHECK_RETURN(this->index_, PUT_ERROR, "Container storage not set");
 
     TRACE("Update bucket: bucket " << bucket_id_ <<
-            ", key " << ToHexString(key, key_size) <<
-            ", key size " << key_size <<
-            ", page " << this->DebugString());
+        ", key " << ToHexString(key, key_size) <<
+        ", key size " << key_size <<
+        ", page " << this->DebugString());
 
     DiskHashEntry entry(this->index_->max_key_size(), this->index_->max_value_size());
 
     for (uint32_t i = 0; i < this->item_count(); i++) {
         uint32_t offset = i * entry.entry_data_size();
         CHECK_RETURN(entry.entry_data_size() <= this->data_buffer_size_ - offset,
-                PUT_ERROR,
-                "entry data size " << entry.entry_data_size() <<
-                "available size " << this->data_buffer_size_ - offset);
+            PUT_ERROR,
+            "entry data size " << entry.entry_data_size() <<
+            "available size " << this->data_buffer_size_ - offset);
         CHECK_RETURN(entry.ParseFrom(this->data_buffer_ + offset, entry.entry_data_size()),
-                PUT_ERROR,
-                "Failed to parse entry data: " <<
-                "offset " << offset <<
-                ", item index " << i <<
-                ", item count " << item_count_ <<
-                ", bucket page " << this->DebugString());
+            PUT_ERROR,
+            "Failed to parse entry data: " <<
+            "offset " << offset <<
+            ", item index " << i <<
+            ", item count " << item_count_ <<
+            ", bucket page " << this->DebugString());
         TRACE("Found: i " << i << ": " << entry.DebugString() << ", offset " << offset);
         if (raw_compare(entry.key(), entry.key_size(), key, key_size) == 0) {
             if (keep) {
@@ -2155,7 +2155,7 @@ put_result DiskHashPage::Update(const void* key, size_t key_size, const Message&
             // Found it
             CHECK_RETURN(entry.AssignValue(message), PUT_ERROR, "Failed to assign value data");
             TRACE("Update bucket entry: bucket " << bucket_id_ << ", key " << ToHexString(key, key_size) <<
-                    ", offset " << offset << ", entry " << entry.DebugString());
+                ", offset " << offset << ", entry " << entry.DebugString());
 
             return PUT_OK;
         }
@@ -2182,19 +2182,19 @@ put_result DiskHashPage::Update(const void* key, size_t key_size, const Message&
     bool isOverflow = (this->item_count() + 1) * entry.entry_data_size() >= this->data_buffer_size();
     if (likely(!isOverflow)) {
         TRACE("Add entry to page: bucket " << bucket_id_ <<
-                ", offset " << next_offset <<
-                ", key " << ToHexString(key, key_size) <<
-                ", key size " << key_size);
+            ", offset " << next_offset <<
+            ", key " << ToHexString(key, key_size) <<
+            ", key size " << key_size);
 
         byte* entry_buffer = this->data_buffer_ + next_offset;
         size_t entry_size = this->data_buffer_size_ - next_offset;
         CHECK_RETURN(entry.AssignBuffer(entry_buffer, entry_size), PUT_ERROR,
-                "Failed to parse entry data: offset " << next_offset << ", entry size " << entry_size << ", buffer size " << this->data_buffer_size_);
+            "Failed to parse entry data: offset " << next_offset << ", entry size " << entry_size << ", buffer size " << this->data_buffer_size_);
 
         CHECK_RETURN(entry.AssignKey(key, key_size), PUT_ERROR,
-                "Failed to assign value data: key size " << key_size << ", max key size " << entry.max_key_size());
+            "Failed to assign value data: key size " << key_size << ", max key size " << entry.max_key_size());
         CHECK_RETURN(entry.AssignValue(message), PUT_ERROR,
-                "Failed to assign value data: " << message.ShortDebugString());
+            "Failed to assign value data: " << message.ShortDebugString());
 
         this->index_->item_count_++;
         this->item_count_++;
@@ -2210,7 +2210,21 @@ put_result DiskHashPage::Update(const void* key, size_t key_size, const Message&
         double average_fill_ratio = this->index_->GetItemCount() / max_count;
 
         CHECK_RETURN(this->index_->overflow_area_, PUT_ERROR, "Bucket full: " <<
-                "bucket id " << this->bucket_id_ <<
+            "bucket id " << this->bucket_id_ <<
+            ", page size " << this->buffer_size_ <<
+            ", data buffer size " << this->data_buffer_size_ <<
+            ", item count " << this->item_count() <<
+            ", entry data size " << entry.entry_data_size() <<
+            ", max key size " << this->index_->max_key_size() <<
+            ", max value size " << this->index_->max_value_size() <<
+            ", index item count " << index_->GetItemCount() <<
+            ", estimated max index item count " << index_->GetEstimatedMaxItemCount() <<
+            ", index bucket count " << index_->bucket_count() <<
+            ", average page fill ratio " << average_fill_ratio <<
+            ", overflow area not set");
+        if (!this->overflow_) {
+            this->overflow_ = true;
+            TRACE("Bucket " << this->bucket_id_ << " switches to overflow mode:" <<
                 ", page size " << this->buffer_size_ <<
                 ", data buffer size " << this->data_buffer_size_ <<
                 ", item count " << this->item_count() <<
@@ -2220,30 +2234,16 @@ put_result DiskHashPage::Update(const void* key, size_t key_size, const Message&
                 ", index item count " << index_->GetItemCount() <<
                 ", estimated max index item count " << index_->GetEstimatedMaxItemCount() <<
                 ", index bucket count " << index_->bucket_count() <<
-                ", average page fill ratio " << average_fill_ratio <<
-                ", overflow area not set");
-        if (!this->overflow_) {
-            this->overflow_ = true;
-            TRACE("Bucket " << this->bucket_id_ << " switches to overflow mode:" <<
-                    ", page size " << this->buffer_size_ <<
-                    ", data buffer size " << this->data_buffer_size_ <<
-                    ", item count " << this->item_count() <<
-                    ", entry data size " << entry.entry_data_size() <<
-                    ", max key size " << this->index_->max_key_size() <<
-                    ", max value size " << this->index_->max_value_size() <<
-                    ", index item count " << index_->GetItemCount() <<
-                    ", estimated max index item count " << index_->GetEstimatedMaxItemCount() <<
-                    ", index bucket count " << index_->bucket_count() <<
-                    ", average page fill ratio " << average_fill_ratio);
+                ", average page fill ratio " << average_fill_ratio);
         }
         CHECK_RETURN(this->index_->overflow_area_->Put(key, key_size, message) != PUT_ERROR, PUT_ERROR,
-                "Failed to put data to overflow area");
+            "Failed to put data to overflow area");
     }
     DCHECK_RETURN(used_size() <= raw_buffer_size(), PUT_ERROR, "Illegal used size: " << DebugString() <<
-            ", used size " << used_size() <<
-            ", buffer size " << raw_buffer_size());
+        ", used size " << used_size() <<
+        ", buffer size " << raw_buffer_size());
     TRACE("Added bucket entry: bucket " << bucket_id_ << ", key " << ToHexString(key, key_size) <<
-            ", offset " << next_offset << ", entry " << entry.DebugString());
+        ", offset " << next_offset << ", entry " << entry.DebugString());
     return PUT_OK;
 }
 
@@ -2280,7 +2280,7 @@ bool DiskHashPage::SerializeToBuffer() {
     DCHECK(s.value() <= kPageDataSize, "Illegal serialized header");
 
     TRACE("Serialize page header " << page_data_.ShortDebugString() <<
-            ", page header size " << page_data_.GetCachedSize());
+        ", page header size " << page_data_.GetCachedSize());
     changed_since_last_serialize_ = false;
     return s.valid();
 }
@@ -2293,32 +2293,32 @@ bool DiskHashPage::Write(File* file) {
     CHECK(SerializeToBuffer(), "Failed to serialize page to buffer: " << DebugString());
 
     TRACE("Write page: " << this->DebugString() << ", file " << file->path() <<
-            ", offset " << offset <<
-            ", page size " << buffer_size_ <<
-            ", checksum " << page_data_.crc());
+        ", offset " << offset <<
+        ", page size " << buffer_size_ <<
+        ", checksum " << page_data_.crc());
 
     // We always write the complete page. Writing less only leads to read/modify write cycles
     ProfileTimer timer(index_->statistics_.write_disk_time_);
     int result = file->Write(offset, this->buffer_, this->buffer_size_);
     CHECK(result == this->buffer_size_ && result != File::kIOError,
-            "Hash write failed: " << DebugString());
+        "Hash write failed: " << DebugString());
     timer.stop();
     TRACE("Finished write page: " << this->DebugString());
     return true;
 }
 
 bool DiskHashPage::MergeWithCache(DiskHashCachePage* cache_page, uint32_t* pinned_item_count,
-        uint32_t* merged_item_count, uint32_t* merged_new_item_count) {
+                                  uint32_t* merged_item_count, uint32_t* merged_new_item_count) {
     DCHECK(cache_page, "Cache page not set");
     changed_since_last_serialize_ = true;
     std::map<bytestring, uint16_t> cache_entries;
 
     TRACE("Merge with cache page: " <<
-            "page " << this->DebugString() <<
-            ", cache page " << cache_page->DebugString());
+        "page " << this->DebugString() <<
+        ", cache page " << cache_page->DebugString());
 
     DiskHashCacheEntry cache_entry(cache_page->mutable_raw_buffer(), cache_page->raw_buffer_size(),
-            this->index_->max_key_size(), this->index_->max_value_size());
+                                   this->index_->max_key_size(), this->index_->max_value_size());
     uint32_t pinned_count = 0;
     lookup_result cache_lr = cache_page->IterateInit(&cache_entry);
     while (cache_lr == LOOKUP_FOUND) {
@@ -2329,8 +2329,8 @@ bool DiskHashPage::MergeWithCache(DiskHashCachePage* cache_page, uint32_t* pinne
             cache_entry.set_dirty(false);
             cache_entry.Store();
 
-            cache_entries[make_bytestring(static_cast<const byte*> (cache_entry.key()), cache_entry.key_size())]
-                    = cache_entry.current_offset();
+            cache_entries[make_bytestring(static_cast<const byte*>(cache_entry.key()), cache_entry.key_size())]
+                = cache_entry.current_offset();
         } else {
             if (cache_entry.is_pinned()) {
                 pinned_count++;
@@ -2344,29 +2344,29 @@ bool DiskHashPage::MergeWithCache(DiskHashCachePage* cache_page, uint32_t* pinne
     for (uint32_t i = 0; i < this->item_count(); i++) {
         uint32_t offset = i * entry.entry_data_size();
         CHECK(entry.entry_data_size() <= this->data_buffer_size_ - offset,
-                "entry data size " << entry.entry_data_size() <<
-                "available size " << this->data_buffer_size_ - offset);
+            "entry data size " << entry.entry_data_size() <<
+            "available size " << this->data_buffer_size_ - offset);
         CHECK(entry.ParseFrom(this->data_buffer_ + offset, entry.entry_data_size()),
-                "Failed to parse entry data: " <<
-                "offset " << offset <<
-                ", bucket page " << this->DebugString() <<
-                ", bucket data " << ToHexString(data_buffer_, data_buffer_size_));
+            "Failed to parse entry data: " <<
+            "offset " << offset <<
+            ", bucket page " << this->DebugString() <<
+            ", bucket data " << ToHexString(data_buffer_, data_buffer_size_));
         TRACE("Look for cache items to merge: " << entry.DebugString() << ", offset " << offset);
 
         std::map<bytestring, uint16_t>::iterator j = cache_entries.find(make_bytestring(
-                static_cast<const byte*> (entry.key()), entry.key_size()));
+                static_cast<const byte*>(entry.key()), entry.key_size()));
         if (j != cache_entries.end()) {
             uint16_t offset_in_cache = j->second;
             TRACE("Found: i " << i << ": " << entry.DebugString() << ", offset " << offset <<
-                    " in cache");
+                " in cache");
             CHECK(cache_entry.ParseFrom(offset_in_cache),
-                    "Failed to parse cache entry data: " <<
-                    "offset " << offset_in_cache <<
-                    ", bucket page " << this->DebugString() <<
-                    ", bucket data " << ToHexString(data_buffer_, data_buffer_size_));
+                "Failed to parse cache entry data: " <<
+                "offset " << offset_in_cache <<
+                ", bucket page " << this->DebugString() <<
+                ", bucket data " << ToHexString(data_buffer_, data_buffer_size_));
 
             entry.AssignKey(cache_entry.key(), cache_entry.key_size());
-            entry.AssignRawValue(static_cast<const byte*> (cache_entry.value()), cache_entry.value_size());
+            entry.AssignRawValue(static_cast<const byte*>(cache_entry.value()), cache_entry.value_size());
             cache_entries.erase(j);
 
             if (merged_item_count) {
@@ -2379,21 +2379,21 @@ bool DiskHashPage::MergeWithCache(DiskHashCachePage* cache_page, uint32_t* pinne
     for (j = cache_entries.begin(); j != cache_entries.end(); j++) {
         uint16_t offset_in_cache = j->second;
         CHECK(cache_entry.ParseFrom(offset_in_cache),
-                "Failed to parse cache entry data: " <<
-                "offset " << offset_in_cache <<
-                ", bucket page " << this->DebugString() <<
-                ", bucket data " << ToHexString(data_buffer_, data_buffer_size_));
+            "Failed to parse cache entry data: " <<
+            "offset " << offset_in_cache <<
+            ", bucket page " << this->DebugString() <<
+            ", bucket data " << ToHexString(data_buffer_, data_buffer_size_));
 
         // If we haven't found it, we lookup the overflow area if the key
         // can be found there (if the page is marked as overflowed page)
         if (unlikely(this->overflow_)) {
             CHECK_RETURN(this->index_->overflow_area_, PUT_ERROR, "Overflow area not set");
             enum lookup_result r =
-                    this->index_->overflow_area_->Lookup(cache_entry.key(), cache_entry.key_size(), NULL);
+                this->index_->overflow_area_->Lookup(cache_entry.key(), cache_entry.key_size(), NULL);
             CHECK_RETURN(r != LOOKUP_ERROR, PUT_ERROR, "Error lookup up overflow area");
             if (r == LOOKUP_FOUND) {
                 this->index_->overflow_area_->RawPut(cache_entry.key(), cache_entry.key_size(), cache_entry.value(),
-                        cache_entry.value_size());
+                    cache_entry.value_size());
                 continue;
             } else {
                 // NOT FOUND
@@ -2416,7 +2416,21 @@ bool DiskHashPage::MergeWithCache(DiskHashCachePage* cache_page, uint32_t* pinne
             double average_fill_ratio = this->index_->GetItemCount() / max_count;
 
             CHECK_RETURN(this->index_->overflow_area_, PUT_ERROR, "Bucket full: " <<
-                    "bucket id " << this->bucket_id_ <<
+                "bucket id " << this->bucket_id_ <<
+                ", page size " << this->buffer_size_ <<
+                ", data buffer size " << this->data_buffer_size_ <<
+                ", item count " << this->item_count() <<
+                ", entry data size " << entry.entry_data_size() <<
+                ", max key size " << this->index_->max_key_size() <<
+                ", max value size " << this->index_->max_value_size() <<
+                ", index item count " << index_->GetItemCount() <<
+                ", estimated max index item count " << index_->GetEstimatedMaxItemCount() <<
+                ", index bucket count " << index_->bucket_count() <<
+                ", average page fill ratio " << average_fill_ratio <<
+                ", overflow area not set");
+            if (!this->overflow_) {
+                this->overflow_ = true;
+                TRACE("Bucket " << this->bucket_id_ << " switches to overflow mode:" <<
                     ", page size " << this->buffer_size_ <<
                     ", data buffer size " << this->data_buffer_size_ <<
                     ", item count " << this->item_count() <<
@@ -2426,32 +2440,18 @@ bool DiskHashPage::MergeWithCache(DiskHashCachePage* cache_page, uint32_t* pinne
                     ", index item count " << index_->GetItemCount() <<
                     ", estimated max index item count " << index_->GetEstimatedMaxItemCount() <<
                     ", index bucket count " << index_->bucket_count() <<
-                    ", average page fill ratio " << average_fill_ratio <<
-                    ", overflow area not set");
-            if (!this->overflow_) {
-                this->overflow_ = true;
-                TRACE("Bucket " << this->bucket_id_ << " switches to overflow mode:" <<
-                        ", page size " << this->buffer_size_ <<
-                        ", data buffer size " << this->data_buffer_size_ <<
-                        ", item count " << this->item_count() <<
-                        ", entry data size " << entry.entry_data_size() <<
-                        ", max key size " << this->index_->max_key_size() <<
-                        ", max value size " << this->index_->max_value_size() <<
-                        ", index item count " << index_->GetItemCount() <<
-                        ", estimated max index item count " << index_->GetEstimatedMaxItemCount() <<
-                        ", index bucket count " << index_->bucket_count() <<
-                        ", average page fill ratio " << average_fill_ratio);
+                    ", average page fill ratio " << average_fill_ratio);
             }
             this->index_->overflow_area_->RawPut(cache_entry.key(), cache_entry.key_size(), cache_entry.value(),
-                    cache_entry.value_size());
+                cache_entry.value_size());
         } else {
             byte* entry_buffer = this->data_buffer_ + next_offset;
             size_t entry_size = this->data_buffer_size_ - next_offset;
             CHECK(entry.AssignBuffer(entry_buffer, entry_size),
-                    "Failed to parse entry data: offset " << next_offset << ", entry size " << entry_size << ", buffer size " << this->data_buffer_size_);
+                "Failed to parse entry data: offset " << next_offset << ", entry size " << entry_size << ", buffer size " << this->data_buffer_size_);
 
             entry.AssignKey(cache_entry.key(), cache_entry.key_size());
-            entry.AssignRawValue(static_cast<const byte*> (cache_entry.value()), cache_entry.value_size());
+            entry.AssignRawValue(static_cast<const byte*>(cache_entry.value()), cache_entry.value_size());
             this->item_count_++;
             this->index_->item_count_++;
         }
@@ -2473,8 +2473,8 @@ bool DiskHashPage::MergeWithCache(DiskHashCachePage* cache_page, uint32_t* pinne
 
     // Check post conditions
     DCHECK(used_size() <= raw_buffer_size(), "Illegal used size: " << DebugString() <<
-            ", used size " << used_size() <<
-            ", buffer size " << raw_buffer_size());
+        ", used size " << used_size() <<
+        ", buffer size " << raw_buffer_size());
     return true;
 }
 
@@ -2486,9 +2486,9 @@ bool DiskHashEntry::ParseFrom(byte* buffer, size_t buffer_size) {
     memcpy(&key_size_, buffer, sizeof(key_size_));
     memcpy(&value_size_, buffer + sizeof(key_size_), sizeof(value_size_));
     CHECK(buffer_size >= sizeof(key_size_) + sizeof(value_size_) + key_size_ + value_size_,
-            "Illegal buffer size: buffer size " << buffer_size <<
-            ", key size " << key_size_ <<
-            ", value size " << value_size_);
+        "Illegal buffer size: buffer size " << buffer_size <<
+        ", key size " << key_size_ <<
+        ", value size " << value_size_);
 
     CHECK(key_size_ <= this->max_key_size_, "Illegal key size: key size " << key_size_ << ", max key size " << max_key_size_);
     CHECK(value_size_ <= this->max_value_size_, "Illegal value size: value size " << value_size_ << ", max value size " << max_value_size_);
@@ -2498,7 +2498,7 @@ bool DiskHashEntry::ParseFrom(byte* buffer, size_t buffer_size) {
 bool DiskHashPage::ParseBuffer() {
     page_data_.Clear();
     CHECK(ParseSizedMessage(&page_data_, this->buffer_, this->index_->page_size_, this->index_->crc_).valid(),
-            "Failed to parse page data " << ToHexString(buffer_, this->index_->page_size_));
+        "Failed to parse page data " << ToHexString(buffer_, this->index_->page_size_));
     this->item_count_ = page_data_.entry_count();
     if (unlikely(page_data_.has_overflow() && page_data_.overflow())) {
         this->overflow_ = true;
@@ -2509,10 +2509,10 @@ bool DiskHashPage::ParseBuffer() {
         uint32_t stored = page_data_.crc();
         uint32_t generated = crc_gen.GetRawValue();
         CHECK(stored == generated, "CRC check failed: " <<
-                "stored " << stored <<
-                ", generated " << generated <<
-                ", page data " << page_data_.ShortDebugString() <<
-                ", page " << DebugString());
+            "stored " << stored <<
+            ", generated " << generated <<
+            ", page data " << page_data_.ShortDebugString() <<
+            ", page " << DebugString());
     }
     changed_since_last_serialize_ = true;
     return true;
@@ -2529,23 +2529,23 @@ bool DiskHashPage::Read(File* file) {
         ProfileTimer timer(this->index_->statistics_.read_disk_time_);
         ssize_t r = file->Read(offset, this->buffer_, this->index_->page_size_);
         CHECK(r == this->index_->page_size_,
-                "Cannot read page data: " <<
-                "bucket " << bucket_id_ <<
-                ", file " << file->path() <<
-                ", offset " << offset <<
-                ", page size " << index_->page_size_ <<
-                ", result " << r <<
-                ", file size " << file->GetSize().value());
+            "Cannot read page data: " <<
+            "bucket " << bucket_id_ <<
+            ", file " << file->path() <<
+            ", offset " << offset <<
+            ", page size " << index_->page_size_ <<
+            ", result " << r <<
+            ", file size " << file->GetSize().value());
     }
     CHECK(ParseBuffer(),
-            "Failed to parse data from read buffer: " <<
-            "file " << file->path() <<
-            ", offset " << offset <<
-            ", bucket id " << bucket_id_);
+        "Failed to parse data from read buffer: " <<
+        "file " << file->path() <<
+        ", offset " << offset <<
+        ", bucket id " << bucket_id_);
     TRACE("Read bucket id " << bucket_id_ << ": " <<
-            "item count " << this->item_count_ <<
-            " file " << file->path() <<
-            ", offset " << offset);
+        "item count " << this->item_count_ <<
+        " file " << file->path() <<
+        ", offset " << offset);
     changed_since_last_serialize_ = true;
     return true;
 }
@@ -2553,7 +2553,7 @@ bool DiskHashPage::Read(File* file) {
 string DiskHashPage::DebugString() const {
     stringstream sstr;
     sstr << "[page " << this->bucket_id_ << ", item count " << this->item_count() << ", page size "
-            << index_->page_size_;
+         << index_->page_size_;
     if (overflow_) {
         sstr << ", overflow";
     }
@@ -2576,13 +2576,13 @@ bool DiskHashEntry::AssignBuffer(byte* buffer, size_t buffer_size) {
 bool DiskHashEntry::AssignValue(const Message& message) {
     DCHECK(this->buffer_ != NULL, "Buffer not set");
     CHECK(this->max_value_size_ >= message.ByteSize(),
-            "Illegal size: " << message.DebugString());
+        "Illegal size: " << message.DebugString());
 
     memset(this->mutable_value(), 0, this->max_value_size_);
     uint32_t value_size = message.ByteSize();
-    byte* value = reinterpret_cast<byte*> (this->mutable_value());
+    byte* value = reinterpret_cast<byte*>(this->mutable_value());
     CHECK(message.SerializeWithCachedSizesToArray(value),
-            "Failed to serialize array: message " << message.DebugString());
+        "Failed to serialize array: message " << message.DebugString());
 
     memcpy(buffer_ + sizeof(key_size_), &value_size, sizeof(uint32_t));
     this->value_size_ = value_size;
@@ -2592,10 +2592,10 @@ bool DiskHashEntry::AssignValue(const Message& message) {
 bool DiskHashEntry::AssignRawValue(const byte* new_value, size_t value_size) {
     DCHECK(this->buffer_ != NULL, "Buffer not set");
     DCHECK(this->max_value_size_ >= value_size,
-            "Illegal size: " << value_size);
+        "Illegal size: " << value_size);
 
     memset(this->mutable_value(), 0, this->max_value_size_);
-    byte* value = reinterpret_cast<byte*> (this->mutable_value());
+    byte* value = reinterpret_cast<byte*>(this->mutable_value());
     memcpy(value, new_value, value_size);
     memcpy(buffer_ + sizeof(key_size_), &value_size, sizeof(uint32_t));
     this->value_size_ = value_size;
@@ -2613,8 +2613,8 @@ DiskHashEntry::DiskHashEntry(uint32_t max_key_size, uint32_t max_value_size) {
 
 string DiskHashEntry::DebugString() {
     return "key " + ToHexString(this->key(), this->key_size()) + ", key size " + ToString(this->key_size())
-            + ", value " + ToHexString(this->value(), this->value_size()) + ", value size " + ToString(
-            this->value_size());
+           + ", value " + ToHexString(this->value(), this->value_size()) + ", value size " + ToString(
+        this->value_size());
 }
 
 DiskHashIndexIterator::DiskHashIndexIterator(DiskHashIndex* index) {
@@ -2660,9 +2660,9 @@ DiskHashPage* DiskHashIndexIterator::LoadBucket() {
     CHECK_RETURN(scoped_lock.AcquireReadLockWithStatistics(&this->index_->statistics_.lock_free_, &this->index_->statistics_.lock_busy_), NULL, "Lock failed");
 
     CHECK_RETURN(new_page->Read(file), NULL,
-            "Hash index page read failed: " <<
-            "page " << new_page->DebugString() <<
-            ", file " << file->path());
+        "Hash index page read failed: " <<
+        "page " << new_page->DebugString() <<
+        ", file " << file->path());
     CHECK_RETURN(scoped_lock.ReleaseLock(), NULL, "Unlock failed");
     return new_page;
 }
@@ -2671,14 +2671,14 @@ lookup_result DiskHashIndexIterator::Next(void* key, size_t* key_size, Message* 
     CHECK_RETURN(this->version_counter_ == this->index_->version_counter_, LOOKUP_ERROR, "Concurrent modification error");
 
     TRACE("Get next entry: current bucket " << this->bucket_id <<
-            ", current index " << this->current_entry_index <<
-            (this->overflow_iterator_ ? ", overflow mode" : ""));
+        ", current index " << this->current_entry_index <<
+        (this->overflow_iterator_ ? ", overflow mode" : ""));
 
     if (this->overflow_iterator_ == NULL) {
 
         // check if the page is empty or if we have not loaded a page before
         while (this->page == NULL || this->page->item_count() == 0 || (this->page->item_count() > 0
-                && this->current_entry_index >= this->page->item_count())) {
+                                                                       && this->current_entry_index >= this->page->item_count())) {
 
             // check if there buckets left
             if (this->bucket_id + 1U < this->index_->bucket_count()) {
@@ -2705,21 +2705,21 @@ lookup_result DiskHashIndexIterator::Next(void* key, size_t* key_size, Message* 
             DiskHashEntry entry(this->index_->max_key_size(), this->index_->max_value_size());
             uint32_t offset = this->current_entry_index * entry.entry_data_size();
             CHECK_RETURN(entry.ParseFrom(this->page->mutable_data_buffer() + offset,
-                            this->page->data_buffer_size() - offset), LOOKUP_ERROR,
-                    "Failed to parse entry data");
+                    this->page->data_buffer_size() - offset), LOOKUP_ERROR,
+                "Failed to parse entry data");
 
             CHECK_RETURN(entry.key_size() <= *key_size, LOOKUP_ERROR,
-                    "Illegal key size: " << (*key_size));
+                "Illegal key size: " << (*key_size));
             memcpy(key, entry.key(), entry.key_size());
             *key_size = entry.key_size();
 
             if (message) {
                 CHECK_RETURN(message->ParseFromArray(entry.value(), entry.value_size()), LOOKUP_ERROR,
-                        "Failed to parse entry value");
+                    "Failed to parse entry value");
 
                 TRACE("Found key " << ToHexString(entry.key(), entry.key_size()) <<
-                        ", key size " << entry.key_size() <<
-                        ", " << message->ShortDebugString());
+                    ", key size " << entry.key_size() <<
+                    ", " << message->ShortDebugString());
             }
             this->current_entry_index++;
             return LOOKUP_FOUND;

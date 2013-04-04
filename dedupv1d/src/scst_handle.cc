@@ -224,8 +224,8 @@ bool ScstHandle::HandleCommand(ScstCommandHandler* handler, struct scst_user_get
         response->result = handler->TaskMgmt(cmd->cmd_h, cmd->sess.sess_h, &cmd->tm_cmd);
         break;
     case SCST_USER_TASK_MGMT_DONE:
-	response->result = 0;
-	break;
+        response->result = 0;
+        break;
     case SCST_USER_EXEC:
         handler->ExecuteSCSICommand(cmd->cmd_h, cmd->sess.sess_h, &cmd->exec_cmd, &response->exec_reply);
         // error reporting is done by SENSE handling

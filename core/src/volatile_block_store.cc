@@ -77,12 +77,12 @@ namespace dedupv1 {
 namespace blockindex {
 
 UncommitedBlockEntry::UncommitedBlockEntry(const BlockMapping& o,
-        const BlockMapping& m,
-        google::protobuf::Message* extra_message,
-        uint64_t block_mapping_written_event_log_id,
-        uint32_t open_container_count,
-        uint32_t open_predecessor_count)
-: original_mapping_(o.block_size()),  modified_mapping_(m.block_size()) {
+                                           const BlockMapping& m,
+                                           google::protobuf::Message* extra_message,
+                                           uint64_t block_mapping_written_event_log_id,
+                                           uint32_t open_container_count,
+                                           uint32_t open_predecessor_count)
+    : original_mapping_(o.block_size()),  modified_mapping_(m.block_size()) {
     if (!this->original_mapping_.CopyFrom(o)) {
         WARNING("Cannot copy original block mapping: " << o.DebugString());
     }
@@ -104,7 +104,7 @@ VolatileBlockStore::VolatileBlockStore() {
 bool VolatileBlockStore::ResetTracker() {
     ScopedLock scoped_lock(&this->lock_);
     CHECK(scoped_lock.AcquireLockWithStatistics(&this->stats_.lock_free_, &this->stats_.lock_free_),
-            "Failed to acquire lock");
+        "Failed to acquire lock");
     CHECK(this->container_tracker_.Reset(), "Failed to mark container as processed");
     CHECK(scoped_lock.ReleaseLock(), "Failed to release lock");
     return true;
@@ -130,14 +130,14 @@ bool VolatileBlockStore::Clear() {
 }
 
 void VolatileBlockStore::HandleVolatileFailChange(list<tuple<BlockMapping, BlockMapping, const google::protobuf::Message*, int64_t> >* callback_ubes,
-        const std::multimap<uint64_t, UncommitedBlockEntry>::iterator& bi) {
+                                                  const std::multimap<uint64_t, UncommitedBlockEntry>::iterator& bi) {
     tuple<BlockMapping, BlockMapping, const google::protobuf::Message*, int64_t> tuple = make_tuple(
-            bi->second.original_mapping(),
-            bi->second.modified_mapping(),
-            bi->second.extra_message(),
-            bi->second.block_mapping_written_event_log_id());
+        bi->second.original_mapping(),
+        bi->second.modified_mapping(),
+        bi->second.extra_message(),
+        bi->second.block_mapping_written_event_log_id());
     callback_ubes->push_back(tuple);
-    
+
     DEBUG("Fail change: block " << bi->second.modified_mapping().block_id() << ", version " << bi->second.modified_mapping().version());
 
     // fail all later versions of the same block
@@ -146,8 +146,8 @@ void VolatileBlockStore::HandleVolatileFailChange(list<tuple<BlockMapping, Block
         const std::multimap<uint64_t, UncommitedBlockEntry>::iterator& i(*j);
 
         DEBUG(i->second.original_mapping().DebugString() << " >> " << i->second.modified_mapping().DebugString() <<
-                ": open predecessor count " <<
-                i->second.open_predecessor_count());
+            ": open predecessor count " <<
+            i->second.open_predecessor_count());
         HandleVolatileFailChange(callback_ubes, i);
     }
     this->uncommited_block_map_.erase(bi);
@@ -160,7 +160,7 @@ bool VolatileBlockStore::Abort(uint64_t container_id, VolatileBlockCommitCallbac
     {
         ScopedLock scoped_lock(&this->lock_);
         CHECK(scoped_lock.AcquireLockWithStatistics(&this->stats_.lock_free_, &this->stats_.lock_free_),
-                "Failed to acquire lock");
+            "Failed to acquire lock");
 
         DEBUG("Abort container " << container_id);
 
@@ -176,7 +176,7 @@ bool VolatileBlockStore::Abort(uint64_t container_id, VolatileBlockCommitCallbac
         for (i = j->second.block_list_.begin(); i != j->second.block_list_.end(); i++) {
             std::multimap<uint64_t, UncommitedBlockEntry>::iterator& bi(*i);
             DEBUG("Found failing block mapping: " << bi->second.original_mapping().DebugString() << " >> " <<
-                    bi->second.modified_mapping().DebugString());
+                bi->second.modified_mapping().DebugString());
 
             HandleVolatileFailChange(&callback_ubes, bi);
         }
@@ -192,9 +192,9 @@ bool VolatileBlockStore::Abort(uint64_t container_id, VolatileBlockCommitCallbac
         if (callback) {
             if (!callback->FailVolatileBlock(std::tr1::get<0>(*j),std::tr1::get<1>(*j), std::tr1::get<2>(*j), std::tr1::get<3>(*j))) {
                 WARNING("Fail function reports an error: " <<
-                        "container id " << container_id <<
-                        ", original block mapping " << std::tr1::get<0>(*j).DebugString() <<
-                        ", modified block mapping " << std::tr1::get<1>(*j).DebugString());
+                    "container id " << container_id <<
+                    ", original block mapping " << std::tr1::get<0>(*j).DebugString() <<
+                    ", modified block mapping " << std::tr1::get<1>(*j).DebugString());
                 failed = true;
             }
             const google::protobuf::Message* message = std::tr1::get<2>(*j);
@@ -224,7 +224,7 @@ bool VolatileBlockStore::Commit(uint64_t container_id, VolatileBlockCommitCallba
     {
         ScopedLock scoped_lock(&this->lock_);
         CHECK(scoped_lock.AcquireLockWithStatistics(&this->stats_.lock_free_, &this->stats_.lock_busy_),
-                "Failed to acquire lock");
+            "Failed to acquire lock");
 
         DEBUG("Commit container " << container_id);
         map<uint64_t, UncommitedContainerEntry>::iterator j = this->uncommited_container_map_.find(container_id);
@@ -234,7 +234,7 @@ bool VolatileBlockStore::Commit(uint64_t container_id, VolatileBlockCommitCallba
             TRACE("No blocks rely on container " << container_id);
 
             CHECK(this->container_tracker_.ProcessedContainer(container_id),
-                    "Failed to mark container as processed");
+                "Failed to mark container as processed");
             return true;
         }
 
@@ -246,17 +246,17 @@ bool VolatileBlockStore::Commit(uint64_t container_id, VolatileBlockCommitCallba
             std::multimap<uint64_t, UncommitedBlockEntry>::iterator& bi(*i);
             bi->second.open_container_count_--;
             DEBUG("Updated uncommitted block entry: " <<
-                    "block " << bi->second.modified_mapping().block_id() <<
-                    ", version " << bi->second.modified_mapping().version() <<
-                    ", open container count " << bi->second.open_container_count() <<
-                    ", open predecessor count " << bi->second.open_predecessor_count() <<
-                    ", committed container " << container_id);
+                "block " << bi->second.modified_mapping().block_id() <<
+                ", version " << bi->second.modified_mapping().version() <<
+                ", open container count " << bi->second.open_container_count() <<
+                ", open predecessor count " << bi->second.open_predecessor_count() <<
+                ", committed container " << container_id);
 
             if  (bi->second.open_container_count() == 0 && bi->second.open_predecessor_count() == 0) {
                 // call back the currently handled block change
                 callback_ubes.push_back(bi);
                 TRACE("Ready uncommited block entry: " <<
-                        bi->second.DebugString());
+                    bi->second.DebugString());
             }
         }
         this->uncommited_container_map_.erase(container_id);
@@ -283,8 +283,8 @@ bool VolatileBlockStore::Commit(uint64_t container_id, VolatileBlockCommitCallba
                             block_entry.extra_message(),
                             block_entry.block_mapping_written_event_log_id(), false)) {
                         WARNING("Commit function reports an error: " <<
-                                "container id " << container_id <<
-                                ", " << block_entry.DebugString());
+                            "container id " << container_id <<
+                            ", " << block_entry.DebugString());
                         failed_callbacks.push_back(j);
                         failed = true;
                     }
@@ -301,7 +301,7 @@ bool VolatileBlockStore::Commit(uint64_t container_id, VolatileBlockCommitCallba
         {
             ScopedLock scoped_lock(&this->lock_);
             CHECK(scoped_lock.AcquireLockWithStatistics(&this->stats_.lock_free_, &this->stats_.lock_free_),
-                    "Failed to acquire lock");
+                "Failed to acquire lock");
 
             // remove failed callbacks
             // the depended block changed of a failed callback should not be processed.
@@ -315,13 +315,12 @@ bool VolatileBlockStore::Commit(uint64_t container_id, VolatileBlockCommitCallba
             }
             failed_callbacks.clear();
 
-
             list<std::multimap<uint64_t, UncommitedBlockEntry>::iterator> new_callback_ubes;
 
             // search for each committed block entry all blocks that are now commitable
             for (list<std::multimap<uint64_t, UncommitedBlockEntry>::iterator>::iterator j = callback_ubes.begin();
-                    j != callback_ubes.end();
-                    j++) {
+                 j != callback_ubes.end();
+                 j++) {
                 std::multimap<uint64_t, UncommitedBlockEntry>::iterator& bi(*j);
                 UncommitedBlockEntry& block_change(bi->second);
                 DEBUG("Process committed block: " << block_change.DebugString());
@@ -333,12 +332,12 @@ bool VolatileBlockStore::Commit(uint64_t container_id, VolatileBlockCommitCallba
 
                     DEBUG("Updated uncommitted block entry: " <<
                         bi->second.ShortDebugString() <<
-                            ", predecessor change");
+                        ", predecessor change");
 
                     if  (bi->second.open_container_count() == 0 && bi->second.open_predecessor_count() == 0) {
                         // call back the currently handled block change
                         TRACE("Ready uncommited block entry: " <<
-                                bi->second.DebugString());
+                            bi->second.DebugString());
                         new_callback_ubes.push_back(bi);
                     }
                 }
@@ -359,17 +358,17 @@ bool VolatileBlockStore::Commit(uint64_t container_id, VolatileBlockCommitCallba
 }
 
 bool VolatileBlockStore::AddBlock(
-        const BlockMapping& o,
-        const BlockMapping& m,
-        google::protobuf::Message* extra_message,
-        const set<uint64_t>& container_id_set,
-        int64_t block_mapping_written_event_log_id,
-        VolatileBlockCommitCallback* callback) {
+    const BlockMapping& o,
+    const BlockMapping& m,
+    google::protobuf::Message* extra_message,
+    const set<uint64_t>& container_id_set,
+    int64_t block_mapping_written_event_log_id,
+    VolatileBlockCommitCallback* callback) {
     ProfileTimer total_timer(this->stats_.total_time_);
     ProfileTimer add_timer(this->stats_.add_time_);
 
     DEBUG("Add block: " <<
-        "block " << m.block_id() << 
+        "block " << m.block_id() <<
         ", version " << m.version() <<
         ", event log id " << block_mapping_written_event_log_id);
 
@@ -381,12 +380,12 @@ bool VolatileBlockStore::AddBlock(
 
     ScopedLock scoped_lock(&this->lock_);
     CHECK(scoped_lock.AcquireLockWithStatistics(&this->stats_.lock_free_, &this->stats_.lock_free_),
-            "Failed to acquire lock");
+        "Failed to acquire lock");
 
     // recheck the container list
     for (list<uint64_t>::iterator i = container_id_list.begin(); i != container_id_list.end(); ) {
         bool should_process = *i != Storage::EMPTY_DATA_STORAGE_ADDRESS &&
-                this->container_tracker_.ShouldProcessContainer(*i);
+                              this->container_tracker_.ShouldProcessContainer(*i);
         if (should_process && commit_state_callback_) {
             TRACE("Check commit state by callback: container id " << *i);
             Option<bool> commit_state = commit_state_callback_->Call(*i);
@@ -409,7 +408,7 @@ bool VolatileBlockStore::AddBlock(
     // Check for open blocks changed for the same block with a lower version
     list<multimap<uint64_t, UncommitedBlockEntry>::iterator> earlier_versions;
     pair<multimap<uint64_t, UncommitedBlockEntry>::iterator, multimap<uint64_t, UncommitedBlockEntry>::iterator> ret =
-            this->uncommited_block_map_.equal_range(m.block_id());
+        this->uncommited_block_map_.equal_range(m.block_id());
 
     for (multimap<uint64_t, UncommitedBlockEntry>::iterator j = ret.first; j != ret.second; j++) {
         if (j->second.modified_mapping().version() < m.version()) {
@@ -427,7 +426,7 @@ bool VolatileBlockStore::AddBlock(
         if (callback) {
             Walltimer callback_timer;
             CHECK(callback->CommitVolatileBlock(o, m, extra_message, block_mapping_written_event_log_id, true),
-                    "Failed to commit volatile block: " << o.DebugString() << ", " << m.DebugString());
+                "Failed to commit volatile block: " << o.DebugString() << ", " << m.DebugString());
             this->stats_.callback_time_.Add(&callback_timer);
         }
         if (extra_message) {
@@ -438,8 +437,8 @@ bool VolatileBlockStore::AddBlock(
 
     UncommitedBlockEntry ube(o, m, extra_message, block_mapping_written_event_log_id, container_id_list.size(), earlier_versions.size());
     DEBUG("Add block list entry: " <<
-            ube.ShortDebugString() <<            
-            ", container list [" << dedupv1::base::strutil::Join(container_id_list.begin(), container_id_list.end(), ",") << "]");
+        ube.ShortDebugString() <<
+        ", container list [" << dedupv1::base::strutil::Join(container_id_list.begin(), container_id_list.end(), ",") << "]");
 
     std::multimap<uint64_t, UncommitedBlockEntry>::iterator nbi = this->uncommited_block_map_.insert(make_pair(ube.modified_mapping().block_id(), ube));
 
@@ -464,7 +463,7 @@ bool VolatileBlockStore::AddBlock(
 Option<bool> VolatileBlockStore::IsVolatileBlock(uint64_t block_id) {
     ScopedLock scoped_lock(&this->lock_);
     CHECK(scoped_lock.AcquireLockWithStatistics(&this->stats_.lock_free_, &this->stats_.lock_free_),
-            "Failed to acquire lock");
+        "Failed to acquire lock");
     bool v = this->uncommited_block_map_.find(block_id) != this->uncommited_block_map_.end();
     return make_option(v);
 }
@@ -472,7 +471,7 @@ Option<bool> VolatileBlockStore::IsVolatileBlock(uint64_t block_id) {
 uint32_t VolatileBlockStore::GetBlockCount() {
     ScopedLock scoped_lock(&this->lock_);
     CHECK(scoped_lock.AcquireLockWithStatistics(&this->stats_.lock_free_, &this->stats_.lock_free_),
-            "Failed to acquire lock");
+        "Failed to acquire lock");
     uint32_t block_count = this->uncommited_block_map_.size();
     return block_count;
 }
@@ -480,7 +479,7 @@ uint32_t VolatileBlockStore::GetBlockCount() {
 uint32_t VolatileBlockStore::GetContainerCount() {
     ScopedLock scoped_lock(&this->lock_);
     CHECK(scoped_lock.AcquireLockWithStatistics(&this->stats_.lock_free_, &this->stats_.lock_free_),
-            "Failed to acquire lock");
+        "Failed to acquire lock");
     uint32_t container_count = this->uncommited_container_map_.size();
     return container_count;
 }
@@ -491,7 +490,7 @@ string VolatileBlockStore::PrintTrace() {
     {
         ScopedLock scoped_lock(&this->lock_);
         CHECK_RETURN(scoped_lock.AcquireLockWithStatistics(&this->stats_.lock_free_, &this->stats_.lock_free_),
-                "{}", "Failed to acquire lock");
+            "{}", "Failed to acquire lock");
         block_count = this->uncommited_block_map_.size();
         container_count = this->uncommited_container_map_.size();
     }
@@ -538,17 +537,17 @@ VolatileBlockCommitCallback::~VolatileBlockCommitCallback() {
 string UncommitedBlockEntry::DebugString() const {
     stringstream sstr;
     sstr << "[" << original_mapping_.DebugString() << " >> " << modified_mapping_.DebugString() <<
-            ", open container count " << open_container_count_<<
-            ", open predecessor block count " << open_predecessor_count_ << "]";
+    ", open container count " << open_container_count_ <<
+    ", open predecessor block count " << open_predecessor_count_ << "]";
     return sstr.str();
 }
 
 string UncommitedBlockEntry::ShortDebugString() const {
     stringstream sstr;
     sstr << "block " << modified_mapping().block_id() <<
-            ", version " << modified_mapping().version() <<
-            ", open container count " << open_container_count_<<
-            ", open predecessor block count " << open_predecessor_count_ << "]";
+    ", version " << modified_mapping().version() <<
+    ", open container count " << open_container_count_ <<
+    ", open predecessor block count " << open_predecessor_count_ << "]";
     return sstr.str();
 }
 

@@ -53,31 +53,31 @@ protected:
 TEST_F(BloomSetTest, Adding) {
     uint64_t i = 0;
     for (i = 0; i < 1024; i++) {
-        ASSERT_TRUE(bloom_set->Put((byte*) &i, sizeof(i)));
+        ASSERT_TRUE(bloom_set->Put((byte *) &i, sizeof(i)));
     }
 }
 
 TEST_F(BloomSetTest, ExistingTesting) {
     uint64_t i = 0;
     for (i = 0; i < 1024; i++) {
-        ASSERT_TRUE(bloom_set->Put((byte*) &i, sizeof(i)));
+        ASSERT_TRUE(bloom_set->Put((byte *) &i, sizeof(i)));
     }
 
     for (i = 0; i < 1024; i++) {
-        ASSERT_EQ(bloom_set->Contains((byte*) &i, sizeof(i)), dedupv1::base::LOOKUP_FOUND);
+        ASSERT_EQ(bloom_set->Contains((byte *) &i, sizeof(i)), dedupv1::base::LOOKUP_FOUND);
     }
 }
 
 TEST_F(BloomSetTest, NotExistingTesting) {
     uint64_t i = 0;
     for (i = 0; i < 1024; i++) {
-        ASSERT_TRUE(bloom_set->Put((byte*) &i, sizeof(i)));
+        ASSERT_TRUE(bloom_set->Put((byte *) &i, sizeof(i)));
     }
 
     int failures = 0;
     for (i = 0; i < 1024; i++) {
         uint64_t value = 1024 + (i * 2);
-        if (bloom_set->Contains((byte*) &value, sizeof(value)) != dedupv1::base::LOOKUP_NOT_FOUND) {
+        if (bloom_set->Contains((byte *) &value, sizeof(value)) != dedupv1::base::LOOKUP_NOT_FOUND) {
             failures++;
         }
     }
@@ -91,7 +91,7 @@ TEST_F(BloomSetTest, CapacityConstructor) {
     bloom_set = BloomSet::NewOptimizedBloomSet(1024 * 1024, 0.01);
     ASSERT_TRUE(bloom_set);
 
-    INFO("k " << (int)bloom_set->hash_count() << ", bits " << bloom_set->size());
+    INFO("k " << (int) bloom_set->hash_count() << ", bits " << bloom_set->size());
 }
 
 TEST_F(BloomSetTest, Performance) {
@@ -104,7 +104,7 @@ TEST_F(BloomSetTest, Performance) {
     tbb::tick_count start = tbb::tick_count::now();
     uint32_t count = 1024 * 1024;
     for (uint64_t i = 0; i < count; i++) {
-        ASSERT_TRUE(bloom_set->Put((byte*) &i, sizeof(i)));
+        ASSERT_TRUE(bloom_set->Put((byte *) &i, sizeof(i)));
     }
     tbb::tick_count end = tbb::tick_count::now();
 

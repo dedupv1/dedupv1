@@ -46,13 +46,13 @@ namespace dedupv1d {
 namespace monitor {
 
 namespace {
-    string FormatICUDate(DateFormat* date_format, UDate date) {
-        UnicodeString unicode;
-        date_format->format(date, unicode);
-        string s;
-        unicode.toUTF8String(s);
-        return s;
-    }
+string FormatICUDate(DateFormat* date_format, UDate date) {
+    UnicodeString unicode;
+    date_format->format(date, unicode);
+    string s;
+    unicode.toUTF8String(s);
+    return s;
+}
 }
 
 SunMonitorAdapter::SunMonitorAdapter() {

@@ -103,7 +103,7 @@ bool ChunkIndexFilter::AcquireChunkLock(const dedupv1::chunkindex::ChunkMapping&
 }
 
 Filter::filter_result ChunkIndexFilter::Check(Session* session, const BlockMapping* block_mapping,
-        ChunkMapping* mapping, ErrorContext* ec) {
+                                              ChunkMapping* mapping, ErrorContext* ec) {
     DCHECK_RETURN(mapping, FILTER_ERROR, "Chunk mapping not set");
     enum filter_result result = FILTER_ERROR;
     ProfileTimer timer(this->stats_.time_);
@@ -137,7 +137,7 @@ Filter::filter_result ChunkIndexFilter::Check(Session* session, const BlockMappi
         result = FILTER_STRONG_MAYBE;
     } else if (index_result == LOOKUP_ERROR) {
         ERROR("Chunk index filter lookup failed: " <<
-                "mapping " << mapping->DebugString());
+            "mapping " << mapping->DebugString());
         stats_.failures++;
         result = FILTER_ERROR;
     }

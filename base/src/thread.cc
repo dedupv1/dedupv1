@@ -32,7 +32,7 @@ namespace dedupv1 {
 namespace base {
 namespace internal {
 
-ThreadImpl::ThreadImpl(void* context, void*(*runner)(void*)) { // NOLINT
+ThreadImpl::ThreadImpl(void* context, void*(*runner)(void *)) { // NOLINT
     this->context_ = context;
     this->runner_ = runner;
     this->t_ = 0;
@@ -93,25 +93,25 @@ bool ThreadImpl::IsStarted() {
 bool ThreadImpl::Cancel() {
     tbb::spin_mutex::scoped_lock l(lock_);
     CHECK(IsStartedLocked(), "Thread not started");
-    
+
     int err = pthread_cancel(this->t_);
     if (err != 0) {
         ERROR("Failed to cancel the thread: " << strerror(err));
         return false;
     }
-    return true;  
+    return true;
 }
 
 bool ThreadImpl::Detach() {
     tbb::spin_mutex::scoped_lock l(lock_);
     CHECK(IsStartedLocked(), "Thread not started");
-    
+
     int err = pthread_detach(this->t_);
     if (err != 0) {
         ERROR("Failed to detach the thread: " << strerror(err));
         return false;
     }
-    return true;  
+    return true;
 }
 
 bool ThreadImpl::Join(void** rt) {
@@ -139,24 +139,23 @@ void ThreadUtil::RegisterCurrentThread(const std::string& thread_name) {
     buf[15] = 0;
 
 #ifdef _DARWIN_C_SOURCE
-    if(pthread_setname_np(buf) != 0) {
+    if (pthread_setname_np(buf) != 0) {
 #else
-    if(pthread_setname_np(pthread_self(), buf) != 0) {
+    if (pthread_setname_np(pthread_self(), buf) != 0) {
 #endif
-         ERROR("Failed to set thread name: " << strerror(errno));
+        ERROR("Failed to set thread name: " << strerror(errno));
     }
 #else
 #ifdef HAS_PRCTL
     char buf[16];
     strncpy(buf, thread_name.c_str(), 16);
     buf[15] = 0;
-    if(prctl(PR_SET_NAME, (unsigned long) &buf) != 0) {
+    if (prctl(PR_SET_NAME, (unsigned long) &buf) != 0) {
         ERROR("Failed to set thread name: " << strerror(errno));
     }
 #endif
 #endif
 }
-
 
 void ThreadUtil::UnregisterCurrentThread() {
     thread_names_.erase(pthread_self());

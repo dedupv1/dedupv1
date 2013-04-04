@@ -77,7 +77,7 @@ Filter::filter_result BlockIndexFilter::Check(Session* session,
     SlidingAverageProfileTimer timer2(this->stats_.average_latency_);
 
     TRACE("Check old block mapping for chunk: " <<
-        "chunk " << mapping->DebugString() << 
+        "chunk " << mapping->DebugString() <<
         ", block mapping " << (block_mapping ? block_mapping->DebugString() : "null"));
 
     enum filter_result result = FILTER_ERROR;
@@ -87,7 +87,7 @@ Filter::filter_result BlockIndexFilter::Check(Session* session,
         this->stats_.reads_++;
         list<BlockMappingItem>::const_iterator i;
         for (i = block_mapping->items().begin(); i != block_mapping->items().end(); i++) {
-            
+
             /*
              * Check for each block mapping item if the chunk mappings (new) fingerprint is known. If this is the case it is a strong indication that the fingerprint chunk
              *  is known.

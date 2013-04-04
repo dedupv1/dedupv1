@@ -65,8 +65,8 @@ using dedupv1::base::Option;
 
 LOGGER("BloomFilter");
 
-#define data_bytes(c) (((c)->size)/8)
-#define data_buckets(c) (((c)->size)/sizeof(uint32_t))
+#define data_bytes(c) (((c)->size) / 8)
+#define data_buckets(c) (((c)->size) / sizeof(uint32_t))
 
 namespace dedupv1 {
 namespace filter {
@@ -82,19 +82,18 @@ Filter* BloomFilter::CreateFilter() {
 BloomFilter::BloomFilter() : Filter("bloom filter", FILTER_WEAK_MAYBE) {
     bloom_set_ = NULL;
     size_ = 0;
-    filter_file_= NULL;
+    filter_file_ = NULL;
 }
 
 BloomFilter::Statistics::Statistics() {
-  reads_ = 0;
-  writes_ = 0;
-  weak_hits_ = 0;
-  miss_ = 0;
+    reads_ = 0;
+    writes_ = 0;
+    weak_hits_ = 0;
+    miss_ = 0;
 }
 
 BloomFilter::~BloomFilter() {
 }
-
 
 bool BloomFilter::SetOption(const string& option_name, const string& option) {
     CHECK(bloom_set_ == NULL, "Bloom filter already started");
@@ -119,13 +118,13 @@ bool BloomFilter::Start(DedupSystem* system) {
     INFO("Starting bloom filter");
     INFO("Usage of the bloom filter is unsafe and is only advised for research and development");
 
-    CHECK(this->size_ > 0 && this->filter_filename_.size() > 0, 
+    CHECK(this->size_ > 0 && this->filter_filename_.size() > 0,
         "Bloom filter not configured");
 
     this->bloom_set_ = BloomSet::NewOptimizedBloomSet(size_, 0.01);
     CHECK(this->bloom_set_, "Failed to alloc bloom set");
     CHECK(this->bloom_set_->Init(), "Failed to init bloom set");
-    INFO("Bloom filter configured: k " << bloom_set_->hash_count() << 
+    INFO("Bloom filter configured: k " << bloom_set_->hash_count() <<
         ", size " << bloom_set_->byte_size());
     this->filter_file_ =  dedupv1::base::File::Open(
         this->filter_filename_, O_RDWR, 0);
@@ -134,7 +133,7 @@ bool BloomFilter::Start(DedupSystem* system) {
         // file not existing;
         this->filter_file_ =  dedupv1::base::File::Open(
             this->filter_filename_, O_RDWR | O_CREAT,
-                S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+            S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
         CHECK(this->filter_file_, "Cannot create filter file");
         CHECK(this->DumpData(), "Cannot write filter file");
     } else { // file already existing
@@ -149,26 +148,26 @@ bool BloomFilter::ReadData() {
 
     CHECK(this->filter_file_->Read(0,
             this->bloom_set_->mutable_data(), this->bloom_set_->byte_size()),
-            "Cannot read bloom filter data");
+        "Cannot read bloom filter data");
     return true;
 }
 
 bool BloomFilter::DumpData() {
     CHECK(this->filter_file_, "File not set");
-    DEBUG("Dump bloom filter data: size " << bloom_set_->byte_size() << 
+    DEBUG("Dump bloom filter data: size " << bloom_set_->byte_size() <<
         ",k " << bloom_set_->hash_count());
 
     CHECK(this->filter_file_->Write(0,
-            this->bloom_set_->data(), this->bloom_set_->byte_size()) 
-        == (ssize_t) this->bloom_set_->byte_size(), 
+            this->bloom_set_->data(), this->bloom_set_->byte_size())
+        == (ssize_t) this->bloom_set_->byte_size(),
         "Cannot write filter data file");
     return true;
 }
 
-bool BloomFilter::Update(Session* session, 
-    const BlockMapping* block_mapping,
-    ChunkMapping* mapping,
-    ErrorContext* ec) {
+bool BloomFilter::Update(Session* session,
+                         const BlockMapping* block_mapping,
+                         ChunkMapping* mapping,
+                         ErrorContext* ec) {
     CHECK(mapping, "Mapping not set");
     CHECK(bloom_set_, "Bloom set not set");
 
@@ -178,14 +177,14 @@ bool BloomFilter::Update(Session* session,
 
     CHECK(this->bloom_set_->Put(mapping->fingerprint(),
             mapping->fingerprint_size()),
-            "Cannot update bloom filter: mapping " << mapping->DebugString());
+        "Cannot update bloom filter: mapping " << mapping->DebugString());
     return true;
 }
 
-Filter::filter_result BloomFilter::Check( Session* session, 
-    const BlockMapping* block_mapping, 
-    ChunkMapping* mapping,
-    ErrorContext* ec) {
+Filter::filter_result BloomFilter::Check( Session* session,
+                                          const BlockMapping* block_mapping,
+                                          ChunkMapping* mapping,
+                                          ErrorContext* ec) {
     CHECK_RETURN(mapping, FILTER_ERROR, "Chunk mapping not set");
     CHECK_RETURN(bloom_set_, FILTER_ERROR, "Bloom set not set");
     ProfileTimer timer(this->stats_.time_);
@@ -195,11 +194,11 @@ Filter::filter_result BloomFilter::Check( Session* session,
 
     // we know that the zero-chunk is stored
     if (Fingerprinter::IsEmptyDataFingerprint(mapping->fingerprint(), mapping->fingerprint_size())) {
-      stats_.weak_hits_++;
-      return FILTER_WEAK_MAYBE;
+        stats_.weak_hits_++;
+        return FILTER_WEAK_MAYBE;
     }
     lookup_result lr = this->bloom_set_->Contains(mapping->fingerprint(),
-            mapping->fingerprint_size());
+        mapping->fingerprint_size());
     CHECK_RETURN(lr != LOOKUP_ERROR, FILTER_ERROR, "Failed to lookup bloom set");
     if (lr == LOOKUP_NOT_FOUND) {
         this->stats_.miss_++;
@@ -234,14 +233,14 @@ bool BloomFilter::PersistStatistics(std::string prefix, dedupv1::PersistStatisti
     data.set_miss_count(stats_.miss_);
     data.set_read_count(stats_.reads_);
     data.set_write_count(stats_.writes_);
-    CHECK(ps->Persist(prefix, data), 
+    CHECK(ps->Persist(prefix, data),
         "Failed to persist bloom filter stats");
-  return true;
+    return true;
 }
 
 bool BloomFilter::RestoreStatistics(std::string prefix, dedupv1::PersistStatistics* ps) {
     BloomFilterStatsData data;
-    CHECK(ps->Restore(prefix, &data), 
+    CHECK(ps->Restore(prefix, &data),
         "Failed to restore bloom filter stats");
     stats_.reads_ = data.read_count();
     stats_.writes_ = data.write_count();

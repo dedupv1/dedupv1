@@ -235,14 +235,14 @@ public:
         }
         // there are no error codes. lz4 cannot fail
         return LZ4_compress(
-                const_cast<char*>(static_cast<const char*>(src)),
-                static_cast<char*>(dest), src_size);
+            const_cast<char*>(static_cast<const char*>(src)),
+            static_cast<char*>(dest), src_size);
     }
 
     virtual ssize_t Decompress(void* dest, size_t dest_size, const void* src, size_t src_size) {
         ssize_t r = LZ4_uncompress_unknownOutputSize(
-                const_cast<char*>(static_cast<const char*>(src)),
-                static_cast<char*>(dest), src_size, dest_size);
+            const_cast<char*>(static_cast<const char*>(src)),
+            static_cast<char*>(dest), src_size, dest_size);
         if (r < 0) {
             return -1;
         }

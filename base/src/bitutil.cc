@@ -47,7 +47,7 @@ int bits(int value) {
 }
 
 size_t RoundUpFullBlocks(size_t s, size_t block_size) {
-    for(int i = 1;; i = i << 1) {
+    for (int i = 1;; i = i << 1) {
         size_t t = block_size * i;
         if (s <= t) {
             return t;

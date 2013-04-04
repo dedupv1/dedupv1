@@ -57,7 +57,7 @@ unsigned int multi_file_get_file_offset(uint64_t multi_file_adress,
                                         unsigned int file_count_bits) {
     multi_file_adress = multi_file_adress << (file_count_bits + 1);
     // Remove the file index bits out of the address
-    multi_file_adress = multi_file_adress >> (file_count_bits + 1); 
+    multi_file_adress = multi_file_adress >> (file_count_bits + 1);
     return multi_file_adress;
 }
 

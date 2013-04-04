@@ -175,8 +175,8 @@ bool GreedyContainerGCStrategy::Start(const StartContext& start_context, Contain
         this->merge_candidate_data_size_threshold_ = (0.40 * container_data_size_);
     } else {
         CHECK(merge_candidate_data_size_threshold_ < container_size_,
-                "Illegal threshold: threshold " << merge_candidate_data_size_threshold_ <<
-                ", container size " << container_size_);
+            "Illegal threshold: threshold " << merge_candidate_data_size_threshold_ <<
+            ", container size " << container_size_);
     }
 
     if (this->merge_candidate_item_count_threshold_ == 0) {
@@ -272,18 +272,18 @@ bool GreedyContainerGCStrategy::ProcessCommit(uint64_t primary_container_id, uin
     recursive_mutex::scoped_lock scoped_lock(this->lock_);
 
     TRACE("Process commit: " <<
-            "container id " << primary_container_id <<
-            ", item count " << item_count <<
-            ", active data size " << active_data_size);
+        "container id " << primary_container_id <<
+        ", item count " << item_count <<
+        ", active data size " << active_data_size);
 
     if (active_data_size > this->merge_candidate_data_size_threshold_) {
         TRACE("Container is no merge candidate: container id " << primary_container_id <<
-                ", threshold " << this->merge_candidate_data_size_threshold_);
+            ", threshold " << this->merge_candidate_data_size_threshold_);
         return true;
     }
     if (item_count > this->merge_candidate_item_count_threshold_) {
         TRACE("Container is no merge candidate: container id " << primary_container_id <<
-                ", item threshold " << this->merge_candidate_item_count_threshold_);
+            ", item threshold " << this->merge_candidate_item_count_threshold_);
         return true;
     }
 
@@ -297,9 +297,9 @@ bool GreedyContainerGCStrategy::ProcessCommit(uint64_t primary_container_id, uin
     uint64_t data_size_bucket = GetBucket(active_data_size);
 
     DEBUG("Insert merge candidate: " <<
-            "container id " << primary_container_id <<
-            ", bucket " << data_size_bucket <<
-            ", threshold " << this->merge_candidate_data_size_threshold_);
+        "container id " << primary_container_id <<
+        ", bucket " << data_size_bucket <<
+        ", threshold " << this->merge_candidate_data_size_threshold_);
 
     ContainerGreedyGCCandidateItemData* item = NULL;
     enum lookup_result r = merge_candidates_->Lookup(&data_size_bucket, sizeof(data_size_bucket), &candidate_data);
@@ -315,8 +315,8 @@ bool GreedyContainerGCStrategy::ProcessCommit(uint64_t primary_container_id, uin
         }
     } else {
         TRACE("Found no merge candidate bucket for container: " <<
-                "container id " << primary_container_id <<
-                ", total candidate count " << merge_candidates_->GetItemCount());
+            "container id " << primary_container_id <<
+            ", total candidate count " << merge_candidates_->GetItemCount());
     }
 
     // r == LOOKUP_NOT_FOUND or similar
@@ -361,12 +361,12 @@ bool GreedyContainerGCStrategy::OnMove(const ContainerMoveEventData& data) {
     // the container is committed
     if (active_data_size > this->merge_candidate_data_size_threshold_) {
         TRACE("Container is no merge candidate: " << data.DebugString() <<
-                ", threshold " << this->merge_candidate_data_size_threshold_);
+            ", threshold " << this->merge_candidate_data_size_threshold_);
         return true;
     }
     if (item_count > this->merge_candidate_item_count_threshold_) {
         TRACE("Container is no merge candidate: " << data.DebugString() <<
-                ", item threshold " << this->merge_candidate_item_count_threshold_);
+            ", item threshold " << this->merge_candidate_item_count_threshold_);
         return true;
     }
     // container is a merge candidate
@@ -396,10 +396,10 @@ bool GreedyContainerGCStrategy::OnMove(const ContainerMoveEventData& data) {
                     old_candidate_data.mutable_item()->SwapElements(i, old_candidate_data.item_size() - 1);
                     old_candidate_data.mutable_item()->RemoveLast();
                     DEBUG("Delete from merge candidate: " <<
-                            "event data " << data.ShortDebugString() <<
-                            ", old active data size " << old_active_data_size <<
-                            ", candidate data " << old_candidate_data.ShortDebugString() <<
-                            ", bucket " << old_data_size_bucket);
+                        "event data " << data.ShortDebugString() <<
+                        ", old active data size " << old_active_data_size <<
+                        ", candidate data " << old_candidate_data.ShortDebugString() <<
+                        ", bucket " << old_data_size_bucket);
                     found_in_old_bucket = true;
                     break;
                 }
@@ -408,11 +408,11 @@ bool GreedyContainerGCStrategy::OnMove(const ContainerMoveEventData& data) {
                 // delete or update the other data size bucket
                 if (old_candidate_data.item_size() == 0) {
                     CHECK(merge_candidates_->Delete(&old_data_size_bucket, sizeof(old_data_size_bucket)),
-                            "Failed to delete merge candidate data: bucket " << old_data_size_bucket);
+                        "Failed to delete merge candidate data: bucket " << old_data_size_bucket);
                 } else {
                     CHECK(merge_candidates_->Put(&old_data_size_bucket, sizeof(old_data_size_bucket), old_candidate_data),
-                            "Cannot store merge candidate data: " << old_candidate_data.ShortDebugString() <<
-                            ", bucket " << old_data_size_bucket);
+                        "Cannot store merge candidate data: " << old_candidate_data.ShortDebugString() <<
+                        ", bucket " << old_data_size_bucket);
                 }
             }
             // else: If we haven't found anything, there is no need to update or delete the index
@@ -432,9 +432,9 @@ bool GreedyContainerGCStrategy::OnMove(const ContainerMoveEventData& data) {
                 item->set_active_data_size(data.active_data_size());
                 item->set_active_item_count(data.item_count());
                 DEBUG("Update merge candidate: " <<
-                        "event data " << data.ShortDebugString() <<
-                        ", candidate data " << candidate_data.ShortDebugString() <<
-                        ", bucket " << data_size_bucket);
+                    "event data " << data.ShortDebugString() <<
+                    ", candidate data " << candidate_data.ShortDebugString() <<
+                    ", bucket " << data_size_bucket);
             }
         }
     } else {
@@ -452,9 +452,9 @@ bool GreedyContainerGCStrategy::OnMove(const ContainerMoveEventData& data) {
         item->set_active_data_size(data.active_data_size());
         item->set_active_item_count(data.item_count());
         DEBUG("Insert merge candidate: " <<
-                "event data " << data.ShortDebugString() <<
-                ", candidate data " << candidate_data.ShortDebugString() <<
-                ", bucket " << data_size_bucket);
+            "event data " << data.ShortDebugString() <<
+            ", candidate data " << candidate_data.ShortDebugString() <<
+            ", bucket " << data_size_bucket);
         merge_candidate_count_++;
     }
     CHECK(merge_candidates_->Put(&data_size_bucket, sizeof(data_size_bucket), candidate_data), "Cannot store merge candidate data");
@@ -500,7 +500,7 @@ Option<bool> GreedyContainerGCStrategy::CheckIfPrimaryContainerId(uint64_t conta
 
     TRACE("Check if primary: container id " << container_id);
     pair<lookup_result, ContainerStorageAddressData> address_data =
-            storage_->LookupContainerAddress(container_id, NULL, false);
+        storage_->LookupContainerAddress(container_id, NULL, false);
     if (address_data.first == LOOKUP_ERROR) {
         WARNING("Lookup of container address failed: " << container_id << ", result " << address_data.first);
         return false;
@@ -509,8 +509,8 @@ Option<bool> GreedyContainerGCStrategy::CheckIfPrimaryContainerId(uint64_t conta
         return make_option(false);
     } else if (address_data.second.has_primary_id() && address_data.second.primary_id() != container_id) {
         WARNING("Merge candidate id is now only secondary: " <<
-                "merge candidate id " << container_id <<
-                ", primary id " << address_data.second.primary_id());
+            "merge candidate id " << container_id <<
+            ", primary id " << address_data.second.primary_id());
         return make_option(false);
     }
     return make_option(true);
@@ -565,10 +565,10 @@ bool GreedyContainerGCStrategy::ProcessMergeCandidates() {
 
                 Option<bool> check_result = CheckIfPrimaryContainerId(item_data.address());
                 CHECK(check_result.valid(),
-                        "Failed to check of container id is primary: container id " << item_data.address());
+                    "Failed to check of container id is primary: container id " << item_data.address());
                 if (!check_result.value()) {
                     TRACE("container id is either not yet committed, already deleted or not primary: " <<
-                            "item " << item_data.ShortDebugString());
+                        "item " << item_data.ShortDebugString());
                     delete_item_list.push_back(make_pair(bucket, item_data.address()));
                     continue;
                 }
@@ -619,10 +619,10 @@ bool GreedyContainerGCStrategy::ProcessMergeCandidates() {
                     ContainerGreedyGCCandidateItemData item_data = candidate_data.item(i);
 
                     if ((item_data.active_data_size() + merge_items[0].active_data_size()) >= container_data_size_
-                            || (item_data.active_item_count() + merge_items[0].active_item_count()) >= storage_->GetMaxItemsPerContainer()
-                            || item_data.address() == merge_items[0].address()) {
+                        || (item_data.active_item_count() + merge_items[0].active_item_count()) >= storage_->GetMaxItemsPerContainer()
+                        || item_data.address() == merge_items[0].address()) {
                         TRACE("Skip merge candidate: " << item_data.ShortDebugString() <<
-                                ", partner " << merge_items[0].ShortDebugString());
+                            ", partner " << merge_items[0].ShortDebugString());
                         continue;
                     }
 
@@ -668,8 +668,8 @@ bool GreedyContainerGCStrategy::ProcessMergeCandidates() {
     // we found a second container
     if (merge_items[0].has_address() && merge_items[1].has_address()) {
         DEBUG("Found merge candidates " <<
-                merge_items[0].ShortDebugString() << ", " <<
-                merge_items[1].ShortDebugString());
+            merge_items[0].ShortDebugString() << ", " <<
+            merge_items[1].ShortDebugString());
 
         if (merge_items[1].address() < merge_items[0].address()) {
             // to have everything a bit more predictable we normalize the ordering
@@ -683,7 +683,7 @@ bool GreedyContainerGCStrategy::ProcessMergeCandidates() {
         for (list<pair<uint64_t, uint64_t> >::iterator i = delete_item_list.begin(); i != delete_item_list.end(); i++) {
             TRACE("Delete merge address from bucket: address " << i->second << ", bucket " << i->first);
             CHECK(DeleteFromBucket(i->first, i->second),
-                    "Failed to remove merge address from bucket: address " << i->second << ", bucket " << i->first);
+                "Failed to remove merge address from bucket: address " << i->second << ", bucket " << i->first);
         }
 
         // release lock to avoid deadlock
@@ -695,34 +695,34 @@ bool GreedyContainerGCStrategy::ProcessMergeCandidates() {
                 merge_items[0].address(),
                 merge_items[1].address(),
                 &aborted),
-                "Failed to merge container " << merge_items[0].address() <<
-                ", container " << merge_items[1].address() << ":"
-                ", data of container " << merge_items[0].ShortDebugString() <<
-                ", data of container " << merge_items[1].ShortDebugString());
+            "Failed to merge container " << merge_items[0].address() <<
+            ", container " << merge_items[1].address() << ":"
+            ", data of container " << merge_items[0].ShortDebugString() <<
+            ", data of container " << merge_items[1].ShortDebugString());
 
         if (aborted) {
             DEBUG("Aborted to merge container " << merge_items[0].address() <<
-                    ", container " << merge_items[1].address() << ":"
-                    ", data of container " << merge_items[0].ShortDebugString() <<
-                    ", data of container " << merge_items[1].ShortDebugString());
+                ", container " << merge_items[1].address() << ":"
+                ", data of container " << merge_items[0].ShortDebugString() <<
+                ", data of container " << merge_items[1].ShortDebugString());
         }
 
         TRACE("Finished processing merge candidates " <<
-                merge_items[0].ShortDebugString() << ", " <<
-                merge_items[1].ShortDebugString());
+            merge_items[0].ShortDebugString() << ", " <<
+            merge_items[1].ShortDebugString());
     } else if (merge_items[0].has_address()) {
         CHECK(merge_items[0].active_data_size() == 0 && merge_items[0].active_item_count() == 0,
-                "Illegal delete candidate container " << merge_items[0].ShortDebugString());
+            "Illegal delete candidate container " << merge_items[0].ShortDebugString());
         // a single deletion container
         DEBUG("Found delete candidate " <<
-                merge_items[0].ShortDebugString());
+            merge_items[0].ShortDebugString());
 
         // remove the items from the bucket before the merge as the worst thing that can happen
         // is to "lose" a merge candidate. While this should not happen constantly, we can life with that
         for (list<pair<uint64_t, uint64_t> >::iterator i = delete_item_list.begin(); i != delete_item_list.end(); i++) {
             TRACE("Delete merge address from bucket: address " << i->second << ", bucket " << i->first);
             CHECK(DeleteFromBucket(i->first, i->second),
-                    "Failed to remove merge address from bucket: address " << i->second << ", bucket " << i->first);
+                "Failed to remove merge address from bucket: address " << i->second << ", bucket " << i->first);
         }
 
         // release lock to avoid deadlock
@@ -733,14 +733,14 @@ bool GreedyContainerGCStrategy::ProcessMergeCandidates() {
         CHECK(storage_->TryDeleteContainer(
                 merge_items[0].address(),
                 &aborted),
-                "Failed to delete container " << merge_items[0].address() <<
-                ", data of container " << merge_items[0].DebugString());
+            "Failed to delete container " << merge_items[0].address() <<
+            ", data of container " << merge_items[0].DebugString());
         if (aborted) {
             DEBUG("Aborted to delete container " << merge_items[0].address() <<
-                    ", data of container " << merge_items[0].ShortDebugString());
+                ", data of container " << merge_items[0].ShortDebugString());
         }
         TRACE("Finished processing delete candidate " <<
-                merge_items[0].ShortDebugString());
+            merge_items[0].ShortDebugString());
     }
     FAULT_POINT("container-storage.gc.process.post");
     return true;
@@ -750,7 +750,7 @@ bool GreedyContainerGCStrategy::OnIdle() {
     CHECK(this->started_, "GC not started");
 
     CHECK(ProcessMergeCandidates(),
-            "Failed to process merge candidates");
+        "Failed to process merge candidates");
     return true;
 }
 

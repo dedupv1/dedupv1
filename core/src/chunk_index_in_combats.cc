@@ -125,7 +125,7 @@ bool ChunkIndexInCombats::Touch(const void* fp, size_t fp_size) {
     ProfileTimer timer(this->stats_.touch_time_);
 
     CHECK(this->in_combat_chunks_->Put(fp, fp_size),
-            "Cannot update bloom filter: " << ToHexString(fp, fp_size));
+        "Cannot update bloom filter: " << ToHexString(fp, fp_size));
 
     in_combat_count_++;
     return true;
@@ -147,14 +147,14 @@ Option<bool> ChunkIndexInCombats::Contains(const void* fp, size_t fp_size) {
 }
 
 bool ChunkIndexInCombats::LogReplay(dedupv1::log::event_type event_type,
-        const LogEventData& event_value,
-        const dedupv1::log::LogReplayContext& context) {
+                                    const LogEventData& event_value,
+                                    const dedupv1::log::LogReplayContext& context) {
     DCHECK(log_, "Log not set");
 
     TRACE("Replay log entry: " <<
-            "event type " << dedupv1::log::Log::GetEventTypeName(event_type) <<
-            ", replay mode " << dedupv1::log::Log::GetReplayModeName(context.replay_mode()) <<
-            ", log id " << context.log_id());
+        "event type " << dedupv1::log::Log::GetEventTypeName(event_type) <<
+        ", replay mode " << dedupv1::log::Log::GetReplayModeName(context.replay_mode()) <<
+        ", log id " << context.log_id());
 
     if (event_type == EVENT_TYPE_BLOCK_MAPPING_WRITTEN && context.replay_mode() == EVENT_REPLAY_MODE_DIRTY_START) {
         // rebuild
@@ -165,9 +165,9 @@ bool ChunkIndexInCombats::LogReplay(dedupv1::log::event_type event_type,
         // -1 block mapping is not yet replayed. Then the chunk might be removed based on the uc value, but the replay
         // fails because the chunk is no in the chunk index
         BlockMappingPairData mapping_pair_data = event_data.mapping_pair();
-        for(int i = 0; i < mapping_pair_data.items_size(); i++) {
+        for (int i = 0; i < mapping_pair_data.items_size(); i++) {
             CHECK(Touch(mapping_pair_data.items(i).fp().data(), mapping_pair_data.items(i).fp().size()),
-                    "Failed to update in-combat data: " << mapping_pair_data.items(i).DebugString());
+                "Failed to update in-combat data: " << mapping_pair_data.items(i).DebugString());
         }
     }
     if (event_type == EVENT_TYPE_BLOCK_MAPPING_DELETED && context.replay_mode() == EVENT_REPLAY_MODE_DIRTY_START) {
@@ -179,22 +179,22 @@ bool ChunkIndexInCombats::LogReplay(dedupv1::log::event_type event_type,
         // -1 block mapping is not yet replayed. Then the chunk might be removed based on the uc value, but the replay
         // fails because the chunk is no in the chunk index
         BlockMappingData mapping_data = event_data.original_block_mapping();
-        for(int i = 0; i < mapping_data.items_size(); i++) {
+        for (int i = 0; i < mapping_data.items_size(); i++) {
             CHECK(Touch(mapping_data.items(i).fp().data(), mapping_data.items(i).fp().size()),
-                    "Failed to update in-combat data: " << mapping_data.items(i).DebugString());
+                "Failed to update in-combat data: " << mapping_data.items(i).DebugString());
         }
-    }    
+    }
     if (event_type == EVENT_TYPE_BLOCK_MAPPING_WRITE_FAILED && context.replay_mode() == EVENT_REPLAY_MODE_DIRTY_START) {
         BlockMappingWriteFailedEventData event_data = event_value.block_mapping_write_failed_event();
 
         BlockMappingPairData mapping_pair_data = event_data.mapping_pair();
-        for(int i = 0; i < mapping_pair_data.items_size(); i++) {
+        for (int i = 0; i < mapping_pair_data.items_size(); i++) {
             CHECK(Touch(mapping_pair_data.items(i).fp().data(), mapping_pair_data.items(i).fp().size()),
-                    "Failed to update in-combat data: " << mapping_pair_data.items(i).DebugString());
+                "Failed to update in-combat data: " << mapping_pair_data.items(i).DebugString());
         }
     }
     if ((event_type == dedupv1::log::EVENT_TYPE_LOG_EMPTY || event_type == dedupv1::log::EVENT_TYPE_LOG_NEW)
-            && context.replay_mode() == EVENT_REPLAY_MODE_DIRECT) {
+        && context.replay_mode() == EVENT_REPLAY_MODE_DIRECT) {
         // log is still empty aka the log empty event is the last event logged
         if (context.log_id() + 1 == log_->log_id()) {
             CHECK(Clear(), "Failed to clear in combat chunks");

@@ -108,11 +108,11 @@ bool ChunkIndexRestorer::InitializeStorageAndChunkIndex(const std::string& filen
     // here we replay the complete log. Parts are in memory, parts are not
     // Note: The chunk index is not a registered user
     CHECK(dedup_system_->log()->PerformDirtyReplay(),
-            "Failed to perform dirty replay");
+        "Failed to perform dirty replay");
 
     // now we persist the block mapping data
     CHECK(dedup_system_->block_index()->ImportAllReadyBlocks(),
-            "Failed to import all ready block mappings");
+        "Failed to import all ready block mappings");
 
     // Get and start the chunk index with create = restore => new chunk index will be created,
     // if we want to restore.
@@ -280,7 +280,7 @@ bool ChunkIndexRestorer::RestoreUsageCount(ChunkIndex* chunk_index) {
         }
         BlockMapping block_mapping(key, dedup_system_->block_size());
         CHECK(block_mapping.UnserializeFrom(block_mapping_data, false),
-                "Failed to unserialize data: " << block_mapping_data.ShortDebugString());
+            "Failed to unserialize data: " << block_mapping_data.ShortDebugString());
         DEBUG("Process block: " << block_mapping.DebugString());
 
         // Iterate over the block mapping items.

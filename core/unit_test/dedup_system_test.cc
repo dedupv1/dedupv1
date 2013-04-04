@@ -72,13 +72,13 @@ void DedupSystemTest::TearDown() {
 }
 
 DedupSystem* DedupSystemTest::CreateDefaultSystem(string config_option,
-        dedupv1::InfoStore* info_store,
-        dedupv1::base::Threadpool* tp,
-        bool start,
-        bool restart,
-        bool crashed,
-        bool dirty,
-        bool full_replay) {
+                                                  dedupv1::InfoStore* info_store,
+                                                  dedupv1::base::Threadpool* tp,
+                                                  bool start,
+                                                  bool restart,
+                                                  bool crashed,
+                                                  bool dirty,
+                                                  bool full_replay) {
     CHECK_RETURN(info_store, NULL, "Info store not set");
     CHECK_RETURN(tp != NULL, NULL, "Threadpool not set");
 
@@ -439,10 +439,10 @@ bool MakeOverwriteRequest(tuple<DedupSystem*, int, int, bool> t) {
         memset(buffer, i % 8, system->block_size());
         if (overwrite) {
             CHECK(volume->MakeRequest(REQUEST_WRITE, thread_id * system->block_size(), system->block_size(), buffer, NO_EC),
-                    "Write failed");
+                "Write failed");
         } else {
             CHECK(volume->MakeRequest(REQUEST_WRITE, ((request_count * thread_id) + i) * system->block_size(), system->block_size(), buffer, NO_EC),
-                    "Write failed");
+                "Write failed");
         }
     }
     return true;

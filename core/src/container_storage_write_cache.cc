@@ -129,9 +129,9 @@ void ContainerStorageWriteCache::ClearData() {
 #endif
 
 lookup_result ContainerStorageWriteCache::GetWriteCacheContainer(uint64_t address,
-      Container** write_container,
-      ReadWriteLock** write_cache_lock,
-      bool write_lock) {
+                                                                 Container** write_container,
+                                                                 ReadWriteLock** write_cache_lock,
+                                                                 bool write_lock) {
     DCHECK_RETURN(this->write_container.size() > 0, LOOKUP_ERROR, "Write cache not started");
 
     ProfileTimer(this->stats_.cache_check_time_);

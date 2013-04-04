@@ -178,7 +178,7 @@ bool BlockMappingPair::CopyFrom(const BlockMapping& original_mapping, const Bloc
     }
     // process left over uc entires
     map<bytestring, int32_t>::const_iterator j;
-    for(j = uc_map.begin(); j != uc_map.end(); j++) {
+    for (j = uc_map.begin(); j != uc_map.end(); j++) {
         if (Fingerprinter::IsEmptyDataFingerprint(j->first.data(), j->first.size())) {
             continue;
         }
@@ -205,7 +205,7 @@ map<bytestring, pair<int, uint64_t> > BlockMappingPair::GetDiff() const {
     for (i = this->items().begin(); i != this->items().end(); i++) {
         bytestring fp;
         fp.assign(i->fingerprint(), i->fingerprint_size());
-        diff[fp] += i->usage_count_modifier(); 
+        diff[fp] += i->usage_count_modifier();
         container_map[fp] = i->data_address();
     }
     map<bytestring, int>::iterator j;
@@ -226,8 +226,8 @@ bool BlockMappingPair::CopyFrom(const BlockMappingPairData& data) {
     for (int i = 0; i < data.items_size(); i++) {
         const BlockMappingPairItemData& data_item(data.items(i));
         BlockMappingPairItem item;
-        CHECK(item.CopyFrom(data_item), 
-                "Cannot copy block mapping pair item: " << data_item.ShortDebugString());
+        CHECK(item.CopyFrom(data_item),
+            "Cannot copy block mapping pair item: " << data_item.ShortDebugString());
         this->items_.push_back(item);
     }
     return true;
@@ -261,9 +261,9 @@ std::string BlockMappingPair::DebugString() const {
     unsigned int count = 0;
     std::stringstream s;
     s << "[block " << block_id() <<
-            ", size " << block_size() <<
-            ", item count " << item_count() <<
-            ", version " << version() << std::endl;
+    ", size " << block_size() <<
+    ", item count " << item_count() <<
+    ", version " << version() << std::endl;
 
     list<BlockMappingPairItem>::const_iterator i;
     for (i = this->items().begin(); i != this->items().end(); i++) {

@@ -98,7 +98,7 @@ public:
         barrier_ = barrier;
         multi_signal_condition_ = multi_signal_condition;
     }
-    
+
     virtual bool Runner() {
         TRACE("Execute task");
         started = true;
@@ -110,7 +110,7 @@ public:
             if (!multi_signal_condition_->Signal()) {
                 return false;
             }
-        }        
+        }
         // wait until the barrier is visited by the correct number of threads
         if (barrier_) {
             if (!barrier_->Wait()) {
@@ -123,13 +123,13 @@ public:
 
     inline int count() const {
         return count_;
-    } 
+    }
 };
 
 TEST_F(ThreadpoolTest, StartWithSize256) {
     ASSERT_TRUE(t.SetOption("size", "256"));
     ASSERT_TRUE(t.Start());
-    
+
     ThreadpoolTestRunnable r;
 
     Future<bool>* f = t.Submit(NewRunnable<bool>(&r, &ThreadpoolTestRunnable::Runner));
@@ -173,7 +173,6 @@ TEST_F(ThreadpoolTest, Priority) {
     f->Close();
     f = NULL;
 
-
     f = t.Submit(NewRunnable<bool>(&r2, &ThreadpoolTestRunnable::Runner), Threadpool::HIGH_PRIORITY);
     ASSERT_TRUE(f);
     f->Close();
@@ -195,33 +194,33 @@ TEST_F(ThreadpoolTest, TooMuchThreads) {
 #ifndef NVALGRIND
     should_run = !(RUNNING_ON_VALGRIND);
 #endif
-#ifdef __APPLE__    
+#ifdef __APPLE__
     should_run = false;
 #endif
     // memory limit where the creatio of 1000 threads should fail. Must be set by experiments
     int thread_count = 1024;
     int memory_limit = 512 * 1024 * 1024;
-    
+
     if (!should_run) {
         INFO("Skip this");
         return;
     }
 
     EXPECT_LOGGING(dedupv1::test::ERROR).Repeatedly();
-    
+
     struct rlimit limit;
     memset(&limit, 0, sizeof(limit));
     struct rlimit oldlimit;
     memset(&limit, 0, sizeof(oldlimit));
-    
+
     ASSERT_EQ(getrlimit(RLIMIT_AS, &oldlimit), 0);
     memcpy(&limit, &oldlimit, sizeof(limit));
     limit.rlim_cur = memory_limit;
     ASSERT_EQ(setrlimit(RLIMIT_AS, &limit), 0);
-    
+
     ASSERT_TRUE(t.SetOption("size", ToString(thread_count)));
     ASSERT_FALSE(t.Start());
-    
+
     ASSERT_EQ(setrlimit(RLIMIT_AS, &oldlimit), 0);
 }
 
@@ -242,10 +241,10 @@ TEST_F(ThreadpoolTest, Reject) {
     // job 1
     Future<bool>* f1 = t.Submit(NewRunnable<bool>(&blocking1, &ThreadpoolTestRunnable::Runner));
     EXPECT_TRUE(f1);
-    
+
     // wait so that f1 is running. job 1 will keep running until b.Wait() is called
     EXPECT_TRUE(c1.Wait());
-    
+
     // job 2 will always be submitted into the queue
     Future<bool>* f2 = t.Submit(NewRunnable<bool>(&blocking2, &ThreadpoolTestRunnable::Runner));
     EXPECT_TRUE(f2);
@@ -261,7 +260,7 @@ TEST_F(ThreadpoolTest, Reject) {
     EXPECT_TRUE(b1.Wait());
     // here we release job 2
     EXPECT_TRUE(b2.Wait());
-    
+
     if (f1) {
         // Wait here until job 1 is finished
         EXPECT_TRUE(f1->Wait());
@@ -288,22 +287,22 @@ TEST_F(ThreadpoolTest, CallerRuns) {
     Barrier b2(2);
     ThreadpoolTestRunnable blocking1(0, &c1, &b1);
     ThreadpoolTestRunnable blocking2(0, NULL, &b2);
-    
+
     ThreadpoolTestRunnable blocked(2);
 
     // job 1
     Future<bool>* f1 = t.Submit(NewRunnable<bool>(&blocking1, &ThreadpoolTestRunnable::Runner));
     EXPECT_TRUE(f1);
-    
+
     // wait so that f1 is running. job 1 will keep running until b.Wait() is called
     EXPECT_TRUE(c1.Wait());
-    
+
     // job 2 will always be submitted into the queue
     Future<bool>* f2 = t.Submit(NewRunnable<bool>(&blocking2, &ThreadpoolTestRunnable::Runner));
     EXPECT_TRUE(f2);
-    
+
     // job 3 will should be started in caller runs mode
-    Future<bool>* f3 = t.Submit(NewRunnable<bool>(&blocked, &ThreadpoolTestRunnable::Runner), 
+    Future<bool>* f3 = t.Submit(NewRunnable<bool>(&blocked, &ThreadpoolTestRunnable::Runner),
         Threadpool::BACKGROUND_PRIORITY, Threadpool::CALLER_RUNS);
     EXPECT_TRUE(f3);
 
@@ -311,7 +310,7 @@ TEST_F(ThreadpoolTest, CallerRuns) {
     EXPECT_TRUE(b1.Wait());
     // here we release job 2
     EXPECT_TRUE(b2.Wait());
-    
+
     if (f1) {
         // Wait here until job 1 is finished
         EXPECT_TRUE(f3->Wait());
@@ -320,13 +319,13 @@ TEST_F(ThreadpoolTest, CallerRuns) {
     }
     if (f2) {
         // Wait here until job 2 is finished
-        EXPECT_TRUE(f3->Wait());       
+        EXPECT_TRUE(f3->Wait());
         EXPECT_TRUE(f2->Close());
         f2 = NULL;
     }
     if (f3) {
         // Wait here until job 3 is finished
-        EXPECT_TRUE(f3->Wait()); 
+        EXPECT_TRUE(f3->Wait());
         EXPECT_TRUE(f3->Close());
         f3 = NULL;
     }
@@ -359,7 +358,7 @@ TEST_F(ThreadpoolTest, SubmitWithoutFuture) {
     ASSERT_TRUE(t.SetOption("size", "1"));
     ASSERT_TRUE(t.Start());
 
-    int count= 4 * 1024;
+    int count = 4 * 1024;
     MultiSignalCondition barrier(count);
     ThreadpoolTestRunnable r(0, &barrier);
     for (int i = 0; i < count; i++) {
@@ -370,7 +369,7 @@ TEST_F(ThreadpoolTest, SubmitWithoutFuture) {
     DEBUG("Start waiting");
     barrier.Wait();
     DEBUG("Stopped waiting");
-    
+
     tbb::tick_count t2 = tbb::tick_count::now();
     DEBUG("Waiting time: " << (t2 - t1).seconds() * 1000 << "ms");
     ASSERT_TRUE(t.Stop());

@@ -69,7 +69,7 @@ Option<string> MonitorClient::PerformRequest() {
         delete result;
         return false;
     }
-    string content((const char*) result->content());
+    string content((const char *) result->content());
     delete result;
     return make_option(content);
 }

@@ -119,7 +119,7 @@ bool TCMemHashIndex::Clear() {
 }
 
 enum lookup_result TCMemHashIndex::RawLookup(const void* key, size_t key_size,
-        void* value, size_t* value_size) {
+                                             void* value, size_t* value_size) {
     DCHECK_RETURN(this->mdb_, LOOKUP_ERROR, "Memory database not set");
     DCHECK_RETURN(key, LOOKUP_ERROR, "Key not set");
 
@@ -135,7 +135,7 @@ enum lookup_result TCMemHashIndex::RawLookup(const void* key, size_t key_size,
     bool b = true;
     if (value) {
         DCHECK_RETURN(value_size, LOOKUP_ERROR, "Value size not set");
-        if(result_size > (*value_size)) {
+        if (result_size > (*value_size)) {
             *value_size = result_size;
             return LOOKUP_ERROR;
         }
@@ -239,9 +239,9 @@ enum put_result TCMemHashIndex::RawPutIfAbsent(
 }
 
 enum put_result TCMemHashIndex::CompareAndSwap(const void* key, size_t key_size,
-        const Message& message,
-        const Message& compare_message,
-        Message* result_message) {
+                                               const Message& message,
+                                               const Message& compare_message,
+                                               Message* result_message) {
     ProfileTimer timer(this->update_time_);
     CHECK_RETURN(this->state_ == TC_HASH_MEM_INDEX_STATE_STARTED, PUT_ERROR, "Index not started");
     DCHECK_RETURN(this->mdb_, PUT_ERROR, "Memory database not set");
@@ -260,7 +260,7 @@ enum put_result TCMemHashIndex::CompareAndSwap(const void* key, size_t key_size,
 
     int sp;
     void* r = tcmdbcas(this->mdb_, key, key_size, target.data(), target.size(),
-            compare_target.data(), compare_target.size(), &sp);
+        compare_target.data(), compare_target.size(), &sp);
     CHECK_RETURN(r, PUT_ERROR, "Failed to find value in hash mem index");
     if (raw_compare(target.data(), target.size(), r, sp) == 0) {
         free(r);
@@ -269,11 +269,11 @@ enum put_result TCMemHashIndex::CompareAndSwap(const void* key, size_t key_size,
         return PUT_OK;
     } else {
         Option<size_t> b = ParseSizedMessage(result_message, r, sp, checksum_);
-         if (!b.valid()) {
-             ERROR("Failed to parse message: " << ToHexString(r, sp));
-             free(r);
-             return PUT_ERROR;
-         }
+        if (!b.valid()) {
+            ERROR("Failed to parse message: " << ToHexString(r, sp));
+            free(r);
+            return PUT_ERROR;
+        }
         free(r);
         r = NULL;
         return PUT_KEEP;
@@ -399,7 +399,7 @@ enum lookup_result TCMemHashIndexIterator::Next(void* key, size_t* key_size, Mes
 
     if (message) {
         CHECK_GOTO(ParseSizedMessage(message, result, result_size, this->index_->checksum_).valid(),
-                "Failed to parse message");
+            "Failed to parse message");
     }
     free(iter_key); // allocated by tc.
     free(result); // allocated by tc.

@@ -119,7 +119,7 @@ string Fingerprinter::DebugString(const bytestring& fp) {
 }
 
 string Fingerprinter::DebugString(const string& fp) {
-    return Fingerprinter::DebugString((const byte*) fp.c_str(), fp.size());
+    return Fingerprinter::DebugString((const byte *) fp.c_str(), fp.size());
 }
 
 bool Fingerprinter::Init() {

@@ -68,7 +68,7 @@ bool Container::UnserializeMetadata(bool verify_checksum) {
 
     ContainerData container_data;
     CHECK(ParseSizedMessage(&container_data, this->data_, kMetaDataSize, verify_checksum).valid(),
-            "Cannot parse data: " << container_data.InitializationErrorString());
+        "Cannot parse data: " << container_data.InitializationErrorString());
 
     if (verify_checksum && container_data.has_checksum() && !this->metaDataOnly_) {
         // we can only check the checksum if we have all data
@@ -110,7 +110,7 @@ bool Container::UnserializeMetadata(bool verify_checksum) {
             // backward mode
             original_id = container_data.primary_id();
         }
-        ContainerItem* item = new ContainerItem((byte*) item_data.fp().data(), item_data.fp().size(),
+        ContainerItem* item = new ContainerItem((byte *) item_data.fp().data(), item_data.fp().size(),
             item_data.position_offset(), item_data.raw_size(), item_data.item_size(), original_id);
 
         CHECK(item, "Alloc item failed");
@@ -253,33 +253,33 @@ void Container::Reuse(uint64_t id) {
     // meta data mode stays the same
 }
 namespace {
-    
-    Compression* GetCompression(CompressionMode mode) {
-        if (mode == COMPRESSION_BZ2) {
-            return Compression::NewCompression(Compression::COMPRESSION_BZ2);
-        } else if (mode == COMPRESSION_DEFLATE) {
-            return Compression::NewCompression(Compression::COMPRESSION_ZLIB_1);
-        } else if (mode == COMPRESSION_LZ4) {
-            return Compression::NewCompression(Compression::COMPRESSION_LZ4);
-        } else if (mode == COMPRESSION_SNAPPY) {
-            return Compression::NewCompression(Compression::COMPRESSION_SNAPPY);
-        }
-        ERROR("Compression not supported yet");
-        return NULL;
-    }
-    
-    bool DecompressItem(const ContainerItemValueData& item_data, const byte* data, void* dest, size_t dest_size) {
-        Compression* comp = GetCompression(item_data.compression());
-        DCHECK(comp, "Cannot create compression");
 
-         bool failed = false;
-         if (comp->Decompress(dest, dest_size, data, item_data.on_disk_size()) < 0) {
-             ERROR("Failed to decompress container data");
-            failed = true;
-        }
-        delete comp;
-        return !failed;
+Compression* GetCompression(CompressionMode mode) {
+    if (mode == COMPRESSION_BZ2) {
+        return Compression::NewCompression(Compression::COMPRESSION_BZ2);
+    } else if (mode == COMPRESSION_DEFLATE) {
+        return Compression::NewCompression(Compression::COMPRESSION_ZLIB_1);
+    } else if (mode == COMPRESSION_LZ4) {
+        return Compression::NewCompression(Compression::COMPRESSION_LZ4);
+    } else if (mode == COMPRESSION_SNAPPY) {
+        return Compression::NewCompression(Compression::COMPRESSION_SNAPPY);
     }
+    ERROR("Compression not supported yet");
+    return NULL;
+}
+
+bool DecompressItem(const ContainerItemValueData& item_data, const byte* data, void* dest, size_t dest_size) {
+    Compression* comp = GetCompression(item_data.compression());
+    DCHECK(comp, "Cannot create compression");
+
+    bool failed = false;
+    if (comp->Decompress(dest, dest_size, data, item_data.on_disk_size()) < 0) {
+        ERROR("Failed to decompress container data");
+        failed = true;
+    }
+    delete comp;
+    return !failed;
+}
 }
 bool Container::CopyRawData(const ContainerItem* item, void* dest, size_t dest_size) const {
     DCHECK(item, "Item not set");
@@ -314,7 +314,7 @@ bool Container::CopyRawData(const ContainerItem* item, void* dest, size_t dest_s
         DCHECK(data_offset + item_data.on_disk_size() <= container_size_, "Illegal source offset");
         memcpy(dest, this->data_ + data_offset, item_data.on_disk_size());
     } else {
-        CHECK(DecompressItem(item_data, this->data_ + data_offset, dest, dest_size), 
+        CHECK(DecompressItem(item_data, this->data_ + data_offset, dest, dest_size),
             "Failed to decompress item: " << item->DebugString() <<
             ", item data " << item_data.ShortDebugString());
     }
@@ -331,7 +331,7 @@ bool Container::DeleteItem(const byte* key, size_t key_size) {
     CHECK(item, "Item not found: " << Fingerprinter::DebugString(key, key_size));
 
     TRACE("Delete item from container " << this->primary_id() <<
-        ", fp " << Fingerprinter::DebugString((byte*) key, key_size));
+        ", fp " << Fingerprinter::DebugString((byte *) key, key_size));
 
     if (item->deleted_ == false) {
         item->deleted_ = true;
@@ -519,7 +519,7 @@ bool ContainerItem::Equals(const ContainerItem& item) const {
 }
 
 string ContainerItem::key_string() const {
-    return Fingerprinter::DebugString((byte*) key_, key_size_);
+    return Fingerprinter::DebugString((byte *) key_, key_size_);
 }
 
 Container::~Container() {
@@ -630,9 +630,9 @@ bool Container::LoadFromFile(File* file, off_t offset, bool verify_checksum) {
 
     uint64_t container_id = this->primary_id(); // unserialize metadata might change primary id
     CHECK(this->UnserializeMetadata(verify_checksum), "Failed to unserialize container: " <<
-            "container id " << container_id <<
-            ", (partially loaded) container " << this->DebugString() <<
-            ", offset " << offset);
+        "container id " << container_id <<
+        ", (partially loaded) container " << this->DebugString() <<
+        ", offset " << offset);
     CHECK(this->pos_, "Position not set correctly");
     CHECK(this->pos_ <= this->container_size_, "Illegal container size: " << this->container_size_);
 

@@ -92,7 +92,7 @@ bool Socket::Bind(const std::string& host, in_port_t port) {
     sockaddr_in raw_addr = addr.value();
     raw_addr.sin_port = htons(port);
 
-    CHECK_ERRNO(bind(this->fd, (struct sockaddr*) &(raw_addr), sizeof(raw_addr)), "Failed to bind socket: ");
+    CHECK_ERRNO(bind(this->fd, (struct sockaddr *) &(raw_addr), sizeof(raw_addr)), "Failed to bind socket: ");
     this->port = static_cast<int>(port);
     this->state = SOCKET_STATE_BIND;
     return true;
@@ -105,7 +105,7 @@ bool Socket::Bind(in_port_t port) {
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
     addr.sin_port = htons(port);
 
-    CHECK_ERRNO(bind(this->fd, (struct sockaddr*) &addr, sizeof(addr)), "Failed to bind socket: ");
+    CHECK_ERRNO(bind(this->fd, (struct sockaddr *) &addr, sizeof(addr)), "Failed to bind socket: ");
     this->port = static_cast<int>(port);
     this->state = SOCKET_STATE_BIND;
     return true;
@@ -121,7 +121,7 @@ bool Socket::Connect(const string& host, in_port_t port) {
     addr.sin_port = htons(port);
     addr.sin_family = AF_INET;
 
-    CHECK_ERRNO(connect(this->fd, (struct sockaddr*) &addr, sizeof(struct sockaddr_in)),
+    CHECK_ERRNO(connect(this->fd, (struct sockaddr *) &addr, sizeof(struct sockaddr_in)),
         "Failed to connect to socket: ");
 
     this->state = SOCKET_STATE_CONNECTED;
@@ -148,7 +148,7 @@ Socket* Socket::Accept(struct sockaddr_in* addr) {
     if (addr == NULL) {
         psize = NULL;
     }
-    fd = accept(this->fd, (struct sockaddr*) addr, psize);
+    fd = accept(this->fd, (struct sockaddr *) addr, psize);
     if (fd < 0) {
         ERROR("Failed to accept socket: " << strerror(errno));
         return NULL;

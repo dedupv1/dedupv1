@@ -161,7 +161,7 @@ bool StaticChunkerSession::ChunkData(
     size_t pos = 0;
 
     request_offset = (request_offset % chunker->avg_chunk_size_);
-    byte* byte_data = (byte*) data;
+    byte* byte_data = (byte *) data;
     while (size > 0) {
         amount = (chunker->avg_chunk_size_ - request_offset); // default case: amount = rest of current chunk
         if (size < amount) { // size to small for amount

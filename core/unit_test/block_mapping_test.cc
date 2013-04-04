@@ -197,6 +197,5 @@ TEST_F(BlockMappingTest, Size) {
     DEBUG("Data size " << data.ByteSize() << ", minimal data size " << (m.items().size() * 20));
 }
 
-
 }
 }

@@ -97,10 +97,10 @@ protected:
     MemoryInfoStore info_store;
     IdleDetector idle_detector;
     Threadpool tp;
-    
+
     // It is NULL, I know it
     ContentStorage* content_storage;
-        
+
     virtual void SetUp() {
         content_storage = NULL;
         ASSERT_TRUE(tp.SetOption("size", "8"));

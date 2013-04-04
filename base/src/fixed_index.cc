@@ -116,7 +116,7 @@ bool FixedIndex::CheckFileSuperBlock(File* file) {
     CHECK(super_data.width() == width, "Width changed: width " << super_data.width() << ", configured width " << width);
     CHECK(super_data.size() == size, "Size changed: size " << super_data.size() << ", configured size " << size);
     CHECK(super_data.file_count() == this->filename.size(), "File count changed: file count " << super_data.file_count() <<
-            ", configured file count " << this->filename.size());
+        ", configured file count " << this->filename.size());
 
     DEBUG("Found super block: " << super_data.ShortDebugString());
 
@@ -128,7 +128,7 @@ bool FixedIndex::Format(File* file) {
     DEBUG("Format file " << file->path());
 
     CHECK(file->Fallocate(0, this->size / this->filename.size()),
-            "File allocate failed: " << file->path());
+        "File allocate failed: " << file->path());
 
     FixedIndexMetaData super_data;
     super_data.set_width(this->width);
@@ -151,7 +151,7 @@ bool FixedIndex::Start(const StartContext& start_context) {
     this->bucket_size = pow(2, b);
 
     CHECK(size % this->bucket_size == 0, "Index size not aligned with bucket size: " <<
-            "width " << this->width << ", bucket size " << this->bucket_size << ", total size " << this->size);
+        "width " << this->width << ", bucket size " << this->bucket_size << ", total size " << this->size);
 
     int io_flags = O_RDWR | O_LARGEFILE | O_SYNC;
 
@@ -168,7 +168,7 @@ bool FixedIndex::Start(const StartContext& start_context) {
             INFO("Creating index file " << this->filename[i]);
 
             CHECK(File::MakeParentDirectory(this->filename[i], start_context.dir_mode().mode()),
-                    "Failed to check parent directories");
+                "Failed to check parent directories");
 
             // We open the file without the O_SYNC flag to increase the speed for the formatting.
             File* format_file = File::Open(this->filename[i], O_CREAT | O_RDWR | O_LARGEFILE, S_IRUSR | S_IWUSR | S_IRGRP);
@@ -183,10 +183,10 @@ bool FixedIndex::Start(const StartContext& start_context) {
 
             if (start_context.create()) {
                 CHECK(chmod(this->filename[i].c_str(), start_context.file_mode().mode()) == 0,
-                        "Failed to change file permissions: " << this->filename[i]);
+                    "Failed to change file permissions: " << this->filename[i]);
                 if (start_context.file_mode().gid() != -1) {
                     CHECK(chown(this->filename[i].c_str(), -1, start_context.file_mode().gid()) == 0,
-                            "Failed to change file group: " << this->filename[i]);
+                        "Failed to change file group: " << this->filename[i]);
                 }
             }
         } else {
@@ -201,14 +201,14 @@ bool FixedIndex::Start(const StartContext& start_context) {
         CHECK(file_size.valid(), "Failed to check file size: " << this->files[i]->path());
 
         CHECK(file_size.value() == size_per_file, "File has wrong size: " <<
-                files[i]->path() <<
-                ", expected size " << size_per_file <<
-                ", actual size " << file_size.value());
+            files[i]->path() <<
+            ", expected size " << size_per_file <<
+            ", actual size " << file_size.value());
     }
 
     DEBUG("Starting index: width " << this->width <<
-            ", bucket size " << this->bucket_size <<
-            ", total size " << this->size);
+        ", bucket size " << this->bucket_size <<
+        ", total size " << this->size);
 
     this->state = FIXED_INDEX_STATE_STARTED;
     return true;
@@ -245,19 +245,18 @@ lookup_result FixedIndex::ReadBucket(File* file, int64_t file_id, int64_t global
     }
     TRACE("Read bucket " << file_id << ": offset " << offset << ", data " << data.ShortDebugString());
 
-
     if (!data.has_state()) {
         // there is a single case where would be ok. an unwritten block.
         TRACE("Bucket has no state: Check if this is ok here: " << data.ShortDebugString());
         CHECK_RETURN(data.has_data() == false && data.has_crc() == false && data.ByteSize() == 0,
-                LOOKUP_ERROR,
-                "Bucket data has not state field: offset " << offset <<
-                ", file size " << file->GetSize().value() <<
-                ", bucket size " << this->bucket_size <<
-                ", read bytes " << reads <<
-                ", file id " << file_id <<
-                ", file " << file->path() <<
-                ", data " << data.ShortDebugString());
+            LOOKUP_ERROR,
+            "Bucket data has not state field: offset " << offset <<
+            ", file size " << file->GetSize().value() <<
+            ", bucket size " << this->bucket_size <<
+            ", read bytes " << reads <<
+            ", file id " << file_id <<
+            ", file " << file->path() <<
+            ", data " << data.ShortDebugString());
         data.set_state(FIXED_INDEX_STATE_INVALID);
     }
 
@@ -267,11 +266,11 @@ lookup_result FixedIndex::ReadBucket(File* file, int64_t file_id, int64_t global
 
     CHECK_RETURN(data.has_data(), LOOKUP_ERROR, "Bucket data has no data field: " << data.ShortDebugString());
     CHECK_RETURN(data.has_crc() || data.has_crc_bytes(), LOOKUP_ERROR,
-            "Bucket data has no crc field: " << data.ShortDebugString());
+        "Bucket data has no crc field: " << data.ShortDebugString());
 
     if (data.has_key()) {
         CHECK_RETURN(data.key() == global_id, LOOKUP_ERROR, "Illegal bucket: " << data.ShortDebugString() <<
-                ", search key " << global_id);
+            ", search key " << global_id);
     }
 
     if (data.has_crc()) {
@@ -284,14 +283,14 @@ lookup_result FixedIndex::ReadBucket(File* file, int64_t file_id, int64_t global
     }
     if (message) {
         CHECK_RETURN(message->ParseFromString(data.data()), LOOKUP_ERROR,
-                "Failed to parse message");
+            "Failed to parse message");
     }
     return LOOKUP_FOUND;
 
 }
 
 lookup_result FixedIndex::Lookup(const void* key, size_t key_size,
-        Message* message) {
+                                 Message* message) {
     ProfileTimer timer(this->profiling);
 
     CHECK_RETURN(key_size <= sizeof(int64_t), LOOKUP_ERROR, "Illegal key size: " << key_size);
@@ -350,7 +349,7 @@ delete_result FixedIndex::DeleteBucket(File* file, int64_t file_id, int64_t glob
 }
 
 put_result FixedIndex::Put(const void* key, size_t key_size,
-        const Message& message) {
+                           const Message& message) {
     ProfileTimer timer(this->profiling);
 
     CHECK_RETURN(this->state == FIXED_INDEX_STATE_STARTED, PUT_ERROR, "Index not started");
@@ -374,7 +373,7 @@ put_result FixedIndex::Put(const void* key, size_t key_size,
 }
 
 put_result FixedIndex::PutIfAbsent(const void* key, size_t key_size,
-        const Message& message) {
+                                   const Message& message) {
     ERROR("PutIfAbsent not supported");
     return PUT_ERROR;
 }
@@ -480,7 +479,7 @@ FixedIndexIterator::~FixedIndexIterator() {
 }
 
 lookup_result FixedIndexIterator::Next(void* key, size_t* key_size,
-        Message* message) {
+                                       Message* message) {
     CHECK_RETURN(this->index_, LOOKUP_ERROR, "Index not set");
     CHECK_RETURN(this->version_counter == this->index_->version_counter, LOOKUP_ERROR, "Concurrent modification error");
 

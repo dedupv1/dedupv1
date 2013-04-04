@@ -94,7 +94,7 @@ size_t NullChunker::GetAvgChunkSize() {
 
 bool NullChunkerSession::ChunkData(
     const byte* data, unsigned int request_offset,
-    unsigned int size, 
+    unsigned int size,
     bool last_chunk_call,
     list<Chunk*>* chunks) {
     return true;

@@ -66,7 +66,7 @@ void IdleTickConsumer::IdleEnd() {
 }
 
 IdleDetector::IdleDetector()
-: idle_thread_(NewRunnable(this, &IdleDetector::IdleLoop), "idle"), sliding_througput_average_(30), sliding_latency_average_(30) {
+    : idle_thread_(NewRunnable(this, &IdleDetector::IdleLoop), "idle"), sliding_througput_average_(30), sliding_latency_average_(30) {
     this->idle_tick_interval_ = 5;
     this->idle_check_interval_ = 1;
     max_average_throughput_ = 512 * 1024; // 512kb
@@ -192,10 +192,10 @@ void IdleDetector::UpdateIdleState() {
         is_idle = false;
     }
     DEBUG("Update idle state: forced idle " << forced_idle_ <<
-            ", force busy " << forced_busy_ <<
-            ", average throughput " << throughput_average <<
-            ", average latency " << latency_average <<
-            ", updated idle state " << is_idle);
+        ", force busy " << forced_busy_ <<
+        ", average throughput " << throughput_average <<
+        ", average latency " << latency_average <<
+        ", updated idle state " << is_idle);
 
     if (is_idle) {
         idle_state old_idle_state = idle_state_.compare_and_swap(STATE_IDLE, STATE_BUSY);
@@ -248,8 +248,8 @@ bool IdleDetector::OnRequestEnd(enum request_type rw, uint64_t request_index, ui
     sliding_througput_average_.Add(seconds_since_start, size);
 
     TRACE("Update data based on request: request size " << size << ", request latency " << request_latency <<
-            ", latency average " << sliding_latency_average_.GetAverage(seconds_since_start) <<
-            ", throughput average " << sliding_througput_average_.GetAverage(seconds_since_start));
+        ", latency average " << sliding_latency_average_.GetAverage(seconds_since_start) <<
+        ", throughput average " << sliding_througput_average_.GetAverage(seconds_since_start));
     return true;
 }
 

@@ -211,7 +211,7 @@ namespace base {
 
 uint64_t bj_hash(const void *data, size_t length)
 {
-    byte* key = (byte*) data;
+    byte* key = (byte *) data;
     uint32_t initval = 0;
     uint32_t a,b,c;                                          /* internal state */
     union { const void *ptr; size_t i; } u;     /* needed for Mac Powerbook G4 */

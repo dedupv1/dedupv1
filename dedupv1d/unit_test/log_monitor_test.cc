@@ -108,7 +108,7 @@ public:
 };
 
 void* log_monitor_with_param(void* c) {
-    MonitorCall* mc = (MonitorCall*) c;
+    MonitorCall* mc = (MonitorCall *) c;
     std::string url = "http://localhost:" + dedupv1::base::strutil::ToString(mc->port()) + "/" +
                       mc->monitor();
     if (mc->key() != "") {
@@ -123,13 +123,13 @@ TEST_F(LogMonitorTest, RunReplayer) {
 
     MonitorCall mc(m->port(), "log", "state", "resume");
     pthread_t t;
-    pthread_create(&t, NULL, log_monitor_with_param, (void*) &mc);
+    pthread_create(&t, NULL, log_monitor_with_param, (void *) &mc);
 
     HttpResult* buffer = NULL;
-    pthread_join(t, (void**) &buffer);
+    pthread_join(t, (void * *) &buffer);
 
     ASSERT_TRUE(buffer);
-    string content((const char*) buffer->content());
+    string content((const char *) buffer->content());
     ASSERT_TRUE(Contains(content, "running")) << content;
     ASSERT_TRUE(content.size() > 0);
     ASSERT_TRUE(IsJson(content));
@@ -147,13 +147,13 @@ TEST_F(LogMonitorTest, PauseReplayer) {
 
     MonitorCall mc(m->port(), "log", "state", "pause");
     pthread_t t;
-    pthread_create(&t, NULL, log_monitor_with_param, (void*) &mc);
+    pthread_create(&t, NULL, log_monitor_with_param, (void *) &mc);
 
     HttpResult* buffer = NULL;
-    pthread_join(t, (void**) &buffer);
+    pthread_join(t, (void * *) &buffer);
 
     ASSERT_TRUE(buffer);
-    string content((const char*) buffer->content());
+    string content((const char *) buffer->content());
 
     ASSERT_TRUE(Contains(content, "paused"));
 

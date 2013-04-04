@@ -44,7 +44,6 @@ ScsiResult::ScsiResult() {
     ascq_ = 0;
 }
 
-
 ScsiResult::ScsiResult(enum scsi_result result, enum scsi_sense_key sense_key, byte asc, byte ascq) {
     result_ = result;
     sense_key_ = sense_key;

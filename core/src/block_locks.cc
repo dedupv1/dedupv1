@@ -127,8 +127,8 @@ bool BlockLocks::WriteUnlocks(const list<uint64_t>& blocks, const char* function
     for (j = locks.begin(); j != locks.end(); j++) {
 
         DCHECK(this->block_locks_.Get(*j)->IsHeldForWrites(),
-                "Illegal unlock: Lock not held by current thread: " <<
-                this->block_locks_.Get(*j)->DebugString());
+            "Illegal unlock: Lock not held by current thread: " <<
+            this->block_locks_.Get(*j)->DebugString());
 
         this->lock_holder_[*j] = kLockNotHeld;
         if (!this->block_locks_.Get(*j)->ReleaseLock_(

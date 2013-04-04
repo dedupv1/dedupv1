@@ -66,9 +66,9 @@ namespace filter {
 INSTANTIATE_TEST_CASE_P(BlockIndexFilter,
     FilterTest,
     ::testing::Values("block-index-filter"));
-    
+
 class BlockIndexFilterTest : public testing::Test  {
-    protected:
+protected:
     USE_LOGGING_EXPECTATION();
 
     DedupSystem* system;
@@ -99,9 +99,9 @@ class BlockIndexFilterTest : public testing::Test  {
 TEST_F(BlockIndexFilterTest, OverwriteAfterReplay) {
     system = DedupSystemTest::CreateDefaultSystem("data/dedupv1_test.conf", &info_store, &tp);
     ASSERT_TRUE(system);
-    
+
     ASSERT_TRUE(system->filter_chain()->GetFilterByName("block-index-filter") != NULL) <<
-        "block index filter not configured";
+    "block index filter not configured";
 
     int size = 16 * 1024 * 1024;
     int requests = size / system->block_size();
@@ -121,26 +121,26 @@ TEST_F(BlockIndexFilterTest, OverwriteAfterReplay) {
     for (int i = 0; i < requests; i++) {
         ASSERT_TRUE(volume->MakeRequest(REQUEST_WRITE, i * system->block_size(), system->block_size(), buffer + (i * system->block_size()), NO_EC));
     }
-    volume = NULL;    
+    volume = NULL;
     ASSERT_TRUE(system->log()->PerformFullReplayBackgroundMode(true));
     ASSERT_TRUE(system->Stop(StopContext::FastStopContext()));
     ASSERT_TRUE(system->Close());
     system = NULL;
-    
+
     system = DedupSystemTest::CreateDefaultSystem("data/dedupv1_test.conf", &info_store, &tp, true, true);
     ASSERT_TRUE(system);
-    
+
     volume = system->GetVolume(0);
     ASSERT_TRUE(volume);
     for (int i = 0; i < requests; i++) {
         // copy the first half of the request to the second half
         byte* request_buffer = buffer + (i * system->block_size());
         memcpy(request_buffer + (system->block_size() / 2), request_buffer, (system->block_size() / 2));
-        
+
         ASSERT_TRUE(volume->MakeRequest(REQUEST_WRITE, i * system->block_size(), system->block_size(), request_buffer, NO_EC));
     }
     volume = NULL;
-    
+
     ASSERT_TRUE(system->log()->PerformFullReplayBackgroundMode(true));
 }
 

@@ -515,10 +515,10 @@ bool Dedupv1dVolumeInfo::ChangeMaintainceMode(uint32_t volume_id, bool maintenan
     if (maintenance_mode) {
         CHECK(volume->session_count() == 0, "Cannot detach change state of volume with sessions: " << volume->DebugString());
     }
-    CHECK(!fast_copy_->IsFastCopySource(volume_id), 
-		  "Cannot change state of in-progress fast-copy source: " << volume->DebugString());
-    CHECK(!fast_copy_->IsFastCopyTarget(volume_id), 
-		  "Cannot change state of in-progress fast-copy target: " << volume->DebugString());
+    CHECK(!fast_copy_->IsFastCopySource(volume_id),
+        "Cannot change state of in-progress fast-copy source: " << volume->DebugString());
+    CHECK(!fast_copy_->IsFastCopyTarget(volume_id),
+        "Cannot change state of in-progress fast-copy target: " << volume->DebugString());
 
     INFO("Change volume state: volume " << volume->DebugString() << ", state " << (maintenance_mode ? "maintenance" : "running"));
 

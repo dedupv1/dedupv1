@@ -89,7 +89,7 @@ bool LogReplayer::Loop() {
 dedupv1::log::log_replay_result LogReplayer::Replay(uint32_t num_elements) {
     uint64_t replay_log_id = 0;
     enum log_replay_result replay_result = this->log_->Replay(EVENT_REPLAY_MODE_REPLAY_BG, num_elements,
-            &replay_log_id, NULL);
+        &replay_log_id, NULL);
 
     if (replay_result == LOG_REPLAY_ERROR) {
         WARNING("Error while replaying log event: replayed log id " << replay_log_id);
@@ -105,7 +105,7 @@ bool LogReplayer::TryStartReplay() {
 
     if (!is_replaying_) {
         CHECK(this->log_->ReplayStart(EVENT_REPLAY_MODE_REPLAY_BG, false, true),
-                "Cannot start log replay");
+            "Cannot start log replay");
         is_replaying_ = true;
     }
 
@@ -119,7 +119,7 @@ bool LogReplayer::TryStopReplay() {
 
     if (is_replaying_) {
         CHECK(this->log_->ReplayStop(EVENT_REPLAY_MODE_REPLAY_BG, true),
-                "Cannot start log replay");
+            "Cannot start log replay");
         is_replaying_ = false;
     }
 
@@ -183,14 +183,14 @@ bool LogReplayer::SetOption(const string& option_name, const string& option) {
     CHECK(this->state_ == LOG_REPLAYER_STATE_CREATED, "Illegal state: " << state_);
 
     if (option_name == "throttle.default") {
-        Option<bool> b = To<bool> (option);
+        Option<bool> b = To<bool>(option);
         if (b.valid() && !b.value()) {
             // deactivate via throttle.default=false
             this->throttle_ = 0;
             return true;
         }
         CHECK(To<uint32_t>(option).valid(), "Illegal option " << option);
-        this->throttle_ = To<uint32_t> (option).value();
+        this->throttle_ = To<uint32_t>(option).value();
         return true;
     } else if (option_name == "area-size-system-idle") {
         CHECK(ToStorageUnit(option).valid(), "Illegal option " << option);
@@ -204,16 +204,15 @@ bool LogReplayer::SetOption(const string& option_name, const string& option) {
         CHECK(ToStorageUnit(option).value() < UINT32_MAX, "Maximum area size log full " << UINT64_MAX << ", illegal option " << option);
         this->max_area_size_replay_log_full_ = ToStorageUnit(option).value();
         return true;
-    } else
-    if (option_name == "throttle.nearly-full") {
-        Option<bool> b = To<bool> (option);
+    } else if (option_name == "throttle.nearly-full")        {
+        Option<bool> b = To<bool>(option);
         if (b.valid() && !b.value()) {
             // deactivate via throttle.nearly-full=false
             this->nearly_full_throttle_ = 0;
             return true;
         }
         CHECK(To<uint32_t>(option).valid(), "Illegal option " << option);
-        this->nearly_full_throttle_ = To<uint32_t> (option).value();
+        this->nearly_full_throttle_ = To<uint32_t>(option).value();
         return true;
     }
     ERROR("Unknown option: " << option_name);
@@ -379,20 +378,20 @@ bool LogReplayer::Close() {
 
 const char* LogReplayer::state_name() {
     switch (this->state_) {
-        case LOG_REPLAYER_STATE_CREATED:
-            return "created";
-        case LOG_REPLAYER_STATE_RUNNING:
-            return "running";
-        case LOG_REPLAYER_STATE_STARTED:
-            return "started";
-        case LOG_REPLAYER_STATE_PAUSED:
-            return "paused";
-        case LOG_REPLAYER_STATE_STOPPED:
-            return "stopped";
-        case LOG_REPLAYER_STATE_FAILED:
-            return "failed";
-        default:
-            return "Unknown";
+    case LOG_REPLAYER_STATE_CREATED:
+        return "created";
+    case LOG_REPLAYER_STATE_RUNNING:
+        return "running";
+    case LOG_REPLAYER_STATE_STARTED:
+        return "started";
+    case LOG_REPLAYER_STATE_PAUSED:
+        return "paused";
+    case LOG_REPLAYER_STATE_STOPPED:
+        return "stopped";
+    case LOG_REPLAYER_STATE_FAILED:
+        return "failed";
+    default:
+        return "Unknown";
     }
     return NULL;
 }

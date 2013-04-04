@@ -113,12 +113,12 @@ TEST_F(ReadWriteLockTest, DebugStringWithHolder) {
 
 class ScopedReadWriteLockTest : public testing::Test {
 protected:
-    USE_LOGGING_EXPECTATION();    
+    USE_LOGGING_EXPECTATION();
 };
 
 TEST_F(ScopedReadWriteLockTest, BaseUsageWriteLock) {
     ReadWriteLock rw_lock;
-    
+
     {
         ScopedReadWriteLock scoped_lock(&rw_lock);
         ASSERT_TRUE(scoped_lock.AcquireWriteLock());
@@ -132,7 +132,7 @@ TEST_F(ScopedReadWriteLockTest, BaseUsageWriteLock) {
 
 TEST_F(ScopedReadWriteLockTest, BaseUsageReadLock) {
     ReadWriteLock rw_lock;
-    
+
     {
         ScopedReadWriteLock scoped_lock(&rw_lock);
         ASSERT_TRUE(scoped_lock.AcquireReadLock());
@@ -146,18 +146,18 @@ TEST_F(ScopedReadWriteLockTest, BaseUsageReadLock) {
 
 TEST_F(ScopedReadWriteLockTest, Unset) {
     ReadWriteLock rw_lock;
-    
+
     {
         ScopedReadWriteLock scoped_lock(&rw_lock);
         ASSERT_TRUE(scoped_lock.AcquireWriteLock());
-        
+
         scoped_lock.Unset();
     }
     // lock should not be released here
     bool locked = false;
     ASSERT_TRUE(rw_lock.TryAcquireWriteLock(&locked));
     ASSERT_FALSE(locked);
-    
+
     ASSERT_TRUE(rw_lock.ReleaseLock());
 }
 

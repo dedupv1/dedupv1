@@ -74,7 +74,7 @@ bool ContainerTracker::ShouldProcessContainerTest(uint64_t id) const {
     } else {
         // if id > least non processed id => check if id should be processed
         set<uint64_t>::const_iterator i = this->processed_containers_.find(id);
-        return (i == this->processed_containers_.end());
+        return i == this->processed_containers_.end();
     }
 }
 
@@ -82,7 +82,7 @@ bool ContainerTracker::ShouldProcessContainer(uint64_t id) {
     bool r = ShouldProcessContainerTest(id);
 
     TRACE("Should process container: container id " << id <<
-            ", tracker " << DebugString());
+        ", tracker " << DebugString());
 
     if (id > highest_seen_container_id_ || highest_seen_container_id_ == Storage::ILLEGAL_STORAGE_ADDRESS) {
         highest_seen_container_id_ = id;
@@ -111,7 +111,7 @@ bool ContainerTracker::ProcessedContainer(uint64_t id) {
     bool see_as_least = id == this->least_non_processed_container_id_;
 
     if (least_non_processed_container_id_ == Storage::ILLEGAL_STORAGE_ADDRESS &&
-            id == Container::kLeastValidContainerId) {
+        id == Container::kLeastValidContainerId) {
         least_non_processed_container_id_ = Container::kLeastValidContainerId;
         see_as_least = true;
     }
@@ -120,7 +120,7 @@ bool ContainerTracker::ProcessedContainer(uint64_t id) {
         DEBUG("container id " << id << " was least non processed container => Find next");
         // find next
         uint64_t j = this->least_non_processed_container_id_ + 1;
-        for(;;j++) {
+        for (;; j++) {
             if (this->ShouldProcessContainerTest(j)) {
                 this->least_non_processed_container_id_ = j;
                 break;
@@ -130,11 +130,11 @@ bool ContainerTracker::ProcessedContainer(uint64_t id) {
         set<uint64_t>::iterator k = processed_containers_.lower_bound(least_non_processed_container_id_);
         processed_containers_.erase(processed_containers_.begin(), k);
         DEBUG("New least non-processed container id: container id " << this->least_non_processed_container_id_ <<
-                ", processed containers [" << Join(this->processed_containers_.begin(), this->processed_containers_.end(), ", ") << "]");
+            ", processed containers [" << Join(this->processed_containers_.begin(), this->processed_containers_.end(), ", ") << "]");
 
     } else {
         DEBUG("container id " << id << " was not least non processed container => Inserting into processed list")
-                        this->processed_containers_.insert(id);
+        this->processed_containers_.insert(id);
 
     }
     return true;
@@ -161,7 +161,7 @@ bool ContainerTracker::Reset() {
         }
 
         DEBUG("reset: least non processed container: " << this->least_non_processed_container_id_ <<
-                ", max processed container id " << max);
+            ", max processed container id " << max);
     } else {
         DEBUG("reset: least non processed container: " << this->least_non_processed_container_id_);
     }

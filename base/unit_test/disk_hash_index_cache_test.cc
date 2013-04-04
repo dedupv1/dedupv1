@@ -71,7 +71,7 @@ protected:
 };
 
 INSTANTIATE_TEST_CASE_P(DiskHashIndex,
-        DiskHashIndexCacheTest,
+    DiskHashIndexCacheTest,
     ::testing::Values(
         // Write-back cache
         string("static-disk-hash;max-key-size=8;max-value-size=8;page-lock-count=1;page-size=4K;size=4M;filename=work/data/hash_test_data;write-cache=true;write-cache.bucket-count=1K;write-cache.max-page-count=4")

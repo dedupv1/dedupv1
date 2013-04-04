@@ -41,9 +41,9 @@ BloomSet* BloomSet::NewOptimizedBloomSet(uint64_t capacity, double error_rate) {
     CHECK_RETURN(capacity > 0, NULL, "Illegal capacity");
     DCHECK_RETURN(error_rate > 0.0 && error_rate < 1.0, NULL, "Illegal error rate");
     // auto set up
-    uint32_t hashes = (uint32_t)std::ceil(dedupv1::base::log2(1 / error_rate));
-    uint32_t bits_per_hash = (uint32_t)std::ceil(
-            (2 * capacity * std::abs(std::log(error_rate))) /(hashes * (std::pow(std::log(2), 2))));
+    uint32_t hashes = (uint32_t) std::ceil(dedupv1::base::log2(1 / error_rate));
+    uint32_t bits_per_hash = (uint32_t) std::ceil(
+        (2 * capacity * std::abs(std::log(error_rate))) / (hashes * (std::pow(std::log(2), 2))));
     uint32_t bits = bits_per_hash * hashes;
     if ((bits % 32) != 0) {
         bits = 32 * ((bits / 32) + 1);
@@ -72,13 +72,13 @@ BloomSet::~BloomSet() {
 
 void BloomSet::Hash(uint32_t* results, const void* key, size_t key_size) {
     // We use Murmur hash as described in http://spyced.blogspot.com/2009/01/all-you-ever-wanted-to-know-about.html
-    
+
     uint32_t* r = results;
     for (int i = 0; i < this->k_; i += 4) {
         murmur_hash3_x64_128(key, key_size, i, r);
         r += 4;
     }
-    for (int i = 0; i < this->k_; i ++) {
+    for (int i = 0; i < this->k_; i++) {
         results[i] %= size_;
     }
 }
@@ -89,7 +89,7 @@ lookup_result BloomSet::Contains(const void* key, size_t key_size) {
 
     uint32_t hashes[k_ + 4];
     Hash(hashes, key, key_size);
-    
+
     CHECK_RETURN(lock_.AcquireReadLock(), LOOKUP_ERROR, "Failed to acquire read lock");
     lookup_result r = LOOKUP_FOUND;
     for (int i = 0; i < this->k_; i++) {
@@ -110,7 +110,7 @@ bool BloomSet::Put(const void* key, size_t key_size) {
 
     uint32_t hashes[k_ + 4];
     Hash(hashes, key, key_size);
-    
+
     CHECK_RETURN(lock_.AcquireWriteLock(), LOOKUP_ERROR, "Failed to acquire read lock");
 
     for (int i = 0; i < this->k_; i++) {
@@ -119,7 +119,7 @@ bool BloomSet::Put(const void* key, size_t key_size) {
         uint32_t* p = &(this->data_[index]);
         bit_set(p, hash % 32);
     }
-    
+
     CHECK_RETURN(lock_.ReleaseLock(), LOOKUP_ERROR, "Failed to release read lock");
     return true;
 }

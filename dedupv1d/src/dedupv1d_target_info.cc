@@ -346,7 +346,7 @@ bool Dedupv1dTargetInfo::ChangeTargetParams(uint32_t tid, const list< pair< stri
 
     // here the target_list_ is updated
     *(i->second) = target;
-    
+
     bool failed = false;
     if (!old_target_name.empty()) { // name of the target changed
         Option<list<pair<uint32_t, uint64_t> > > volumes = volume_info_->FindVolumesInTarget(old_target_name);
@@ -367,41 +367,41 @@ bool Dedupv1dTargetInfo::ChangeTargetParams(uint32_t tid, const list< pair< stri
         }
 
         if (!failed) {
-          Option<list<string> > users = user_info_->GetUsersInTarget(old_target_name);
-          CHECK(users.valid(), "Failed to get users for target");
+            Option<list<string> > users = user_info_->GetUsersInTarget(old_target_name);
+            CHECK(users.valid(), "Failed to get users for target");
 
-          list<string>::const_iterator l;
-          for (l = users.value().begin(); l != users.value().end() && !failed; ++l) {
-            if (!user_info_->RemoveUserFromTarget(*l, old_target_name)) {
-                ERROR("Failed to remove user from target: " <<
-                    "old target name " << old_target_name <<
-                    ", new target name " << target.name() <<
-                    ", user " << *l);
-                failed = true;
-            } else {
-                // remove as ok
-                if (!user_info_->AddUserToTarget(*l, target.name())) {
-                    ERROR("Failed to re-add user to target: " <<
+            list<string>::const_iterator l;
+            for (l = users.value().begin(); l != users.value().end() && !failed; ++l) {
+                if (!user_info_->RemoveUserFromTarget(*l, old_target_name)) {
+                    ERROR("Failed to remove user from target: " <<
                         "old target name " << old_target_name <<
                         ", new target name " << target.name() <<
                         ", user " << *l);
                     failed = true;
+                } else {
+                    // remove as ok
+                    if (!user_info_->AddUserToTarget(*l, target.name())) {
+                        ERROR("Failed to re-add user to target: " <<
+                            "old target name " << old_target_name <<
+                            ", new target name " << target.name() <<
+                            ", user " << *l);
+                        failed = true;
+                    }
                 }
             }
-          }
         }
 
         // if the old target name has changed, we have to update the map
         if (!failed) {
-          target_map_[target.name()] = i->second;
-          target_map_.erase(old_target_name);
+            target_map_[target.name()] = i->second;
+            target_map_.erase(old_target_name);
         }
     }
 
     if (!failed) {
-      TargetInfoData target_info;
-      CHECK(target.SerializeTo(&target_info), "Cannot fill target info settings: " << target.DebugString());
-      CHECK(info_->Put(&tid, sizeof(tid), target_info), "Cannot store target info: " << target.DebugString() <<
+        TargetInfoData target_info;
+        CHECK(target.SerializeTo(&target_info), "Cannot fill target info settings: " << target.DebugString());
+        CHECK(info_->Put(&tid, sizeof(tid), target_info), "Cannot store target info: " << target.DebugString() <<
             ", data " << target_info.ShortDebugString());
     }
     CHECK(scoped_lock.ReleaseLock(), "Failed to release lock");

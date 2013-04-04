@@ -49,20 +49,20 @@ Option<pair<int, bytestring> > RunUntilCompletion(const string& cmd) {
     ScopedArray<byte> scoped_buffer(buffer);
 
     int b = 0;
-    while((b = fread(buffer, 1, 1024, stream)) > 0) {
+    while ((b = fread(buffer, 1, 1024, stream)) > 0) {
         data.append(buffer, b);
     }
     if (ferror(stream) != 0) {
         ERROR("Failed to read from process stream: cmd " << cmd <<
-        ", message " << strerror(ferror(stream)) << " (" << ferror(stream) << ")");
+            ", message " << strerror(ferror(stream)) << " (" << ferror(stream) << ")");
         CHECK(pclose(stream) == 0, "Failed to close process stream: cmd " << cmd);
-        return false;    
+        return false;
     }
     int result = pclose(stream);
 
     // ignore if ECHILD is returned. This may happen if the signal handling has been changed.
     CHECK(result >= 0 || errno == ECHILD, "Failed to close process stream: " <<
-        "cmd " << cmd << 
+        "cmd " << cmd <<
         ", message " << strerror(errno) << " (" << errno << ")");
     return make_option(make_pair(result, data));
 }

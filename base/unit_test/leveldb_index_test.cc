@@ -33,9 +33,9 @@ namespace base {
 INSTANTIATE_TEST_CASE_P(LeveldbIndex,
     IndexTest,
     ::testing::Values("leveldb-disk-lsm;filename=work/level_test_data1;max-item-count=16K",
-    "leveldb-disk-lsm;filename=work/level_test_data1;max-item-count=16K;compression=false",
-    "leveldb-disk-lsm;filename=work/level_test_data1;max-item-count=16K;bloom-filter=false"
-    ));
+        "leveldb-disk-lsm;filename=work/level_test_data1;max-item-count=16K;compression=false",
+        "leveldb-disk-lsm;filename=work/level_test_data1;max-item-count=16K;bloom-filter=false"
+        ));
 
 }
 }

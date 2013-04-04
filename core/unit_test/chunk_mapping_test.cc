@@ -45,7 +45,7 @@ TEST_F(ChunkMappingTest, Init) {
 
 TEST_F(ChunkMappingTest, SerializeWithoutUsageCount) {
     uint64_t fp = 1;
-    ChunkMapping m1((byte*) &fp, sizeof(fp));
+    ChunkMapping m1((byte *) &fp, sizeof(fp));
     m1.set_data_address(10);
 
     ChunkMappingData value;
@@ -60,7 +60,7 @@ TEST_F(ChunkMappingTest, SerializeWithoutUsageCount) {
 
 TEST_F(ChunkMappingTest, SerializeWithUsageCount) {
     uint64_t fp = 1;
-    ChunkMapping m1((byte*) &fp, sizeof(fp));
+    ChunkMapping m1((byte *) &fp, sizeof(fp));
     m1.set_data_address(10);
     m1.set_usage_count(10);
 
@@ -75,7 +75,7 @@ TEST_F(ChunkMappingTest, SerializeWithUsageCount) {
 
 TEST_F(ChunkMappingTest, InitWithFP) {
     uint64_t fp = 1;
-    ChunkMapping m((byte*) &fp, sizeof(fp));
+    ChunkMapping m((byte *) &fp, sizeof(fp));
 
     ASSERT_EQ(m.data_address(), Storage::ILLEGAL_STORAGE_ADDRESS);
     ASSERT_TRUE(m.chunk() == NULL);
@@ -88,7 +88,7 @@ TEST_F(ChunkMappingTest, InitWitChunk) {
     Chunk c;
     c.Init(8 * 1024);
 
-    ChunkMapping m((byte*) &fp, sizeof(fp));
+    ChunkMapping m((byte *) &fp, sizeof(fp));
     ASSERT_TRUE(m.Init(&c));
 
     ASSERT_EQ(m.data_address(), Storage::ILLEGAL_STORAGE_ADDRESS);
@@ -103,7 +103,7 @@ TEST_F(ChunkMappingTest, Copy) {
     Chunk c;
     c.Init(8 * 1024);
 
-    ChunkMapping m((byte*) &fp, sizeof(fp));
+    ChunkMapping m((byte *) &fp, sizeof(fp));
     ASSERT_TRUE(m.Init(&c));
 
     ChunkMapping m2 = m;

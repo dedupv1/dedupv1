@@ -107,10 +107,10 @@ BlockMapping::~BlockMapping() {
 bool BlockMapping::MergePartsFrom(const BlockMapping& src_block_mapping, uint32_t target_offset, uint32_t src_offset, uint32_t size) {
 
     DEBUG("Merge parts: src " << src_block_mapping.DebugString() <<
-            ", target " << this->DebugString() <<
-            ", src offset " << src_offset <<
-            ", target offset " << target_offset <<
-            ", size " << size);
+        ", target " << this->DebugString() <<
+        ", src offset " << src_offset <<
+        ", target offset " << target_offset <<
+        ", size " << size);
 
     if (block_size_ == src_block_mapping.block_size_ && src_offset == 0 && target_offset == 0 && size == block_size_) {
         // short cut if the complete block is merged
@@ -129,11 +129,11 @@ bool BlockMapping::MergePartsFrom(const BlockMapping& src_block_mapping, uint32_
                 item_size = size;
             }
             TRACE("Start pos: " << start_pos <<
-                    ", end pos " << end_pos <<
-                    ", src offset " << src_offset <<
-                    ", item offset " << item_offset <<
-                    ", item size " << item_size <<
-                    ", item " << i->DebugString());
+                ", end pos " << end_pos <<
+                ", src offset " << src_offset <<
+                ", item offset " << item_offset <<
+                ", item size " << item_size <<
+                ", item " << i->DebugString());
             if (item_size > 0) {
                 BlockMappingItem copy = *i;
                 copy.set_chunk_offset(i->chunk_offset() + item_offset);
@@ -141,7 +141,7 @@ bool BlockMapping::MergePartsFrom(const BlockMapping& src_block_mapping, uint32_
 
                 DEBUG("Append: target offset " << target_offset << ", item " << copy.DebugString());
                 CHECK(this->Append(target_offset, copy), "Failed to append item: " << this->DebugString() <<
-                        ", item " << copy.DebugString());
+                    ", item " << copy.DebugString());
 
                 src_offset += item_size;
                 target_offset += item_size;
@@ -160,9 +160,9 @@ bool BlockMapping::Append(unsigned int offset, const BlockMappingItem& item) {
 
     DCHECK(offset >= 0, "Offset cannot be negative");
     DCHECK(offset + item.size() <= this->block_size(),
-            "Illegal request: offset " << offset <<
-            ", item " << item.DebugString() <<
-            ", block " << this->DebugString());
+        "Illegal request: offset " << offset <<
+        ", item " << item.DebugString() <<
+        ", block " << this->DebugString());
 
     TRACE("Append item " << item.DebugString() << ": offset " << offset << ", block " << this->DebugString());
     pos = 0;
@@ -171,9 +171,9 @@ bool BlockMapping::Append(unsigned int offset, const BlockMappingItem& item) {
     list<BlockMappingItem>::iterator current;
     for (current = this->items().begin(); current != this->items().end(); ) {
         TRACE("merge new item " << item.DebugString() <<
-                ", offset " << offset <<
-                ", position " << pos <<
-                ", current " << current->DebugString());
+            ", offset " << offset <<
+            ", position " << pos <<
+            ", current " << current->DebugString());
         if (pos < offset && (offset + item.size()) < (pos + current->size())) {
             // first case: new earlier and larger than current
             //        pos        pos + current->size
@@ -272,9 +272,9 @@ bool BlockMapping::Append(unsigned int offset, const BlockMappingItem& item) {
         }
     }
     CHECK(inserted, "Item not inserted: " <<
-            "mapping " << this->DebugString() <<
-            ", offset " << offset <<
-            ", new item " << item.DebugString());
+        "mapping " << this->DebugString() <<
+        ", offset " << offset <<
+        ", new item " << item.DebugString());
     return true;
 }
 
@@ -291,7 +291,7 @@ bool BlockMapping::Merge(const ChunkMapping& chunk_mapping) {
     // Process from the end (newest) items to the beginning an apply new
     // fingerprint from chunk_mapping
     CHECK(chunk_mapping.data_address() != Storage::ILLEGAL_STORAGE_ADDRESS,
-            "Data address not set: " << chunk_mapping.DebugString());
+        "Data address not set: " << chunk_mapping.DebugString());
 
     list<BlockMappingItem>::reverse_iterator i;
     for (i = this->items().rbegin(); i != this->items().rend(); i++) {
@@ -377,7 +377,7 @@ bool BlockMapping::SerializeTo(BlockMappingData* data, bool setBlockId, bool set
 
 bool BlockMapping::UnserializeFrom(const BlockMappingData& data, bool checkBlockId) {
     DCHECK(!checkBlockId || !data.has_block_id() || this->block_id() == data.block_id(),
-            "Illegal block id" << this->block_id());
+        "Illegal block id" << this->block_id());
     CHECK(this->CopyFrom(data), "cannot copy from data: " << data.ShortDebugString());
     return true;
 }
@@ -391,7 +391,7 @@ bool BlockMapping::CopyFrom(const BlockMappingData& data) {
 
     if (data.has_checksum()) {
         this->checksum_.assign(reinterpret_cast<const byte*>(data.checksum().data()),
-                data.checksum().size());
+            data.checksum().size());
     } else {
         this->checksum_.clear();
     }
@@ -414,10 +414,10 @@ bool BlockMapping::CopyFrom(const BlockMappingData& data) {
 
 bool BlockMapping::CopyFrom(const BlockMapping& src) {
     DCHECK(src.block_id() != BlockMapping::ILLEGAL_BLOCK_ID,
-            "Illegal block id: " << src.DebugString());
+        "Illegal block id: " << src.DebugString());
     DCHECK(this->block_id_ == ILLEGAL_BLOCK_ID || this->block_id_ == src.block_id(),
-            "Block mapping already acquired: block id " << this->block_id_ <<
-            ", src block " << src.DebugString());
+        "Block mapping already acquired: block id " << this->block_id_ <<
+        ", src block " << src.DebugString());
     *this = src;
     return true;
 }
@@ -458,10 +458,10 @@ std::string BlockMapping::DebugString() const {
     unsigned int count = 0;
     std::stringstream s;
     s << "[block " << block_id() <<
-            ", size " << block_size() <<
-            ", item count " << item_count() <<
-            ", version " << version() <<
-            ", event log id " << event_log_id();
+    ", size " << block_size() <<
+    ", item count " << item_count() <<
+    ", version " << version() <<
+    ", event log id " << event_log_id();
 
     if (has_checksum()) {
         s << ", checksum " << ToHexString(checksum_.data(), checksum_.size());
@@ -495,10 +495,10 @@ bool BlockMappingItem::Equals(const BlockMappingItem& i2) const {
 
 bool BlockMapping::Equals(const BlockMapping& m2) const {
     if ((this->block_id() != m2.block_id())
-            || (this->block_size() != m2.block_size())
-            || (this->item_count() != m2.item_count())
-            || (this->version() != m2.version())
-            || (this->event_log_id() != m2.event_log_id())) {
+        || (this->block_size() != m2.block_size())
+        || (this->item_count() != m2.item_count())
+        || (this->version() != m2.version())
+        || (this->event_log_id() != m2.event_log_id())) {
         return false;
     }
 
@@ -523,7 +523,7 @@ bool BlockMapping::FillEmptyBlockMapping() {
         }
         BlockMappingItem item(0, size);
         CHECK(Fingerprinter::SetEmptyDataFingerprint(item.mutable_fingerprint(), item.mutable_fingerprint_size()),
-                "Failed to set empty data fp");
+            "Failed to set empty data fp");
         item.set_data_address(Storage::EMPTY_DATA_STORAGE_ADDRESS);
         item.set_is_used(true);
         CHECK(this->Append(pos, item), "Failed to append empty block mapping");

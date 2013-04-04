@@ -347,7 +347,7 @@ bool DedupSystem::Start(const StartContext& start_context, dedupv1::InfoStore* i
     CHECK(this->chunk_management_, "Cannot create chunk resource management");
     CHECK(this->chunk_management_->Init("chunk", 32 * kChunkResourceFactor,
             new ChunkResourceType(), false),
-            "Cannot init chunk resource management");
+        "Cannot init chunk resource management");
 
     tp_ = tp;
     info_store_ = info_store;
@@ -374,7 +374,7 @@ bool DedupSystem::Start(const StartContext& start_context, dedupv1::InfoStore* i
             this->tp_,
             this->block_index_, this->chunk_index_, this->chunk_store_, this->filter_chain_,
             this->chunk_management_, this->log_, &this->block_locks_, this->block_size_),
-            "Content Storage start failed");
+        "Content Storage start failed");
 
     CHECK(this->gc_->Start(start_context, this), "Cannot start gc");
     CHECK(this->idle_detector_.Start(), "Cannot start idle detection");
@@ -387,7 +387,7 @@ bool DedupSystem::Start(const StartContext& start_context, dedupv1::InfoStore* i
         event_data.set_forced(start_context.force());
         event_data.set_dirty(start_context.dirty());
         CHECK(this->log_->CommitEvent(EVENT_TYPE_SYSTEM_START, &event_data, NULL, NULL, NO_EC),
-                "Cannot log system start event");
+            "Cannot log system start event");
     }
     DEBUG("Started dedup system (startup time: " << startup_timer.GetTime() << "ms)");
     this->state_ = STARTED;
@@ -406,7 +406,7 @@ bool DedupSystem::Run() {
 
     if (!readonly_) {
         CHECK(this->log_->CommitEvent(EVENT_TYPE_SYSTEM_RUN, NULL, NULL, NULL, NO_EC),
-                "Cannot log system start event");
+            "Cannot log system start event");
     }
     INFO("Dedup subsystem is running");
     this->state_ = RUNNING;
@@ -616,8 +616,8 @@ ScsiResult DedupSystem::SyncCache() {
     ProfileTimer timer(this->stats_.profiling_total_);
 
     CHECK_RETURN(this->state_ == RUNNING,
-            ScsiResult(SCSI_CHECK_CONDITION, SCSI_KEY_NOT_READY, 0x04, 0x00),
-            "System not started");
+        ScsiResult(SCSI_CHECK_CONDITION, SCSI_KEY_NOT_READY, 0x04, 0x00),
+        "System not started");
 
     DEBUG("Dedup Sync Cache");
 
@@ -631,8 +631,8 @@ ScsiResult DedupSystem::SyncCache() {
     if (chunk_store_) {
         // TODO (dmeister): in an error we report a write error as I don't know what to really return
         CHECK_RETURN(chunk_store_->Flush(&ec),
-                ScsiResult(SCSI_CHECK_CONDITION, SCSI_KEY_MEDIUM_ERROR, 0x0C, 0x00),
-                "Failed to flush storage");
+            ScsiResult(SCSI_CHECK_CONDITION, SCSI_KEY_MEDIUM_ERROR, 0x0C, 0x00),
+            "Failed to flush storage");
     } else {
         WARNING("Chunk store not set");
     }
@@ -641,18 +641,18 @@ ScsiResult DedupSystem::SyncCache() {
 }
 
 bool DedupSystem::FastBlockCopy(
-        uint64_t src_block_id,
-        uint64_t src_offset,
-        uint64_t target_block_id,
-        uint64_t target_offset,
-        uint64_t size,
-        dedupv1::base::ErrorContext* ec) {
+    uint64_t src_block_id,
+    uint64_t src_offset,
+    uint64_t target_block_id,
+    uint64_t target_offset,
+    uint64_t size,
+    dedupv1::base::ErrorContext* ec) {
 
     DEBUG("Fast block block: src block " << src_block_id <<
-            ", target block " << target_block_id <<
-            ", src offset " << src_offset <<
-            ", target offset " << target_offset <<
-            ", size " << size);
+        ", target block " << target_block_id <<
+        ", src offset " << src_offset <<
+        ", target offset " << target_offset <<
+        ", size " << size);
 
     // deadlock prevention
     list<uint64_t> blocks;
@@ -665,7 +665,7 @@ bool DedupSystem::FastBlockCopy(
     // In this loop we try to get all necessary locks. If this fails, we back off and try again later
     // We cannot make any guarantees about the lock ordering here, therefore we have to break deadlocks by backing off
     //
-    while(true) {
+    while (true) {
         locked_block_list.clear();
         unlocked_block_list.clear();
         CHECK(block_locks_.TryWriteLocks(blocks, &locked_block_list, &unlocked_block_list, LOCK_LOCATION_INFO),
@@ -676,43 +676,43 @@ bool DedupSystem::FastBlockCopy(
             break;
         } else {
             CHECK(block_locks_.WriteUnlocks(locked_block_list, LOCK_LOCATION_INFO),
-                    "Failed to unlock block locks");
+                "Failed to unlock block locks");
             ThreadUtil::Sleep(100, ThreadUtil::MILLISECONDS);
         }
     }
 
     bool r = this->content_storage_->FastCopyBlock(src_block_id,
-            src_offset,
-            target_block_id,
-            target_offset,
-            size,
-            ec);
+        src_offset,
+        target_block_id,
+        target_offset,
+        size,
+        ec);
 
     CHECK(this->block_locks_.WriteUnlocks(blocks, LOCK_LOCATION_INFO),
-            "Read unlock failure for block locks");
+        "Read unlock failure for block locks");
 
     return r;
 }
 
 dedupv1::scsi::ScsiResult DedupSystem::FastCopy(
-        uint64_t src_block_id,
-        uint64_t src_offset,
-        uint64_t target_block_id,
-        uint64_t target_offset,
-        uint64_t size,
-        dedupv1::base::ErrorContext* ec) {
+    uint64_t src_block_id,
+    uint64_t src_offset,
+    uint64_t target_block_id,
+    uint64_t target_offset,
+    uint64_t size,
+    dedupv1::base::ErrorContext* ec) {
 
     ProfileTimer timer(this->stats_.profiling_total_);
 
     DCHECK_RETURN(this->state_ == RUNNING,
-            ScsiResult(SCSI_CHECK_CONDITION, SCSI_KEY_NOT_READY, 0x04, 0x00),
-            "System not running");
+        ScsiResult(SCSI_CHECK_CONDITION, SCSI_KEY_NOT_READY, 0x04, 0x00),
+        "System not running");
 
     DEBUG("Fast copy: src block id " << src_block_id <<
-            ", target block id " << target_block_id <<
-            ", src offset " << src_offset <<
-            ", target offset " << target_offset <<
-            ", size " << size);
+        ", target block id " << target_block_id <<
+        ", src offset " << src_offset <<
+        ", target offset " << target_offset <<
+        ", size " << size);
 
     // In contrast to the MakeRequest method, I do not check the chunk index here as a clone
     // nearly by definition doesn't insert new items into it
@@ -726,14 +726,14 @@ dedupv1::scsi::ScsiResult DedupSystem::FastCopy(
             request_size = size;
         }
         TRACE("Size " << size <<
-                ", request size " << request_size);
+            ", request size " << request_size);
 
         bool r = FastBlockCopy(src_block_id,
-                src_offset,
-                target_block_id,
-                target_offset,
-                request_size,
-                ec);
+            src_offset,
+            target_block_id,
+            target_offset,
+            request_size,
+            ec);
         if (!r) {
             failed = true;
         }
@@ -787,7 +787,7 @@ bool DedupSystem::MakeBlockRequest(
     if (block_request->request_type() == REQUEST_READ) {
         request_stats.Start(RequestStatistics::WAITING);
         CHECK(this->block_locks_.ReadLock(block_request->block_id(), LOCK_LOCATION_INFO),
-                "Read lock failure for block lock: " << block_request->DebugString());
+            "Read lock failure for block lock: " << block_request->DebugString());
         request_stats.Finish(RequestStatistics::WAITING);
         this->stats_.average_waiting_time_.Add(request_stats.latency(RequestStatistics::WAITING));
 
@@ -798,14 +798,14 @@ bool DedupSystem::MakeBlockRequest(
         this->stats_.processsed_session_count_.fetch_and_decrement();
 
         CHECK(this->block_locks_.ReadUnlock(block_request->block_id(), LOCK_LOCATION_INFO),
-                "Cannot unlock block lock: " << block_request->DebugString());
+            "Cannot unlock block lock: " << block_request->DebugString());
         CHECK(result,
-                "Read failure: request " << block_request->DebugString() <<
-                ", active requests " << this->stats_.active_session_count_);
+            "Read failure: request " << block_request->DebugString() <<
+            ", active requests " << this->stats_.active_session_count_);
     } else {
         request_stats.Start(RequestStatistics::WAITING);
         CHECK(this->block_locks_.WriteLock(block_request->block_id(), LOCK_LOCATION_INFO),
-                "Write lock failure for block lock: " << block_request->DebugString());
+            "Write lock failure for block lock: " << block_request->DebugString());
         request_stats.Finish(RequestStatistics::WAITING);
         this->stats_.average_waiting_time_.Add(request_stats.latency(RequestStatistics::WAITING));
 
@@ -814,10 +814,10 @@ bool DedupSystem::MakeBlockRequest(
         if (!this->content_storage_->WriteBlock(sess, block_request, &request_stats, last_block_request, ec)) {
             if (ec && ec->is_full()) {
                 ERROR("Write failure: request " << block_request->DebugString() <<
-                        ", active requests " << this->stats_.active_session_count_ << ", reason: full");
+                    ", active requests " << this->stats_.active_session_count_ << ", reason: full");
             } else {
                 ERROR("Write failure: request " << block_request->DebugString() <<
-                        ", active requests " << this->stats_.active_session_count_);
+                    ", active requests " << this->stats_.active_session_count_);
             }
             this->stats_.processsed_session_count_.fetch_and_decrement();
             return false;
@@ -830,7 +830,7 @@ bool DedupSystem::MakeBlockRequest(
     if (request_stats.latency(RequestStatistics::TOTAL) > 1000.0) {
         if (report_long_running_requests_) {
             DEBUG("Long running request: " << block_request->DebugString() <<
-                    ", stats " << request_stats.DebugString());
+                ", stats " << request_stats.DebugString());
         }
         stats_.long_running_request_count_++;
     }
@@ -846,25 +846,25 @@ bool DedupSystem::MakeBlockRequest(
 }
 
 ScsiResult DedupSystem::MakeRequest(
-        Session* session,
-        enum request_type rw,
-        uint64_t request_index,
-        uint64_t request_offset,
-        uint64_t size,
-        byte* buffer,
-        ErrorContext* ec) {
+    Session* session,
+    enum request_type rw,
+    uint64_t request_index,
+    uint64_t request_offset,
+    uint64_t size,
+    byte* buffer,
+    ErrorContext* ec) {
     DCHECK_RETURN(this->state_ == RUNNING,
-            ScsiResult(SCSI_CHECK_CONDITION, SCSI_KEY_NOT_READY, 0x04, 0x00),
-            "System not running");
+        ScsiResult(SCSI_CHECK_CONDITION, SCSI_KEY_NOT_READY, 0x04, 0x00),
+        "System not running");
     DCHECK_RETURN(rw == REQUEST_READ || rw == REQUEST_WRITE,
-            ScsiResult(SCSI_CHECK_CONDITION, SCSI_KEY_ILLEGAL_REQUEST, 0x24, 0x00),
-            "Illegal rw value");
+        ScsiResult(SCSI_CHECK_CONDITION, SCSI_KEY_ILLEGAL_REQUEST, 0x24, 0x00),
+        "Illegal rw value");
     DCHECK_RETURN(buffer,
-            ScsiResult(SCSI_CHECK_CONDITION, SCSI_KEY_ILLEGAL_REQUEST, 0x24, 0x00),
-            "Buffer not set");
+        ScsiResult(SCSI_CHECK_CONDITION, SCSI_KEY_ILLEGAL_REQUEST, 0x24, 0x00),
+        "Buffer not set");
     DCHECK_RETURN(session,
-            ScsiResult(SCSI_CHECK_CONDITION, SCSI_KEY_ILLEGAL_REQUEST, 0x24, 0x00),
-            "Session not set");
+        ScsiResult(SCSI_CHECK_CONDITION, SCSI_KEY_ILLEGAL_REQUEST, 0x24, 0x00),
+        "Session not set");
 
     // first request
     ScsiResult r = DoMakeRequest(session, rw, request_index, request_offset, size, buffer, ec);
@@ -939,33 +939,33 @@ Option<bool> DedupSystem::Throttle(int thread_id, int thread_count) {
 }
 
 ScsiResult DedupSystem::DoMakeRequest(
-        Session* sess,
-        enum request_type rw,
-        uint64_t request_index,
-        uint64_t request_offset,
-        uint64_t size,
-        byte* buffer,
-        ErrorContext* ec) {
+    Session* sess,
+    enum request_type rw,
+    uint64_t request_index,
+    uint64_t request_offset,
+    uint64_t size,
+    byte* buffer,
+    ErrorContext* ec) {
 
     ProfileTimer timer(this->stats_.profiling_total_);
 
     DCHECK_RETURN(this->state_ == RUNNING,
-            ScsiResult(SCSI_CHECK_CONDITION, SCSI_KEY_NOT_READY, 0x04, 0x00),
-            "System not running");
+        ScsiResult(SCSI_CHECK_CONDITION, SCSI_KEY_NOT_READY, 0x04, 0x00),
+        "System not running");
     DCHECK_RETURN(rw == REQUEST_READ || rw == REQUEST_WRITE,
-            ScsiResult(SCSI_CHECK_CONDITION, SCSI_KEY_ILLEGAL_REQUEST, 0x24, 0x00),
-            "Illegal rw value");
+        ScsiResult(SCSI_CHECK_CONDITION, SCSI_KEY_ILLEGAL_REQUEST, 0x24, 0x00),
+        "Illegal rw value");
     DCHECK_RETURN(buffer,
-            ScsiResult(SCSI_CHECK_CONDITION, SCSI_KEY_ILLEGAL_REQUEST, 0x24, 0x00),
-            "Buffer not set");
+        ScsiResult(SCSI_CHECK_CONDITION, SCSI_KEY_ILLEGAL_REQUEST, 0x24, 0x00),
+        "Buffer not set");
     DCHECK_RETURN(sess,
-            ScsiResult(SCSI_CHECK_CONDITION, SCSI_KEY_ILLEGAL_REQUEST, 0x24, 0x00),
-            "Session not set");
+        ScsiResult(SCSI_CHECK_CONDITION, SCSI_KEY_ILLEGAL_REQUEST, 0x24, 0x00),
+        "Session not set");
 
     DCHECK_RETURN(sess->open_request_count() == 0,
-            (rw == REQUEST_READ ? ScsiResult::kReadError : ScsiResult::kWriteError),
-            "Non cleared session: " <<
-            "active session " << this->stats_.active_session_count_);
+        (rw == REQUEST_READ ? ScsiResult::kReadError : ScsiResult::kWriteError),
+        "Non cleared session: " <<
+        "active session " << this->stats_.active_session_count_);
 
     if (rw == REQUEST_READ) {
         DEBUG("Read: index " << request_index << ", offset " << request_offset << ", size " << size);
@@ -1016,8 +1016,8 @@ ScsiResult DedupSystem::DoMakeRequest(
     }
 
     CHECK_RETURN(sess->open_request_count() == 0,
-            (rw == REQUEST_READ ? ScsiResult::kReadError : ScsiResult::kWriteError),
-            "Illegal session: " << sess->open_request_count() << " open requests");
+        (rw == REQUEST_READ ? ScsiResult::kReadError : ScsiResult::kWriteError),
+        "Illegal session: " << sess->open_request_count() << " open requests");
 
     if (failed) {
         if (ec) {
@@ -1044,30 +1044,30 @@ bool DedupSystem::PersistStatistics(std::string prefix, dedupv1::PersistStatisti
     }
     if (block_index_) {
         CHECK(block_index_->PersistStatistics(prefix + ".block-index", ps),
-                "Failed to persist block index stats");
+            "Failed to persist block index stats");
     }
     if (chunk_index_) {
         CHECK(chunk_index_->PersistStatistics(prefix + ".chunk-index", ps),
-                "Failed to persist chunk index stats");
+            "Failed to persist chunk index stats");
     }
     if (chunk_store_) {
         CHECK(chunk_store_->PersistStatistics(prefix + ".chunk-store", ps),
-                "Failed to persist chunk store stats");
+            "Failed to persist chunk store stats");
     }
     if (filter_chain_) {
         CHECK(filter_chain_->PersistStatistics(prefix + ".filter-chain", ps),
-                "Failed to persist filter chain stats");
+            "Failed to persist filter chain stats");
     }
     if (volume_info_) {
         CHECK(volume_info_->PersistStatistics(prefix + ".volumes", ps),
-                "Failed to persist volume stats");
+            "Failed to persist volume stats");
     }
     if (content_storage_) {
         CHECK(content_storage_->PersistStatistics(prefix + ".content-storage", ps),
-                "Failed to persist content storage stats");
+            "Failed to persist content storage stats");
     }
     CHECK(idle_detector_.PersistStatistics(prefix + ".idle", ps),
-            "Failed to persist idle detector stats");
+        "Failed to persist idle detector stats");
     return true;
 }
 
@@ -1081,31 +1081,31 @@ bool DedupSystem::RestoreStatistics(std::string prefix, dedupv1::PersistStatisti
     }
     if (block_index_) {
         CHECK(block_index_->RestoreStatistics(prefix + ".block-index", ps),
-                "Failed to restore block index stats");
+            "Failed to restore block index stats");
     }
     if (chunk_index_) {
         CHECK(chunk_index_->RestoreStatistics(prefix + ".chunk-index", ps),
-                "Failed to restore chunk index stats");
+            "Failed to restore chunk index stats");
     }
     if (chunk_store_) {
         CHECK(chunk_store_->RestoreStatistics(prefix + ".chunk-store", ps),
-                "Failed to restore chunk store stats");
+            "Failed to restore chunk store stats");
     }
     if (filter_chain_) {
         CHECK(filter_chain_->RestoreStatistics(prefix + ".filter-chain", ps),
-                "Failed to restore filter chain stats");
+            "Failed to restore filter chain stats");
     }
     if (volume_info_) {
         CHECK(volume_info_->RestoreStatistics(prefix + ".volumes", ps),
-                "Failed to restore volume stats");
+            "Failed to restore volume stats");
     }
     if (content_storage_) {
         CHECK(content_storage_->RestoreStatistics(prefix + ".content-storage", ps),
-                "Failed to restore content storage stats");
+            "Failed to restore content storage stats");
     }
 
     CHECK(idle_detector_.RestoreStatistics(prefix + ".idle", ps),
-            "Failed to restore idle detector stats");
+        "Failed to restore idle detector stats");
 
     return true;
 }
@@ -1191,11 +1191,11 @@ string DedupSystem::PrintProfile() {
     sstr << "\"gc\": " << (this->gc_ ? this->gc_->PrintProfile() : "null") << "," << std::endl;
     sstr << "\"idle\": " << this->idle_detector_.PrintProfile() << "," << std::endl;
     sstr << "\"block index\": " <<
-            (block_index_ ? this->block_index_->PrintProfile() : "null") << "," << std::endl;
+    (block_index_ ? this->block_index_->PrintProfile() : "null") << "," << std::endl;
     sstr << "\"chunk index\": " <<
-            (chunk_index_ ? this->chunk_index_->PrintProfile() : "null") << "," << std::endl;
+    (chunk_index_ ? this->chunk_index_->PrintProfile() : "null") << "," << std::endl;
     sstr << "\"chunk store\": " <<
-            (chunk_store_ ? this->chunk_store_->PrintProfile() : "null") << "," << std::endl;
+    (chunk_store_ ? this->chunk_store_->PrintProfile() : "null") << "," << std::endl;
     sstr << "\"filter chain\": " << (filter_chain_ ? this->filter_chain_->PrintProfile() : "null") << "," << std::endl;
     sstr << "\"volumes\": " << (volume_info_ ? this->volume_info_->PrintProfile() : "null") << "," << std::endl;
     sstr << "\"content storage\": " <<
@@ -1298,7 +1298,7 @@ void DedupSystem::ClearData() {
     }
     if (dynamic_cast<dedupv1::chunkstore::ContainerStorage*>(storage())) {
         dedupv1::chunkstore::ContainerStorage* cs =
-                dynamic_cast<dedupv1::chunkstore::ContainerStorage*>(storage());
+            dynamic_cast<dedupv1::chunkstore::ContainerStorage*>(storage());
         cs->ClearData();
     }
     block_index_->ClearData();

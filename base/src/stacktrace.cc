@@ -88,7 +88,7 @@ static void signal_segv(int signum, siginfo_t* info, void*ptr) {
     static const char *si_codes[3] = {"", "SEGV_MAPERR", "SEGV_ACCERR"};
 
     int i, f = 0;
-    ucontext_t *ucontext = (ucontext_t*) ptr;
+    ucontext_t *ucontext = (ucontext_t *) ptr;
     Dl_info dlinfo;
     void **bp = 0;
     void *ip = 0;
@@ -105,11 +105,11 @@ static void signal_segv(int signum, siginfo_t* info, void*ptr) {
 #ifndef SIGSEGV_NOSTACK
 #if defined(SIGSEGV_STACK_IA64) || defined(SIGSEGV_STACK_X86)
 #if defined(SIGSEGV_STACK_IA64)
-    ip = (void*) ucontext->uc_mcontext.gregs[REG_RIP];
-    bp = (void**) ucontext->uc_mcontext.gregs[REG_RBP];
+    ip = (void *) ucontext->uc_mcontext.gregs[REG_RIP];
+    bp = (void * *) ucontext->uc_mcontext.gregs[REG_RBP];
 #elif defined(SIGSEGV_STACK_X86)
-    ip = (void*) ucontext->uc_mcontext.gregs[REG_EIP];
-    bp = (void**) ucontext->uc_mcontext.gregs[REG_EBP];
+    ip = (void *) ucontext->uc_mcontext.gregs[REG_EIP];
+    bp = (void * *) ucontext->uc_mcontext.gregs[REG_EBP];
 #endif
 
     ERROR("Stack trace:");
@@ -142,7 +142,7 @@ static void signal_segv(int signum, siginfo_t* info, void*ptr) {
         }
 
         ip = bp[1];
-        bp = (void**) bp[0];
+        bp = (void * *) bp[0];
     }
 #else
     ERROR("Stack trace (non-dedicated):");

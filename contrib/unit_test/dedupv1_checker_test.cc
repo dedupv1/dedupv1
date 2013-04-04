@@ -59,23 +59,23 @@ using dedupv1::contrib::check::Dedupv1Checker;
 using namespace dedupv1;
 LOGGER("Dedupv1CheckerTest");
 
-class Dedupv1CheckerTest: public testing::TestWithParam<uint32_t> {
-    protected:
-        USE_LOGGING_EXPECTATION();
+class Dedupv1CheckerTest : public testing::TestWithParam<uint32_t> {
+protected:
+    USE_LOGGING_EXPECTATION();
 
-        Dedupv1d* system;
-        uint32_t passes;
+    Dedupv1d* system;
+    uint32_t passes;
 
-        virtual void SetUp() {
-            system = NULL;
+    virtual void SetUp() {
+        system = NULL;
+    }
+
+    virtual void TearDown() {
+        if (system) {
+            ASSERT_TRUE(system->Close());
         }
-
-        virtual void TearDown() {
-            if (system) {
-                ASSERT_TRUE(system->Close());
-            }
-        }
-    };
+    }
+};
 
 TEST_P(Dedupv1CheckerTest, Init)
 {
@@ -219,8 +219,8 @@ TEST_P(Dedupv1CheckerTest, CheckWithChunkDataAddressError)
     delete i;
 
     chunk_data.set_data_address(0); // a wrong data address
-    dedupv1::base::PersistentIndex* persitent_chunk_index = 
-      chunk_index->persistent_index();
+    dedupv1::base::PersistentIndex* persitent_chunk_index =
+        chunk_index->persistent_index();
     ASSERT_EQ(persitent_chunk_index->Put(fp, fp_size, chunk_data), dedupv1::base::PUT_OK);
 
     ASSERT_TRUE(system->Close());
@@ -386,8 +386,8 @@ TEST_P(Dedupv1CheckerTest, RepairWithChunkDataAddressError)
     delete i;
 
     chunk_data.set_data_address(0); // a wrong data address
-    dedupv1::base::PersistentIndex* persitent_chunk_index = 
-      chunk_index->persistent_index();
+    dedupv1::base::PersistentIndex* persitent_chunk_index =
+        chunk_index->persistent_index();
     ASSERT_EQ(dedupv1::base::PUT_OK, persitent_chunk_index->Put(fp, fp_size, chunk_data));
 
     ASSERT_TRUE(system->Close());
@@ -483,15 +483,15 @@ TEST_P(Dedupv1CheckerTest, RepairWithUsageCountError)
     chunk_data_increased.set_usage_count(chunk_data_increased.usage_count() + 1);
     chunk_data_extrem_high.set_usage_count(extrem_usage_count);
 
-    dedupv1::base::PersistentIndex* persitent_chunk_index = 
-      chunk_index->persistent_index();
+    dedupv1::base::PersistentIndex* persitent_chunk_index =
+        chunk_index->persistent_index();
 
     ASSERT_EQ(dedupv1::base::PUT_OK,
-      persitent_chunk_index->Put(fp_increased, fp_size, chunk_data_increased));
+        persitent_chunk_index->Put(fp_increased, fp_size, chunk_data_increased));
     ASSERT_EQ(dedupv1::base::PUT_OK,
-      persitent_chunk_index->Put(fp_decreased, fp_size, chunk_data_decreased));
+        persitent_chunk_index->Put(fp_decreased, fp_size, chunk_data_decreased));
     ASSERT_EQ(dedupv1::base::PUT_OK,
-      persitent_chunk_index->Put(fp_extrem_high, fp_size, chunk_data_extrem_high));
+        persitent_chunk_index->Put(fp_extrem_high, fp_size, chunk_data_extrem_high));
 
     ASSERT_TRUE(system->Close());
     system = NULL;
@@ -592,7 +592,7 @@ TEST_P(Dedupv1CheckerTest, RepairWithNoGCCandidateError)
 
     if (process_with_test) {
         DEBUG("Delete " << dedupv1::base::strutil::ToHexString(key, key_size) << " as gc candidate: " <<
-                candidate_data.ShortDebugString());
+            candidate_data.ShortDebugString());
         dedupv1::base::delete_result dr = candidate_info->Delete(key, key_size);
         EXPECT_EQ(dedupv1::base::DELETE_OK, dr);
     }
@@ -621,7 +621,7 @@ TEST_P(Dedupv1CheckerTest, RepairWithNoGCCandidateError)
 }
 
 INSTANTIATE_TEST_CASE_P(Dedupv1Checker,
-        Dedupv1CheckerTest,
-        ::testing::Values(0U, 1U, 2U, 3U, 4U))
+    Dedupv1CheckerTest,
+    ::testing::Values(0U, 1U, 2U, 3U, 4U))
 // passes
 ;

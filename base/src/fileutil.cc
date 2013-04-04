@@ -108,21 +108,21 @@ bool File::Fallocate(off_t offset, off_t len) {
             }
             int result = Write(offset, buffer, write_size);
             CHECK(result == write_size && result != File::kIOError,
-                    "Write to file " << path() << " failed at position " << offset);
+                "Write to file " << path() << " failed at position " << offset);
             len -= write_size;
             offset += write_size;
         }
         while (len >= write_page_size) {
             int result = Write(offset, buffer, write_page_size);
             CHECK(result == write_page_size && result != File::kIOError,
-                    "Write to file " << path() << " failed at position " << offset);
+                "Write to file " << path() << " failed at position " << offset);
             len -= write_page_size;
             offset += write_page_size;
         }
         if (len > 0) {
             int result = Write(offset, buffer, len);
             CHECK(result == len && result != File::kIOError,
-                    "Write to file " << path() << " failed at position " << offset);
+                "Write to file " << path() << " failed at position " << offset);
         }
     }
     return true;
@@ -133,7 +133,7 @@ bool File::GetLine(int* offset, string* line, unsigned int max) {
     unsigned int i = 0;
     while (i < max) {
         char c;
-        if (this->Read(*offset, (void*) &c, 1) != 1) {
+        if (this->Read(*offset, (void *) &c, 1) != 1) {
             return i > 0;
         }
         if (c == '\n') {
@@ -252,10 +252,10 @@ ssize_t File::Write(off_t offset, const void* data, size_t size) {
 Option<off_t> File::Seek(off_t offset, int origin) {
     off_t seek_offset = lseek(this->fd_, offset, origin);
     CHECK(seek_offset != -1, "Failed to seek:" <<
-            "fd " << fd_ <<
-            ", offset " << offset <<
-            ", origin " << origin <<
-            ", message " << strerror(errno));
+        "fd " << fd_ <<
+        ", offset " << offset <<
+        ", origin " << origin <<
+        ", message " << strerror(errno));
     return make_option(seek_offset);
 }
 
@@ -284,7 +284,7 @@ bool File::Sync() {
 }
 
 ssize_t File::WriteSizedMessage(off_t offset, const ::google::protobuf::Message& message, size_t max_size,
-        bool checksum) {
+                                bool checksum) {
     size_t value_size = message.ByteSize() + 32;
     byte value[value_size];
 
@@ -310,10 +310,10 @@ bool File::ReadSizedMessage(off_t offset, ::google::protobuf::Message* message, 
     }
 
     CHECK(ParseSizedMessage(message, value, r, checksum).valid(), "Failed to parse sized message: " <<
-            "path " << this->path_ <<
-            ", offset " << offset <<
-            ", max value size " << max_size <<
-            ", value size " << r);
+        "path " << this->path_ <<
+        ", offset " << offset <<
+        ", max value size " << max_size <<
+        ", value size " << r);
     return true;
 }
 
@@ -531,8 +531,8 @@ bool File::CopyFile(const std::string& src_name, const std::string& dest_name, i
             ssize_t w = dest->Write(buffer, r);
             if (w <= 0) {
                 ERROR("write error during copy: " <<
-                        "source " << src_name <<
-                        ", destination " << dest_name);
+                    "source " << src_name <<
+                    ", destination " << dest_name);
                 failed = true;
                 continue; // some write error, r is > 0 => leave the loops
             }
@@ -543,8 +543,8 @@ bool File::CopyFile(const std::string& src_name, const std::string& dest_name, i
     }
     if (r < 0) {
         ERROR("Read error during copy: " <<
-                "source " << src_name <<
-                ", destination " << dest_name);
+            "source " << src_name <<
+            ", destination " << dest_name);
         failed = true;
     }
 

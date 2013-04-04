@@ -56,7 +56,7 @@ bool ContainerGCMonitorAdapter::ParseParam(const string& key, const string& valu
 
     DedupSystem* system = this->ds_->dedup_system();
     CHECK(system, "System not ready");
-    
+
     ContainerStorage* storage = dynamic_cast<ContainerStorage*>(system->storage());
     CHECK(storage, "System not ready");
 
@@ -73,7 +73,7 @@ bool ContainerGCMonitorAdapter::ParseParam(const string& key, const string& valu
         string value1;
         string value2;
         CHECK(dedupv1::base::strutil::Split(value, ":", &value1, &value2),
-                "Failed to split the merge values");
+            "Failed to split the merge values");
 
         Option<uint64_t> container_id1 = To<uint64_t>(value1);
         Option<uint64_t> container_id2 = To<uint64_t>(value2);
@@ -83,7 +83,7 @@ bool ContainerGCMonitorAdapter::ParseParam(const string& key, const string& valu
         DEBUG("Force merge: container id " << container_id1.value() << ", container id " << container_id2.value());
 
         bool aborted = false;
-        if(!storage->TryMergeContainer(container_id1.value(), container_id2.value(), &aborted)) {
+        if (!storage->TryMergeContainer(container_id1.value(), container_id2.value(), &aborted)) {
             ERROR("Failed to merge container id " << (container_id1.value()) << ", container id " << (container_id2.value()));
             error_message_ = "Failed to merge container id " + ToString(container_id1.value()) + ", container id " + ToString(container_id2.value());
         }
@@ -96,7 +96,7 @@ bool ContainerGCMonitorAdapter::ParseParam(const string& key, const string& valu
 }
 
 string ContainerGCMonitorAdapter::Monitor() {
-    CHECK_RETURN_JSON (error_message_.empty(), error_message_);
+    CHECK_RETURN_JSON(error_message_.empty(), error_message_);
 
     stringstream sstr;
     sstr << "{";

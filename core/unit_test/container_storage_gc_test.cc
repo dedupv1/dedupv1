@@ -130,7 +130,7 @@ protected:
     void FillDefaultContainer(Container* container, int begin, int count) {
         for (int i = 0; i < count; i++) {
             // Use small items to avoid an overflow
-            ASSERT_TRUE(container->AddItem((byte*) &test_fp[begin + i], sizeof(test_fp[begin + i]), (byte*) test_data[begin + i], (size_t) 16 * 1024))
+            ASSERT_TRUE(container->AddItem((byte *) &test_fp[begin + i], sizeof(test_fp[begin + i]), (byte *) test_data[begin + i], (size_t) 16 * 1024))
             << "Add item " << begin + i << " failed";
         }
     }
@@ -163,7 +163,7 @@ TEST_P(GreedyContainerGCStrategyTest, OnRead) {
     ASSERT_TRUE(c.Init(0, CONTAINER_SIZE));
     FillDefaultContainer(&c, 0, 4 );
 
-    ASSERT_TRUE(gc->OnRead(c, (void*) &test_fp[2], sizeof(test_fp[2])));
+    ASSERT_TRUE(gc->OnRead(c, (void *) &test_fp[2], sizeof(test_fp[2])));
 }
 
 TEST_P(GreedyContainerGCStrategyTest, OnCommitFullContainer) {
@@ -257,7 +257,7 @@ TEST_P(GreedyContainerGCStrategyTest, OnDeleteFull) {
 
     uint32_t old_active_data_size = c.active_data_size();
     uint32_t old_item_count = c.item_count();
-    c.DeleteItem((byte*) &test_fp[2], sizeof(test_fp[2]));
+    c.DeleteItem((byte *) &test_fp[2], sizeof(test_fp[2]));
 
     ContainerMoveEventData event_data;
     event_data.set_container_id(c.primary_id());
@@ -271,7 +271,7 @@ TEST_P(GreedyContainerGCStrategyTest, OnDeleteFull) {
     old_active_data_size = c.active_data_size();
     old_item_count = c.item_count();
 
-    c.DeleteItem((byte*) &test_fp[0], sizeof(test_fp[0]));
+    c.DeleteItem((byte *) &test_fp[0], sizeof(test_fp[0]));
 
     event_data.Clear();
     event_data.set_container_id(c.primary_id());
@@ -299,7 +299,7 @@ TEST_P(GreedyContainerGCStrategyTest, OnDeleteHalfFull) {
 
     uint32_t old_active_data_size = c.active_data_size();
     uint32_t old_item_count = c.item_count();
-    ASSERT_TRUE(c.DeleteItem((byte*) &test_fp[2], sizeof(test_fp[2])));
+    ASSERT_TRUE(c.DeleteItem((byte *) &test_fp[2], sizeof(test_fp[2])));
 
     ContainerMoveEventData event_data;
     event_data.set_container_id(c.primary_id());
@@ -313,7 +313,7 @@ TEST_P(GreedyContainerGCStrategyTest, OnDeleteHalfFull) {
     old_active_data_size = c.active_data_size();
     old_item_count = c.item_count();
 
-    ASSERT_TRUE(c.DeleteItem((byte*) &test_fp[0], sizeof(test_fp[0])));
+    ASSERT_TRUE(c.DeleteItem((byte *) &test_fp[0], sizeof(test_fp[0])));
 
     event_data.Clear();
     event_data.set_container_id(c.primary_id());

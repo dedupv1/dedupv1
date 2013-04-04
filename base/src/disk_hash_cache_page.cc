@@ -72,13 +72,13 @@ LOGGER("DiskHashIndex");
 namespace {
 template<class T> T GetFromBuffer(const byte* b, off_t offset) {
     const byte* p = b + offset;
-    const T* t = (const T*) p;
+    const T* t = (const T *) p;
     return *t;
 }
 
 template<class T> void SetToBuffer(byte* b, off_t offset, T value) {
     byte* p = b + offset;
-    T* t = (T*) p;
+    T* t = (T *) p;
     *t = value;
 }
 }
@@ -88,7 +88,7 @@ namespace base {
 namespace internal {
 
 lookup_result DiskHashCachePage::Search(const void* key, size_t key_size, Message* message, bool* is_dirty,
-        bool* is_pinned) {
+                                        bool* is_pinned) {
     DCHECK_RETURN(key, LOOKUP_ERROR, "Key not set");
 
     TRACE("Search cache page: bucket " << bucket_id_ << ", key " << ToHexString(key, key_size));
@@ -100,13 +100,13 @@ lookup_result DiskHashCachePage::Search(const void* key, size_t key_size, Messag
             /* Found it */
             if (message) {
                 CHECK_RETURN(message->ParseFromArray(entry.value(), entry.value_size()),
-                        LOOKUP_ERROR, "Failed to parse message: " <<
-                        "key " << ToHexString(key, key_size) <<
-                        ", value " << ToHexString(entry.value(), entry.value_size()) <<
-                        ", size " << entry.value_size() <<
-                        ", entry " << entry.DebugString() <<
-                        ", cache page " << this->DebugString() <<
-                        ", message " << message->InitializationErrorString());
+                    LOOKUP_ERROR, "Failed to parse message: " <<
+                    "key " << ToHexString(key, key_size) <<
+                    ", value " << ToHexString(entry.value(), entry.value_size()) <<
+                    ", size " << entry.value_size() <<
+                    ", entry " << entry.DebugString() <<
+                    ", cache page " << this->DebugString() <<
+                    ", message " << message->InitializationErrorString());
             }
             if (is_dirty) {
                 *is_dirty = entry.is_dirty();
@@ -133,9 +133,9 @@ bool DiskHashCachePage::DropAllPinned() {
             size_t s = buffer_size_ - (next_buffer - buffer_);
 
             DCHECK(next_buffer + s <= buffer_ + buffer_size_, "Illegal next buffer: " <<
-                    "buffer size " << buffer_size_ <<
-                    "copy size " << s <<
-                    "next buffer offset " << static_cast<int>(next_buffer - buffer_));
+                "buffer size " << buffer_size_ <<
+                "copy size " << s <<
+                "next buffer offset " << static_cast<int>(next_buffer - buffer_));
 
             // The next line will bring sometimes a valgind error:
             //     Source and destination overlap in memcpy
@@ -168,14 +168,14 @@ delete_result DiskHashCachePage::Delete(const void* key, unsigned int key_size) 
             size_t s = buffer_size_ - (next_buffer - buffer_);
 
             TRACE("Found delete entry: key " << ToHexString(key, key_size) << ", offset " << entry.current_offset() <<
-                    ", next buffer offset " << static_cast<int>(next_buffer - buffer_) <<
-                    ", copy size " << s);
+                ", next buffer offset " << static_cast<int>(next_buffer - buffer_) <<
+                ", copy size " << s);
 
             DCHECK_RETURN(next_buffer + s <= buffer_ + buffer_size_, DELETE_ERROR,
-                    "Illegal next buffer: " <<
-                    "buffer size " << buffer_size_ <<
-                    "copy size " << s <<
-                    "next buffer offset " << static_cast<int>(next_buffer - buffer_));
+                "Illegal next buffer: " <<
+                "buffer size " << buffer_size_ <<
+                "copy size " << s <<
+                "next buffer offset " << static_cast<int>(next_buffer - buffer_));
 
             // The next line will bring sometimes a valgrind error:
             //     Source and destination overlap in memcpy
@@ -193,8 +193,9 @@ delete_result DiskHashCachePage::Delete(const void* key, unsigned int key_size) 
 enum lookup_result DiskHashCachePage::IterateInit(DiskHashCacheEntry* cache_entry) const {
     DCHECK_RETURN(cache_entry, LOOKUP_ERROR, "Cache entry not set");
 
-    if (cache_entry->ParseFrom(kHeaderOffset) && (cache_entry->key_size() != 0))
+    if (cache_entry->ParseFrom(kHeaderOffset) && (cache_entry->key_size() != 0)) {
         return LOOKUP_FOUND;
+    }
     return LOOKUP_NOT_FOUND;
 }
 
@@ -202,8 +203,9 @@ enum lookup_result DiskHashCachePage::Iterate(DiskHashCacheEntry* cache_entry) c
     DCHECK_RETURN(cache_entry, LOOKUP_ERROR, "Cache entry not set");
 
     if (cache_entry->ParseFrom(cache_entry->current_offset() + cache_entry->entry_data_size())
-            && (cache_entry->key_size() != 0))
+        && (cache_entry->key_size() != 0)) {
         return LOOKUP_FOUND;
+    }
     return LOOKUP_NOT_FOUND;
 }
 
@@ -211,11 +213,11 @@ enum lookup_result DiskHashCachePage::ChangePinningState(const void* key, size_t
     DCHECK_RETURN(key, LOOKUP_ERROR, "Key not set");
 
     TRACE("Pin: bucket " << bucket_id_ <<
-            ", key " << ToHexString(key, key_size) <<
-            ", key size " << key_size <<
-            ", page bin state " << pinned_ << 
-            ", page dirty state " << dirty_ <<
-            ", new key pin state " << ToString(new_pinning_state));
+        ", key " << ToHexString(key, key_size) <<
+        ", key size " << key_size <<
+        ", page bin state " << pinned_ <<
+        ", page dirty state " << dirty_ <<
+        ", new key pin state " << ToString(new_pinning_state));
 
     uint32_t pinned_count = 0;
     bool found = false;
@@ -257,12 +259,12 @@ void DiskHashCachePage::RaiseBuffer(size_t minimal_new_buffer_size) {
 }
 
 put_result DiskHashCachePage::Update(const void* key, size_t key_size, const Message& message, bool keep,
-        bool dirty_change, bool pin) {
+                                     bool dirty_change, bool pin) {
     DCHECK_RETURN(key, PUT_ERROR, "Key not set");
 
     TRACE("Update cache page: bucket " << bucket_id_ <<
-            ", key " << ToHexString(key, key_size) <<
-            ", key size " << key_size);
+        ", key " << ToHexString(key, key_size) <<
+        ", key size " << key_size);
 
     DiskHashCacheEntry entry(buffer_, buffer_size_, max_key_size_, max_value_size_);
     lookup_result cache_lr = IterateInit(&entry);
@@ -283,7 +285,7 @@ put_result DiskHashCachePage::Update(const void* key, size_t key_size, const Mes
             }
             entry.Store();
             TRACE("Update cache entry: bucket " << bucket_id_ << ", key " << ToHexString(key, key_size) <<
-                    ", offset " << entry.current_offset() << ", entry " << entry.DebugString());
+                ", offset " << entry.current_offset() << ", entry " << entry.DebugString());
             return PUT_OK;
         }
         cache_lr = Iterate(&entry);
@@ -296,13 +298,13 @@ put_result DiskHashCachePage::Update(const void* key, size_t key_size, const Mes
         entry.SetBuffer(buffer_, buffer_size_);
     }
     TRACE("New cache entry: bucket " << bucket_id_ <<
-            ", offset " << entry.current_offset() <<
-            ", key " << ToHexString(key, key_size) <<
-            ", key size " << key_size);
+        ", offset " << entry.current_offset() <<
+        ", key " << ToHexString(key, key_size) <<
+        ", key size " << key_size);
     CHECK_RETURN(entry.AssignKey(key, key_size), PUT_ERROR,
-            "Failed to assign value data: key size " << key_size << ", max key size " << entry.max_key_size());
+        "Failed to assign value data: key size " << key_size << ", max key size " << entry.max_key_size());
     CHECK_RETURN(entry.AssignValue(message), PUT_ERROR,
-            "Failed to assign value data: " << message.ShortDebugString());
+        "Failed to assign value data: " << message.ShortDebugString());
     if (dirty_change) {
         this->dirty_ = true;
         entry.set_dirty(true);
@@ -318,11 +320,11 @@ put_result DiskHashCachePage::Update(const void* key, size_t key_size, const Mes
 
 bool DiskHashCachePage::IsAcceptingNewEntries() {
     uint32_t space_needed = kHeaderOffset + ((item_count_ + 1) * (4 + this->max_key_size_ + this->max_value_size_));
-    return (space_needed < this->buffer_size_);
+    return space_needed < this->buffer_size_;
 }
 
 DiskHashCachePage::DiskHashCachePage(uint64_t bucket_id, size_t page_size, uint32_t max_key_size,
-        uint32_t max_value_size) {
+                                     uint32_t max_value_size) {
     this->bucket_id_ = bucket_id;
     this->page_size_ = page_size;
     dirty_ = false;
@@ -336,11 +338,11 @@ DiskHashCachePage::DiskHashCachePage(uint64_t bucket_id, size_t page_size, uint3
 }
 
 bool DiskHashCachePage::ParseData() {
-    bucket_id_ = GetFromBuffer<uint64_t> (buffer_, 0);
-    item_count_ = GetFromBuffer<uint16_t> (buffer_, 8);
+    bucket_id_ = GetFromBuffer<uint64_t>(buffer_, 0);
+    item_count_ = GetFromBuffer<uint16_t>(buffer_, 8);
 
     DCHECK(item_count_ >= 0 && item_count_ <= 1024,
-            "Illegal item count");
+        "Illegal item count");
 
     dirty_ = false;
     pinned_ = false;
@@ -348,10 +350,10 @@ bool DiskHashCachePage::ParseData() {
     lookup_result cache_lr = IterateInit(&entry);
     while (cache_lr == LOOKUP_FOUND) {
         if (entry.is_dirty()) {
-          dirty_ = true;
+            dirty_ = true;
         }
         if (entry.is_pinned()) {
-          pinned_ = true;
+            pinned_ = true;
         }
         cache_lr = Iterate(&entry);
     }
@@ -360,17 +362,17 @@ bool DiskHashCachePage::ParseData() {
 
 bool DiskHashCachePage::Store() {
     DCHECK(item_count_ >= 0 && item_count_ <= 1024,
-            "Illegal item count");
+        "Illegal item count");
 
-    SetToBuffer<uint64_t> (buffer_, 0, bucket_id_);
-    SetToBuffer<uint16_t> (buffer_, 8, (uint16_t) item_count_);
+    SetToBuffer<uint64_t>(buffer_, 0, bucket_id_);
+    SetToBuffer<uint16_t>(buffer_, 8, (uint16_t) item_count_);
     return true;
 }
 
 string DiskHashCachePage::DebugString() const {
     stringstream sstr;
     sstr << "[cache page " << this->bucket_id_ << ", cache buffer size " << buffer_size_ << ", item count "
-            << item_count_ << ", dirty " << ToString(dirty_) << ", pinned " << ToString(pinned_) << "]";
+         << item_count_ << ", dirty " << ToString(dirty_) << ", pinned " << ToString(pinned_) << "]";
     return sstr.str();
 }
 
@@ -399,9 +401,9 @@ bool DiskHashCacheEntry::ParseFrom(uint32_t offset) {
         return false;
     }
 
-    key_size_ = GetFromBuffer<uint8_t> (buf, 0);
-    value_size_ = GetFromBuffer<uint16_t> (buf, 1);
-    uint8_t state = GetFromBuffer<uint8_t> (buf, 3);
+    key_size_ = GetFromBuffer<uint8_t>(buf, 0);
+    value_size_ = GetFromBuffer<uint16_t>(buf, 1);
+    uint8_t state = GetFromBuffer<uint8_t>(buf, 3);
     dirty_ = state & 1;
     pinned_ = state & 2;
 
@@ -409,28 +411,28 @@ bool DiskHashCacheEntry::ParseFrom(uint32_t offset) {
     DCHECK(value_size_ <= max_value_size_, "Illegal value size: " << value_size_);
 
     TRACE("Parse entry: "
-            "key " << ToHexString(key(), key_size()) <<
-            ", key size " << key_size_ <<
-            ", value size " << value_size_ <<
-            ", state " << ToHexString(state) <<
-            ", offset " << offset_);
+        "key " << ToHexString(key(), key_size()) <<
+        ", key size " << key_size_ <<
+        ", value size " << value_size_ <<
+        ", state " << ToHexString(state) <<
+        ", offset " << offset_);
     return true;
 }
 
 void DiskHashCacheEntry::Store() {
     byte* buf = buffer_ + offset_;
 
-    SetToBuffer<uint8_t> (buf, 0, (uint8_t) key_size_);
-    SetToBuffer<uint16_t> (buf, 1, (uint16_t) value_size_);
+    SetToBuffer<uint8_t>(buf, 0, (uint8_t) key_size_);
+    SetToBuffer<uint16_t>(buf, 1, (uint16_t) value_size_);
 
     uint8_t state = (dirty_) | (pinned_ << 1);
-    SetToBuffer<uint8_t> (buf, 3, (uint8_t) state);
+    SetToBuffer<uint8_t>(buf, 3, (uint8_t) state);
 }
 
 bool DiskHashCacheEntry::AssignKey(const void* key, size_t key_size) {
     key_size_ = key_size;
     memcpy(this->buffer_, &key_size, sizeof(uint32_t));
-    void* key_buf = const_cast<void*> (this->key());
+    void* key_buf = const_cast<void*>(this->key());
     memcpy(key_buf, key, key_size);
     this->key_size_ = key_size;
     return true;
@@ -439,13 +441,13 @@ bool DiskHashCacheEntry::AssignKey(const void* key, size_t key_size) {
 bool DiskHashCacheEntry::AssignValue(const Message& message) {
     DCHECK(this->buffer_ != NULL, "Buffer not set");
     CHECK(this->max_value_size_ >= message.ByteSize(),
-            "Illegal size: " << message.DebugString());
+        "Illegal size: " << message.DebugString());
 
-    void* value_buf = const_cast<void*> (this->value());
+    void* value_buf = const_cast<void*>(this->value());
     memset(value_buf, 0, this->max_value_size_);
     uint32_t value_size = message.ByteSize();
-    CHECK(message.SerializeWithCachedSizesToArray(reinterpret_cast<byte*> (value_buf)),
-            "Failed to serialize array: message " << message.DebugString());
+    CHECK(message.SerializeWithCachedSizesToArray(reinterpret_cast<byte*>(value_buf)),
+        "Failed to serialize array: message " << message.DebugString());
     this->value_size_ = value_size;
     return true;
 }
@@ -464,9 +466,9 @@ DiskHashCacheEntry::DiskHashCacheEntry(byte* buffer, size_t buffer_size, uint32_
 
 string DiskHashCacheEntry::DebugString() {
     return "cache entry: key " + ToHexString(this->key(), this->key_size()) + ", key size "
-            + ToString(this->key_size()) + ", value " + ToHexString(this->value(), this->value_size())
-            + ", value size " + ToString(this->value_size()) + ", dirty " + ToString(dirty_) + ", pinned " + ToString(
-            pinned_);
+           + ToString(this->key_size()) + ", value " + ToHexString(this->value(), this->value_size())
+           + ", value size " + ToString(this->value_size()) + ", dirty " + ToString(dirty_) + ", pinned " + ToString(
+        pinned_);
 }
 
 }

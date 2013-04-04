@@ -52,7 +52,7 @@ LOGGER("IndexTest");
 
 #define SKIP_IF_FIXED_INDEX(x) if (dynamic_cast<FixedIndex*>(x)) { INFO("Skipping test for fixed index"); return; }
 
-#define SKIP_UNLESS_PUT_IF_ABSENT_SUPPORTED(index) if(!index->HasCapability(PUT_IF_ABSENT)) { INFO("Skipping test for index"); return; }
+#define SKIP_UNLESS_PUT_IF_ABSENT_SUPPORTED(index) if (!index->HasCapability(PUT_IF_ABSENT)) { INFO("Skipping test for index"); return; }
 
 #define INDEX_TEST_OP_COUNT (1024 * 4)
 
@@ -78,7 +78,7 @@ void IndexTest::TearDown() {
 bool IndexTest::Write(Index* index, int start, int end) {
     for (int i = start; i < end; i++) {
         uint64_t key_value = i;
-        byte* key = (byte*) &key_value;
+        byte* key = (byte *) &key_value;
 
         IntData value;
         value.set_i(i);
@@ -87,7 +87,6 @@ bool IndexTest::Write(Index* index, int start, int end) {
     return true;
 }
 
-
 bool IndexTest::BatchWrite(Index* index, int start, int end) {
     int batch_size = 8;
     for (int i = start; i < end; i += batch_size) {
@@ -95,7 +94,7 @@ bool IndexTest::BatchWrite(Index* index, int start, int end) {
         vector<tuple<bytestring, const google::protobuf::Message*> > data;
         for (int j = i; j < (i + batch_size) && j < end; j++) {
             uint64_t key_value = j;
-            byte* key = (byte*) &key_value;
+            byte* key = (byte *) &key_value;
 
             IntData* value = new IntData();
             value->set_i(j);
@@ -119,7 +118,7 @@ bool IndexTest::BatchWrite(Index* index, int start, int end) {
 bool IndexTest::Read(Index* index, int start, int end) {
     for (int i = start; i < end; i++) {
         uint64_t key_value = i;
-        byte* key = (byte*) &key_value;
+        byte* key = (byte *) &key_value;
         uint64_t value = i;
 
         IntData get_value;
@@ -246,12 +245,12 @@ TEST_P(IndexTest, StartWithDefaultFilemode) {
             struct stat file_stat;
             memset(&file_stat, 0, sizeof(file_stat));
             ASSERT_TRUE(File::Stat(option, &file_stat));
-            
+
             if ((file_stat.st_mode & S_IFDIR) == 0) {
-              ASSERT_EQ(file_mode.mode(), file_stat.st_mode & 07777) << 
+                ASSERT_EQ(file_mode.mode(), file_stat.st_mode & 07777) <<
                 option << " has wrong mode";
             } else {
-              ASSERT_EQ(dir_mode.mode(), file_stat.st_mode & 07777) << 
+                ASSERT_EQ(dir_mode.mode(), file_stat.st_mode & 07777) <<
                 option << " has wrong mode (directory)";
             }
         }
@@ -290,9 +289,9 @@ TEST_P(IndexTest, StartWithCustomFilemode) {
             ASSERT_TRUE(File::Stat(option, &file_stat));
 
             if ((file_stat.st_mode & S_IFDIR) == 0) {
-              ASSERT_EQ(file_mode, file_stat.st_mode & 07777);
+                ASSERT_EQ(file_mode, file_stat.st_mode & 07777);
             } else {
-              ASSERT_EQ(dir_mode, file_stat.st_mode & 07777);
+                ASSERT_EQ(dir_mode, file_stat.st_mode & 07777);
             }
         }
     }
@@ -320,7 +319,7 @@ TEST_P(IndexTest, GetEstimatedMaxItemCount) {
 TEST_P(IndexTest, LookupWithoutData) {
     ASSERT_TRUE(index->Start(StartContext()));
     uint64_t key_value = 1;
-    byte* key = (byte*) &key_value;
+    byte* key = (byte *) &key_value;
 
     IntData value;
     enum lookup_result result = index->Lookup(key, sizeof(key_value), &value);
@@ -330,7 +329,7 @@ TEST_P(IndexTest, LookupWithoutData) {
 TEST_P(IndexTest, WriteRead) {
     ASSERT_TRUE(index->Start(StartContext()));
     uint64_t key_value = 1;
-    byte* key = (byte*) &key_value;
+    byte* key = (byte *) &key_value;
 
     IntData value;
     value.set_i(1);
@@ -344,7 +343,7 @@ TEST_P(IndexTest, WriteRead) {
 TEST_P(IndexTest, WriteOverwrite) {
     ASSERT_TRUE(index->Start(StartContext()));
     uint64_t key_value = 1;
-    byte* key = (byte*) &key_value;
+    byte* key = (byte *) &key_value;
 
     IntData value;
     value.set_i(1);
@@ -369,7 +368,7 @@ TEST_P(IndexTest, WriteClear) {
     ASSERT_TRUE(mi->Start(StartContext()));
     for (int i = 0; i < INDEX_TEST_OP_COUNT; i++) {
         uint64_t key_value = i;
-        byte* key = (byte*) &key_value;
+        byte* key = (byte *) &key_value;
 
         IntData value;
         value.set_i(i);
@@ -388,7 +387,7 @@ TEST_P(IndexTest, CompareAndSwap) {
     ASSERT_TRUE(index->Start(StartContext()));
 
     uint64_t key_value = 2;
-    byte* key = (byte*) &key_value;
+    byte* key = (byte *) &key_value;
 
     IntData value;
     value.set_i(key_value);
@@ -417,7 +416,7 @@ TEST_P(IndexTest, MultipleWriteRead) {
     ASSERT_TRUE(index->Start(StartContext()));
     for (int i = 0; i < INDEX_TEST_OP_COUNT; i++) {
         uint64_t key_value = i;
-        byte* key = (byte*) &key_value;
+        byte* key = (byte *) &key_value;
 
         IntData value;
         value.set_i(i);
@@ -426,7 +425,7 @@ TEST_P(IndexTest, MultipleWriteRead) {
 
     for (int i = 0; i < INDEX_TEST_OP_COUNT; i++) {
         uint64_t key_value = i;
-        byte* key = (byte*) &key_value;
+        byte* key = (byte *) &key_value;
         uint64_t value = i;
 
         IntData get_value;
@@ -485,7 +484,7 @@ TEST_P(IndexTest, BatchedMultiThreadedWriteRead) {
     start = tbb::tick_count::now();
     for (int i = 0; i < INDEX_TEST_OP_COUNT; i++) {
         uint64_t key_value = i;
-        byte* key = (byte*) &key_value;
+        byte* key = (byte *) &key_value;
         uint64_t value = i;
 
         IntData get_value;
@@ -543,7 +542,7 @@ TEST_P(IndexTest, MultiThreadedWriteRead) {
     start = tbb::tick_count::now();
     for (int i = 0; i < INDEX_TEST_OP_COUNT; i++) {
         uint64_t key_value = i;
-        byte* key = (byte*) &key_value;
+        byte* key = (byte *) &key_value;
         uint64_t value = i;
 
         IntData get_value;
@@ -567,7 +566,7 @@ TEST_P(IndexTest, ItemCountOnRestart) {
     ASSERT_TRUE(index->Start(StartContext()));
     for (int i = 0; i < INDEX_TEST_OP_COUNT; i++) {
         uint64_t key_value = i;
-        byte* key = (byte*) &key_value;
+        byte* key = (byte *) &key_value;
 
         IntData value;
         value.set_i(i);
@@ -578,7 +577,7 @@ TEST_P(IndexTest, ItemCountOnRestart) {
     ASSERT_EQ(INDEX_TEST_OP_COUNT, index->GetItemCount());
     for (int i = 0; i < INDEX_TEST_OP_COUNT; i++) {
         uint64_t key_value = i;
-        byte* key = (byte*) &key_value;
+        byte* key = (byte *) &key_value;
         uint64_t value = i;
 
         IntData get_value;
@@ -593,7 +592,7 @@ TEST_P(IndexTest, ItemCountOnRestart) {
 TEST_P(IndexTest, Delete) {
     ASSERT_TRUE(index->Start(StartContext()));
     uint64_t key_value = 1;
-    byte* key = (byte*) &key_value;
+    byte* key = (byte *) &key_value;
 
     IntData value;
     value.set_i(1);
@@ -620,7 +619,7 @@ TEST_P(IndexTest, MultipleWriteReadDelete) {
     start = tbb::tick_count::now();
     for (int i = 0; i < INDEX_TEST_OP_COUNT; i++) {
         uint64_t key_value = i;
-        byte* key = (byte*) &key_value;
+        byte* key = (byte *) &key_value;
 
         IntData value;
         value.set_i(i);
@@ -632,7 +631,7 @@ TEST_P(IndexTest, MultipleWriteReadDelete) {
     start = tbb::tick_count::now();
     for (int i = 0; i < INDEX_TEST_OP_COUNT / 2; i++) {
         uint64_t key_value = i;
-        byte* key = (byte*) &key_value;
+        byte* key = (byte *) &key_value;
 
         ASSERT_EQ(index->Delete(key, sizeof(key_value)), DELETE_OK) << "Delete " << i << " failed";
     }
@@ -642,14 +641,14 @@ TEST_P(IndexTest, MultipleWriteReadDelete) {
     start = tbb::tick_count::now();
     for (int i = 0; i < INDEX_TEST_OP_COUNT / 2; i++) {
         uint64_t key_value = i;
-        byte* key = (byte*) &key_value;
+        byte* key = (byte *) &key_value;
 
         ASSERT_EQ(index->Lookup(key, sizeof(key_value), NULL), LOOKUP_NOT_FOUND);
     }
 
     for (int i = INDEX_TEST_OP_COUNT / 2; i < INDEX_TEST_OP_COUNT; i++) {
         uint64_t key_value = i;
-        byte* key = (byte*) &key_value;
+        byte* key = (byte *) &key_value;
         uint64_t value = i;
 
         IntData get_value;
@@ -662,7 +661,7 @@ TEST_P(IndexTest, MultipleWriteReadDelete) {
     start = tbb::tick_count::now();
     for (int i = 0; i < INDEX_TEST_OP_COUNT; i++) {
         uint64_t key_value = i;
-        byte* key = (byte*) &key_value;
+        byte* key = (byte *) &key_value;
 
         IntData value;
         value.set_i(i + 1);
@@ -673,7 +672,7 @@ TEST_P(IndexTest, MultipleWriteReadDelete) {
     start = tbb::tick_count::now();
     for (int i = 0; i < INDEX_TEST_OP_COUNT; i++) {
         uint64_t key_value = i;
-        byte* key = (byte*) &key_value;
+        byte* key = (byte *) &key_value;
         ASSERT_EQ(index->Lookup(key, sizeof(key_value), NULL), LOOKUP_FOUND);
     }
     INFO("Read all time: " << (tbb::tick_count::now() - start).seconds() << "s");
@@ -682,7 +681,7 @@ TEST_P(IndexTest, MultipleWriteReadDelete) {
     start = tbb::tick_count::now();
     for (int i = 0; i < INDEX_TEST_OP_COUNT; i++) {
         uint64_t key_value = i;
-        byte* key = (byte*) &key_value;
+        byte* key = (byte *) &key_value;
 
         ASSERT_EQ(index->Delete(key, sizeof(key_value)), DELETE_OK) << "Delete " << i << " failed";
     }
@@ -692,7 +691,7 @@ TEST_P(IndexTest, MultipleWriteReadDelete) {
     start = tbb::tick_count::now();
     for (int i = 0; i < INDEX_TEST_OP_COUNT; i++) {
         uint64_t key_value = i;
-        byte* key = (byte*) &key_value;
+        byte* key = (byte *) &key_value;
         ASSERT_EQ(index->Lookup(key, sizeof(key_value), NULL), LOOKUP_NOT_FOUND);
     }
     INFO("Read all time: " << (tbb::tick_count::now() - start).seconds() << "s");
@@ -700,29 +699,29 @@ TEST_P(IndexTest, MultipleWriteReadDelete) {
 
 TEST_P(IndexTest, DeleteNotFound) {
     SKIP_IF_FIXED_INDEX(index);
-  
+
     bool has_cap = index->HasCapability(RETURNS_DELETE_NOT_FOUND);
 
     ASSERT_TRUE(index->Start(StartContext()));
     uint64_t key_value = 1;
-    byte* key = (byte*) &key_value;
+    byte* key = (byte *) &key_value;
 
     enum delete_result r = index->Delete(key, sizeof(key_value));
     if (has_cap) {
-      ASSERT_TRUE(r == DELETE_NOT_FOUND);
+        ASSERT_TRUE(r == DELETE_NOT_FOUND);
     } else {
-      // if the index has not the capability, it should return DELETE_OK.
-      // It should not be an error
-      ASSERT_TRUE(r == DELETE_OK);
+        // if the index has not the capability, it should return DELETE_OK.
+        // It should not be an error
+        ASSERT_TRUE(r == DELETE_OK);
     }
 }
 
 TEST_P(IndexTest, PutIfAbsent) {
     SKIP_UNLESS_PUT_IF_ABSENT_SUPPORTED(index);
-    
+
     ASSERT_TRUE(index->Start(StartContext()));
     uint64_t key_value = 1;
-    byte* key = (byte*) &key_value;
+    byte* key = (byte *) &key_value;
 
     IntData value;
     value.set_i(1);
@@ -814,7 +813,7 @@ TEST_P(IndexTest, Cursor) {
 
     for (int i = 0; i < INDEX_TEST_OP_COUNT; i++) {
         uint64_t key_value = i;
-        byte* key = (byte*) &key_value;
+        byte* key = (byte *) &key_value;
 
         IntData value;
         value.set_i(i);

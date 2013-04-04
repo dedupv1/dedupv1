@@ -96,7 +96,7 @@ protected:
         for (int i = 4; i < 8; i++) {
             // Use small items to avoid an overflow
             DEBUG("Add " << i << ", " << crc(test_data[i], 16 * 1024));
-            ASSERT_TRUE(container.AddItem((byte*) &test_fp[i], sizeof(test_fp[i]), (byte*) test_data[i], (size_t) 16 * 1024, comp))
+            ASSERT_TRUE(container.AddItem((byte *) &test_fp[i], sizeof(test_fp[i]), (byte *) test_data[i], (size_t) 16 * 1024, comp))
             << "Add item " << i << " failed";
         }
 
@@ -124,7 +124,7 @@ protected:
         for (int i = 0; i < count; i++) {
             // Use small items to avoid an overflow
             DEBUG("Add " << i << ": " << crc(test_data[i], 16 * 1024));
-            ASSERT_TRUE(container.AddItem((byte*) &test_fp[i], sizeof(test_fp[i]), (byte*) test_data[i], (size_t) 16 * 1024, comp))
+            ASSERT_TRUE(container.AddItem((byte *) &test_fp[i], sizeof(test_fp[i]), (byte *) test_data[i], (size_t) 16 * 1024, comp))
             << "Add item " << i << " failed";
         }
 
@@ -152,7 +152,7 @@ TEST_F(ContainerTest, AddItem) {
     for (int i = 0; i < 4; i++) {
         size_t old_pos = container.data_position();
         // Use small items to avoid an overflow
-        ASSERT_TRUE(container.AddItem((byte*) &test_fp[i], sizeof(test_fp[i]), (byte*) test_data[i], (size_t) 16 * 1024))
+        ASSERT_TRUE(container.AddItem((byte *) &test_fp[i], sizeof(test_fp[i]), (byte *) test_data[i], (size_t) 16 * 1024))
         << "Add item " << i << " failed";
         ASSERT_GT(container.data_position(), old_pos);
         ASSERT_EQ(container.item_count(), (uint32_t) i + 1);
@@ -176,7 +176,7 @@ TEST_F(ContainerTest, AddItemRandomFingerprints) {
     for (int i = 0; i < 4; i++) {
         size_t old_pos = container.data_position();
         // Use small items to avoid an overflow
-        ASSERT_TRUE(container.AddItem((byte*) &test_fp[i], sizeof(test_fp[i]), (byte*) test_data[i], (size_t) 16 * 1024))
+        ASSERT_TRUE(container.AddItem((byte *) &test_fp[i], sizeof(test_fp[i]), (byte *) test_data[i], (size_t) 16 * 1024))
         << "Add item " << i << " failed";
         ASSERT_GT(container.data_position(), old_pos);
         ASSERT_EQ(container.item_count(), (uint32_t) i + 1);
@@ -193,7 +193,7 @@ TEST_F(ContainerTest, NoLineFeedInDebugString) {
     container.Init(Container::kLeastValidContainerId, CONTAINER_SIZE);
     for (int i = 0; i < 4; i++) {
         // Use small items to avoid an overflow
-        ASSERT_TRUE(container.AddItem((byte*) &test_fp[i], sizeof(test_fp[i]), (byte*) test_data[i], (size_t) 16 * 1024))
+        ASSERT_TRUE(container.AddItem((byte *) &test_fp[i], sizeof(test_fp[i]), (byte *) test_data[i], (size_t) 16 * 1024))
         << "Add item " << i << " failed";
     }
 
@@ -212,7 +212,7 @@ TEST_F(ContainerTest, SerializeContainer) {
     container.Init(0, CONTAINER_SIZE);
     for (int i = 0; i < 4; i++) {
         // Use small items to avoid an overflow
-        ASSERT_TRUE(container.AddItem((byte*) &test_fp[i], sizeof(test_fp[i]), (byte*) test_data[i], (size_t) 16 * 1024))
+        ASSERT_TRUE(container.AddItem((byte *) &test_fp[i], sizeof(test_fp[i]), (byte *) test_data[i], (size_t) 16 * 1024))
         << "Add item " << i << " failed";
     }
 
@@ -234,7 +234,7 @@ TEST_F(ContainerTest, CopyFrom) {
     container.Init(0, CONTAINER_SIZE);
     for (int i = 0; i < 4; i++) {
         // Use small items to avoid an overflow
-        ASSERT_TRUE(container.AddItem((byte*) &test_fp[i], sizeof(test_fp[i]), (byte*) test_data[i], (size_t) 16 * 1024))
+        ASSERT_TRUE(container.AddItem((byte *) &test_fp[i], sizeof(test_fp[i]), (byte *) test_data[i], (size_t) 16 * 1024))
         << "Add item " << i << " failed";
     }
 
@@ -290,7 +290,7 @@ TEST_F(ContainerTest, StoreAndLoad) {
     container.Init(Container::kLeastValidContainerId, CONTAINER_SIZE);
     for (int i = 0; i < 4; i++) {
         // Use small items to avoid an overflow
-        ASSERT_TRUE(container.AddItem((byte*) &test_fp[i], sizeof(test_fp[i]), (byte*) test_data[i], (size_t) 16 * 1024))
+        ASSERT_TRUE(container.AddItem((byte *) &test_fp[i], sizeof(test_fp[i]), (byte *) test_data[i], (size_t) 16 * 1024))
         << "Add item " << i << " failed";
     }
 
@@ -318,7 +318,7 @@ TEST_F(ContainerTest, AddAfterLoad) {
     container.Init(Container::kLeastValidContainerId, CONTAINER_SIZE);
     for (int i = 0; i < 3; i++) {
         // Use small items to avoid an overflow
-        ASSERT_TRUE(container.AddItem((byte*) &test_fp[i], sizeof(test_fp[i]), (byte*) test_data[i], (size_t) 16 * 1024))
+        ASSERT_TRUE(container.AddItem((byte *) &test_fp[i], sizeof(test_fp[i]), (byte *) test_data[i], (size_t) 16 * 1024))
         << "Add item " << i << " failed";
     }
 
@@ -335,7 +335,7 @@ TEST_F(ContainerTest, AddAfterLoad) {
     ASSERT_TRUE(container2.LoadFromFile(f, 0, true));
 
     ASSERT_FALSE(
-        container2.AddItem((byte*) &test_fp[3], sizeof(test_fp[3]), (byte*) test_data[3], (size_t) 16 * 1024)) <<
+        container2.AddItem((byte *) &test_fp[3], sizeof(test_fp[3]), (byte *) test_data[3], (size_t) 16 * 1024)) <<
     "It is not allowed to add items to an loaded container";
     EXPECT_TRUE(f->Close());
 
@@ -348,7 +348,7 @@ TEST_F(ContainerTest, AddAfterStore) {
     container.Init(Container::kLeastValidContainerId, CONTAINER_SIZE);
     for (int i = 0; i < 3; i++) {
         // Use small items to avoid an overflow
-        ASSERT_TRUE(container.AddItem((byte*) &test_fp[i], sizeof(test_fp[i]), (byte*) test_data[i], (size_t) 16 * 1024))
+        ASSERT_TRUE(container.AddItem((byte *) &test_fp[i], sizeof(test_fp[i]), (byte *) test_data[i], (size_t) 16 * 1024))
         << "Add item " << i << " failed";
     }
 
@@ -359,7 +359,7 @@ TEST_F(ContainerTest, AddAfterStore) {
     f = NULL;
 
     // Add last
-    ASSERT_FALSE(container.AddItem((byte*) &test_fp[3], sizeof(test_fp[3]), (byte*) test_data[3], (size_t) 16 * 1024));
+    ASSERT_FALSE(container.AddItem((byte *) &test_fp[3], sizeof(test_fp[3]), (byte *) test_data[3], (size_t) 16 * 1024));
 }
 
 TEST_F(ContainerTest, StoreMinimalChunks) {
@@ -403,7 +403,7 @@ TEST_F(ContainerTest, DeleteItem) {
     container.Init(Container::kLeastValidContainerId, CONTAINER_SIZE);
     for (int i = 0; i < 4; i++) {
         // Use small items to avoid an overflow
-        ASSERT_TRUE(container.AddItem((byte*) &test_fp[i], sizeof(test_fp[i]), (byte*) test_data[i], (size_t) 16 * 1024))
+        ASSERT_TRUE(container.AddItem((byte *) &test_fp[i], sizeof(test_fp[i]), (byte *) test_data[i], (size_t) 16 * 1024))
         << "Add item " << i << " failed";
     }
 
@@ -411,12 +411,12 @@ TEST_F(ContainerTest, DeleteItem) {
     ASSERT_GT(old_active_data_size,  4U * 16 * 1024); // no compression for this test, please
 
     size_t old_item_count = container.item_count();
-    ASSERT_TRUE(container.DeleteItem((byte*) &test_fp[2], sizeof(test_fp[2])));
+    ASSERT_TRUE(container.DeleteItem((byte *) &test_fp[2], sizeof(test_fp[2])));
 
     ASSERT_LE(container.active_data_size(), old_active_data_size - (16 * 1024));
 
-    ASSERT_TRUE(container.FindItem((byte*) &test_fp[2], sizeof(test_fp[2])) == NULL);
-    ASSERT_TRUE(container.FindItem((byte*) &test_fp[2], sizeof(test_fp[2]), true) != NULL);
+    ASSERT_TRUE(container.FindItem((byte *) &test_fp[2], sizeof(test_fp[2])) == NULL);
+    ASSERT_TRUE(container.FindItem((byte *) &test_fp[2], sizeof(test_fp[2]), true) != NULL);
     ASSERT_EQ(container.item_count(), old_item_count - 1);
 }
 
@@ -425,19 +425,19 @@ TEST_F(ContainerTest, AddItemAfterDeleteItem) {
     container.Init(Container::kLeastValidContainerId, CONTAINER_SIZE);
     for (int i = 0; i < 2; i++) {
         // Use small items to avoid an overflow
-        ASSERT_TRUE(container.AddItem((byte*) &test_fp[i], sizeof(test_fp[i]), (byte*) test_data[i], (size_t) 16 * 1024));
+        ASSERT_TRUE(container.AddItem((byte *) &test_fp[i], sizeof(test_fp[i]), (byte *) test_data[i], (size_t) 16 * 1024));
     }
-    ASSERT_TRUE(container.DeleteItem((byte*) &test_fp[1], sizeof(test_fp[1])));
+    ASSERT_TRUE(container.DeleteItem((byte *) &test_fp[1], sizeof(test_fp[1])));
     for (int i = 2; i < 4; i++) {
         // Use small items to avoid an overflow
-        ASSERT_TRUE(container.AddItem((byte*) &test_fp[i], sizeof(test_fp[i]), (byte*) test_data[i], (size_t) 16 * 1024));
+        ASSERT_TRUE(container.AddItem((byte *) &test_fp[i], sizeof(test_fp[i]), (byte *) test_data[i], (size_t) 16 * 1024));
     }
 
     ASSERT_GT(container.active_data_size(), 3U * (16 * 1024));
     ASSERT_LE(container.active_data_size(), 3U * ((16 + 2) * 1024));
 
-    ASSERT_TRUE(container.FindItem((byte*) &test_fp[1], sizeof(test_fp[1])) == NULL);
-    ASSERT_TRUE(container.FindItem((byte*) &test_fp[1], sizeof(test_fp[1]), true) != NULL);
+    ASSERT_TRUE(container.FindItem((byte *) &test_fp[1], sizeof(test_fp[1])) == NULL);
+    ASSERT_TRUE(container.FindItem((byte *) &test_fp[1], sizeof(test_fp[1]), true) != NULL);
 }
 
 TEST_F(ContainerTest, ActiveDataSizeAfterStoreLoad) {
@@ -447,7 +447,7 @@ TEST_F(ContainerTest, ActiveDataSizeAfterStoreLoad) {
     for (int i = 0; i < 4; i++) {
         DEBUG("After adding " << (i + 1) << ": " << container.active_data_size());
         // Use small items to avoid an overflow
-        ASSERT_TRUE(container.AddItem((byte*) &test_fp[i], sizeof(test_fp[i]), (byte*) test_data[i], (size_t) 16 * 1024))
+        ASSERT_TRUE(container.AddItem((byte *) &test_fp[i], sizeof(test_fp[i]), (byte *) test_data[i], (size_t) 16 * 1024))
         << "Add item " << i << " failed";
     }
     DEBUG("After adding all" << container.active_data_size());
@@ -478,14 +478,14 @@ TEST_F(ContainerTest, DeleteItemAfterLoad) {
     container.Init(Container::kLeastValidContainerId, CONTAINER_SIZE);
     for (int i = 0; i < 4; i++) {
         // Use small items to avoid an overflow
-        ASSERT_TRUE(container.AddItem((byte*) &test_fp[i], sizeof(test_fp[i]), (byte*) test_data[i], (size_t) 16 * 1024))
+        ASSERT_TRUE(container.AddItem((byte *) &test_fp[i], sizeof(test_fp[i]), (byte *) test_data[i], (size_t) 16 * 1024))
         << "Add item " << i << " failed";
     }
 
     uint32_t old_active_data_size = container.active_data_size();
     ASSERT_GT(old_active_data_size,  4U * 16 * 1024); // no compression for this test, please
 
-    ASSERT_TRUE(container.DeleteItem((byte*) &test_fp[2], sizeof(test_fp[2])));
+    ASSERT_TRUE(container.DeleteItem((byte *) &test_fp[2], sizeof(test_fp[2])));
 
     dedupv1::base::File* f = dedupv1::base::File::Open("work/container", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
     ASSERT_TRUE(f);
@@ -504,8 +504,8 @@ TEST_F(ContainerTest, DeleteItemAfterLoad) {
     ASSERT_LT(container2.active_data_size(), old_active_data_size - (16 * 1024));
     ASSERT_GE(container.active_data_size(), old_active_data_size - ((16 + 2) * 1024));
 
-    ASSERT_TRUE(container2.FindItem((byte*) &test_fp[2], sizeof(test_fp[2])) == NULL);
-    ASSERT_TRUE(container2.FindItem((byte*) &test_fp[2], sizeof(test_fp[2]), true) != NULL);
+    ASSERT_TRUE(container2.FindItem((byte *) &test_fp[2], sizeof(test_fp[2])) == NULL);
+    ASSERT_TRUE(container2.FindItem((byte *) &test_fp[2], sizeof(test_fp[2]), true) != NULL);
 }
 
 TEST_F(ContainerTest, MergeContainer) {
@@ -513,7 +513,7 @@ TEST_F(ContainerTest, MergeContainer) {
     container1.Init(Container::kLeastValidContainerId, CONTAINER_SIZE);
     for (int i = 0; i < 2; i++) {
         // Use small items to avoid an overflow
-        ASSERT_TRUE(container1.AddItem((byte*) &test_fp[i], sizeof(test_fp[i]), (byte*) test_data[i], (size_t) 16 * 1024))
+        ASSERT_TRUE(container1.AddItem((byte *) &test_fp[i], sizeof(test_fp[i]), (byte *) test_data[i], (size_t) 16 * 1024))
         << "Add item " << i << " failed";
     }
 
@@ -521,7 +521,7 @@ TEST_F(ContainerTest, MergeContainer) {
     container2.Init(Container::kLeastValidContainerId + 1, CONTAINER_SIZE);
     for (int i = 2; i < 4; i++) {
         // Use small items to avoid an overflow
-        ASSERT_TRUE(container2.AddItem((byte*) &test_fp[i], sizeof(test_fp[i]), (byte*) test_data[i], (size_t) 16 * 1024))
+        ASSERT_TRUE(container2.AddItem((byte *) &test_fp[i], sizeof(test_fp[i]), (byte *) test_data[i], (size_t) 16 * 1024))
         << "Add item " << i << " failed";
     }
 
@@ -534,7 +534,7 @@ TEST_F(ContainerTest, MergeContainer) {
     ASSERT_TRUE(new_container.HasId(container2.primary_id()));
 
     for (int i = 0; i < 4; i++) {
-        ContainerItem* new_item = new_container.FindItem((byte*) &test_fp[i], sizeof(test_fp[i]));
+        ContainerItem* new_item = new_container.FindItem((byte *) &test_fp[i], sizeof(test_fp[i]));
         ASSERT_TRUE(new_item);
 
         ASSERT_EQ(new_item->raw_size(), 16 * 1024U);
@@ -542,7 +542,7 @@ TEST_F(ContainerTest, MergeContainer) {
         byte result[16 * 1024];
         memset(result, 0, 16 * 1024);
         ASSERT_TRUE(new_container.CopyRawData(new_item, result, 16 * 1024));
-        ASSERT_TRUE(memcmp(result, (byte*) test_data[i], 16 * 1024) == 0);
+        ASSERT_TRUE(memcmp(result, (byte *) test_data[i], 16 * 1024) == 0);
     }
 }
 
@@ -551,7 +551,7 @@ TEST_F(ContainerTest, MergeContainerSwitched) {
     container1.Init(Container::kLeastValidContainerId, CONTAINER_SIZE);
     for (int i = 0; i < 2; i++) {
         // Use small items to avoid an overflow
-        ASSERT_TRUE(container1.AddItem((byte*) &test_fp[i], sizeof(test_fp[i]), (byte*) test_data[i], (size_t) 16 * 1024))
+        ASSERT_TRUE(container1.AddItem((byte *) &test_fp[i], sizeof(test_fp[i]), (byte *) test_data[i], (size_t) 16 * 1024))
         << "Add item " << i << " failed";
     }
 
@@ -559,7 +559,7 @@ TEST_F(ContainerTest, MergeContainerSwitched) {
     container2.Init(Container::kLeastValidContainerId + 1, CONTAINER_SIZE);
     for (int i = 2; i < 4; i++) {
         // Use small items to avoid an overflow
-        ASSERT_TRUE(container2.AddItem((byte*) &test_fp[i], sizeof(test_fp[i]), (byte*) test_data[i], (size_t) 16 * 1024))
+        ASSERT_TRUE(container2.AddItem((byte *) &test_fp[i], sizeof(test_fp[i]), (byte *) test_data[i], (size_t) 16 * 1024))
         << "Add item " << i << " failed";
     }
 
@@ -572,7 +572,7 @@ TEST_F(ContainerTest, MergeContainerSwitched) {
     ASSERT_TRUE(new_container.HasId(container2.primary_id()));
 
     for (int i = 0; i < 4; i++) {
-        ContainerItem* new_item = new_container.FindItem((byte*) &test_fp[i], sizeof(test_fp[i]));
+        ContainerItem* new_item = new_container.FindItem((byte *) &test_fp[i], sizeof(test_fp[i]));
         ASSERT_TRUE(new_item);
 
         ASSERT_EQ(new_item->raw_size(), 16 * 1024U);
@@ -580,7 +580,7 @@ TEST_F(ContainerTest, MergeContainerSwitched) {
         byte result[16 * 1024];
         memset(result, 0, 16 * 1024);
         ASSERT_TRUE(new_container.CopyRawData(new_item, result, 16 * 1024));
-        ASSERT_TRUE(memcmp(result, (byte*) test_data[i], 16 * 1024) == 0);
+        ASSERT_TRUE(memcmp(result, (byte *) test_data[i], 16 * 1024) == 0);
     }
 }
 
@@ -591,7 +591,7 @@ TEST_F(ContainerTest, LoadOnlyMetaData) {
     container.Init(Container::kLeastValidContainerId, CONTAINER_SIZE);
     for (int i = 0; i < 3; i++) {
         // Use small items to avoid an overflow
-        ASSERT_TRUE(container.AddItem((byte*) &test_fp[i], sizeof(test_fp[i]), (byte*) test_data[i], (size_t) 16 * 1024))
+        ASSERT_TRUE(container.AddItem((byte *) &test_fp[i], sizeof(test_fp[i]), (byte *) test_data[i], (size_t) 16 * 1024))
         << "Add item " << i << " failed";
     }
 
@@ -607,7 +607,7 @@ TEST_F(ContainerTest, LoadOnlyMetaData) {
     container2.InitInMetadataOnlyMode(Container::kLeastValidContainerId, CONTAINER_SIZE);
     ASSERT_TRUE(container2.LoadFromFile(f, 0, true));
 
-    ContainerItem* item = container2.FindItem((byte*) &test_fp[0], sizeof(test_fp[0]));
+    ContainerItem* item = container2.FindItem((byte *) &test_fp[0], sizeof(test_fp[0]));
     ASSERT_TRUE(item) << "Should find the item";
     ASSERT_TRUE(container2.is_metadata_only());
 
@@ -624,7 +624,7 @@ TEST_F(ContainerTest, CopyFromMetaData) {
     container.Init(Container::kLeastValidContainerId, CONTAINER_SIZE);
     for (int i = 0; i < 3; i++) {
         // Use small items to avoid an overflow
-        ASSERT_TRUE(container.AddItem((byte*) &test_fp[i], sizeof(test_fp[i]), (byte*) test_data[i], (size_t) 16 * 1024))
+        ASSERT_TRUE(container.AddItem((byte *) &test_fp[i], sizeof(test_fp[i]), (byte *) test_data[i], (size_t) 16 * 1024))
         << "Add item " << i << " failed";
     }
 
@@ -632,7 +632,7 @@ TEST_F(ContainerTest, CopyFromMetaData) {
     container2.InitInMetadataOnlyMode(Container::kLeastValidContainerId, CONTAINER_SIZE);
     ASSERT_TRUE(container2.CopyFrom(container, true));
 
-    ContainerItem* item = container2.FindItem((byte*) &test_fp[0], sizeof(test_fp[0]));
+    ContainerItem* item = container2.FindItem((byte *) &test_fp[0], sizeof(test_fp[0]));
     ASSERT_TRUE(item) << "Should find the item";
     ASSERT_TRUE(container2.is_metadata_only());
 }
@@ -643,7 +643,7 @@ TEST_F(ContainerTest, CommitTime) {
 
     for (int i = 0; i < 4; i++) {
         // Use small items to avoid an overflow
-        ASSERT_TRUE(container.AddItem((byte*) &test_fp[i], sizeof(test_fp[i]), (byte*) test_data[i], (size_t) 16 * 1024))
+        ASSERT_TRUE(container.AddItem((byte *) &test_fp[i], sizeof(test_fp[i]), (byte *) test_data[i], (size_t) 16 * 1024))
         << "Add item " << i << " failed";
     }
     ASSERT_EQ(container.commit_time(), 0) << "Commit time should not be set now";

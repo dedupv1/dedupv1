@@ -70,15 +70,15 @@ namespace chunkstore {
 
 class MemoryBitmapContainerStorageAllocatorTestFriend {
 public:
-        MemoryBitmapContainerStorageAllocator* alloc_;
+    MemoryBitmapContainerStorageAllocator* alloc_;
 
-        MemoryBitmapContainerStorageAllocatorTestFriend(MemoryBitmapContainerStorageAllocator* alloc) {
-            alloc_ = alloc;
-        }
+    MemoryBitmapContainerStorageAllocatorTestFriend(MemoryBitmapContainerStorageAllocator* alloc) {
+        alloc_ = alloc;
+    }
 
-        int GetNextFile() {
-            return alloc_->GetNextFile();
-        }
+    int GetNextFile() {
+        return alloc_->GetNextFile();
+    }
 };
 
 class MemoryBitmapAllocatorTest  : public testing::TestWithParam<const char*> {
@@ -156,7 +156,7 @@ protected:
     void FillDefaultContainer(Container* container, int begin, int count) {
         for (int i = 0; i < count; i++) {
             // Use small items to avoid an overflow
-            ASSERT_TRUE(container->AddItem((byte*) &test_fp[begin + i], sizeof(test_fp[begin + i]), (byte*) test_data[begin + i], (size_t) 16 * 1024))
+            ASSERT_TRUE(container->AddItem((byte *) &test_fp[begin + i], sizeof(test_fp[begin + i]), (byte *) test_data[begin + i], (size_t) 16 * 1024))
             << "Add item " << begin + i << " failed";
         }
     }
@@ -175,7 +175,7 @@ TEST_P(MemoryBitmapAllocatorTest, GetNextFile) {
 
     MemoryBitmapContainerStorageAllocatorTestFriend alloc_friend(alloc);
 
-    for (int i=0; i<(100 * storage->GetFileCount()); i++) {
+    for (int i = 0; i < (100 * storage->GetFileCount()); i++) {
         ASSERT_EQ(i % storage->GetFileCount(), alloc_friend.GetNextFile());
     }
 }
@@ -213,7 +213,7 @@ TEST_P(MemoryBitmapAllocatorTest, OnCommit) {
 }
 
 /**
- * Tests if the allocator is handling out container places for merges, even if 
+ * Tests if the allocator is handling out container places for merges, even if
  * normal allocators already fail
  */
 TEST_P(MemoryBitmapAllocatorTest, OnContainerForMerge) {
@@ -222,7 +222,7 @@ TEST_P(MemoryBitmapAllocatorTest, OnContainerForMerge) {
     Container c;
     c.Init(0, CONTAINER_SIZE);
     FillDefaultContainer(&c, 0, 12 );
-    
+
     ContainerStorageAddressData address_data;
     address_data.set_file_index(-2); // set illegal values
     address_data.set_file_offset(-2); // set illegal values
@@ -271,7 +271,7 @@ TEST_P(MemoryBitmapAllocatorTest, Overflow) {
         DEBUG("Free count " << alloc->free_count());
     }
 
-    for(;alloc->free_count() > 4; i++) { // not all places will be allocated to new containers
+    for (; alloc->free_count() > 4; i++) { // not all places will be allocated to new containers
         ContainerStorageAddressData address_data;
         address_data.set_file_index(-2); // set illegal values
         address_data.set_file_offset(-2); // set illegal values

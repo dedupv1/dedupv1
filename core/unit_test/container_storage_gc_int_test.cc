@@ -215,7 +215,7 @@ bool Merge(GreedyContainerGCStrategy* gc) {
 
 TEST_P(GreedyContainerGCStrategyIntegrationTest, MergeWithReading) {
     ASSERT_TRUE(container_test_helper->WriteDefaultData(system, 0, 16));
-    
+
     ASSERT_TRUE(storage->Flush(NO_EC));
     storage->GetReadCache()->ClearCache();
 

@@ -371,7 +371,7 @@ string FilterChain::PrintStatistics() {
 string FilterChain::PrintProfile() {
     list<Filter*>::iterator i;
     stringstream sstr;
-    
+
     sstr << "{";
     sstr << "\"check time\": " << this->stats_.check_time_.GetSum() << "," << std::endl;
     sstr << "\"update time\": " << this->stats_.update_time_.GetSum() << std::endl;

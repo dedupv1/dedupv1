@@ -69,7 +69,7 @@ string LogMonitorAdapter::Monitor() {
     uint64_t open_event_count = log->log_id() - log->replay_id();
     int64_t remaining_free_log = 0;
     CHECK_RETURN_JSON(log->GetRemainingFreeLogPlaces(&remaining_free_log),
-            "Failed to get remaining free log places");
+        "Failed to get remaining free log places");
 
     sstr << "{" << std::endl;
 

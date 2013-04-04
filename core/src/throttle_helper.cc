@@ -44,8 +44,8 @@ ThrottleHelper::ThrottleHelper() {
 }
 
 Option<bool> ThrottleHelper::Throttle(
-        double fill_ratio,
-        double thread_ratio) {
+    double fill_ratio,
+    double thread_ratio) {
 
     if (!enabled_) {
         return make_option(false);
@@ -64,11 +64,11 @@ Option<bool> ThrottleHelper::Throttle(
         }
 
         DEBUG("Throttling, "
-                "fill ratio " << fill_ratio <<
-                ", scaled fill ratio " << scaled_fill_ratio <<
-                ", throttle ratio " << throttle_ratio <<
-                ", thread_ratio " << thread_ratio <<
-                ", throttled " << ToString(throttled));
+            "fill ratio " << fill_ratio <<
+            ", scaled fill ratio " << scaled_fill_ratio <<
+            ", throttle ratio " << throttle_ratio <<
+            ", thread_ratio " << thread_ratio <<
+            ", throttled " << ToString(throttled));
     }
     return make_option(throttled);
 }

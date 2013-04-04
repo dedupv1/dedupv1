@@ -44,53 +44,53 @@ LOGGER("DiskHashIndexTest");
 namespace dedupv1 {
 namespace base {
 
-class DiskHashIndexTest: public testing::Test {
-    protected:
-        USE_LOGGING_EXPECTATION();
+class DiskHashIndexTest : public testing::Test {
+protected:
+    USE_LOGGING_EXPECTATION();
 
-        Index* index;
+    Index* index;
 
-        virtual void SetUp() {
-            index = NULL;
+    virtual void SetUp() {
+        index = NULL;
+    }
+
+    virtual void TearDown() {
+        if (index) {
+            index->Close();
         }
-
-        virtual void TearDown() {
-            if (index) {
-                index->Close();
-            }
-        }
+    }
 };
 
 INSTANTIATE_TEST_CASE_P(DiskHashIndex,
-        IndexTest,
-        ::testing::Values(
-                // 4 files
-                "static-disk-hash;max-key-size=8;max-value-size=8;page-size=8K;size=32M;filename=work/data/hash_test_data1;filename=work/hash_test_data2;filename=work/hash_test_data3;filename=work/hash_test_data4",
-                // Sync = false
-                "static-disk-hash;max-key-size=8;max-value-size=8;page-size=8K;size=32M;filename=work/data/hash_test_data1;filename=work/hash_test_data2;filename=work/hash_test_data3;filename=work/hash_test_data4;sync=true",
-                // Not much space, but enough
-                "static-disk-hash;max-key-size=8;max-value-size=8;page-size=8K;size=512K;filename=work/data/hash_test_data1",
-                // Overflow
-                "static-disk-hash;max-key-size=8;max-value-size=8;page-size=8K;size=64K;filename=work/data/hash_test_data1;overflow-area=sqlite-disk-btree;overflow-area.max-item-count=1K;overflow-area.filename=work/tc_test_overflow_data",
-                // Transactions (custom files)
-                "static-disk-hash;max-key-size=8;max-value-size=8;page-size=8K;size=32M;filename=work/data/hash_test_data1;transactions.filename=work/hash_test_trans1;transactions.filename=work/hash_test_trans2",
-                // Write-back cache
-                "static-disk-hash;max-key-size=8;max-value-size=8;page-size=8K;size=32M;filename=work/data/hash_test_data;write-cache=true;write-cache.bucket-count=1K;write-cache.max-page-count=128"
+    IndexTest,
+    ::testing::Values(
+        // 4 files
+        "static-disk-hash;max-key-size=8;max-value-size=8;page-size=8K;size=32M;filename=work/data/hash_test_data1;filename=work/hash_test_data2;filename=work/hash_test_data3;filename=work/hash_test_data4",
+        // Sync = false
+        "static-disk-hash;max-key-size=8;max-value-size=8;page-size=8K;size=32M;filename=work/data/hash_test_data1;filename=work/hash_test_data2;filename=work/hash_test_data3;filename=work/hash_test_data4;sync=true",
+        // Not much space, but enough
+        "static-disk-hash;max-key-size=8;max-value-size=8;page-size=8K;size=512K;filename=work/data/hash_test_data1",
+        // Overflow
+        "static-disk-hash;max-key-size=8;max-value-size=8;page-size=8K;size=64K;filename=work/data/hash_test_data1;overflow-area=sqlite-disk-btree;overflow-area.max-item-count=1K;overflow-area.filename=work/tc_test_overflow_data",
+        // Transactions (custom files)
+        "static-disk-hash;max-key-size=8;max-value-size=8;page-size=8K;size=32M;filename=work/data/hash_test_data1;transactions.filename=work/hash_test_trans1;transactions.filename=work/hash_test_trans2",
+        // Write-back cache
+        "static-disk-hash;max-key-size=8;max-value-size=8;page-size=8K;size=32M;filename=work/data/hash_test_data;write-cache=true;write-cache.bucket-count=1K;write-cache.max-page-count=128"
         ))
 ;
 
 TEST_F(DiskHashIndexTest, CorrectItemCount)
 {
     string
-            config =
-                    "static-disk-hash;max-key-size=8;max-value-size=8;page-size=8K;size=32M;filename=work/hash_test_data1;transactions.filename=work/hash_test_trans1;transactions.filename=work/hash_test_trans2";
+        config =
+        "static-disk-hash;max-key-size=8;max-value-size=8;page-size=8K;size=32M;filename=work/hash_test_data1;transactions.filename=work/hash_test_trans1;transactions.filename=work/hash_test_trans2";
     index = IndexTest::CreateIndex(config);
     ASSERT_TRUE(index);
     ASSERT_TRUE(index->Start(StartContext()));
 
     for (int i = 0; i < 32; i++) {
         uint64_t key_value = i;
-        byte* key = (byte*) &key_value;
+        byte* key = (byte *) &key_value;
 
         IntData value;
         value.set_i(i);
@@ -101,7 +101,7 @@ TEST_F(DiskHashIndexTest, CorrectItemCount)
 
     for (int i = 16; i < 24; i++) {
         uint64_t key_value = i;
-        byte* key = (byte*) &key_value;
+        byte* key = (byte *) &key_value;
 
         ASSERT_EQ(index->Delete(key, sizeof(key_value)), DELETE_OK) << "Delete " << i << " failed";
     }
@@ -117,7 +117,7 @@ TEST_F(DiskHashIndexTest, RecoverItemCount) {
 
     for (int i = 0; i < 32; i++) {
         uint64_t key_value = i;
-        byte* key = (byte*) &key_value;
+        byte* key = (byte *) &key_value;
 
         IntData value;
         value.set_i(i);
@@ -189,8 +189,8 @@ TEST_F(DiskHashIndexTest, GetFileSequential) {
     for (i = 0; i < 100; i++) {
         bucket_id[i] = hash_index->GetBucket(&id[i], sizeof(id[i]));
         hash_index->GetFileIndex(bucket_id[i],
-                &file_id[i],
-                &lock_id[i]);
+            &file_id[i],
+            &lock_id[i]);
         bucket[file_id[i]]++;
     }
 

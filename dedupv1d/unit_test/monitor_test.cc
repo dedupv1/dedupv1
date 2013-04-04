@@ -335,7 +335,7 @@ TEST_F(MonitorTest, ReadMonitorData) {
     HttpResult* result = NULL;
     ASSERT_TRUE(t.Join(&result));
     ASSERT_TRUE(result);
-    ASSERT_STREQ("test",(char*) result->content());
+    ASSERT_STREQ("test",(char *) result->content());
     delete result;
 }
 
@@ -353,7 +353,7 @@ TEST_F(MonitorTest, MultipleReadMonitorData) {
     HttpResult* result = NULL;
     ASSERT_TRUE(t.Join(&result));
     ASSERT_TRUE(result);
-    ASSERT_STREQ("test", (const char*) result->content());
+    ASSERT_STREQ("test", (const char *) result->content());
     if (result) {
         delete result;
         result = NULL;
@@ -365,7 +365,7 @@ TEST_F(MonitorTest, MultipleReadMonitorData) {
     result = NULL;
     ASSERT_TRUE(t2.Join(&result));
     ASSERT_TRUE(result);
-    ASSERT_STREQ("test", (const char*) result->content());
+    ASSERT_STREQ("test", (const char *) result->content());
     if (result) {
         delete result;
         result = NULL;
@@ -394,7 +394,7 @@ TEST_F(MonitorTest, ReadWrongMonitorData) {
     HttpResult* result = NULL;
     ASSERT_TRUE(t.Join(&result));
     ASSERT_TRUE(result);
-    ASSERT_TRUE(Contains((const char*) result->content(), "Unknown monitor"));
+    ASSERT_TRUE(Contains((const char *) result->content(), "Unknown monitor"));
     if (result) {
         delete result;
         result = NULL;
@@ -406,7 +406,7 @@ TEST_F(MonitorTest, ReadWrongMonitorData) {
     result = NULL;
     ASSERT_TRUE(t2.Join(&result));
     ASSERT_TRUE(result);
-    ASSERT_TRUE(Contains((const char*) result->content(), "test"));
+    ASSERT_TRUE(Contains((const char *) result->content(), "test"));
     if (result) {
         delete result;
         result = NULL;
@@ -433,7 +433,7 @@ TEST_F(MonitorTest, ActiveMonitor) {
     HttpResult* result = NULL;
     ASSERT_TRUE(t.Join(&result));
     ASSERT_TRUE(result);
-    string content_text((const char*) result->content());
+    string content_text((const char *) result->content());
     ASSERT_TRUE(Contains(content_text, "key=value")) << content_text;
     delete result;
 

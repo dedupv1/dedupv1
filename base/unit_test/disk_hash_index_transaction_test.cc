@@ -140,7 +140,7 @@ TEST_F(DiskHashIndexTransactionTest, NormalCommitWithRecovery) {
 
     {
         DiskHashIndexTransaction trans(trans_system, page);
-        index->version_counter_ = 1; 
+        index->version_counter_ = 1;
         // change page data and update buffer
         ASSERT_TRUE(page.Update(&key2, sizeof(key2), value));
         ASSERT_TRUE(trans.Start(0, page));

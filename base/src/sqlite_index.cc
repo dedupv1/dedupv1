@@ -174,10 +174,10 @@ bool SqliteIndex::Start(const dedupv1::StartContext& start_context) {
     for (size_t i = 0; i < this->db.size(); i++) {
         sqlite3* new_db = NULL;
         int error_code = sqlite3_open_v2(
-                this->filename[i].c_str(),
-                &new_db,
-                SQLITE_OPEN_READWRITE,
-                NULL);
+            this->filename[i].c_str(),
+            &new_db,
+            SQLITE_OPEN_READWRITE,
+            NULL);
         if (error_code != SQLITE_OK) {
             if (new_db) {
                 sqlite3_close(new_db);
@@ -187,13 +187,13 @@ bool SqliteIndex::Start(const dedupv1::StartContext& start_context) {
                 INFO("Creating index " << this->filename[i]);
 
                 CHECK(File::MakeParentDirectory(this->filename[i], start_context.dir_mode().mode()),
-                        "Failed to check parent directories");
+                    "Failed to check parent directories");
 
                 error_code = sqlite3_open_v2(
-                        this->filename[i].c_str(),
-                        &new_db,
-                        SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
-                        NULL);
+                    this->filename[i].c_str(),
+                    &new_db,
+                    SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
+                    NULL);
                 if (error_code == SQLITE_OK) {
                     char* errmsg = NULL;
                     if (sqlite3_exec(new_db, statements.createStatement.c_str(), NULL, NULL, &errmsg) != SQLITE_OK) {
@@ -221,10 +221,10 @@ bool SqliteIndex::Start(const dedupv1::StartContext& start_context) {
                 }
 
                 CHECK(chmod(this->filename[i].c_str(), start_context.file_mode().mode()) == 0,
-                        "Failed to change file permissions: " << this->filename[i]);
+                    "Failed to change file permissions: " << this->filename[i]);
                 if (start_context.file_mode().gid() != -1) {
                     CHECK(chown(this->filename[i].c_str(), -1, start_context.file_mode().gid()) == 0,
-                            "Failed to change file group: " << this->filename[i]);
+                        "Failed to change file group: " << this->filename[i]);
                 }
 
                 // WAL file
@@ -237,7 +237,7 @@ bool SqliteIndex::Start(const dedupv1::StartContext& start_context) {
                 wal_file = NULL;
                 if (start_context.file_mode().gid() != -1) {
                     CHECK(chown(wal_filename.c_str(), -1, start_context.file_mode().gid()) == 0,
-                            "Failed to change file group: " << wal_filename);
+                        "Failed to change file group: " << wal_filename);
                 }
 
             }
@@ -290,7 +290,7 @@ bool SqliteIndex::BeginTransaction(sqlite3* db) {
     CHECK(db, "Database not set");
     char* errmsg = NULL;
     CHECK(sqlite3_exec(db, statements.beginStatement.c_str(), NULL, NULL, &errmsg) == SQLITE_OK,
-            "Failed to start transaction: message " << errmsg);
+        "Failed to start transaction: message " << errmsg);
     return true;
 }
 
@@ -298,7 +298,7 @@ bool SqliteIndex::AbortTransaction(sqlite3* db) {
     CHECK(db, "Database not set");
     char* errmsg = NULL;
     CHECK(sqlite3_exec(db, statements.abortStatement.c_str(), NULL, NULL, &errmsg) == SQLITE_OK,
-            "Failed to abort transaction: message " << errmsg);
+        "Failed to abort transaction: message " << errmsg);
     return true;
 }
 
@@ -306,7 +306,7 @@ bool SqliteIndex::CommitTransaction(sqlite3* db) {
     CHECK(db, "Database not set");
     char* errmsg = NULL;
     CHECK(sqlite3_exec(db, statements.commitStatement.c_str(), NULL, NULL, &errmsg) == SQLITE_OK,
-            "Failed to commit transaction: message " << errmsg);
+        "Failed to commit transaction: message " << errmsg);
     return true;
 }
 
@@ -325,7 +325,7 @@ sqlite3_stmt* SqliteIndex::GetStatement(sqlite3* db, const string& statement) {
 }
 
 enum lookup_result SqliteIndex::RawLookup(const void* key, size_t key_size,
-        void* value, size_t* value_size) {
+                                          void* value, size_t* value_size) {
     tbb::spin_rw_mutex::scoped_lock scoped_lock(lock, false);
     ProfileTimer timer(this->lookup_profiling_);
 
@@ -387,15 +387,15 @@ enum lookup_result SqliteIndex::RawLookup(const void* key, size_t key_size,
                 r = LOOKUP_FOUND;
             } else {
                 ERROR("Result not set: " <<
-                        "key " << ToHexString(key, key_size) <<
-                        ", result size " << result_size);
+                    "key " << ToHexString(key, key_size) <<
+                    ", result size " << result_size);
             }
         } else if (ec == SQLITE_DONE) {
             r = LOOKUP_NOT_FOUND;
         } else {
             ERROR("Failed to stop query: " << sqlite3_errmsg(current_db) <<
-                    ", db filename " << filename[current_db_index] <<
-                    ", error code " << ec);
+                ", db filename " << filename[current_db_index] <<
+                ", error code " << ec);
 
         }
     }
@@ -408,7 +408,7 @@ enum lookup_result SqliteIndex::RawLookup(const void* key, size_t key_size,
 }
 
 enum lookup_result SqliteIndex::Lookup(const void* key, size_t key_size,
-        Message* message) {
+                                       Message* message) {
     tbb::spin_rw_mutex::scoped_lock scoped_lock(lock, false);
     ProfileTimer timer(this->lookup_profiling_);
 
@@ -462,15 +462,15 @@ enum lookup_result SqliteIndex::Lookup(const void* key, size_t key_size,
                 r = LOOKUP_FOUND;
             } else {
                 ERROR("Result not set: " <<
-                        "key " << ToHexString(key, key_size) <<
-                        ", result size " << result_size);
+                    "key " << ToHexString(key, key_size) <<
+                    ", result size " << result_size);
             }
         } else if (ec == SQLITE_DONE) {
             r = LOOKUP_NOT_FOUND;
         } else {
-            ERROR("Failed to stop query: " << sqlite3_errmsg(current_db) << 
-                    ", db filename " << filename[current_db_index] <<
-                    ", error code " << ec);
+            ERROR("Failed to stop query: " << sqlite3_errmsg(current_db) <<
+                ", db filename " << filename[current_db_index] <<
+                ", error code " << ec);
 
         }
     }
@@ -483,8 +483,8 @@ enum lookup_result SqliteIndex::Lookup(const void* key, size_t key_size,
 }
 
 enum put_result SqliteIndex::RawPut(
-        const void* key, size_t key_size,
-        const void* value, size_t value_size) {
+    const void* key, size_t key_size,
+    const void* value, size_t value_size) {
     tbb::spin_rw_mutex::scoped_lock scoped_lock(lock, false);
     ProfileTimer timer(this->write_profiling_);
 
@@ -498,7 +498,7 @@ enum put_result SqliteIndex::RawPut(
 }
 
 enum put_result SqliteIndex::RawPutBatch(
-        const vector<tuple<bytestring, bytestring> >& data) {
+    const vector<tuple<bytestring, bytestring> >& data) {
     tbb::spin_rw_mutex::scoped_lock scoped_lock(lock, false);
     ProfileTimer timer(this->write_profiling_);
 
@@ -508,7 +508,7 @@ enum put_result SqliteIndex::RawPutBatch(
 }
 
 enum put_result SqliteIndex::InternalPutBatch(
-        const vector<tuple<bytestring, bytestring> >& data) {
+    const vector<tuple<bytestring, bytestring> >& data) {
     bool overwrite = false;
     put_result r = PUT_OK;
 
@@ -522,7 +522,7 @@ enum put_result SqliteIndex::InternalPutBatch(
      * - Checks if the key is valid
      */
     vector<tuple<bytestring, bytestring> >::const_iterator di;
-    for(di = data.begin(); di != data.end(); di++) {
+    for (di = data.begin(); di != data.end(); di++) {
         CHECK_RETURN(std::tr1::get<0>(*di).size() <= this->max_key_size, PUT_ERROR, "Key size too large");
 
         int current_db_index = 0;
@@ -536,7 +536,7 @@ enum put_result SqliteIndex::InternalPutBatch(
     sqlite3* last_db = NULL;
     ReadWriteLock* used_lock = NULL;
     multimap<int, tuple<bytestring, bytestring> >::iterator dai;
-    for(dai = db_assignment.begin(); dai != db_assignment.end() && r == PUT_OK; dai++) {
+    for (dai = db_assignment.begin(); dai != db_assignment.end() && r == PUT_OK; dai++) {
         int current_db_index = dai->first;
         sqlite3* current_db = this->db[current_db_index];
         bytestring& key(std::tr1::get<0>(dai->second));
@@ -556,7 +556,7 @@ enum put_result SqliteIndex::InternalPutBatch(
             last_db = NULL;
 
             if (used_lock) {
-                if(!used_lock->ReleaseLock()) {
+                if (!used_lock->ReleaseLock()) {
                     ERROR("Failed to release lock");
                     r = PUT_ERROR;
                     break;
@@ -581,7 +581,7 @@ enum put_result SqliteIndex::InternalPutBatch(
         }
 
         sqlite3_stmt* stmt = GetStatement(current_db, statements.putIfAbsentStatement);
-        if(!stmt) {
+        if (!stmt) {
             ERROR("Cannot get statement");
             r = PUT_ERROR;
             break;
@@ -621,7 +621,7 @@ enum put_result SqliteIndex::InternalPutBatch(
         }
         if (overwrite && r == PUT_OK) {
             sqlite3_stmt* overwrite_stmt = GetStatement(current_db, statements.putStatement);
-            if(!overwrite_stmt) {
+            if (!overwrite_stmt) {
                 ERROR("Cannot get statement");
                 r = PUT_ERROR;
             }
@@ -671,7 +671,7 @@ enum put_result SqliteIndex::InternalPutBatch(
         last_db = NULL;
     }
     if (used_lock) {
-        if(!used_lock->ReleaseLock()) {
+        if (!used_lock->ReleaseLock()) {
             ERROR("Failed to release lock");
             r = PUT_ERROR;
         }
@@ -683,8 +683,8 @@ enum put_result SqliteIndex::InternalPutBatch(
 }
 
 enum put_result SqliteIndex::InternalPut(
-        const void* key, size_t key_size,
-        const void* value, size_t value_size) {
+    const void* key, size_t key_size,
+    const void* value, size_t value_size) {
     bool overwrite = false;
     int current_db_index = 0;
     CHECK_RETURN(GetDBIndex(key, key_size, &current_db_index), PUT_ERROR, "Cannot get db index");
@@ -765,7 +765,7 @@ enum put_result SqliteIndex::InternalPut(
 }
 
 enum put_result SqliteIndex::PutBatch(
-        const vector<tuple<bytestring, const Message*> >& data) {
+    const vector<tuple<bytestring, const Message*> >& data) {
     tbb::spin_rw_mutex::scoped_lock scoped_lock(lock, false);
     ProfileTimer timer(this->write_profiling_);
 
@@ -790,7 +790,7 @@ enum put_result SqliteIndex::PutBatch(
 }
 
 enum put_result SqliteIndex::Put(const void* key, size_t key_size,
-        const Message& message) {
+                                 const Message& message) {
     tbb::spin_rw_mutex::scoped_lock scoped_lock(lock, false);
     ProfileTimer timer(this->write_profiling_);
 
@@ -802,17 +802,17 @@ enum put_result SqliteIndex::Put(const void* key, size_t key_size,
 
     ScopedArray<byte> scoped_array(new byte[message.ByteSize()]);
     CHECK_RETURN(message.SerializeWithCachedSizesToArray(scoped_array.Get()),
-            PUT_ERROR,
-            "Failed to serialize message: " << message.DebugString());
+        PUT_ERROR,
+        "Failed to serialize message: " << message.DebugString());
 
     return InternalPut(
-            key, key_size,
-            scoped_array.Get(), message.GetCachedSize());
+        key, key_size,
+        scoped_array.Get(), message.GetCachedSize());
 }
 
 enum put_result SqliteIndex::InternalPutIfAbsent(
-        const void* key, size_t key_size,
-        const void* value, size_t value_size) {
+    const void* key, size_t key_size,
+    const void* value, size_t value_size) {
     int current_db_index = 0;
     CHECK_RETURN(GetDBIndex(key, key_size, &current_db_index), PUT_ERROR, "Cannot get db index");
     sqlite3* current_db = this->db[current_db_index];
@@ -861,8 +861,8 @@ enum put_result SqliteIndex::InternalPutIfAbsent(
 }
 
 enum put_result SqliteIndex::RawPutIfAbsent(
-        const void* key, size_t key_size,
-        const void* value, size_t value_size) {
+    const void* key, size_t key_size,
+    const void* value, size_t value_size) {
     tbb::spin_rw_mutex::scoped_lock scoped_lock(lock, false);
     ProfileTimer timer(this->write_profiling_);
 
@@ -875,7 +875,7 @@ enum put_result SqliteIndex::RawPutIfAbsent(
 }
 
 enum put_result SqliteIndex::PutIfAbsent(const void* key, size_t key_size,
-        const Message& message) {
+                                         const Message& message) {
     tbb::spin_rw_mutex::scoped_lock scoped_lock(lock, false);
     ProfileTimer timer(this->write_profiling_);
 
@@ -885,8 +885,8 @@ enum put_result SqliteIndex::PutIfAbsent(const void* key, size_t key_size,
 
     ScopedArray<byte> scoped_array(new byte[message.ByteSize()]);
     CHECK_RETURN(message.SerializeWithCachedSizesToArray(scoped_array.Get()),
-            PUT_ERROR,
-            "Failed to serialize message: " << message.DebugString());
+        PUT_ERROR,
+        "Failed to serialize message: " << message.DebugString());
 
     return InternalPutIfAbsent(key, key_size, scoped_array.Get(), message.GetCachedSize());
 }
@@ -996,12 +996,12 @@ SqliteIterator::~SqliteIterator() {
 }
 
 enum lookup_result SqliteIterator::Next(void* key, size_t* key_size,
-        google::protobuf::Message* message) {
+                                        google::protobuf::Message* message) {
     CHECK_RETURN(this->version_counter_ == this->index_->version_counter,
-            LOOKUP_ERROR, "Concurrent modification error");
+        LOOKUP_ERROR, "Concurrent modification error");
     TRACE("Get next entry: end " << end_ <<
-            ", index " << db_index_ <<
-            ", db count " << this->index_->db.size());
+        ", index " << db_index_ <<
+        ", db count " << this->index_->db.size());
 
     while (true) {
         if (end_) {
@@ -1055,7 +1055,7 @@ enum lookup_result SqliteIterator::Next(void* key, size_t* key_size,
                 CHECK_RETURN(result, LOOKUP_ERROR, "Result not set");
 
                 CHECK_RETURN(message->ParseFromArray(result, result_size),
-                        LOOKUP_ERROR, "Failed to parse message");
+                    LOOKUP_ERROR, "Failed to parse message");
             }
             return LOOKUP_FOUND;
         } else if (ec == SQLITE_DONE) {
@@ -1212,7 +1212,7 @@ bool SingleFileSqliteCursor::Remove() {
 }
 
 bool SingleFileSqliteCursor::Get(void* key, size_t* key_size,
-        Message* message) {
+                                 Message* message) {
     CHECK(this->cursor_stmt, "Invalid position");
 
     if (key) {
@@ -1226,14 +1226,11 @@ bool SingleFileSqliteCursor::Get(void* key, size_t* key_size,
             int32_t result_size = sizeof(result);
             if (result <= UINT8_MAX) {
                 result_size = sizeof(UINT8_MAX);
-            }
-            else if (result <= UINT16_MAX) {
+            }else if (result <= UINT16_MAX)  {
                 result_size = sizeof(UINT16_MAX);
-            }
-            else if (result <= UINT32_MAX) {
+            }else if (result <= UINT32_MAX)  {
                 result_size = sizeof(UINT32_MAX);
-            }
-            else if (result <= UINT64_MAX) {
+            }else if (result <= UINT64_MAX)  {
                 result_size = sizeof(UINT64_MAX);
             }
             CHECK(*key_size >= result_size, "Result size to big for key (key_size: " << *key_size << "; key: " << key << "; result_size: " << result_size << "; result: " << result << ")");

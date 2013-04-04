@@ -66,7 +66,7 @@ TEST_F(MemChunkTest, CloseWithoutFree) {
     ASSERT_TRUE(mc);
     ASSERT_EQ(mc->size(), 1024U);
 
-    byte* data = (byte*) mc->value();
+    byte* data = (byte *) mc->value();
     ASSERT_TRUE(data);
     delete mc;
     mc = NULL;
@@ -82,19 +82,19 @@ TEST_F(MemChunkTest, Realloc) {
 
     ASSERT_TRUE(mc->Realloc(2048));
     ASSERT_EQ(mc->size(), 2048U);
-    byte* data = (byte*) mc->value();
+    byte* data = (byte *) mc->value();
     ASSERT_EQ(memcmp(data, buffer + 1024, 1024),0);
     ASSERT_EQ(memcmp(data + 1024, buffer, 1024),0);
 
     ASSERT_TRUE(mc->Realloc(2048));
     ASSERT_EQ(mc->size(), 2048U);
-    data = (byte*) mc->value();
+    data = (byte *) mc->value();
     ASSERT_EQ(memcmp(data, buffer + 1024, 1024),0);
     ASSERT_EQ(memcmp(data + 1024, buffer, 1024),0);
 
     ASSERT_TRUE(mc->Realloc(512));
     ASSERT_EQ(mc->size(), 512U);
-    data = (byte*) mc->value();
+    data = (byte *) mc->value();
     ASSERT_EQ(memcmp(data, buffer + 1024, 512),0);
 }
 

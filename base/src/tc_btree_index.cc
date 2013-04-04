@@ -200,27 +200,27 @@ bool TCBTreeIndex::Start(const StartContext& start_context) {
     int open_flags = BDBOWRITER | BDBOTSYNC;
 
     switch (this->compression_) {
-        case TC_BTREE_INDEX_COMPRESSION_NONE:
-            compression_flag = 0;
-            break;
-        case TC_BTREE_INDEX_COMPRESSION_DEFLATE:
-            compression_flag = BDBTDEFLATE;
-            break;
-        case TC_BTREE_INDEX_COMPRESSION_BZIP2:
-            compression_flag = BDBTBZIP;
-            break;
-        case TC_BTREE_INDEX_COMPRESSION_TCBS:
-            compression_flag = BDBTTCBS;
-            break;
-        default:
-            ERROR("Illegal compression setting");
-            return false;
+    case TC_BTREE_INDEX_COMPRESSION_NONE:
+        compression_flag = 0;
+        break;
+    case TC_BTREE_INDEX_COMPRESSION_DEFLATE:
+        compression_flag = BDBTDEFLATE;
+        break;
+    case TC_BTREE_INDEX_COMPRESSION_BZIP2:
+        compression_flag = BDBTBZIP;
+        break;
+    case TC_BTREE_INDEX_COMPRESSION_TCBS:
+        compression_flag = BDBTTCBS;
+        break;
+    default:
+        ERROR("Illegal compression setting");
+        return false;
     }
 
     CHECK(this->buckets_ % this->filename_.size() == 0,
-            "Buckets are not aligned to the number of files: " <<
-            "buckets " << buckets_ <<
-            ", files " << this->filename_.size());
+        "Buckets are not aligned to the number of files: " <<
+        "buckets " << buckets_ <<
+        ", files " << this->filename_.size());
 
     uint64_t buckets_per_bdb = this->buckets_ / this->filename_.size();
     int64_t mem_mapped_per_bdb = -1;
@@ -283,7 +283,7 @@ bool TCBTreeIndex::Start(const StartContext& start_context) {
             int local_open_flags = open_flags;
             if (!exists.value() && start_context.create()) {
                 CHECK(File::MakeParentDirectory(this->filename_[i], start_context.dir_mode().mode()),
-                        "Failed to check parent directories");
+                    "Failed to check parent directories");
 
                 local_open_flags |= BDBOCREAT;
                 INFO("Creating index file " << this->filename_[i]);
@@ -298,12 +298,12 @@ bool TCBTreeIndex::Start(const StartContext& start_context) {
 
                 if ((stat.st_mode & 0777) != start_context.file_mode().mode()) {
                     CHECK(chmod(this->filename_[i].c_str(), start_context.file_mode().mode()) == 0,
-                            "Failed to change file permissions: " << this->filename_[i] << ", message " << strerror(errno));
+                        "Failed to change file permissions: " << this->filename_[i] << ", message " << strerror(errno));
                 }
                 if (start_context.file_mode().gid() != -1) {
                     if (stat.st_gid != start_context.file_mode().gid()) {
                         CHECK(chown(this->filename_[i].c_str(), -1, start_context.file_mode().gid()) == 0,
-                                "Failed to change file group: " << this->filename_[i] << ", message " << strerror(errno));
+                            "Failed to change file group: " << this->filename_[i] << ", message " << strerror(errno));
                     }
                 }
 
@@ -321,12 +321,12 @@ bool TCBTreeIndex::Start(const StartContext& start_context) {
 
                 if ((stat.st_mode & 0777) != start_context.file_mode().mode()) {
                     CHECK(chmod(wal_filename.c_str(), start_context.file_mode().mode()) == 0,
-                            "Failed to change file permissions: " << wal_filename << ", message " << strerror(errno));
+                        "Failed to change file permissions: " << wal_filename << ", message " << strerror(errno));
                 }
                 if (start_context.file_mode().gid() != -1) {
                     if (stat.st_gid != start_context.file_mode().gid()) {
                         CHECK(chown(wal_filename.c_str(), -1, start_context.file_mode().gid()) == 0,
-                                "Failed to change file group: " << wal_filename << ", message " << strerror(errno));
+                            "Failed to change file group: " << wal_filename << ", message " << strerror(errno));
                     }
                 }
             }
@@ -345,7 +345,7 @@ bool TCBTreeIndex::Start(const StartContext& start_context) {
 }
 
 lookup_result TCBTreeIndex::Lookup(const void* key, size_t key_size,
-        Message* message) {
+                                   Message* message) {
     ProfileTimer timer(this->stats_.total_time_);
     ProfileTimer lookup_timer(this->stats_.lookup_time_);
 
@@ -358,9 +358,9 @@ lookup_result TCBTreeIndex::Lookup(const void* key, size_t key_size,
     ScopedReadWriteLock scoped_lock(current.second);
     ProfileTimer lock_timer(this->stats_.lock_time_);
     CHECK_RETURN(scoped_lock.AcquireReadLockWithStatistics(&stats_.lock_free_, &stats_.lock_busy_), LOOKUP_ERROR,
-            "Failed to acquire bdb lock: " <<
-            " key " << ToHexString(key, key_size) <<
-            ", db filename " << tcbdbpath(current_db));
+        "Failed to acquire bdb lock: " <<
+        " key " << ToHexString(key, key_size) <<
+        ", db filename " << tcbdbpath(current_db));
     lock_timer.stop();
 
     int result_size = 0;
@@ -389,7 +389,7 @@ lookup_result TCBTreeIndex::Lookup(const void* key, size_t key_size,
 }
 
 enum put_result TCBTreeIndex::Put(const void* key, size_t key_size,
-        const Message& message) {
+                                  const Message& message) {
     ProfileTimer timer(this->stats_.total_time_);
     ProfileTimer update_timer(this->stats_.update_time_);
 
@@ -399,8 +399,8 @@ enum put_result TCBTreeIndex::Put(const void* key, size_t key_size,
 
     string target;
     CHECK_RETURN(SerializeSizedMessageToString(message, &target, checksum_),
-            PUT_ERROR,
-            "Failed to serialize message: " << message.ShortDebugString());
+        PUT_ERROR,
+        "Failed to serialize message: " << message.ShortDebugString());
 
     pair<TCBDB*, ReadWriteLock*> current = GetBTree(key, key_size);
     CHECK_RETURN(current.first && current.second, PUT_ERROR, "Cannot get bdb");
@@ -409,10 +409,10 @@ enum put_result TCBTreeIndex::Put(const void* key, size_t key_size,
 
     ProfileTimer lock_timer(this->stats_.lock_time_);
     CHECK_RETURN(scoped_lock.AcquireWriteLockWithStatistics(&stats_.lock_free_, &stats_.lock_busy_), PUT_ERROR,
-            "Failed to acquire bdb lock: " <<
-            " key " << ToHexString(key, key_size) <<
-            ", value " << message.ShortDebugString() <<
-            ", db filename " << tcbdbpath(current_db));
+        "Failed to acquire bdb lock: " <<
+        " key " << ToHexString(key, key_size) <<
+        ", value " << message.ShortDebugString() <<
+        ", db filename " << tcbdbpath(current_db));
     lock_timer.stop();
 
     TRACE("Put: key " << ToHexString(key, key_size) << ", value " << message.ShortDebugString());
@@ -420,9 +420,9 @@ enum put_result TCBTreeIndex::Put(const void* key, size_t key_size,
     ProfileTimer tc_timer(this->stats_.tc_time_);
     if (!tcbdbtranbegin(current_db)) {
         LOG_TC_ERROR(current_db, "Failed to begin transaction: " <<
-                "db filename " << tcbdbpath(current_db) <<
-                ", key " <<  ToHexString(key, key_size) <<
-                ", message ");
+            "db filename " << tcbdbpath(current_db) <<
+            ", key " <<  ToHexString(key, key_size) <<
+            ", message ");
         return PUT_ERROR;
     }
     if (!tcbdbput(current_db, key, key_size, target.data(), target.size())) {
@@ -431,9 +431,9 @@ enum put_result TCBTreeIndex::Put(const void* key, size_t key_size,
         }
 
         LOG_TC_ERROR(current_db, "Failed to put value: " <<
-                " key " << ToHexString(key, key_size) <<
-                ", value " << message.ShortDebugString() <<
-                ", message ");
+            " key " << ToHexString(key, key_size) <<
+            ", value " << message.ShortDebugString() <<
+            ", message ");
         return PUT_ERROR;
     }
 
@@ -444,16 +444,16 @@ enum put_result TCBTreeIndex::Put(const void* key, size_t key_size,
     tc_timer.stop();
 
     CHECK_RETURN(scoped_lock.ReleaseLock(), PUT_ERROR,
-            "Failed to release bdb lock: " <<
-            " key " << ToHexString(key, key_size) <<
-            ", value " << message.ShortDebugString());
+        "Failed to release bdb lock: " <<
+        " key " << ToHexString(key, key_size) <<
+        ", value " << message.ShortDebugString());
     this->stats_.update_count_++;
     this->version_counter_.fetch_and_increment();
     return PUT_OK;
 }
 
 enum put_result TCBTreeIndex::PutIfAbsent(const void* key, size_t key_size,
-        const Message& message) {
+                                          const Message& message) {
     ProfileTimer timer(this->stats_.total_time_);
     ProfileTimer update_timer(this->stats_.update_time_);
 
@@ -463,8 +463,8 @@ enum put_result TCBTreeIndex::PutIfAbsent(const void* key, size_t key_size,
 
     string target;
     CHECK_RETURN(SerializeSizedMessageToString(message, &target, checksum_),
-            PUT_ERROR,
-            "Failed to serialize message: " << message.ShortDebugString());
+        PUT_ERROR,
+        "Failed to serialize message: " << message.ShortDebugString());
 
     pair<TCBDB*, ReadWriteLock*> current = GetBTree(key, key_size);
     CHECK_RETURN(current.first && current.second, PUT_ERROR, "Cannot get bdb");
@@ -472,10 +472,10 @@ enum put_result TCBTreeIndex::PutIfAbsent(const void* key, size_t key_size,
     ScopedReadWriteLock scoped_lock(current.second);
     ProfileTimer lock_timer(this->stats_.lock_time_);
     CHECK_RETURN(scoped_lock.AcquireWriteLockWithStatistics(&stats_.lock_free_, &stats_.lock_busy_), PUT_ERROR,
-            "Failed to acquire bdb lock: " <<
-            " key " << ToHexString(key, key_size) <<
-            ", value " << message.ShortDebugString() <<
-            ", db filename " << tcbdbpath(current_db));
+        "Failed to acquire bdb lock: " <<
+        " key " << ToHexString(key, key_size) <<
+        ", value " << message.ShortDebugString() <<
+        ", db filename " << tcbdbpath(current_db));
     lock_timer.stop();
 
     TRACE("Put: key " << ToHexString(key, key_size) << ", value " << message.ShortDebugString());
@@ -526,7 +526,7 @@ enum delete_result TCBTreeIndex::Delete(const void* key, size_t key_size) {
     ScopedReadWriteLock scoped_lock(current.second);
     ProfileTimer lock_timer(this->stats_.lock_time_);
     CHECK_RETURN(scoped_lock.AcquireWriteLockWithStatistics(&stats_.lock_free_, &stats_.lock_busy_), DELETE_ERROR,
-            "Failed to acquire bdb lock");
+        "Failed to acquire bdb lock");
     lock_timer.stop();
 
     ProfileTimer tc_timer(this->stats_.tc_time_);
@@ -720,7 +720,7 @@ bool SingleFileTCBTreeCursor::Remove() {
 }
 
 bool SingleFileTCBTreeCursor::Get(void* key, size_t* key_size,
-        Message* message) {
+                                  Message* message) {
     int s = 0;
     void* result = NULL;
 
@@ -770,8 +770,8 @@ bool SingleFileTCBTreeCursor::Put(const Message& message) {
 
     string target;
     CHECK_RETURN(SerializeSizedMessageToString(message, &target, this->index_->checksum_),
-            PUT_ERROR,
-            "Failed to serialize message: " << message.ShortDebugString());
+        PUT_ERROR,
+        "Failed to serialize message: " << message.ShortDebugString());
 
     if (!tcbdbtranbegin(current_db)) {
         LOG_TC_ERROR(current_db, "Failed to begin transaction");
@@ -845,10 +845,10 @@ TCBTreeIndexIterator::~TCBTreeIndexIterator() {
 }
 
 enum lookup_result TCBTreeIndexIterator::Next(void* key, size_t* key_size,
-        Message* message) {
+                                              Message* message) {
     CHECK_RETURN(this->version_counter_ == this->index_->version_counter_, LOOKUP_ERROR,
-            "Concurrent modification error: index version " << this->index_->version_counter_ <<
-            ", iterator version " << this->version_counter_);
+        "Concurrent modification error: index version " << this->index_->version_counter_ <<
+        ", iterator version " << this->version_counter_);
 
     TRACE("Next: valid " << ToString(cur_valid) << ", index " << tree_index);
 

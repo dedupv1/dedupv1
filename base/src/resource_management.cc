@@ -101,7 +101,7 @@ void* ResourceManagementImpl::Acquire() {
     }
 
     void* resource = NULL;
-    apr_status_t status = apr_reslist_acquire(this->resource_list, (void**) &resource);
+    apr_status_t status = apr_reslist_acquire(this->resource_list, (void * *) &resource);
     if (status != 0) {
         // we have seen instances where the message was
         // "There is no error, this value signifies an initialized error code" // NOLINT

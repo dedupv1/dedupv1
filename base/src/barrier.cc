@@ -59,7 +59,7 @@ bool Barrier::Wait() {
     CHECK(lock_.AcquireLock(), "Failed to acquire lock");
     if (fired_) {
         CHECK(lock_.ReleaseLock(), "Failed to release lock");
-        ERROR("Failed wait for a non-ready barrier");        
+        ERROR("Failed wait for a non-ready barrier");
         return false;
     }
     this->current_++;

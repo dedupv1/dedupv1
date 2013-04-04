@@ -31,44 +31,44 @@ LOGGER("BitmapTest");
 using dedupv1::base::Bitmap;
 using dedupv1::base::Option;
 
-class BitmapTest: public testing::Test {
-    protected:
-        USE_LOGGING_EXPECTATION();
+class BitmapTest : public testing::Test {
+protected:
+    USE_LOGGING_EXPECTATION();
 
-        Bitmap* bitmap_;
+    Bitmap* bitmap_;
 
-        dedupv1::base::Index* index;
+    dedupv1::base::Index* index;
 
-        virtual void SetUp() {
-            bitmap_ = NULL;
+    virtual void SetUp() {
+        bitmap_ = NULL;
+        index = NULL;
+    }
+
+    virtual void TearDown() {
+        if (bitmap_) {
+            delete bitmap_;
+            bitmap_ = 0;
+        }
+        if (index) {
+            index->Close();
             index = NULL;
         }
+        ASSERT_TRUE(ClearWork());
+    }
 
-        virtual void TearDown() {
-            if (bitmap_) {
-                delete bitmap_;
-                bitmap_ = 0;
+    bool ClearWork() {
+        std::vector<std::string> files;
+        CHECK(dedupv1::base::File::ListDirectory("work/", &files), "Could not read work directory");
+        for (size_t i = 0; i < files.size(); i++) {
+            if ((files[i] != ".") && (files[i] != "..")) {
+                CHECK(dedupv1::base::File::Remove(dedupv1::base::File::Join("work/", files[i])), "Could not remove from work dir: " << files[i]);
             }
-            if (index) {
-                index->Close();
-                index = NULL;
-            }
-            ASSERT_TRUE(ClearWork());
         }
-
-        bool ClearWork() {
-            std::vector<std::string> files;
-            CHECK(dedupv1::base::File::ListDirectory("work/", &files), "Could not read work directory");
-            for (size_t i = 0; i < files.size(); i++) {
-                if ((files[i] != ".") && (files[i] != "..")) {
-                    CHECK(dedupv1::base::File::Remove(dedupv1::base::File::Join("work/", files[i])), "Could not remove from work dir: " << files[i]);
-                }
-            }
-            return true;
-        }
+        return true;
+    }
 };
 
-TEST_F (BitmapTest, Create)
+TEST_F(BitmapTest, Create)
 {
     std::vector<uint64_t> sizes;
     sizes.push_back(0);
@@ -105,9 +105,9 @@ TEST_F (BitmapTest, Create)
     }
 }
 
-TEST_F (BitmapTest, NotInitialized)
+TEST_F(BitmapTest, NotInitialized)
 {
-    EXPECT_LOGGING(dedupv1::test::ERROR).Times(7); //clearAll, find_next_unset, both Store, both Load, setPersistence
+    EXPECT_LOGGING(dedupv1::test::ERROR).Times(7); // clearAll, find_next_unset, both Store, both Load, setPersistence
     bitmap_ = new Bitmap(62);
     ASSERT_TRUE(bitmap_);
 
@@ -131,7 +131,7 @@ TEST_F (BitmapTest, NotInitialized)
     ASSERT_FALSE(bitmap_->setPersistence(pi, &key, key_size, 4096));
 }
 
-TEST_F (BitmapTest, SetPersistenceFailing)
+TEST_F(BitmapTest, SetPersistenceFailing)
 {
     bitmap_ = new Bitmap(62);
     ASSERT_TRUE(bitmap_);
@@ -153,7 +153,7 @@ TEST_F (BitmapTest, SetPersistenceFailing)
     ASSERT_TRUE(bitmap_->setPersistence(pi, &key, key_size, 4096));
 }
 
-TEST_F (BitmapTest, NoPersistence)
+TEST_F(BitmapTest, NoPersistence)
 {
     bitmap_ = new Bitmap(62);
     ASSERT_TRUE(bitmap_);
@@ -169,7 +169,7 @@ TEST_F (BitmapTest, NoPersistence)
     ASSERT_FALSE(bitmap_->Load(true));
 }
 
-TEST_F (BitmapTest, Persistent)
+TEST_F(BitmapTest, Persistent)
 {
     std::vector<uint64_t> sizes;
     sizes.push_back(0);
@@ -209,7 +209,7 @@ TEST_F (BitmapTest, Persistent)
 
             DEBUG("Size is " << size);
             index = dedupv1::testing::CreateIndex(
-                    "sqlite-disk-btree;filename=work/tc_test_data;max-key-size=8;max-item-count=16K");
+                "sqlite-disk-btree;filename=work/tc_test_data;max-key-size=8;max-item-count=16K");
             dedupv1::base::PersistentIndex* pi = index->AsPersistentIndex();
             ASSERT_TRUE(pi);
             ASSERT_TRUE(pi->Init());
@@ -229,7 +229,7 @@ TEST_F (BitmapTest, Persistent)
             }
 
             ASSERT_TRUE(bitmap_->isDirty());
-            for (size_t i = 0; i < size; i+=2) {
+            for (size_t i = 0; i < size; i += 2) {
                 ASSERT_TRUE(bitmap_->set(i));
             }
             ASSERT_EQ((bitmap_->size()) / 2, bitmap_->clean_bits());
@@ -247,7 +247,7 @@ TEST_F (BitmapTest, Persistent)
 
             Option<bool> value;
             for (size_t i = 0; i < size; i++) {
-                if ((i%2) == 0) {
+                if ((i % 2) == 0) {
                     value = bitmap_->is_set(i);
                     ASSERT_TRUE(value.valid()) << "Error reading bit " << i;
                     ASSERT_TRUE(value.value()) << "Bit " << i << " should be set, but it is not";
@@ -276,7 +276,7 @@ TEST_F (BitmapTest, Persistent)
     }
 }
 
-TEST_F (BitmapTest, StorePage)
+TEST_F(BitmapTest, StorePage)
 {
     size_t page_size = 8 * 4;
     size_t bits_per_page = page_size * 8;
@@ -356,7 +356,7 @@ TEST_F (BitmapTest, StorePage)
     ASSERT_EQ(bits_per_page * 32 - 3, bitmap_->clean_bits());
 }
 
-TEST_F (BitmapTest, Override)
+TEST_F(BitmapTest, Override)
 {
     EXPECT_LOGGING(dedupv1::test::ERROR).Times(2); // Failed Store override with check if new gives two errors
 
@@ -404,7 +404,7 @@ TEST_F (BitmapTest, Override)
     }
 }
 
-TEST_F (BitmapTest, PersistentWrongSize)
+TEST_F(BitmapTest, PersistentWrongSize)
 {
     EXPECT_LOGGING(dedupv1::test::ERROR).Times(2); // both Load calls
 
@@ -413,7 +413,7 @@ TEST_F (BitmapTest, PersistentWrongSize)
     ASSERT_TRUE(bitmap_->Init());
 
     index = dedupv1::testing::CreateIndex(
-            "sqlite-disk-btree;filename=work/tc_test_data;max-key-size=8;max-item-count=16K");
+        "sqlite-disk-btree;filename=work/tc_test_data;max-key-size=8;max-item-count=16K");
     dedupv1::base::PersistentIndex* pi = index->AsPersistentIndex();
     ASSERT_TRUE(pi);
     ASSERT_TRUE(pi->Init());
@@ -446,7 +446,7 @@ TEST_F (BitmapTest, PersistentWrongSize)
     ASSERT_FALSE(bitmap_->Load(false)); // ERROR
 }
 
-TEST_F (BitmapTest, Negate)
+TEST_F(BitmapTest, Negate)
 {
     bitmap_ = new Bitmap(295);
     ASSERT_TRUE(bitmap_);
@@ -470,7 +470,7 @@ TEST_F (BitmapTest, Negate)
         ASSERT_FALSE(value.value());
     }
 
-    for (size_t i = 0; i < bitmap_->size(); i+=2) {
+    for (size_t i = 0; i < bitmap_->size(); i += 2) {
         ASSERT_TRUE(bitmap_->set(i));
     }
     ASSERT_EQ(147, bitmap_->clean_bits());
@@ -507,7 +507,7 @@ TEST_F (BitmapTest, Negate)
     }
 }
 
-TEST_F (BitmapTest, SetAndClear)
+TEST_F(BitmapTest, SetAndClear)
 {
     std::vector<uint64_t> sizes;
     sizes.push_back(0);
@@ -538,13 +538,13 @@ TEST_F (BitmapTest, SetAndClear)
             ASSERT_TRUE(bitmap_->set(i));
             ASSERT_EQ(size - i - 1, bitmap_->clean_bits()) << " Round " << i;
             value = bitmap_->is_set(i);
-            ASSERT_TRUE(value.valid())<< "Error reading bit " << i << " of " << size;
+            ASSERT_TRUE(value.valid()) << "Error reading bit " << i << " of " << size;
             ASSERT_TRUE(value.value()) << "Bit " << i << " of " << size << " was not set, but should";
 
             ASSERT_TRUE(bitmap_->set(i)); // second set should not change anything
             ASSERT_EQ(size - i - 1, bitmap_->clean_bits());
             value = bitmap_->is_set(i);
-            ASSERT_TRUE(value.valid())<< "Error reading bit " << i << " of " << size;
+            ASSERT_TRUE(value.valid()) << "Error reading bit " << i << " of " << size;
             ASSERT_TRUE(value.value()) << "Bit " << i << " of " << size << " was not set, but should";
         }
 
@@ -560,13 +560,13 @@ TEST_F (BitmapTest, SetAndClear)
             ASSERT_TRUE(bitmap_->clear(i));
             ASSERT_EQ(i + 1, bitmap_->clean_bits());
             value = bitmap_->is_set(i);
-            ASSERT_TRUE(value.valid())<< "Error reading bit " << i << " of " << size;
+            ASSERT_TRUE(value.valid()) << "Error reading bit " << i << " of " << size;
             ASSERT_FALSE(value.value()) << "Bit " << i << " of " << size << " was set, but should not";
 
             ASSERT_TRUE(bitmap_->clear(i));
             ASSERT_EQ(i + 1, bitmap_->clean_bits());
             value = bitmap_->is_set(i);
-            ASSERT_TRUE(value.valid())<< "Error reading bit " << i << " of " << size;
+            ASSERT_TRUE(value.valid()) << "Error reading bit " << i << " of " << size;
             ASSERT_FALSE(value.value()) << "Bit " << i << " of " << size << " was set, but should not";
         }
 
@@ -602,7 +602,7 @@ TEST_F(BitmapTest, SetAndClearAll)
         Option<bool> value;
         for (size_t i = 0; i < size; i++) {
             value = bitmap_->is_set(i);
-            ASSERT_TRUE(value.valid())<< "Error reading bit " << i << " of " << size;
+            ASSERT_TRUE(value.valid()) << "Error reading bit " << i << " of " << size;
             ASSERT_FALSE(value.value()) << "Bit " << i << " of " << size << " was set, but should not";
             ASSERT_TRUE(bitmap_->set(i));
         }
@@ -694,7 +694,7 @@ TEST_F(BitmapTest, FindNextClean)
 
         if (size > 0) {
             for (byte k = 0; k < 5; k++) {
-                DEBUG("Starting position " << (uint16_t)k << " is " << start[k]);
+                DEBUG("Starting position " << (uint16_t) k << " is " << start[k]);
                 size_t startpos = start[k];
                 for (size_t i = 0; i < size; i++) {
                     pos_value = bitmap_->find_next_unset(startpos, startpos);

@@ -544,7 +544,7 @@ lookup_result TCFixedIndexIterator::Next(void* key, size_t* key_size,
     }
     if (message) {
         CHECK_GOTO(ParseSizedMessage(message, result, result_size, this->index_->checksum_).valid(),
-                "Failed to parse message");
+            "Failed to parse message");
     }
     free(result); // allocated by tc.
     return LOOKUP_FOUND;

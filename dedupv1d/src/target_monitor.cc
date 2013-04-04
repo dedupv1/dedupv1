@@ -250,8 +250,8 @@ string TargetMonitorAdapterRequest::Monitor() {
             list< pair<string, string> >::iterator i = ++options.begin(); // on second entry
             for (; i != options.end(); i++) {
                 bool is_param_option = StartsWith(i->first, "param.") ||
-                        StartsWith(i->first, "auth.") ||
-                        i->first == "name";
+                                       StartsWith(i->first, "auth.") ||
+                                       i->first == "name";
                 CHECK_RETURN_JSON(is_param_option, "Illegal option: " << i->first);
                 param_options.push_back(make_pair(i->first, i->second));
             }

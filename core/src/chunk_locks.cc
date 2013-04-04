@@ -75,7 +75,7 @@ bool ChunkLocks::Start(const StartContext& start_context) {
 }
 
 int ChunkLocks::GetLockIndex(const void* fp, size_t fp_size) {
-    DCHECK_RETURN(fp_size >= sizeof(uint64_t), -1, 
+    DCHECK_RETURN(fp_size >= sizeof(uint64_t), -1,
         "Illegal fp size: fp size " << fp_size);
     uint32_t hash_value = 0;
     dedupv1::base::murmur_hash3_x86_32(fp, fp_size, 0, &hash_value);

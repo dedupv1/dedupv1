@@ -124,13 +124,13 @@ ContentStorage::~ContentStorage() {
 
 ContentStorage::Statistics::Statistics() :
     average_write_block_latency_(256), average_processing_time_(256), average_filter_chain_time_(256),
-            average_chunking_latency_(256), average_fingerprint_latency_(256), average_chunk_store_latency_(256),
-            average_block_read_latency_(256), average_sync_latency_(256), average_open_request_handling_latency_(256),
-            average_block_storing_latency_(256), average_process_chunk_filter_chain_latency_(256),
-            average_process_filter_chain_barrier_wait_latency_(256),
-            average_process_chunk_filter_chain_read_chunk_info_latency_(256),
-            average_process_chunk_filter_chain_write_block_latency_(256),
-            average_process_chunk_filter_chain_store_chunk_info_latency_(256) {
+    average_chunking_latency_(256), average_fingerprint_latency_(256), average_chunk_store_latency_(256),
+    average_block_read_latency_(256), average_sync_latency_(256), average_open_request_handling_latency_(256),
+    average_block_storing_latency_(256), average_process_chunk_filter_chain_latency_(256),
+    average_process_filter_chain_barrier_wait_latency_(256),
+    average_process_chunk_filter_chain_read_chunk_info_latency_(256),
+    average_process_chunk_filter_chain_write_block_latency_(256),
+    average_process_chunk_filter_chain_store_chunk_info_latency_(256) {
     reads_ = 0;
     read_size_ = 0;
     writes_ = 0;
@@ -160,8 +160,8 @@ bool ContentStorage::InitEmptyFingerprint(Chunker* chunker, Fingerprinter* fp_ge
 }
 
 bool ContentStorage::Start(dedupv1::base::Threadpool* tp, dedupv1::blockindex::BlockIndex* block_index,
-        dedupv1::chunkindex::ChunkIndex* chunk_index, ChunkStore* chunk_store, FilterChain* filter_chain,
-        ResourceManagement<Chunk>* chunk_management, Log* log, BlockLocks* block_locks, uint32_t block_size) {
+                           dedupv1::chunkindex::ChunkIndex* chunk_index, ChunkStore* chunk_store, FilterChain* filter_chain,
+                           ResourceManagement<Chunk>* chunk_management, Log* log, BlockLocks* block_locks, uint32_t block_size) {
     DCHECK(tp, "Threadpool not set");
 
     this->tp_ = tp;
@@ -180,7 +180,7 @@ bool ContentStorage::Start(dedupv1::base::Threadpool* tp, dedupv1::blockindex::B
         CHECK(default_chunker_, "Failed to create default chunker");
     }
     CHECK(this->default_chunker_->Start(chunk_management),
-            "Cannot start chunker");
+        "Cannot start chunker");
 
     return true;
 }
@@ -286,7 +286,7 @@ bool ContentStorage::SetOption(const string& option_name, const string& option) 
 }
 
 bool ContentStorage::ReadBlock(Session* session, Request* request, RequestStatistics* request_stats,
-        dedupv1::base::ErrorContext* ec) {
+                               dedupv1::base::ErrorContext* ec) {
     ProfileTimer timer(this->stats_.profiling_);
 
     DCHECK(session, "Session not set");
@@ -295,7 +295,7 @@ bool ContentStorage::ReadBlock(Session* session, Request* request, RequestStatis
 
     unsigned int data_pos = 0; // Current position in the data
     int count = 0; // Number of bytes already read
-    byte* data_buffer = static_cast<byte*> (request->buffer()); // data as byte array
+    byte* data_buffer = static_cast<byte*>(request->buffer()); // data as byte array
 
     DEBUG("Read block: request " << request->DebugString());
 
@@ -322,11 +322,11 @@ bool ContentStorage::ReadBlock(Session* session, Request* request, RequestStatis
         }
 
         CHECK(ContentStorage::ReadDataForItem(
-                        item, session, data_buffer,
-                        data_pos, count, offset, ec),
-                "Read chunk failed: chunk " << item->DebugString() <<
-                ", block " << mapping.DebugString() <<
-                ", request " << request->DebugString());
+                item, session, data_buffer,
+                data_pos, count, offset, ec),
+            "Read chunk failed: chunk " << item->DebugString() <<
+            ", block " << mapping.DebugString() <<
+            ", request " << request->DebugString());
 
         todo_size -= count;
         offset = 0;
@@ -335,7 +335,7 @@ bool ContentStorage::ReadBlock(Session* session, Request* request, RequestStatis
 
     IF_TRACE() {
         TRACE("Read block: request " << request->DebugString() <<
-                ", crc " << crc(request->buffer(), request->size()));
+            ", crc " << crc(request->buffer(), request->size()));
     }
     stats_.reads_++;
     stats_.read_size_ += request->size();
@@ -344,13 +344,13 @@ bool ContentStorage::ReadBlock(Session* session, Request* request, RequestStatis
 }
 
 bool ContentStorage::FastCopyBlock(uint64_t src_block_id, uint64_t src_offset, uint64_t target_block_id,
-        uint64_t target_offset, uint64_t size, dedupv1::base::ErrorContext* ec) {
+                                   uint64_t target_offset, uint64_t size, dedupv1::base::ErrorContext* ec) {
 
     DEBUG("Fast copy block: src block " << src_block_id <<
-            ", target block " << target_block_id <<
-            ", src offset " << src_offset <<
-            ", target offset " << target_offset <<
-            ", size " << size);
+        ", target block " << target_block_id <<
+        ", src offset " << src_offset <<
+        ", target offset " << target_offset <<
+        ", size " << size);
 
     BlockMapping updated_block_mapping(this->block_size_);
     BlockMapping original_block_mapping(target_block_id, block_size_);
@@ -369,22 +369,22 @@ bool ContentStorage::FastCopyBlock(uint64_t src_block_id, uint64_t src_offset, u
     CHECK(rr2 != BlockIndex::READ_RESULT_ERROR, "Failed to read target original mapping");
 
     CHECK(updated_block_mapping.CopyFrom(original_block_mapping),
-            "Failed to copy block mapping. " << original_block_mapping.DebugString());
+        "Failed to copy block mapping. " << original_block_mapping.DebugString());
     updated_block_mapping.set_version(updated_block_mapping.version() + 1);
     updated_block_mapping.set_event_log_id(0);
 
     DEBUG("Fast copy: src " << src_block_mapping.DebugString() <<
-            ", target " << updated_block_mapping.DebugString() <<
-            ", src offset " << src_offset <<
-            ", target offset " << target_offset <<
-            ", size " << size);
+        ", target " << updated_block_mapping.DebugString() <<
+        ", src offset " << src_offset <<
+        ", target offset " << target_offset <<
+        ", size " << size);
 
     // slice here from the existing (source) block mapping
     // there is no need to run through the filter chain. In some way this can be seen
     // as an block index filter against a different block
 
     CHECK(updated_block_mapping.MergePartsFrom(src_block_mapping, target_offset, src_offset, size),
-            "Failed to merge");
+        "Failed to merge");
 
     TRACE("Finished merge");
 
@@ -402,12 +402,12 @@ bool ContentStorage::FastCopyBlock(uint64_t src_block_id, uint64_t src_offset, u
 }
 
 bool ContentStorage::WriteBlock(Session* session, Request* request, RequestStatistics* request_stats, bool last_block,
-        dedupv1::base::ErrorContext* ec) {
+                                dedupv1::base::ErrorContext* ec) {
     ProfileTimer timer(this->stats_.profiling_);
     SlidingAverageProfileTimer average_timer(this->stats_.average_write_block_latency_);
     REQUEST_STATS_START(request_stats, RequestStatistics::PROCESSING);
 
-    //tbb::tick_count end_tick;
+    // tbb::tick_count end_tick;
     tbb::tick_count block_read_start_tick;
     DCHECK(session, "Session not set");
     DCHECK(request, "Request not set");
@@ -416,11 +416,11 @@ bool ContentStorage::WriteBlock(Session* session, Request* request, RequestStati
 
     IF_TRACE() {
         TRACE("Write block: request " << request->DebugString() <<
-                ", crc " << crc(request->buffer(), request->size()) <<
-                ", last " << ToString(last_block));
+            ", crc " << crc(request->buffer(), request->size()) <<
+            ", last " << ToString(last_block));
     } else {
         DEBUG("Write block: request " << request->DebugString() <<
-                ", last " << ToString(last_block));
+            ", last " << ToString(last_block));
     }
 
     block_read_start_tick = tbb::tick_count::now();
@@ -430,7 +430,7 @@ bool ContentStorage::WriteBlock(Session* session, Request* request, RequestStati
     CHECK(this->block_index_->ReadBlockInfo(session, &original_block_mapping, ec), "Reading block mapping failed");
 
     CHECK(updated_block_mapping.CopyFrom(original_block_mapping),
-            "Failed to copy block mapping. " << original_block_mapping.DebugString());
+        "Failed to copy block mapping. " << original_block_mapping.DebugString());
     updated_block_mapping.set_version(updated_block_mapping.version() + 1);
     updated_block_mapping.set_event_log_id(0);
     this->stats_.average_block_read_latency_.Add((tbb::tick_count::now() - block_read_start_tick).seconds() * 1000);
@@ -440,14 +440,14 @@ bool ContentStorage::WriteBlock(Session* session, Request* request, RequestStati
         bool old_state = reported_full_block_index_before_.compare_and_swap(true, false);
         if (!old_state) {
             WARNING("Block index full: " <<
-                    original_block_mapping.DebugString() << " => " << updated_block_mapping.DebugString() <<
-                    ", state: not processed" <<
-                    ", stats " << block_index_->PrintStatistics());
+                original_block_mapping.DebugString() << " => " << updated_block_mapping.DebugString() <<
+                ", state: not processed" <<
+                ", stats " << block_index_->PrintStatistics());
         } else {
             DEBUG("Block index full: " <<
-                    original_block_mapping.DebugString() << " => " << updated_block_mapping.DebugString() <<
-                    ", state: not processed" <<
-                    ", block index item count " << block_index_->GetActiveBlockCount());
+                original_block_mapping.DebugString() << " => " << updated_block_mapping.DebugString() <<
+                ", state: not processed" <<
+                ", block index item count " << block_index_->GetActiveBlockCount());
         }
         if (ec) {
             ec->set_full();
@@ -461,14 +461,14 @@ bool ContentStorage::WriteBlock(Session* session, Request* request, RequestStati
         bool old_state = reported_full_storage_before_.compare_and_swap(true, false);
         if (!old_state) {
             WARNING("Chunk store full: " <<
-                    original_block_mapping.DebugString() << " => " << updated_block_mapping.DebugString() <<
-                    ", state: not processed" <<
-                    ", stats " << chunk_store_->PrintStatistics());
+                original_block_mapping.DebugString() << " => " << updated_block_mapping.DebugString() <<
+                ", state: not processed" <<
+                ", stats " << chunk_store_->PrintStatistics());
         } else {
             DEBUG("Chunk store full: " <<
-                    original_block_mapping.DebugString() << " => " << updated_block_mapping.DebugString() <<
-                    ", state: not processed" <<
-                    ", stats " << chunk_store_->PrintStatistics());
+                original_block_mapping.DebugString() << " => " << updated_block_mapping.DebugString() <<
+                ", state: not processed" <<
+                ", stats " << chunk_store_->PrintStatistics());
         }
         if (ec) {
             ec->set_full();
@@ -487,14 +487,14 @@ bool ContentStorage::WriteBlock(Session* session, Request* request, RequestStati
         bool old_state = reported_full_chunk_index_before_.compare_and_swap(true, false);
         if (!old_state) {
             WARNING("Chunk index full: " <<
-                    original_block_mapping.DebugString() << " => " << updated_block_mapping.DebugString() <<
-                    ", state: not processed" <<
-                    ", stats " << chunk_index_->PrintStatistics());
+                original_block_mapping.DebugString() << " => " << updated_block_mapping.DebugString() <<
+                ", state: not processed" <<
+                ", stats " << chunk_index_->PrintStatistics());
         } else {
             DEBUG("Chunk index full: " <<
-                    original_block_mapping.DebugString() << " => " << updated_block_mapping.DebugString() <<
-                    ", state: not processed" <<
-                    ", stats " << chunk_index_->PrintStatistics());
+                original_block_mapping.DebugString() << " => " << updated_block_mapping.DebugString() <<
+                ", state: not processed" <<
+                ", stats " << chunk_index_->PrintStatistics());
         }
         if (ec) {
             ec->set_full();
@@ -536,20 +536,20 @@ bool ContentStorage::WriteBlock(Session* session, Request* request, RequestStati
                 result = false;
             } else if (!session->AppendRequest(request->block_id(), request->offset(), mapping_item)) {
                 ERROR("Cannot append block request to session: " <<
-                        ", request " << request->DebugString() <<
-                        ", open request " << session->GetRequest(session->open_request_count() - 1)->DebugString() <<
-                        ", block mapping item " << mapping_item.DebugString());
+                    ", request " << request->DebugString() <<
+                    ", open request " << session->GetRequest(session->open_request_count() - 1)->DebugString() <<
+                    ", block mapping item " << mapping_item.DebugString());
                 result = false;
             }
             // do not unlock block lock, because block_id is in the open chunk list
         } else {
             // Chunks are finished in this block => Handle chunks in separate function
             result = this->HandleChunks(session, request, request_stats, &original_block_mapping,
-                    &updated_block_mapping, chunks, ec);
+                &updated_block_mapping, chunks, ec);
             if (!result) {
                 ERROR("Failed to write block: " << request->DebugString() <<
-                        ", block mapping " <<
-                        original_block_mapping.DebugString() << " => " << updated_block_mapping.DebugString());
+                    ", block mapping " <<
+                    original_block_mapping.DebugString() << " => " << updated_block_mapping.DebugString());
 
                 /*
                  * TODO (dmeister) The error handling seems be in a bad shape. It is not clear in which situations
@@ -558,7 +558,7 @@ bool ContentStorage::WriteBlock(Session* session, Request* request, RequestStati
                  */
                 if (!block_index_->MarkBlockWriteAsFailed(original_block_mapping, updated_block_mapping, false, ec)) {
                     WARNING("Failed to mark block write as failed: " <<
-                            original_block_mapping.DebugString() << " => " << updated_block_mapping.DebugString());
+                        original_block_mapping.DebugString() << " => " << updated_block_mapping.DebugString());
                 }
             }
         }
@@ -576,10 +576,10 @@ bool ContentStorage::WriteBlock(Session* session, Request* request, RequestStati
     if (request_stats) {
         this->stats_.average_processing_time_.Add(request_stats->latency(RequestStatistics::PROCESSING));
         DEBUG("Write finished: request " << request->DebugString() <<
-                ", latency " << request_stats->latency(RequestStatistics::PROCESSING) << "ms");
+            ", latency " << request_stats->latency(RequestStatistics::PROCESSING) << "ms");
     } else {
         DEBUG("Write finished: request " << request->DebugString() <<
-                ", latency null");
+            ", latency null");
     }
 
     if (!result) {
@@ -592,12 +592,12 @@ bool ContentStorage::WriteBlock(Session* session, Request* request, RequestStati
             OpenRequest* request = session->GetRequest(i);
             if (request) {
                 if (!(request->modified_block_mapping().block_id() == updated_block_mapping.block_id()
-                        && request->modified_block_mapping().version() == updated_block_mapping.version())) {
+                      && request->modified_block_mapping().version() == updated_block_mapping.version())) {
                     // the current block mapping should not be handled here
                     if (!block_index_->MarkBlockWriteAsFailed(request->original_block_mapping(),
                             request->modified_block_mapping(), false, ec)) {
                         WARNING("Failed to mark block write as failed: " <<
-                                request->original_block_mapping().DebugString() << " => " << request->modified_block_mapping().DebugString());
+                            request->original_block_mapping().DebugString() << " => " << request->modified_block_mapping().DebugString());
                     }
                 }
             }
@@ -608,7 +608,7 @@ bool ContentStorage::WriteBlock(Session* session, Request* request, RequestStati
             // the last open request is from this block
             OpenRequest* request = session->GetRequest(session->open_request_count() - 1);
             if (request->modified_block_mapping().block_id() == updated_block_mapping.block_id()
-                    && request->modified_block_mapping().version() == updated_block_mapping.version()) {
+                && request->modified_block_mapping().version() == updated_block_mapping.version()) {
                 unlock = false; // the current block mapping should not be unlocked here
             }
         }
@@ -625,8 +625,8 @@ bool ContentStorage::WriteBlock(Session* session, Request* request, RequestStati
 }
 
 bool ContentStorage::FingerprintChunks(Session* session, Request* request, RequestStatistics* request_stats,
-        Fingerprinter* fingerprinter, const list<Chunk*>& chunks, vector<ChunkMapping>* chunk_mappings,
-        ErrorContext* ec) {
+                                       Fingerprinter* fingerprinter, const list<Chunk*>& chunks, vector<ChunkMapping>* chunk_mappings,
+                                       ErrorContext* ec) {
     DCHECK(chunk_mappings, "Chunk mappings not set");
     DCHECK(fingerprinter, "Fingerprinter not set");
     DCHECK(chunk_mappings->size() == 0, "Chunk mapping not empty");
@@ -644,8 +644,8 @@ bool ContentStorage::FingerprintChunks(Session* session, Request* request, Reque
         fp_size = Fingerprinter::kMaxFingerprintSize;
         CHECK(chunk_mappings->at(i).Init(c), "Cannot init chunk mapping");
         CHECK(fingerprinter->Fingerprint(c->data(),
-                        c->size(), chunk_mappings->at(i).mutable_fingerprint(), &fp_size),
-                "Fingerprinting failed");
+                c->size(), chunk_mappings->at(i).mutable_fingerprint(), &fp_size),
+            "Fingerprinting failed");
         chunk_mappings->at(i).set_fingerprint_size(fp_size);
 
         // here we rewrite the calculated fp of the empty chunk with the static empty fp.
@@ -654,8 +654,8 @@ bool ContentStorage::FingerprintChunks(Session* session, Request* request, Reque
             // the fp is the empty fp
 
             CHECK(Fingerprinter::SetEmptyDataFingerprint(chunk_mappings->at(i).mutable_fingerprint(),
-                            chunk_mappings->at(i).mutable_fingerprint_size()),
-                    "Failed to set the empty fingerprint");
+                    chunk_mappings->at(i).mutable_fingerprint_size()),
+                "Failed to set the empty fingerprint");
         }
         i++;
     }
@@ -671,7 +671,7 @@ bool ContentStorage::FingerprintChunks(Session* session, Request* request, Reque
 }
 
 bool ContentStorage::ProcessChunkFilterChain(std::tr1::tuple<Session*, const BlockMapping*, ChunkMapping*,
-        MultiSignalCondition*, tbb::atomic<bool>*, ErrorContext*> t) {
+                                                             MultiSignalCondition*, tbb::atomic<bool>*, ErrorContext*> t) {
     SlidingAverageProfileTimer method_timer(this->stats_.average_process_chunk_filter_chain_latency_);
     Session* session = std::tr1::get<0>(t);
     const BlockMapping* block_mapping = std::tr1::get<1>(t);
@@ -692,12 +692,12 @@ bool ContentStorage::ProcessChunkFilterChain(std::tr1::tuple<Session*, const Blo
     start_step_tick = tbb::tick_count::now();
     if (!filter_chain_->ReadChunkInfo(session, block_mapping, chunk_mapping, ec)) {
         ERROR("Reading of chunk infos failed: " << chunk_mapping->DebugString() <<
-                ", " << (ec ? ec->DebugString() : ""));
+            ", " << (ec ? ec->DebugString() : ""));
         failed = true;
     }
     end_step_tick = tbb::tick_count::now();
     this->stats_.average_process_chunk_filter_chain_read_chunk_info_latency_.Add(
-            (end_step_tick - start_step_tick).seconds() * 1000);
+        (end_step_tick - start_step_tick).seconds() * 1000);
 
     // Write data to data storage for every chunk with an unknown data address
     FAULT_POINT("content-storage.handle.pre-chunk-store");
@@ -705,21 +705,22 @@ bool ContentStorage::ProcessChunkFilterChain(std::tr1::tuple<Session*, const Blo
         SlidingAverageProfileTimer method_timer2(this->stats_.average_process_chunk_filter_chain_write_block_latency_);
         if (!this->chunk_store_->WriteBlock(session->storage_session(), chunk_mapping, ec)) {
             ERROR("Storing of chunk data failed: " <<
-                    "block mapping " << (block_mapping ? block_mapping->DebugString() : "<no block mapping>") <<
-                    ", chunk mapping " << chunk_mapping->DebugString());
+                "block mapping " << (block_mapping ? block_mapping->DebugString() : "<no block mapping>") <<
+                ", chunk mapping " << chunk_mapping->DebugString());
             failed = true;
         }
     }
 
     if (likely(!failed)) {
         SlidingAverageProfileTimer method_timer2(
-                this->stats_.average_process_chunk_filter_chain_store_chunk_info_latency_);
+            this->stats_.average_process_chunk_filter_chain_store_chunk_info_latency_);
         // Store the chunks
         FAULT_POINT("content-storage.handle.pre-filter-update");
         if (!filter_chain_->StoreChunkInfo(session, chunk_mapping, ec)) {
             ERROR("Storing of chunk failed: " << chunk_mapping->DebugString());
             failed = true;
-        }FAULT_POINT("content-storage.handle.post-filter-update");
+        }
+        FAULT_POINT("content-storage.handle.post-filter-update");
 
     } else {
         if (!filter_chain_->AbortChunkInfo(session, chunk_mapping, ec)) {
@@ -736,7 +737,7 @@ bool ContentStorage::ProcessChunkFilterChain(std::tr1::tuple<Session*, const Blo
 }
 
 bool ContentStorage::ProcessFilterChain(Session* session, Request* request, RequestStatistics* request_stats,
-        const BlockMapping* block_mapping, vector<ChunkMapping>* chunk_mappings, ErrorContext* ec) {
+                                        const BlockMapping* block_mapping, vector<ChunkMapping>* chunk_mappings, ErrorContext* ec) {
     DCHECK(chunk_mappings, "Chunk mappings not set");
 
     stats_.threads_in_filter_chain_++;
@@ -776,25 +777,25 @@ bool ContentStorage::ProcessFilterChain(Session* session, Request* request, Requ
 }
 
 bool ContentStorage::MergeChunksIntoCurrentRequest(uint64_t block_id, RequestStatistics* request_stats,
-        unsigned int block_offset, unsigned long open_chunk_pos, bool already_failed, Session* session,
-        const BlockMapping* original_block_mapping, const BlockMapping* updated_block_mapping,
-        vector<ChunkMapping>* chunk_mappings, ErrorContext* ec) {
+                                                   unsigned int block_offset, unsigned long open_chunk_pos, bool already_failed, Session* session,
+                                                   const BlockMapping* original_block_mapping, const BlockMapping* updated_block_mapping,
+                                                   vector<ChunkMapping>* chunk_mappings, ErrorContext* ec) {
     DCHECK(session->open_chunk_position() <= chunk_mappings->at(0).chunk()->size(),
-            "Illegal open chunk position");
+        "Illegal open chunk position");
 
     BlockMappingItem request(session->open_chunk_position(), chunk_mappings->at(0).chunk()->size()
-            - session->open_chunk_position());
+                             - session->open_chunk_position());
     CHECK(request.Convert(chunk_mappings->at(0)), "Failed to convert chunk mapping: " << chunk_mappings->at(0).DebugString());
 
     // TODO(fermat): Is this necessary? Is is used anywhere? It is also set in the last line of this method.
     session->set_open_chunk_position(session->open_chunk_position() + request.size());
 
     CHECK(session->AppendBlock(*original_block_mapping, *updated_block_mapping),
-            "Cannot append block to session: " <<
-            original_block_mapping->DebugString() << " => " << updated_block_mapping->DebugString());
+        "Cannot append block to session: " <<
+        original_block_mapping->DebugString() << " => " << updated_block_mapping->DebugString());
     if (request.size() > 0) {
         CHECK(session->AppendRequest(block_id, block_offset, request),
-                "Cannot append block request to session");
+            "Cannot append block request to session");
         block_offset += request.size();
     }
     // Create new block mappings
@@ -806,11 +807,11 @@ bool ContentStorage::MergeChunksIntoCurrentRequest(uint64_t block_id, RequestSta
         }
         BlockMappingItem request(0, chunk_mappings->at(i).chunk()->size());
         CHECK(request.Convert(chunk_mappings->at(i)),
-                "Cannot convert chunk mapping: " << chunk_mappings->at(i).DebugString());
+            "Cannot convert chunk mapping: " << chunk_mappings->at(i).DebugString());
 
         // We append entries to the block mapping here, we do not hold the requests.
         CHECK(session->AppendRequest(block_id, block_offset, request),
-                "Cannot append block request to session");
+            "Cannot append block request to session");
         block_offset += request.size();
     }
 
@@ -825,16 +826,16 @@ bool ContentStorage::MergeChunksIntoCurrentRequest(uint64_t block_id, RequestSta
             BlockMappingItem mapping_item(0, open_chunk_pos);
             // Fingerprint not known yet
             CHECK(session->AppendRequest(block_id, block_offset, mapping_item),
-                    "Cannot append last block mapping to session: block id " << block_id <<
-                    ", block offset " << block_offset <<
-                    ", request " << request.DebugString());
+                "Cannot append last block mapping to session: block id " << block_id <<
+                ", block offset " << block_offset <<
+                ", request " << request.DebugString());
         } else {
             OpenRequest* open_request = session->GetRequest(0);
             DCHECK(open_request, "Open request not set");
 
             TRACE("Store open request: " << open_request->DebugString() <<
-                    ", reason chunk not open" <<
-                    ", open request count " << session->open_request_count());
+                ", reason chunk not open" <<
+                ", open request count " << session->open_request_count());
 
             REQUEST_STATS_START(request_stats, RequestStatistics::BLOCK_STORING);
             if (!this->block_index_->StoreBlock(open_request->original_block_mapping(),
@@ -848,7 +849,7 @@ bool ContentStorage::MergeChunksIntoCurrentRequest(uint64_t block_id, RequestSta
             }
             REQUEST_STATS_FINISH(request_stats, RequestStatistics::BLOCK_STORING);
             CHECK(this->block_locks_->WriteUnlock(open_request->block_id(), LOCK_LOCATION_INFO),
-                    "Failed to unlock block lock: open request: " << open_request->DebugString());
+                "Failed to unlock block lock: open request: " << open_request->DebugString());
 
             // Clear the requests by forwarding the cyclic buffer position
             CHECK(session->ClearRequests(1), "Failed to clear request");
@@ -863,7 +864,7 @@ bool ContentStorage::MergeChunksIntoCurrentRequest(uint64_t block_id, RequestSta
             WARNING("Failed to mark block write as failed: " << open_request->DebugString());
         }
         CHECK(this->block_locks_->WriteUnlock(open_request->block_id(), LOCK_LOCATION_INFO),
-                "Failed to unlock block lock: open request: " << open_request->DebugString());
+            "Failed to unlock block lock: open request: " << open_request->DebugString());
 
         // Clear the requests by forwarding the cyclic buffer position
         CHECK(session->ClearRequests(1), "Failed to clear request");
@@ -875,8 +876,8 @@ bool ContentStorage::MergeChunksIntoCurrentRequest(uint64_t block_id, RequestSta
 }
 
 bool ContentStorage::MergeChunksIntoOpenRequests(uint64_t block_id, Session* session, Request* request,
-        RequestStatistics* request_stats, const BlockMapping* original_block_mapping,
-        const BlockMapping* updated_block_mapping, vector<ChunkMapping>* chunk_mappings, ErrorContext* ec) {
+                                                 RequestStatistics* request_stats, const BlockMapping* original_block_mapping,
+                                                 const BlockMapping* updated_block_mapping, vector<ChunkMapping>* chunk_mappings, ErrorContext* ec) {
     DCHECK(chunk_mappings, "Chunk mappings not set");
     REQUEST_STATS_START(request_stats, RequestStatistics::OPEN_REQUEST_HANDLING);
 
@@ -896,15 +897,15 @@ bool ContentStorage::MergeChunksIntoOpenRequests(uint64_t block_id, Session* ses
         OpenRequest* open_request = session->GetRequest(i);
         DCHECK(open_request, "Open request not set");
         DCHECK(chunk_mappings->at(0).data_address() != Storage::ILLEGAL_STORAGE_ADDRESS,
-                "Data address not set: " << chunk_mappings->at(0).DebugString())
+            "Data address not set: " << chunk_mappings->at(0).DebugString())
 
         TRACE("Store open request: " << open_request->DebugString());
 
         bool failed_open_request = false;
         if (unlikely(!open_request->mutable_block_mapping()->Merge(chunk_mappings->at(0)))) {
             ERROR("Failed to merge chunk mapping with open request: " <<
-                    "chunk mapping " << chunk_mappings->at(0).DebugString() <<
-                    ", open request " << open_request->DebugString());
+                "chunk mapping " << chunk_mappings->at(0).DebugString() <<
+                ", open request " << open_request->DebugString());
             failed_open_request = true;
         } else {
             if (open_request->block_id() == block_id) {
@@ -942,22 +943,23 @@ bool ContentStorage::MergeChunksIntoOpenRequests(uint64_t block_id, Session* ses
     }
 
     CHECK(MergeChunksIntoCurrentRequest(block_id,
-                    request_stats,
-                    request->offset(),
-                    open_chunk_pos,
-                    failed_store_open_requests, // mark the request as failed
-                    session,
-                    original_block_mapping,
-                    updated_block_mapping,
-                    chunk_mappings,
-                    ec), "Failed to merge chunks into current request");
+            request_stats,
+            request->offset(),
+            open_chunk_pos,
+            failed_store_open_requests, // mark the request as failed
+            session,
+            original_block_mapping,
+            updated_block_mapping,
+            chunk_mappings,
+            ec), "Failed to merge chunks into current request");
 
     REQUEST_STATS_FINISH(request_stats, RequestStatistics::OPEN_REQUEST_HANDLING);
     if (request_stats) {
         stats_.average_open_request_handling_latency_.Add(request_stats->latency(
                 RequestStatistics::OPEN_REQUEST_HANDLING));
         stats_.average_block_storing_latency_.Add(request_stats->latency(RequestStatistics::BLOCK_STORING));
-    }FAULT_POINT("content-storage.handle.post");
+    }
+    FAULT_POINT("content-storage.handle.post");
     return !failed_store_open_requests;
 }
 
@@ -974,13 +976,13 @@ bool ContentStorage::MarkChunksAsOphran(const vector<ChunkMapping>& chunk_mappin
     DEBUG("Mark chunks as possible ophran: " << event_data.ShortDebugString());
 
     CHECK(log_->CommitEvent(dedupv1::log::EVENT_TYPE_OPHRAN_CHUNKS, &event_data, NULL, NULL, NO_EC),
-            "Cannot commit log entry: " << event_data.ShortDebugString());
+        "Cannot commit log entry: " << event_data.ShortDebugString());
     return true;
 }
 
 bool ContentStorage::HandleChunks(Session* session, Request* request, RequestStatistics* request_stats,
-        const BlockMapping* original_block_mapping, const BlockMapping* updated_block_mapping,
-        const list<Chunk*>& chunks, ErrorContext* ec) {
+                                  const BlockMapping* original_block_mapping, const BlockMapping* updated_block_mapping,
+                                  const list<Chunk*>& chunks, ErrorContext* ec) {
     DCHECK(request, "Request not set");
     DCHECK(session, "Session not set");
     DCHECK(chunks.size() > 0, "No Chunks to handle");
@@ -991,21 +993,21 @@ bool ContentStorage::HandleChunks(Session* session, Request* request, RequestSta
     DCHECK(request->IsValid(), "Request not valid: " << request->DebugString());
 
     DCHECK(original_block_mapping->block_id() == updated_block_mapping->block_id(),
-            "Block id mismatch");
+        "Block id mismatch");
     DCHECK(original_block_mapping->block_size() == updated_block_mapping->block_size(),
-            "Block size mismatch");
+        "Block size mismatch");
 
     uint64_t block_id = original_block_mapping->block_id();
     FAULT_POINT("content-storage.handle.pre");
 
     vector<ChunkMapping> chunk_mappings;
     CHECK(FingerprintChunks(session, request, request_stats, session->fingerprinter(), chunks, &chunk_mappings, ec),
-            "Failed to fingerprint chunks: " << (request ? request->DebugString() : "no request"));
+        "Failed to fingerprint chunks: " << (request ? request->DebugString() : "no request"));
     // do not use the chunks list directly after this
 
     if (unlikely(!ProcessFilterChain(session, request, request_stats, updated_block_mapping, &chunk_mappings, ec))) {
         ERROR("Failed to process filter chain: " << (request ? request->DebugString() : "no request") <<
-                (ec ? ", " + ec->DebugString() : ""));
+            (ec ? ", " + ec->DebugString() : ""));
 
         // no open requests have been changed, but we might have chunks that should be considered a gc candidate
         if (!MarkChunksAsOphran(chunk_mappings)) {
@@ -1032,7 +1034,7 @@ bool ContentStorage::HandleChunks(Session* session, Request* request, RequestSta
     // After running through the filter chain the new chunks are also in container storage
 
     return MergeChunksIntoOpenRequests(block_id, session, request, request_stats, original_block_mapping,
-            updated_block_mapping, &chunk_mappings, ec);
+        updated_block_mapping, &chunk_mappings, ec);
 }
 
 bool ContentStorage::PersistStatistics(std::string prefix, dedupv1::PersistStatistics* ps) {
@@ -1086,35 +1088,35 @@ string ContentStorage::PrintProfile() {
 
     sstr << "{";
     sstr << "\"average write request processing latency\": " << this->stats_.average_processing_time_.GetAverage()
-            << "," << std::endl;
+         << "," << std::endl;
     sstr << "\"average filter chain latency\": " << this->stats_.average_filter_chain_time_.GetAverage() << ","
-            << std::endl;
+         << std::endl;
     sstr << "\"average process filter chain latency\": "
-            << this->stats_.average_process_chunk_filter_chain_latency_.GetAverage() << "," << std::endl;
+         << this->stats_.average_process_chunk_filter_chain_latency_.GetAverage() << "," << std::endl;
     sstr << "\"average process filter chain barrier wait latency\": "
-            << this->stats_.average_process_filter_chain_barrier_wait_latency_.GetAverage() << "," << std::endl;
+         << this->stats_.average_process_filter_chain_barrier_wait_latency_.GetAverage() << "," << std::endl;
     sstr << "\"average process filter chain read chunk info latency\": "
-            << this->stats_.average_process_chunk_filter_chain_read_chunk_info_latency_.GetAverage() << ","
-            << std::endl;
+         << this->stats_.average_process_chunk_filter_chain_read_chunk_info_latency_.GetAverage() << ","
+         << std::endl;
     sstr << "\"average process filter chain write block latency\": "
-            << this->stats_.average_process_chunk_filter_chain_write_block_latency_.GetAverage() << "," << std::endl;
+         << this->stats_.average_process_chunk_filter_chain_write_block_latency_.GetAverage() << "," << std::endl;
     sstr << "\"average process filter chain store chunk info latency\": "
-            << this->stats_.average_process_chunk_filter_chain_store_chunk_info_latency_.GetAverage() << ","
-            << std::endl;
+         << this->stats_.average_process_chunk_filter_chain_store_chunk_info_latency_.GetAverage() << ","
+         << std::endl;
     sstr << "\"average chunk store latency\": " << this->stats_.average_chunk_store_latency_.GetAverage() << ","
-            << std::endl;
+         << std::endl;
     sstr << "\"average chunking latency\": " << this->stats_.average_chunking_latency_.GetAverage() << "," << std::endl;
     sstr << "\"average fingerprinting latency\": " << this->stats_.average_fingerprint_latency_.GetAverage() << ","
-            << std::endl;
+         << std::endl;
     sstr << "\"average block read latency\": " << this->stats_.average_block_read_latency_.GetAverage() << ","
-            << std::endl;
+         << std::endl;
     sstr << "\"average sync latency\": " << this->stats_.average_sync_latency_.GetAverage() << "," << std::endl;
     sstr << "\"average open request handling latency\": "
-            << this->stats_.average_open_request_handling_latency_.GetAverage() << "," << std::endl;
+         << this->stats_.average_open_request_handling_latency_.GetAverage() << "," << std::endl;
     sstr << "\"average block storing latency\": " << this->stats_.average_block_storing_latency_.GetAverage() << ","
-            << std::endl;
+         << std::endl;
     sstr << "\"average write block latency\": " << this->stats_.average_write_block_latency_.GetAverage() << ","
-            << std::endl;
+         << std::endl;
     sstr << "\"checksum\": " << this->stats_.checksum_time_.GetSum() << "," << std::endl;
     sstr << "\"content store\": " << this->stats_.profiling_.GetSum() << "," << std::endl;
     sstr << "\"chunking\": " << this->stats_.chunking_time_.GetSum() << "," << std::endl;
@@ -1124,18 +1126,18 @@ string ContentStorage::PrintProfile() {
 }
 
 bool ContentStorage::ReadDataForItem(BlockMappingItem* item, Session* session, byte* data_buffer,
-        unsigned int data_pos, int count, int offset, dedupv1::base::ErrorContext* ec) {
+                                     unsigned int data_pos, int count, int offset, dedupv1::base::ErrorContext* ec) {
     if (item->fingerprint_size() > 0) {
         // Chunk is finished and normally stored in the index => Read data from storage
         size_t local_buffer_size = session->buffer_size();
         memset(session->buffer(), 0, session->buffer_size());
 
         CHECK(this->chunk_store_->ReadBlock(session->storage_session(), item, session->buffer(), &local_buffer_size, ec),
-                "Chunk reading failed " << item->DebugString() << ", offset = " << offset);
+            "Chunk reading failed " << item->DebugString() << ", offset = " << offset);
 
         CHECK(local_buffer_size >= item->chunk_offset() + item->size(),
-                "Buffer length error (offset " << item->chunk_offset() <<
-                ", size " << item->size() << ", buffer size " << local_buffer_size << ")");
+            "Buffer length error (offset " << item->chunk_offset() <<
+            ", size " << item->size() << ", buffer size " << local_buffer_size << ")");
         CHECK(item->chunk_offset() + item->size() <= session->buffer_size(), "Item doesn't fit in buffer");
 
         // If we want to read data then read it to the data buffer.

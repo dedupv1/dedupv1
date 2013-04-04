@@ -105,11 +105,11 @@ TEST_P(ChunkerTest, PrintProfile) {
 }
 
 TEST_P(ChunkerTest, ZeroDataChunking) {
-    ResourceManagement<Chunk>* cmc = new ResourceManagement<Chunk>(); 
+    ResourceManagement<Chunk>* cmc = new ResourceManagement<Chunk>();
     cmc->Init("chunks", 1024 * 1024, new ChunkResourceType());
     ASSERT_TRUE(cmc);
     ASSERT_TRUE(chunker->Start(cmc));
-            
+
     size_t data_size = 8 * 1024 * 1024;
     byte* data = new byte[data_size];
     ASSERT_TRUE(data);
@@ -120,13 +120,13 @@ TEST_P(ChunkerTest, ZeroDataChunking) {
 
     // pre allocate chunks
     list<Chunk*> chunks;
-    for(int i = 0; i <= (data_size / (4 * 1024)); i++) {
+    for (int i = 0; i <= (data_size / (4 * 1024)); i++) {
         Chunk* c = cmc->Acquire();
         ASSERT_TRUE(c);
         chunks.push_back(c);
     }
     list<Chunk*>::iterator i;
-    for(i = chunks.begin(); i != chunks.end(); i++) {
+    for (i = chunks.begin(); i != chunks.end(); i++) {
         ASSERT_TRUE(cmc->Release(*i));
     }
     chunks.clear();
@@ -135,7 +135,7 @@ TEST_P(ChunkerTest, ZeroDataChunking) {
     ASSERT_TRUE(session);
 
     size_t pos = 0;
-    while(pos < data_size) {
+    while (pos < data_size) {
         size_t size = 256 * 1024;
         if (data_size - pos < size) {
             size = data_size - pos;
@@ -147,11 +147,10 @@ TEST_P(ChunkerTest, ZeroDataChunking) {
     ASSERT_TRUE(session->Close());
     session = NULL;
 
-
     AdlerChecksum checksum2;
     uint32_t size_sum = 0;
     list<Chunk*>::iterator ci;
-    for(ci = chunks.begin(); ci != chunks.end(); ci++) {
+    for (ci = chunks.begin(); ci != chunks.end(); ci++) {
         Chunk* chunk = *ci;
         ASSERT_TRUE(chunk);
         TRACE("Checksum chunk: " << chunk << ", size " << chunk->size());
@@ -160,10 +159,10 @@ TEST_P(ChunkerTest, ZeroDataChunking) {
         ASSERT_TRUE(cmc->Release(*ci));
     }
     chunks.clear();
-    
+
     ASSERT_EQ(data_size, size_sum) << "Size mismatch";
     ASSERT_EQ(checksum.checksum(), checksum2.checksum()) << "Checksum mismatch";
-    
+
     delete[] data;
     if (cmc) {
         ASSERT_TRUE(cmc->Close());
@@ -172,11 +171,11 @@ TEST_P(ChunkerTest, ZeroDataChunking) {
 }
 
 TEST_P(ChunkerTest, BasicChunking) {
-    ResourceManagement<Chunk>* cmc = new ResourceManagement<Chunk>(); 
+    ResourceManagement<Chunk>* cmc = new ResourceManagement<Chunk>();
     cmc->Init("chunks", 1024 * 1024, new ChunkResourceType());
     ASSERT_TRUE(cmc);
     ASSERT_TRUE(chunker->Start(cmc));
-            
+
     size_t data_size = 8 * 1024 * 1024;
     byte* data = new byte[data_size];
     ASSERT_TRUE(data);
@@ -189,13 +188,13 @@ TEST_P(ChunkerTest, BasicChunking) {
 
     // pre allocate chunks
     list<Chunk*> chunks;
-    for(int i = 0; i <= (data_size /( 4 * 1024)); i++) {
+    for (int i = 0; i <= (data_size / (4 * 1024)); i++) {
         Chunk* c = cmc->Acquire();
         ASSERT_TRUE(c);
         chunks.push_back(c);
     }
     list<Chunk*>::iterator i;
-    for(i = chunks.begin(); i != chunks.end(); i++) {
+    for (i = chunks.begin(); i != chunks.end(); i++) {
         ASSERT_TRUE(cmc->Release(*i));
     }
     chunks.clear();
@@ -204,7 +203,7 @@ TEST_P(ChunkerTest, BasicChunking) {
     ASSERT_TRUE(session);
 
     size_t pos = 0;
-    while(pos < data_size) {
+    while (pos < data_size) {
         size_t size = 256 * 1024;
         if (data_size - pos < size) {
             size = data_size - pos;
@@ -219,20 +218,20 @@ TEST_P(ChunkerTest, BasicChunking) {
     AdlerChecksum checksum2;
     uint32_t size_sum = 0;
     list<Chunk*>::iterator ci;
-    for(ci = chunks.begin(); ci != chunks.end(); ci++) {
+    for (ci = chunks.begin(); ci != chunks.end(); ci++) {
         Chunk* chunk = *ci;
         ASSERT_TRUE(chunk);
         TRACE("Checksum chunk: " << chunk << ", size " << chunk->size());
         checksum2.Update(chunk->data(), chunk->size());
         size_sum += chunk->size();
-        
+
         EXPECT_TRUE(cmc->Release(*ci));
     }
     chunks.clear();
-    
+
     ASSERT_EQ(data_size, size_sum) << "Size mismatch";
     ASSERT_EQ(checksum.checksum(), checksum2.checksum()) << "Checksum mismatch";
-    
+
     fclose(file);
     delete[] data;
     if (cmc) {

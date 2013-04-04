@@ -38,13 +38,13 @@ namespace base {
 
 size_t HttpResult::GetUrlCallback(void* ptr, size_t size, size_t nmemb, void* data) {
     size_t realsize = size * nmemb;
-    Memchunk* mc = (Memchunk*) data;
+    Memchunk* mc = (Memchunk *) data;
     CHECK(mc, "Memory buffer not set");
     CHECK(mc->size() >= 0, "Illegal memory buffer");
 
     size_t old_size = mc->size();
     CHECK(mc->Realloc(mc->size() + realsize + 1), "HTTP buffer realloc failed");
-    byte* value = (byte*) mc->value();
+    byte* value = (byte *) mc->value();
     memcpy(&(value[old_size]), ptr, realsize);
     value[mc->size() - 1] = 0;
 
@@ -72,7 +72,7 @@ HttpResult* HttpResult::GetUrl(const string& url) {
 
     check_curl_error(curl_easy_setopt(curl_handle, CURLOPT_URL, url.c_str()));
     check_curl_error(curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, &HttpResult::GetUrlCallback));
-    check_curl_error(curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void*) mc));
+    check_curl_error(curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *) mc));
 
     check_curl_error(curl_easy_perform(curl_handle));
     check_curl_error(curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &result->code_));

@@ -38,10 +38,10 @@ namespace dedupv1 {
 namespace chunkindex {
 
 ChunkIndexBackgroundCommitter::ChunkIndexBackgroundCommitter(ChunkIndex* chunk_index,
-        uint32_t thread_count,
-        uint32_t check_interval,
-        uint32_t wait_interval,
-        bool stoppingMode) {
+                                                             uint32_t thread_count,
+                                                             uint32_t check_interval,
+                                                             uint32_t wait_interval,
+                                                             bool stoppingMode) {
     this->chunk_index_ = chunk_index; // this call might be early. the object should not do more with the chunk_index than store the pointer
     this->state_ = CREATED;
     this->wait_interval_ = wait_interval;

@@ -112,51 +112,51 @@ TEST_P(BlockIndexTest, Init) {
 
 TEST_P(BlockIndexTest, DoubleStart) {
     EXPECT_LOGGING(dedupv1::test::ERROR).Once();
-        
+
     system = DedupSystemTest::CreateDefaultSystem(GetParam(), &info_store, &tp);
     ASSERT_TRUE(system);
     BlockIndex* block_index = system->block_index();
-    ASSERT_TRUE(block_index);    
+    ASSERT_TRUE(block_index);
     ASSERT_FALSE(block_index->Start(StartContext(), system)) << "Second start should fail";
 }
 
 TEST_P(BlockIndexTest, ConfigurationAfterStart) {
     EXPECT_LOGGING(dedupv1::test::ERROR).Once();
-        
+
     system = DedupSystemTest::CreateDefaultSystem(GetParam(), &info_store, &tp);
     ASSERT_TRUE(system);
     BlockIndex* block_index = system->block_index();
-    ASSERT_TRUE(block_index);    
+    ASSERT_TRUE(block_index);
     ASSERT_FALSE(block_index->SetOption("import-thread-count", "4")) << "Set options after start should fail";
 }
 
 TEST_P(BlockIndexTest, StartWithoutSystem) {
     EXPECT_LOGGING(dedupv1::test::ERROR).Once();
-    
+
     system = DedupSystemTest::CreateDefaultSystem(GetParam(), &info_store, &tp, false);
     ASSERT_TRUE(system);
     BlockIndex* block_index = system->block_index();
-    ASSERT_TRUE(block_index);    
+    ASSERT_TRUE(block_index);
     ASSERT_FALSE(block_index->Start(StartContext(), NULL)) << "Start without system should fail";
 }
 
 TEST_P(BlockIndexTest, IsSoftLimitReachedBeforeStart) {
     BlockIndex* block_index = new BlockIndex();
-    ASSERT_TRUE(block_index);    
+    ASSERT_TRUE(block_index);
     EXPECT_FALSE(block_index->IsSoftLimitReached());
     EXPECT_TRUE(block_index->Close());
 }
 
 TEST_P(BlockIndexTest, IsHardLimitReachedBeforeStart) {
     BlockIndex* block_index = new BlockIndex();
-    ASSERT_TRUE(block_index);    
+    ASSERT_TRUE(block_index);
     EXPECT_FALSE(block_index->IsHardLimitReached());
     EXPECT_TRUE(block_index->Close());
 }
 
 TEST_P(BlockIndexTest, GetActiveBlockCountBeforeStart) {
     BlockIndex* block_index = new BlockIndex();
-    ASSERT_TRUE(block_index);    
+    ASSERT_TRUE(block_index);
     EXPECT_EQ(0, block_index->GetActiveBlockCount());
     EXPECT_TRUE(block_index->Close());
 }
@@ -183,7 +183,7 @@ TEST_P(BlockIndexTest, IllegalSoftLimitHardLimit) {
 
 TEST_P(BlockIndexTest, ReadWrite) {
     system = DedupSystemTest::CreateDefaultSystem(GetParam(), &info_store, &tp);
-    ASSERT_TRUE(system);;
+    ASSERT_TRUE(system);
 
     DEBUG("Write data");
     container_test_helper->WriteDefaultData(system, 0, 16);
@@ -456,7 +456,7 @@ TEST_P(BlockIndexTest, ReadWriteWithFailedCommittedData) {
     BlockMapping m4(0, 64 * 1024);
     ASSERT_TRUE(block_index->ReadBlockInfo(NULL, &m4, NO_EC));
     m4.set_event_log_id(0);
-    
+
     BlockMapping final_mapping(0, 64 * 1024);
     ASSERT_TRUE(final_mapping.CopyFrom(orig));
     final_mapping.set_version(m1.version());
@@ -573,7 +573,7 @@ TEST_P(BlockIndexTest, ReadWriteAfterCloseWithoutCommit) {
     DEBUG("Block Mapping: After Crash: " << m2.DebugString());
 
     m2.set_event_log_id(0);
-    
+
     BlockMapping final_mapping(0, 64 * 1024);
     ASSERT_TRUE(final_mapping.CopyFrom(orig));
     final_mapping.set_version(m1.version());
@@ -692,7 +692,7 @@ TEST_P(BlockIndexTest, BlockUpdateLogging) {
     BlockMapping& logged_mapping(lc.modified);
     logged_mapping.set_event_log_id(0); // ignore the event log id
     ASSERT_TRUE(logged_mapping.Equals(m1)) << "logged mapping " << logged_mapping.DebugString() <<
-            ", original mapping " << m1.DebugString();
+    ", original mapping " << m1.DebugString();
 }
 
 TEST_P(BlockIndexTest, PartiallyWrittenBlock) {

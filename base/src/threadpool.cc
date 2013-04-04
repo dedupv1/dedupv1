@@ -74,7 +74,7 @@ Threadpool::Statistics::Statistics() {
 bool Threadpool::SetOption(const string& option_name, const string& option) {
     if (option_name == "size") {
         CHECK(To<int>(option).valid(), "Illegal option " << option);
-        int size = To<int> (option).value();
+        int size = To<int>(option).value();
         CHECK(size > 0, "Illegal size value");
         this->thread_count_[HIGH_PRIORITY] = std::max(size / 2, 1);
         this->thread_count_[BACKGROUND_PRIORITY] = std::max(size / 2, 1);
@@ -82,21 +82,21 @@ bool Threadpool::SetOption(const string& option_name, const string& option) {
     }
     if (option_name == "high-priority-thread-count") {
         CHECK(To<int>(option).valid(), "Illegal option " << option);
-        int size = To<int> (option).value();
+        int size = To<int>(option).value();
         CHECK(size > 0, "Illegal size value");
         this->thread_count_[HIGH_PRIORITY] = size;
         return true;
     }
     if (option_name == "background-priority-thread-count") {
         CHECK(To<int>(option).valid(), "Illegal option " << option);
-        int size = To<int> (option).value();
+        int size = To<int>(option).value();
         CHECK(size > 0, "Illegal size value");
         this->thread_count_[BACKGROUND_PRIORITY] = size;
         return true;
     }
     if (option_name == "queue-size") {
         CHECK(To<int>(option).valid(), "Illegal option " << option);
-        int size = To<int> (option).value();
+        int size = To<int>(option).value();
         CHECK(size > 0, "Illegal size value");
         this->queue_size_[HIGH_PRIORITY] = size;
         this->queue_size_[BACKGROUND_PRIORITY] = size;
@@ -104,14 +104,14 @@ bool Threadpool::SetOption(const string& option_name, const string& option) {
     }
     if (option_name == "high-priority-queue-size") {
         CHECK(To<int>(option).valid(), "Illegal option " << option);
-        int size = To<int> (option).value();
+        int size = To<int>(option).value();
         CHECK(size > 0, "Illegal size value");
         this->queue_size_[HIGH_PRIORITY] = size;
         return true;
     }
     if (option_name == "background-priority-queue-size") {
         CHECK(To<int>(option).valid(), "Illegal option " << option);
-        int size = To<int> (option).value();
+        int size = To<int>(option).value();
         CHECK(size > 0, "Illegal size value");
         this->queue_size_[BACKGROUND_PRIORITY] = size;
         return true;
@@ -122,7 +122,7 @@ bool Threadpool::SetOption(const string& option_name, const string& option) {
 
 bool Threadpool::RunTask(const TaskData& task_data, priority prio) {
     TRACE("Execute task: task id " << task_data.task_id() <<
-            ", busy thread count " << this->stats_.busy_thread_count_);
+        ", busy thread count " << this->stats_.busy_thread_count_);
     // dequeue operation successful
     DCHECK(task_data.runnable(), "Runnable not set: " << task_data.task_id());
 
@@ -145,7 +145,7 @@ bool Threadpool::RunTask(const TaskData& task_data, priority prio) {
     }
 
     TRACE("Executed task: task id " << task_data.task_id() <<
-            ", busy thread count " << this->stats_.busy_thread_count_);
+        ", busy thread count " << this->stats_.busy_thread_count_);
     return true;
 }
 
@@ -161,7 +161,7 @@ bool Threadpool::Runner(int thread_id, priority prio, int queue) {
 
     tbb::concurrent_bounded_queue<TaskData>& queueRef(*task_queue_[prio][queue]);
     TaskData task_data;
-    for(;;) {
+    for (;; ) {
         queueRef.pop(task_data);
         if (unlikely(task_data.task_id() == kSentinalTaskId)) {
             break;
@@ -195,8 +195,6 @@ bool Threadpool::Stop() {
 
     TRACE("Stopping threadpool");
     this->state_ = THREADPOOL_STATE_STOPPED;
-
-
 
     for (int j = 0; j < kPriorityCount; j++) {
         for (int i = 0; i < thread_count_[j]; i++) {
@@ -274,7 +272,6 @@ bool Threadpool::Start() {
         }
     }
 
-
     // Thread must be started after state is set
     this->state_ = THREADPOOL_STATE_STARTING;
     bool failed = false;
@@ -285,8 +282,8 @@ bool Threadpool::Start() {
             priority prio = static_cast<priority>(i);
             Runnable<bool>* r = NewRunnable(tp, &Threadpool::Runner, thread_id, prio, j);
             CHECK(r, "Failed to create runnable: i " << thread_id);
-            this->threads_[thread_id] = new Thread<bool> (r, "pool " + ToString(thread_id));
-            if(!this->threads_[thread_id]->Start()) {
+            this->threads_[thread_id] = new Thread<bool>(r, "pool " + ToString(thread_id));
+            if (!this->threads_[thread_id]->Start()) {
                 ERROR("Failed to start threadpool thread " << thread_id);
                 TaskData task_data(kSentinalTaskId, NULL, NULL);
                 delete threads_[thread_id];
@@ -329,7 +326,7 @@ bool Threadpool::Start() {
         return false;
     }
     // The start of all threads was successful, now we wait for all threads
-    while(finished_thread_count_ == 0 && running_thread_count_ < total_thread_count) {
+    while (finished_thread_count_ == 0 && running_thread_count_ < total_thread_count) {
         // no thread failed, but not all threads are started
         ThreadUtil::Sleep(50, ThreadUtil::MILLISECONDS);
     }
@@ -368,12 +365,12 @@ bool Threadpool::DoSubmit(Runnable<bool>* r, priority prio, overflow_strategy ov
 
     uint64_t task_id = next_task_id_.fetch_and_increment();
 
-    TRACE("Submit task: task id " << task_id << 
-            ", priority " << GetPriorityName(prio) <<
-            ", busy thread count " << this->stats_.busy_thread_count_ <<
-            ", waiting task count " << stats_.waiting_task_count_[prio] <<
-            ", queue size " << queue_size_[prio] <<
-            ", thread count " << thread_count_[prio]);
+    TRACE("Submit task: task id " << task_id <<
+        ", priority " << GetPriorityName(prio) <<
+        ", busy thread count " << this->stats_.busy_thread_count_ <<
+        ", waiting task count " << stats_.waiting_task_count_[prio] <<
+        ", queue size " << queue_size_[prio] <<
+        ", thread count " << thread_count_[prio]);
 
     TaskData task_data(task_id, r, future);
     if (future) {
@@ -383,8 +380,8 @@ bool Threadpool::DoSubmit(Runnable<bool>* r, priority prio, overflow_strategy ov
     stats_.waiting_task_count_[prio]++;
     int queue_index = task_id % thread_count_[prio];
     DCHECK(queue_index < task_queue_[prio].size(),
-            "Illegal queue index: queue index " << queue_index <<
-            ", task queue size " << task_queue_[prio].size());
+        "Illegal queue index: queue index " << queue_index <<
+        ", task queue size " << task_queue_[prio].size());
 
     if (overflow_method == ACCEPT) {
         this->task_queue_[prio][queue_index]->push(task_data);
@@ -411,17 +408,16 @@ bool Threadpool::DoSubmit(Runnable<bool>* r, priority prio, overflow_strategy ov
     return true;
 }
 
-
 bool Threadpool::SubmitNoFuture(Runnable<bool>* r,
-        priority prio,
-        overflow_strategy overflow_method) {
+                                priority prio,
+                                overflow_strategy overflow_method) {
     return DoSubmit(r,
-            prio,
-            overflow_method, NULL);
+        prio,
+        overflow_method, NULL);
 }
 
 Future<bool>* Threadpool::Submit(Runnable<bool>* r, priority prio, overflow_strategy overflow_method) {
-    Future<bool>* future = new Future<bool> ();
+    Future<bool>* future = new Future<bool>();
 
     bool result = DoSubmit(r, prio, overflow_method, future);
     if (!result) {
@@ -456,7 +452,7 @@ string Threadpool::PrintTrace() {
         if (i != 0) {
             sstr << "," << std::endl;
         }
-        priority prio = static_cast<priority> (i);
+        priority prio = static_cast<priority>(i);
         sstr << "\"" << GetPriorityName(prio) << "\": ";
         sstr << "{" << std::endl;
         sstr << "\"running count\": " << this->running_count(prio) << "," << std::endl;

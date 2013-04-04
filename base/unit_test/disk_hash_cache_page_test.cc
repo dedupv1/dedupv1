@@ -50,7 +50,6 @@ protected:
     size_t buffer_size;
     byte* shared_buffer;
 
-
     virtual void SetUp() {
         buffer_size = 4096;
         shared_buffer = new byte[buffer_size];
@@ -214,7 +213,7 @@ TEST_F(DiskHashCachePageTest, DoubleUpdate) {
 TEST_F(DiskHashCachePageTest, RaiseBuffer) {
     DiskHashCachePage page(0, buffer_size, 8, 32);
 
-    for (int i = 0; i< 256; i++)  {
+    for (int i = 0; i < 256; i++) {
         uint64_t key = i;
         IntData value;
         value.set_i(i);
@@ -228,8 +227,8 @@ TEST_F(DiskHashCachePageTest, FullPage) {
     DiskHashCachePage page(0, custom_buffer_size, 8, 4);
 
     int i = 0;
-    for (i = 0;; i++)  {
-        if (!page.IsAcceptingNewEntries())  {
+    for (i = 0;; i++) {
+        if (!page.IsAcceptingNewEntries()) {
             break;
         }
         uint64_t key = i;
@@ -254,8 +253,8 @@ TEST_F(DiskHashCachePageTest, FullPageRunBad) {
     byte* old_buffer = page.ReplaceBufferPointer(custom_buffer);
 
     int i = 0;
-    for (i = 0;; i++)  {
-        if (!page.IsAcceptingNewEntries())  {
+    for (i = 0;; i++) {
+        if (!page.IsAcceptingNewEntries()) {
             break;
         }
         uint64_t key = i;
@@ -277,14 +276,14 @@ TEST_F(DiskHashCachePageTest, FullPageDropPinned) {
     DiskHashCachePage page(0, custom_buffer_size, 8, 4);
 
     int i = 0;
-    for (i = 0;; i++)  {
-        if (!page.IsAcceptingNewEntries())  {
+    for (i = 0;; i++) {
+        if (!page.IsAcceptingNewEntries()) {
             break;
         }
         uint64_t key = i;
         IntData value;
         value.set_i(i);
-        ASSERT_EQ(page.Update(&key, sizeof(key), value, false, true, true), PUT_OK); //pinned
+        ASSERT_EQ(page.Update(&key, sizeof(key), value, false, true, true), PUT_OK); // pinned
         page.Store();
     }
     ASSERT_TRUE(page.DropAllPinned());

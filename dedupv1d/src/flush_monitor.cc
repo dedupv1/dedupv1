@@ -45,7 +45,6 @@ FlushMonitorAdapter::FlushMonitorAdapter(dedupv1d::Dedupv1d* ds) {
     this->ds_ = ds;
 }
 
-
 bool FlushMonitorAdapter::ParseParam(const string& key, const string& value) {
     if (key == "flush" && value == "true") {
         DedupSystem* system = this->ds_->dedup_system();

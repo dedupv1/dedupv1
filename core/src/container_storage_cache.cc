@@ -118,10 +118,10 @@ bool ContainerStorageReadCache::Close() {
 }
 
 enum lookup_result ContainerStorageReadCache::CheckCache(uint64_t container_id,
-        const Container** container,
-        bool no_update,
-        bool write_lock,
-        CacheEntry* entry) {
+                                                         const Container** container,
+                                                         bool no_update,
+                                                         bool write_lock,
+                                                         CacheEntry* entry) {
     DCHECK_RETURN(container, LOOKUP_ERROR, "Container not set");
     DCHECK_RETURN(entry, LOOKUP_ERROR, "Cache entry not set");
 
@@ -144,7 +144,6 @@ enum lookup_result ContainerStorageReadCache::CheckCache(uint64_t container_id,
         if (this->reverse_cache_map_.insert(a, container_id)) {
             // not found
             this->stats_.cache_miss_.fetch_and_increment();
-
 
             // we should free a place to use and than fill it later with data
             // we place is locked so that other threads accessing the same container is wait
@@ -195,8 +194,8 @@ enum lookup_result ContainerStorageReadCache::CheckCache(uint64_t container_id,
 
         // this usually should not happen too often. But it may happen due to expected races.
         DEBUG("Cache line already reassigned: cache container " << this->read_cache_[read_cache_index]->DebugString() <<
-                ", target container id " << container_id <<
-                ", cache line " << read_cache_index);
+            ", target container id " << container_id <<
+            ", cache line " << read_cache_index);
         return LOOKUP_NOT_FOUND;
     }
 
@@ -206,7 +205,7 @@ enum lookup_result ContainerStorageReadCache::CheckCache(uint64_t container_id,
     spin_rw_mutex::scoped_lock scoped_lock(this->read_cache_used_time_lock_);
     this->read_cache_used_time_[read_cache_index] = tick_count::now();
     TRACE("Update used timestamp: " << read_cache_index <<
-            ", container " <<  this->read_cache_[read_cache_index]->DebugString());
+        ", container " <<  this->read_cache_[read_cache_index]->DebugString());
     scoped_lock.release();
 
     this->stats_.cache_hits_.fetch_and_increment();
@@ -251,7 +250,7 @@ enum lookup_result ContainerStorageReadCache::GetCache(uint64_t container_id, Ca
     ReadWriteLock* read_cache_lock = this->read_cache_lock_.Get(read_cache_index);
     DCHECK_RETURN(read_cache_lock, LOOKUP_ERROR, "Read cache lock not set");
     CHECK_RETURN(read_cache_lock->AcquireReadLockWithStatistics(&this->stats_.read_cache_lock_free_, &this->stats_.read_cache_lock_busy_),
-            LOOKUP_ERROR, "Failed to acquire read cache lock");
+        LOOKUP_ERROR, "Failed to acquire read cache lock");
     if (!this->read_cache_[read_cache_index]->HasId(container_id)) {
         // read cache entry has changed in the mean time
         this->reverse_cache_map_.erase(container_id); // the information is out dated
@@ -264,8 +263,8 @@ enum lookup_result ContainerStorageReadCache::GetCache(uint64_t container_id, Ca
 
         // this usually should not happen too often. But it may happen due to expected races.
         DEBUG("Cache line already reassigned: cache container " << this->read_cache_[read_cache_index]->DebugString() <<
-                ", target container id " << container_id <<
-                ", cache line " << read_cache_index);
+            ", target container id " << container_id <<
+            ", cache line " << read_cache_index);
         return LOOKUP_NOT_FOUND;
     }
     if (!read_cache_lock->ReleaseLock()) {
@@ -281,11 +280,11 @@ bool ContainerStorageReadCache::AcquireCacheLineLock(uint64_t future_container_i
 
     ScopedReadWriteLock used_cache_lock(this->read_cache_lock_.Get(cache_line));
     CHECK(used_cache_lock.AcquireWriteLock(),
-            "Failed to acquire read cache lock: index " << cache_line);
+        "Failed to acquire read cache lock: index " << cache_line);
 
     DEBUG("Reuse read cache container: index " << cache_line <<
-            ", replaced " << (Storage::IsValidAddress(active_container->primary_id(), false) ? active_container->DebugString() : "null") <<
-            ", new " << future_container_id);
+        ", replaced " << (Storage::IsValidAddress(active_container->primary_id(), false) ? active_container->DebugString() : "null") <<
+        ", new " << future_container_id);
 
     // remove old entries from reverse lookup map
     if (active_container->primary_id() != Storage::ILLEGAL_STORAGE_ADDRESS && active_container->primary_id() != future_container_id) {
@@ -304,8 +303,8 @@ bool ContainerStorageReadCache::AcquireCacheLineLock(uint64_t future_container_i
 }
 
 bool ContainerStorageReadCache::ReuseCacheLine(uint64_t future_container_id,
-        concurrent_hash_map<uint64_t, int>::accessor* accessor,
-        CacheEntry* cache_entry) {
+                                               concurrent_hash_map<uint64_t, int>::accessor* accessor,
+                                               CacheEntry* cache_entry) {
     DCHECK(cache_entry, "Cache entry not set");
     DCHECK(accessor, "Accessor not set");
 
@@ -316,7 +315,7 @@ bool ContainerStorageReadCache::ReuseCacheLine(uint64_t future_container_id,
     tick_count t = tick_count::now();
     for (int read_cache_index = 0; read_cache_index < this->read_cache_size_; read_cache_index++) {
         TRACE("cache index used time: " << read_cache_index <<
-                ", container " << this->read_cache_[read_cache_index]->DebugString());
+            ", container " << this->read_cache_[read_cache_index]->DebugString());
         tick_count::interval_t diff = t - this->read_cache_used_time_[read_cache_index];
         if ((least_recently_used_index == -1) || diff.seconds() > 0) {
             least_recently_used_index = read_cache_index;
@@ -329,7 +328,7 @@ bool ContainerStorageReadCache::ReuseCacheLine(uint64_t future_container_id,
             // rerun everything as we may be released the lock in the meantime
             for (int read_cache_index = 0; read_cache_index < this->read_cache_size_; read_cache_index++) {
                 TRACE("cache index used time: " << read_cache_index <<
-                        ", container " << this->read_cache_[read_cache_index]->DebugString());
+                    ", container " << this->read_cache_[read_cache_index]->DebugString());
                 tick_count::interval_t diff = t - this->read_cache_used_time_[read_cache_index];
                 if ((least_recently_used_index == -1) || diff.seconds() > 0) {
                     least_recently_used_index = read_cache_index;
@@ -366,7 +365,7 @@ bool ContainerStorageReadCache::ReuseCacheLine(uint64_t future_container_id,
 }
 
 bool ContainerStorageReadCache::CopyToReadCache(const Container& container,
-        CacheEntry* cache_entry) {
+                                                CacheEntry* cache_entry) {
     DCHECK(cache_entry && cache_entry->is_set(), "Cache entry not set");
     DCHECK(cache_entry->lock()->IsHeldForWrites(), "Cache line lock not held by current thread");
     DCHECK(this->read_cache_lock_.Get(cache_entry->line()) == cache_entry->lock(), "Illegal cache line lock");
@@ -380,7 +379,7 @@ bool ContainerStorageReadCache::CopyToReadCache(const Container& container,
     spin_rw_mutex::scoped_lock scoped_lock(this->read_cache_used_time_lock_);
     this->read_cache_used_time_[cache_entry->line()] = tick_count::now();
     TRACE("Update used timestamp: " << cache_entry->DebugString() <<
-            ", container " <<  this->read_cache_[cache_entry->line()]->DebugString());
+        ", container " <<  this->read_cache_[cache_entry->line()]->DebugString());
     scoped_lock.release();
 
     ScopedReadWriteLock used_cache_lock(NULL);
@@ -389,7 +388,7 @@ bool ContainerStorageReadCache::CopyToReadCache(const Container& container,
     cache_entry->clear();
 
     DEBUG("Provide read cache container data: index " << cache_line <<
-            ", new " << container.DebugString());
+        ", new " << container.DebugString());
 
     Container* active_container = this->read_cache_[cache_line];
     active_container->Reuse(container.primary_id());
@@ -435,7 +434,7 @@ bool ContainerStorageReadCache::ReleaseCacheline(uint64_t container_id, CacheEnt
     DCHECK(this->read_cache_lock_.Get(cache_entry->line()) == cache_entry->lock(), "Illegal cache line lock");
 
     TRACE("Release cache line: " << cache_entry->DebugString() <<
-            "current container " << this->read_cache_[cache_entry->line()]->DebugString());
+        "current container " << this->read_cache_[cache_entry->line()]->DebugString());
 
     // Release cache line lock after reverse cache map to avoid a cyclic lock with ReuseCacheLine
     this->reverse_cache_map_.erase(container_id);
@@ -453,20 +452,20 @@ bool ContainerStorageReadCache::RemoveFromReadCache(uint64_t container_id, Cache
     DCHECK(cache_entry->lock()->IsHeldForWrites(), "Cache line lock not held by current thread");
     DCHECK(this->read_cache_lock_.Get(cache_entry->line()) == cache_entry->lock(), "Illegal cache line lock");
     DCHECK(this->read_cache_lock_.Get(cache_entry->line()) == cache_entry->lock(), "Illegal cache line lock");
-    
-    CHECK (this->read_cache_[cache_entry->line()]->HasId(container_id), "Illegal cache entry: " << 
+
+    CHECK(this->read_cache_[cache_entry->line()]->HasId(container_id), "Illegal cache entry: " <<
         this->read_cache_[cache_entry->line()]->DebugString() << ", expected container id " << container_id);
 
     // we found it
     // we also have to update the reverse cache map
     this->reverse_cache_map_.erase(this->read_cache_[cache_entry->line()]->primary_id());
-    for (set<uint64_t>::const_iterator k = this->read_cache_[cache_entry->line()]->secondary_ids().begin(); 
-        k != this->read_cache_[cache_entry->line()]->secondary_ids().end(); k++) {
+    for (set<uint64_t>::const_iterator k = this->read_cache_[cache_entry->line()]->secondary_ids().begin();
+         k != this->read_cache_[cache_entry->line()]->secondary_ids().end(); k++) {
         this->reverse_cache_map_.erase(*k);
     }
     this->read_cache_[cache_entry->line()]->Reuse(Storage::ILLEGAL_STORAGE_ADDRESS);
     DEBUG("Remove container " << container_id << " from read cache: index " << cache_entry->line());
-    
+
     ReadWriteLock* lock = cache_entry->lock();
     cache_entry->clear();
 

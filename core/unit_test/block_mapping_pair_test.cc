@@ -34,7 +34,7 @@ namespace dedupv1 {
 namespace blockindex {
 
 class BlockMappingPairTest : public testing::Test {
-    protected:
+protected:
     static const size_t BLOCKSIZE_64K;
     static const size_t BLOCKSIZE_256K;
 
@@ -48,7 +48,7 @@ class BlockMappingPairTest : public testing::Test {
 
     virtual void TearDown() {
     }
-    
+
 };
 
 const size_t BlockMappingPairTest::BLOCKSIZE_64K = 64U * 1024;
