@@ -340,5 +340,24 @@ TEST_F(ChunkIndexTest, LoadBrokenChunkMapping) {
     ASSERT_TRUE(message.ParseFromArray(value.data(), value.size()));
 }
 
+TEST_P(ChunkIndexTest, WriteBack) {
+  system = DedupSystemTest::CreateDefaultSystem(GetParam(), &info_store, &tp, true, false, false);
+  ASSERT_TRUE(system);
+  StorageSession* session = system->chunk_store()->CreateSession();
+  WriteTestData(system->chunk_index(), session);
+
+  ASSERT_TRUE(system->idle_detector()->ForceIdle(true));
+  LogEventData event_value;
+  dedupv1::log::LogReplayContext context(dedupv1::log::EVENT_REPLAY_MODE_DIRECT, 1);
+  system->chunk_index()->LogReplay(dedupv1::log::EVENT_TYPE_REPLAY_STARTED, event_value, context);
+
+  // This is kind of a timeout for the test.
+  for (int i = 0; i < 120 && system->chunk_index()->GetDirtyCount() > 0; i++) {
+    sleep(1);
+  }
+  // After 2 minutes, all data should be written back
+  ASSERT_EQ(0, system->chunk_index()->GetDirtyCount());
+}
+
 }
 }

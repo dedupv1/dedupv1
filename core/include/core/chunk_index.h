@@ -652,10 +652,15 @@ class ChunkIndex: public dedupv1::log::LogConsumer, public dedupv1::StatisticPro
     bool PutOverwrite(ChunkMapping& mapping, dedupv1::base::ErrorContext* ec);
 
     /**
-     * Returns the number of Elements in the persistent Index
+     * Returns the number of persisting chunk index entries.
      * @return
      */
     inline uint64_t GetPersistentCount();
+
+    /**
+     * Returns the number of dirty chunk index entries.
+     */
+    inline uint64_t GetDirtyCount();
 
     /**
      * Create an Iterator to run over the persistent Index.
@@ -818,6 +823,10 @@ ChunkIndex::chunk_index_state ChunkIndex::state() const {
     return this->state_;
 }
 
+
+inline uint64_t ChunkIndex::GetDirtyCount() {
+  return this->chunk_index_->GetDirtyItemCount();
+}
 
 inline uint64_t ChunkIndex::GetPersistentCount() {
     return this->chunk_index_->GetItemCount();
