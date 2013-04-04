@@ -44,6 +44,7 @@ using std::list;
 using std::vector;
 using std::stringstream;
 using dedupv1::base::Option;
+using dedupv1::base::ProfileTimer;
 using dedupv1::blockindex::BlockMapping;
 using dedupv1::blockindex::BlockMappingItem;
 using dedupv1::chunkstore::Storage;
@@ -124,6 +125,7 @@ bool FilterChain::StoreChunkInfo(Session* session, ChunkMapping* chunk_mapping,
     DCHECK(session, "Session not set");
     DCHECK(chunk_mapping, "Chunk mapping not set");
 
+    ProfileTimer update_timer(stats_.update_time_);
     bool failed = false;
 
     DEBUG("Update filer chain: chunk " << chunk_mapping->DebugString());
@@ -225,6 +227,8 @@ bool FilterChain::ReadChunkInfo(Session* session,
                                 ErrorContext* ec) {
     DCHECK(session, "Session not set");
     DCHECK(chunk_mapping, "Chunk mapping not set");
+
+    ProfileTimer check_timer(stats_.check_time_);
 
     bool failed = false;
     DEBUG("Check for chunk " << chunk_mapping->DebugString());
@@ -367,11 +371,12 @@ string FilterChain::PrintStatistics() {
 string FilterChain::PrintProfile() {
     list<Filter*>::iterator i;
     stringstream sstr;
+    
     sstr << "{";
+    sstr << "\"check time\": " << this->stats_.check_time_.GetSum() << "," << std::endl;
+    sstr << "\"update time\": " << this->stats_.update_time_.GetSum() << std::endl;
     for (i = this->chain_.begin(); i != this->chain_.end(); i++) {
-        if (i != this->chain_.begin()) {
-            sstr << "," << std::endl;
-        }
+        sstr << "," << std::endl;
         Filter* filter = *i;
         sstr << "\"" << filter->GetName() << "\": " << filter->PrintProfile() << "" << std::endl;
     }

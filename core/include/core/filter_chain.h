@@ -23,6 +23,7 @@
 
 #include <tbb/atomic.h>
 
+#include <base/profile.h>
 #include <core/chunk_mapping.h>
 #include <core/block_mapping.h>
 #include <core/filter.h>
@@ -82,6 +83,16 @@ class FilterChain : public StatisticProvider {
 			 * Number of updates of the filter chain
 			 */
             tbb::atomic<uint64_t> index_writes_;
+
+            /**
+             * Total time spent checking the filter chain
+             */ 
+            dedupv1::base::Profile check_time_;
+
+            /**
+             * Total time spent updating the filter chain
+             */ 
+            dedupv1::base::Profile update_time_;
     };
 
     /**
