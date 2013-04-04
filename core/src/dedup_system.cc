@@ -49,6 +49,7 @@
 #include <core/chunk_index_filter.h>
 #include <core/block_index_filter.h>
 #include <core/bytecompare_filter.h>
+#include <core/bloom_filter.h>
 #include <core/chunker.h>
 #include <core/static_chunker.h>
 #include <core/rabin_chunker.h>
@@ -1256,6 +1257,7 @@ void DedupSystem::RegisterDefaults() {
     dedupv1::filter::ChunkIndexFilter::RegisterFilter();
     dedupv1::filter::BlockIndexFilter::RegisterFilter();
     dedupv1::filter::ByteCompareFilter::RegisterFilter();
+    dedupv1::filter::BloomFilter::RegisterFilter();
 
     dedupv1::StaticChunker::RegisterChunker();
     dedupv1::RabinChunker::RegisterChunker();
