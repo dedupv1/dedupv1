@@ -937,6 +937,31 @@ class DiskHashIndex : public PersistentIndex {
      */
     std::vector<CacheLine*> cache_lines_;
 
+
+    /**
+     * Tree that stores information about all dirty disk pages
+     */
+    std::map<uint64_t, std::pair<uint32_t, uint32_t> > dirty_page_map_;
+
+    /**
+     * Spin lock to protect the dirty page tree
+     */ 
+    tbb::spin_mutex dirty_page_map_lock_;
+
+    void MarkBucketAsDirty(uint64_t bucket_id, uint32_t cache_line_id, uint32_t cache_id);
+
+    /**
+     * Checks if the bucket is marked as dirty.
+     * The information may be outdated on usage
+     */ 
+    bool IsBucketDirty(uint64_t bucket_id, uint32_t* cache_line_id, uint32_t* cache_id);
+    void ClearBucketDirtyState(uint64_t bucket_id);
+
+    bool GetNextDirtyBucket(uint64_t current_bucket_id,
+        uint64_t* next_bucket_id,
+        uint32_t* cache_line_id,
+        uint32_t* cache_id);
+
     /**
      * Evict the page with the given id out of cache.
      *

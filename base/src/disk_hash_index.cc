@@ -73,6 +73,8 @@ using google::protobuf::Message;
 using dedupv1::base::Option;
 using tbb::spin_mutex;
 using std::map;
+using std::make_pair;
+using std::pair;
 using dedupv1::base::make_bytestring;
 using dedupv1::base::ScopedArray;
 using dedupv1::base::TCMemHashIndex;
@@ -1313,7 +1315,74 @@ bool DiskHashIndex::WriteBackCachePage(CacheLine* cache_line, DiskHashCachePage*
 
     ProfileTimer commit_timer(this->statistics_.update_time_commit_);
     CHECK(transaction.Commit(), "Commit failed");
+
+    if (!cache_page->is_dirty() && merged_item_count > 0) {
+      // remove this page from the dirty page tree
+      ClearBucketDirtyState(cache_page->bucket_id());
+    }
+
     return true;
+}
+
+void DiskHashIndex::MarkBucketAsDirty(uint64_t bucket_id, 
+    uint32_t cache_line_id, 
+    uint32_t cache_id) {
+
+  spin_mutex::scoped_lock l(dirty_page_map_lock_);
+
+  dirty_page_map_[bucket_id] = make_pair(cache_line_id, cache_id);
+}
+
+void DiskHashIndex::ClearBucketDirtyState(uint64_t bucket_id) {
+  spin_mutex::scoped_lock l(dirty_page_map_lock_);
+
+  dirty_page_map_.erase(bucket_id);
+}
+
+bool DiskHashIndex::IsBucketDirty(uint64_t bucket_id, uint32_t* cache_line_id, uint32_t* cache_id) {
+  spin_mutex::scoped_lock l(dirty_page_map_lock_);
+
+  std::map<uint64_t, pair<uint32_t, uint32_t> >::iterator i;
+  i = dirty_page_map_.find(bucket_id);
+  if (i != dirty_page_map_.end()) {
+    if (cache_line_id) {
+      *cache_line_id = i->second.first;
+    }
+    if (cache_id) {
+      *cache_id = i->second.second;
+    }
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool DiskHashIndex::GetNextDirtyBucket(uint64_t current_bucket_id,
+        uint64_t* next_bucket_id,
+        uint32_t* cache_line_id,
+        uint32_t* cache_id)
+{
+  spin_mutex::scoped_lock l(dirty_page_map_lock_);
+  if (dirty_page_map_.empty()) {
+    return false;
+  }
+  std::map<uint64_t, pair<uint32_t, uint32_t> >::iterator i;
+  
+  i = dirty_page_map_.upper_bound(current_bucket_id);
+  if (i == dirty_page_map_.end()) {
+    // no higher bucket => wrap
+    i = dirty_page_map_.begin();
+  }
+  if (next_bucket_id) {
+     *next_bucket_id = i->first;
+  }
+  if (cache_line_id) {
+    *cache_line_id = i->second.first;
+  }
+  if (cache_id) {
+    *cache_id = i->second.second;
+  }
+  return true;
 }
 
 bool DiskHashIndex::TryPersistDirtyItem(uint32_t max_batch_size, bool* persisted) {
@@ -1324,32 +1393,26 @@ bool DiskHashIndex::TryPersistDirtyItem(uint32_t max_batch_size, bool* persisted
         return PUT_KEEP;
     }
 
+    uint64_t dirty_bucket_id = 0;
     unsigned int cache_index = 0;
-    uint32_t try_counter = page_locks_count_;
-    for (int i = 0; i < max_batch_size;) {
-        cache_index = (cache_index + 1) % page_locks_count_;
-        CacheLine* cache_line = cache_lines_[cache_index];
+    for (int i = 0; i < max_batch_size;i++) {
+        uint32_t cache_line_id;
+        uint32_t cache_id;
+        if (!GetNextDirtyBucket(dirty_bucket_id, &dirty_bucket_id, &cache_line_id,
+              &cache_id)) {
+          // no dirty bucket
+          DEBUG("Found no dirty bucket");
+          *persisted  = false;
+          return true;
+        }
+        DEBUG("Found dirty bucket: bucket id " << dirty_bucket_id <<
+            ", cache line id " << cache_line_id <<
+            ", cache id " << cache_id);
+        CacheLine* cache_line = cache_lines_[cache_line_id];
 
         ScopedReadWriteLock scoped_lock(this->page_locks_.Get(cache_index));
         CHECK(scoped_lock.AcquireWriteLockWithStatistics(&this->statistics_.lock_free_,
                         &this->statistics_.lock_busy_), "Lock failed: page lock " << cache_index);
-
-        uint32_t cache_id = 0;
-        Option<bool> r = cache_line->SearchDirtyPage(&cache_id);
-        CHECK(r.valid(), "Failed to search dirty page: " << cache_line->DebugString());
-        if (!r.value()) {
-            // failed to find a dirty page in the cache line
-            CHECK(scoped_lock.ReleaseLock(), "Unlock failed");
-
-            try_counter--;
-            if (try_counter == 0) {
-                *persisted = false;
-                return true;
-            }
-
-            continue;
-        }
-        try_counter = page_locks_count_;
 
         DiskHashCachePage cache_page(0, page_size_, max_key_size_, max_value_size_);
 
@@ -1379,7 +1442,6 @@ bool DiskHashIndex::TryPersistDirtyItem(uint32_t max_batch_size, bool* persisted
         CHECK_RETURN(CopyToWriteBackCache(cache_line, &cache_page), PUT_ERROR,
                 "Failed to put data to write back cache");
 
-        i++;
         *persisted = true;
         CHECK(scoped_lock.ReleaseLock(), "Unlock failed");
     }
@@ -1431,7 +1493,6 @@ bool DiskHashIndex::EvictCacheItem(CacheLine* cache_line, uint32_t cache_id, boo
     cache_line->bucket_pinned_state_[cache_id] = false;
     cache_line->current_cache_item_count_ -= cache_page.item_count();
     cache_line->cache_page_map_.erase(bucket_id);
-    statistics_.write_cache_dirty_page_count_--;
 
     return true;
 }
@@ -1694,6 +1755,8 @@ bool DiskHashIndex::CopyToWriteBackCache(CacheLine* cache_line, internal::DiskHa
     put_result pr = write_back_cache_->RawPut(&cache_map_id, sizeof(cache_map_id), page->raw_buffer(),
             page->used_size());
     CHECK(pr != PUT_ERROR, "Failed to put write back page: " << page->DebugString());
+
+    MarkBucketAsDirty(page->bucket_id(), cache_line->cache_line_id_, cache_id); 
     return true;
 }
 
