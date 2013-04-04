@@ -1325,7 +1325,8 @@ bool DiskHashIndex::WriteBackCachePage(CacheLine* cache_line, DiskHashCachePage*
 
     ProfileTimer commit_timer(this->statistics_.update_time_commit_);
     CHECK(transaction.Commit(), "Commit failed");
-
+    
+    statistics_.write_cache_persisted_page_count_++;
     if (!cache_page->is_dirty() && merged_item_count > 0) {
       // remove this page from the dirty page tree
       ClearBucketDirtyState(cache_page->bucket_id());
@@ -1337,13 +1338,14 @@ bool DiskHashIndex::WriteBackCachePage(CacheLine* cache_line, DiskHashCachePage*
 void DiskHashIndex::MarkBucketAsDirty(uint64_t bucket_id, 
     uint32_t cache_line_id, 
     uint32_t cache_id) {
-
+  TRACE("Mark bucket as dirty: bucket " << bucket_id);
   spin_mutex::scoped_lock l(dirty_page_map_lock_);
 
   dirty_page_map_[bucket_id] = make_pair(cache_line_id, cache_id);
 }
 
 void DiskHashIndex::ClearBucketDirtyState(uint64_t bucket_id) {
+  TRACE("Clear bucket diry state: bucket " << bucket_id);
   spin_mutex::scoped_lock l(dirty_page_map_lock_);
 
   dirty_page_map_.erase(bucket_id);
@@ -1781,7 +1783,9 @@ bool DiskHashIndex::CopyToWriteBackCache(CacheLine* cache_line, internal::DiskHa
             page->used_size());
     CHECK(pr != PUT_ERROR, "Failed to put write back page: " << page->DebugString());
 
-    MarkBucketAsDirty(page->bucket_id(), cache_line->cache_line_id_, cache_id); 
+    if (page->is_dirty() && page->is_pinned()) {
+      MarkBucketAsDirty(page->bucket_id(), cache_line->cache_line_id_, cache_id); 
+    }
     return true;
 }
 
