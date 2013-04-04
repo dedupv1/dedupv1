@@ -1430,8 +1430,9 @@ bool DiskHashIndex::TryPersistDirtyItem(uint32_t max_batch_size, bool* persisted
         TRACE("Found cache map entry: " << cache_page.DebugString() << ", size " << buf_size);
 
         TRACE("Persist cache item: " <<
-                "cache line id " << cache_line->cache_line_id_ <<
-                ", cache id " << cache_id);
+              "cache line id " << cache_line->cache_line_id_ <<
+              ", cache id " << cache_id <<
+              ", dirty item count " << dirty_item_count_);
 
         CHECK(WriteBackCachePage(cache_line, &cache_page), "Failed to write back cache page: " <<
                 "cache line id " << cache_line->cache_line_id_ <<
@@ -1534,6 +1535,7 @@ dedupv1::base::Option<bool> DiskHashIndex::CacheLine::SearchDirtyPage(uint32_t* 
             if (try_counter == 0) {
                 TRACE("Checked all pages. Failed to find a page to evict: " <<
                         "cache line id " << DebugString() <<
+                        ", end cache victim " << next_dirty_search_cache_victim_ <<
                         ", pinned page count " << pinned_page_count <<
                         ", max page count " << max_cache_page_count_);
                 return make_option(false);
@@ -1547,12 +1549,14 @@ dedupv1::base::Option<bool> DiskHashIndex::CacheLine::SearchDirtyPage(uint32_t* 
             if (try_counter == 0) {
                 TRACE("Checked all pages. Failed to find a page to evict: " <<
                         "cache line id " << DebugString() <<
+                        ", end cache victim " << next_dirty_search_cache_victim_ <<
                         ", pinned page count " << pinned_page_count <<
                         ", max page count " << max_cache_page_count_);
                 return make_option(false);
             }
         } else {
-            *cache_id = next_cache_victim_;
+            TRACE("Found dirty cache id " << next_dirty_search_cache_victim_);
+            *cache_id = next_dirty_search_cache_victim_;
             return make_option(true);
         }
     }
