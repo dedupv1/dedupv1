@@ -62,7 +62,7 @@ LogReplayer::LogReplayer() :
     this->log_ = NULL;
     this->idle_detector_ = NULL;
     this->thread_state_ = false;
-    this->throttle_ = 10;
+    this->throttle_ = 0;
     this->nearly_full_throttle_ = 0;
     this->check_interval_ = 1;
     this->state_ = LOG_REPLAYER_STATE_CREATED;

@@ -148,7 +148,7 @@ BlockIndex::BlockIndex()
     import_if_replaying_ = true;
     is_replaying_ = false;
     this->state_ = CREATED;
-    log_replay_import_delay_ = 50;
+    log_replay_import_delay_ = 0;
     full_log_replay_import_delay_ = 0;
     hard_limit_import_delay_ = 0;
     soft_limit_import_delay_ = 100;

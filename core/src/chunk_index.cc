@@ -140,7 +140,7 @@ ChunkIndex::ChunkIndex() {
     is_replaying_ = false;
     import_if_replaying_ = true;
     dirty_import_container_exists_ = false;
-    import_delay_ = 1000;
+    import_delay_ = 0;
     dirty_import_finished_ = false;
     dirty_chunk_count_threshold_ = 0;
     has_reported_importing_ = false;
