@@ -90,7 +90,13 @@ class ChunkLocks : public dedupv1::StatisticProvider {
 
     bool started_;
 
-    unsigned int GetLockIndex(const void* fp, size_t fp_size);
+    /**
+     * Calculates the lock index for the given fingerprint.
+     *
+     * @return -1 in case of an error. Otherwise a
+     * value between 0 and chunk_lock_count_ - 1.
+     */
+    int GetLockIndex(const void* fp, size_t fp_size);
 
     public:
     /**

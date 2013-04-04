@@ -74,8 +74,9 @@ bool ChunkLocks::Start(const StartContext& start_context) {
     return true;
 }
 
-unsigned int ChunkLocks::GetLockIndex(const void* fp, size_t fp_size) {
-    DCHECK(fp_size >= sizeof(uint64_t), "Illegal fp size");
+int ChunkLocks::GetLockIndex(const void* fp, size_t fp_size) {
+    DCHECK_RETURN(fp_size >= sizeof(uint64_t), -1, 
+        "Illegal fp size: fp size " << fp_size);
     uint32_t hash_value = 0;
     dedupv1::base::murmur_hash3_x86_32(fp, fp_size, 0, &hash_value);
     return hash_value % this->chunk_lock_count_;
@@ -86,7 +87,8 @@ bool ChunkLocks::Lock(const void* fp, size_t fp_size) {
 
     ProfileTimer timer(this->stats_.profiling_lock_);
     try {
-        unsigned int i = GetLockIndex(fp, fp_size);
+        int i = GetLockIndex(fp, fp_size);
+        DCHECK(i >= 0, "Failed to get lock index");
         TRACE("Try acquire chunk lock " << i << " of chunk " << Fingerprinter::DebugString(fp, fp_size) << " at " << i);
         DCHECK(i < locks_.size(), "Illegal lock");
         if (locks_[i].try_lock()) {
@@ -109,8 +111,9 @@ bool ChunkLocks::TryLock(const void* fp, size_t fp_size, bool* locked) {
 
     ProfileTimer timer(this->stats_.profiling_lock_);
     try {
-        unsigned int i = GetLockIndex(fp, fp_size);
-        DCHECK(i < locks_.size(), "Illegal lock");
+        int i = GetLockIndex(fp, fp_size);
+        DCHECK(i >= 0, "Illegal lock index");
+        DCHECK(i < locks_.size(), "Illegal lock index");
         if (!locks_[i].try_lock()) {
             TRACE("Negative try lock result");
             if (locked) {
@@ -135,8 +138,9 @@ bool ChunkLocks::Unlock(const void* fp, size_t fp_size) {
 
     ProfileTimer timer(this->stats_.profiling_lock_);
     try {
-        unsigned int i = GetLockIndex(fp, fp_size);
-        DCHECK(i < locks_.size(), "Illegal lock");
+        int i = GetLockIndex(fp, fp_size);
+        DCHECK(i >= 0, "Illegal lock index");
+        DCHECK(i < locks_.size(), "Illegal lock index");
         TRACE("Release block lock " << i << " of chunk " << Fingerprinter::DebugString(fp, fp_size) << " from " << i);
         locks_[i].unlock();
         this->stats_.held_count_.fetch_and_decrement();
