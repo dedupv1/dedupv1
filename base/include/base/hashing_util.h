@@ -47,18 +47,39 @@ int raw_compare(const void* data1, size_t data1_size,
 // MurmurHash3 was written by Austin Appleby, and is placed in the public
 // domain. The author hereby disclaims copyright to this source code.
 // @see http://code.google.com/p/smhasher/
-void murmur_hash3_x86_32  ( const void * key, int len, uint32_t seed, void * out );
+void murmur_hash3_x86_32(const void* key, int len, uint32_t seed, void* out);
 
 // MurmurHash3 was written by Austin Appleby, and is placed in the public
 // domain. The author hereby disclaims copyright to this source code.
 // @see http://code.google.com/p/smhasher/
-void murmur_hash3_x86_128 ( const void * key, int len, uint32_t seed, void * out );
+void murmur_hash3_x86_128(const void * key, int len, uint32_t seed, void* out);
 
 // MurmurHash3 was written by Austin Appleby, and is placed in the public
 // domain. The author hereby disclaims copyright to this source code.
 // @see http://code.google.com/p/smhasher/
-void murmur_hash3_x64_128 ( const void * key, int len, uint32_t seed, void * out );
+void murmur_hash3_x64_128(const void * key, int len, uint32_t seed, void* out);
+ 
+/**
+ * C++ hash object for murmur hash.
+ *
+ * This allows to use murmur hash as a hash function in std::map and other
+ * C++ containers.
+ */ 
+struct bytestring_fp_murmur_hash {
+    std::size_t operator()(const bytestring &key) const {
+        return hash(key);
+    }
 
+    bool equal( const bytestring& j, const bytestring& k ) const {
+        return j == k;
+    }
+
+    size_t hash( const bytestring& k ) const {
+        size_t r = 0;
+        dedupv1::base::murmur_hash3_x86_32(k.data(), k.size(), 0, &r);
+        return r;
+    }
+};
 
 }
 }
