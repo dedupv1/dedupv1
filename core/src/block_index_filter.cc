@@ -26,6 +26,8 @@
 #include <core/dedup.h>
 #include <core/chunk_mapping.h>
 #include <core/filter.h>
+#include <core/dedup_system.h>
+
 #include <base/strutil.h>
 #include <base/hashing_util.h>
 #include <base/timer.h>
@@ -43,6 +45,9 @@ using dedupv1::blockindex::BlockMappingItem;
 using dedupv1::Session;
 using dedupv1::chunkindex::ChunkMapping;
 using dedupv1::base::raw_compare;
+using dedupv1::base::Option;
+using dedupv1::base::strutil::To;
+using dedupv1::base::strutil::StartsWith;
 
 LOGGER("BlockIndexFilter");
 
@@ -51,6 +56,9 @@ namespace filter {
 
 BlockIndexFilter::BlockIndexFilter()
     : Filter("block-index-filter", FILTER_STRONG_MAYBE) {
+    block_index_ = NULL;
+    block_chunk_cache_ = new BlockChunkCache();
+    use_block_chunk_cache_ = true;
 }
 
 BlockIndexFilter::Statistics::Statistics() : average_latency_(256) {
@@ -71,12 +79,49 @@ Filter* BlockIndexFilter::CreateFilter() {
     return filter;
 }
 
+bool BlockIndexFilter::Start(DedupSystem* system) {
+    block_index_ = system->block_index();
+    CHECK(block_index_, "Block index not set");
+
+    if (use_block_chunk_cache_) {
+        CHECK(block_chunk_cache_->Start(block_index_), "Failed to start block chunk cache");
+    }
+    return true;
+}
+
+bool BlockIndexFilter::Close() {
+    if (block_chunk_cache_) {
+        block_chunk_cache_->Close();
+        block_chunk_cache_ = NULL;
+    }
+    return Filter::Close();
+}
+
+bool BlockIndexFilter::SetOption(const string& option_name, const string& option) {
+    if (option_name == "block-chunk-cache") {
+        Option<bool> b = To<bool>(option);
+        CHECK(b.valid(), "Illegal option value: " << option_name << "=" << option);
+        use_block_chunk_cache_ = b.value();
+        return true;
+    }
+    if (StartsWith(option_name, "block-chunk-cache.")) {
+        CHECK(this->block_chunk_cache_, "Block chunk cache not set");
+        CHECK(this->block_chunk_cache_->SetOption(option_name.substr(strlen("block-chunk-cache.")),
+                option), "Configuration failed");
+        return true;
+    }
+    ERROR("Illegal option" << option_name);
+    return false;
+}
+
 Filter::filter_result BlockIndexFilter::Check(Session* session,
-                                              const BlockMapping* block_mapping, ChunkMapping* mapping, dedupv1::base::ErrorContext* ec) {
+                                              const BlockMapping* block_mapping,
+                                              ChunkMapping* mapping,
+                                              dedupv1::base::ErrorContext* ec) {
     ProfileTimer timer(this->stats_.time_);
     SlidingAverageProfileTimer timer2(this->stats_.average_latency_);
 
-    TRACE("Check old block mapping for chunk: " <<
+    DEBUG("Check old block mapping for chunk: " <<
         "chunk " << mapping->DebugString() <<
         ", block mapping " << (block_mapping ? block_mapping->DebugString() : "null"));
 
@@ -89,8 +134,9 @@ Filter::filter_result BlockIndexFilter::Check(Session* session,
         for (i = block_mapping->items().begin(); i != block_mapping->items().end(); i++) {
 
             /*
-             * Check for each block mapping item if the chunk mappings (new) fingerprint is known. If this is the case it is a strong indication that the fingerprint chunk
-             *  is known.
+             * Check for each block mapping item if the chunk mappings (new) 
+             * fingerprint is known. If this is the case it is a strong indication 
+             * that the fingerprint chunk is known.
              */
             if (raw_compare(i->fingerprint(), i->fingerprint_size(),
                     mapping->fingerprint(),
@@ -103,14 +149,54 @@ Filter::filter_result BlockIndexFilter::Check(Session* session,
             }
         }
     }
-    if (result == FILTER_ERROR) {
+    if (result == FILTER_ERROR && block_mapping && use_block_chunk_cache_) {
         // result not overwritten
+
+        uint64_t data_address = 0;
+        if (block_chunk_cache_->Contains(mapping, block_mapping->block_id(), &data_address)) {
+            mapping->set_data_address(data_address);
+            this->stats_.hits_++;
+            result = FILTER_STRONG_MAYBE;
+        }
+
+    }
+
+    if (result == FILTER_ERROR) {
+        // result still not overwritten
 
         // We cannot make any real statement
         this->stats_.miss_++;
         result = FILTER_WEAK_MAYBE;
     }
+
     return result;
+}
+
+bool BlockIndexFilter::UpdateKnownChunk(Session* session,
+                                        const dedupv1::blockindex::BlockMapping* block_mapping,
+                                        ChunkMapping* mapping,
+                                        dedupv1::base::ErrorContext* ec) {
+    ProfileTimer timer(this->stats_.time_);
+
+    DCHECK(mapping, "Mapping must be set");
+
+    if (!use_block_chunk_cache_) {
+        return true;
+    }
+    if (Fingerprinter::IsEmptyDataFingerprint(mapping->fingerprint(), mapping->fingerprint_size())) {
+        return true;
+    }
+
+    DEBUG("Filter update: " <<
+        "chunk " << mapping->DebugString() <<
+        ", block mapping " << (block_mapping ? block_mapping->DebugString() : "null"));
+
+    if (block_chunk_cache_ && block_mapping) {
+        CHECK(block_chunk_cache_->UpdateKnownChunk(mapping, block_mapping->block_id()),
+            "Failed to update block chunk cache");
+    }
+
+    return true;
 }
 
 bool BlockIndexFilter::PersistStatistics(std::string prefix, dedupv1::PersistStatistics* ps) {
@@ -134,6 +220,12 @@ bool BlockIndexFilter::RestoreStatistics(std::string prefix, dedupv1::PersistSta
 string BlockIndexFilter::PrintStatistics() {
     stringstream sstr;
     sstr << "{";
+    if (block_chunk_cache_) {
+        sstr << "\"block chunk cache\": " << 
+          block_chunk_cache_->PrintStatistics() << "," << std::endl;
+    } else {
+        sstr << "\"block chunk cache\": null," << std::endl;
+    }
     sstr << "\"reads\": " << this->stats_.reads_ << "," << std::endl;
     sstr << "\"strong\": " << this->stats_.hits_ << "," << std::endl;
     sstr << "\"weak\": " << this->stats_.miss_ << std::endl;
@@ -145,7 +237,8 @@ string BlockIndexFilter::PrintProfile() {
     stringstream sstr;
     sstr << "{";
     sstr << "\"used time\": " << this->stats_.time_.GetSum() << "," << std::endl;
-    sstr << "\"average latency\": " << this->stats_.average_latency_.GetAverage() << std::endl;
+    sstr << "\"average latency\": " << this->stats_.average_latency_.GetAverage() << 
+      std::endl;
     sstr << "}";
     return sstr.str();
 }

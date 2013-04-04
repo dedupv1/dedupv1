@@ -37,6 +37,8 @@
 #include <core/chunk_index_in_combat.h>
 #include <base/profile.h>
 #include <base/strutil.h>
+#include <core/block_index.h>
+#include <core/block_chunk_cache.h>
 
 #include <string>
 
@@ -96,6 +98,12 @@ class BlockIndexFilter: public Filter {
          */
         Statistics stats_;
 
+        blockindex::BlockIndex* block_index_;
+
+        BlockChunkCache* block_chunk_cache_;
+
+        bool use_block_chunk_cache_;
+
     public:
         /**
          * Constructor.
@@ -107,6 +115,12 @@ class BlockIndexFilter: public Filter {
          */
         virtual ~BlockIndexFilter();
 
+        bool Start(DedupSystem* system);
+
+        bool Close();
+
+        bool SetOption(const std::string& option_name, const std::string& option);
+
         /**
          * Performs a check by searching the chunk mapping to check in the current block mapping (items).
          * This way of optimizing the duplication detection is limited to certain situations, but takes nearly no time and no I/O.
@@ -117,7 +131,13 @@ class BlockIndexFilter: public Filter {
          * @param ec Error context that can be filled if case of special errors
          */
         virtual enum filter_result Check(dedupv1::Session* session,
-                const dedupv1::blockindex::BlockMapping* block_mapping, dedupv1::chunkindex::ChunkMapping* mapping,
+                const dedupv1::blockindex::BlockMapping* block_mapping,
+                dedupv1::chunkindex::ChunkMapping* mapping,
+                dedupv1::base::ErrorContext* ec);
+
+        virtual bool UpdateKnownChunk(dedupv1::Session* session,
+                const dedupv1::blockindex::BlockMapping* block_mapping,
+                dedupv1::chunkindex::ChunkMapping* mapping,
                 dedupv1::base::ErrorContext* ec);
 
         /**
