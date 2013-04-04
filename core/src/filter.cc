@@ -62,8 +62,18 @@ bool Filter::Start(DedupSystem* system) {
     return true;
 }
 
-bool Filter::Update(Session* session, ChunkMapping* mapping, ErrorContext* ec) {
+bool Filter::Update(Session* session,
+                    const dedupv1::blockindex::BlockMapping* block_mapping,
+                    ChunkMapping* mapping,
+                    ErrorContext* ec) {
     return true;
+}
+
+bool Filter::UpdateKnownChunk(Session* session,
+                              const dedupv1::blockindex::BlockMapping* block_mapping,
+                              ChunkMapping* mapping,
+                              ErrorContext* ec) {
+    return Abort(session, mapping, ec);
 }
 
 bool Filter::Abort(Session* session,

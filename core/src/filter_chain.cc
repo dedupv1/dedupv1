@@ -120,7 +120,9 @@ bool FilterChain::Start(DedupSystem* system) {
     return true;
 }
 
-bool FilterChain::StoreChunkInfo(Session* session, ChunkMapping* chunk_mapping,
+bool FilterChain::StoreChunkInfo(Session* session,
+                                 const dedupv1::blockindex::BlockMapping* block_mapping,
+                                 ChunkMapping* chunk_mapping,
                                  ErrorContext* ec) {
     DCHECK(session, "Session not set");
     DCHECK(chunk_mapping, "Chunk mapping not set");
@@ -139,13 +141,23 @@ bool FilterChain::StoreChunkInfo(Session* session, ChunkMapping* chunk_mapping,
         for (list<Filter*>::iterator j = this->chain_.begin(); j != this->chain_.end(); j++) {
             Filter* filter = *j;
             if (session->is_filter_enabled(filter)) {
-                if (!filter->Update(session, chunk_mapping, ec)) {
+                if (!filter->Update(session, block_mapping, chunk_mapping, ec)) {
                     ERROR("Update of filter index failed: " << chunk_mapping->DebugString());
                     failed = true;
                 }
             }
         }
         this->stats_.index_writes_++;
+    } else if (!failed && chunk_mapping->is_known_chunk()) {
+        for (list<Filter*>::iterator j = this->chain_.begin(); j != this->chain_.end(); j++) {
+            Filter* filter = *j;
+            if (session->is_filter_enabled(filter)) {
+                if (!filter->UpdateKnownChunk(session, block_mapping, chunk_mapping, ec)) {
+                    ERROR("Update of filter index failed: " << chunk_mapping->DebugString());
+                    failed = true;
+                }
+            }
+        }
     } else {
         for (list<Filter*>::iterator j = this->chain_.begin(); j != this->chain_.end(); j++) {
             Filter* filter = *j;

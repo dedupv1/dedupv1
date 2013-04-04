@@ -716,7 +716,10 @@ bool ContentStorage::ProcessChunkFilterChain(std::tr1::tuple<Session*, const Blo
             this->stats_.average_process_chunk_filter_chain_store_chunk_info_latency_);
         // Store the chunks
         FAULT_POINT("content-storage.handle.pre-filter-update");
-        if (!filter_chain_->StoreChunkInfo(session, chunk_mapping, ec)) {
+        if (!filter_chain_->StoreChunkInfo(session,
+              block_mapping,
+              chunk_mapping,
+              ec)) {
             ERROR("Storing of chunk failed: " << chunk_mapping->DebugString());
             failed = true;
         }
@@ -736,8 +739,12 @@ bool ContentStorage::ProcessChunkFilterChain(std::tr1::tuple<Session*, const Blo
     return !failed;
 }
 
-bool ContentStorage::ProcessFilterChain(Session* session, Request* request, RequestStatistics* request_stats,
-                                        const BlockMapping* block_mapping, vector<ChunkMapping>* chunk_mappings, ErrorContext* ec) {
+bool ContentStorage::ProcessFilterChain(Session* session,
+    Request* request,
+    RequestStatistics* request_stats,
+    const BlockMapping* block_mapping,
+    vector<ChunkMapping>* chunk_mappings,
+    ErrorContext* ec) {
     DCHECK(chunk_mappings, "Chunk mappings not set");
 
     stats_.threads_in_filter_chain_++;
@@ -776,16 +783,23 @@ bool ContentStorage::ProcessFilterChain(Session* session, Request* request, Requ
     return !failed;
 }
 
-bool ContentStorage::MergeChunksIntoCurrentRequest(uint64_t block_id, RequestStatistics* request_stats,
-                                                   unsigned int block_offset, unsigned long open_chunk_pos, bool already_failed, Session* session,
-                                                   const BlockMapping* original_block_mapping, const BlockMapping* updated_block_mapping,
-                                                   vector<ChunkMapping>* chunk_mappings, ErrorContext* ec) {
+bool ContentStorage::MergeChunksIntoCurrentRequest(uint64_t block_id, 
+    RequestStatistics* request_stats,
+    unsigned int block_offset,
+    unsigned long open_chunk_pos,
+    bool already_failed,
+    Session* session,
+    const BlockMapping* original_block_mapping,
+    const BlockMapping* updated_block_mapping,
+    vector<ChunkMapping>* chunk_mappings,
+    ErrorContext* ec) {
     DCHECK(session->open_chunk_position() <= chunk_mappings->at(0).chunk()->size(),
         "Illegal open chunk position");
 
     BlockMappingItem request(session->open_chunk_position(), chunk_mappings->at(0).chunk()->size()
                              - session->open_chunk_position());
-    CHECK(request.Convert(chunk_mappings->at(0)), "Failed to convert chunk mapping: " << chunk_mappings->at(0).DebugString());
+    CHECK(request.Convert(chunk_mappings->at(0)), 
+        "Failed to convert chunk mapping: " << chunk_mappings->at(0).DebugString());
 
     // TODO(fermat): Is this necessary? Is is used anywhere? It is also set in the last line of this method.
     session->set_open_chunk_position(session->open_chunk_position() + request.size());

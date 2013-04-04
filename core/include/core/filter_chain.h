@@ -60,7 +60,7 @@ namespace filter {
  * It controls the execution.
  */
 class FilterChain : public StatisticProvider {
-    private:
+private:
     DISALLOW_COPY_AND_ASSIGN(FilterChain);
 
     /**
@@ -68,31 +68,31 @@ class FilterChain : public StatisticProvider {
      * Statistics for the filter chain
      */
     class Statistics {
-        public:
-			/**
-			 * Constructor
-			 */
-            Statistics();
+public:
+        /**
+         * Constructor
+         */
+        Statistics();
 
-			/**
-			 * Number of reads of the filter chain
-			 */
-            tbb::atomic<uint64_t> index_reads_;
+        /**
+         * Number of reads of the filter chain
+         */
+        tbb::atomic<uint64_t> index_reads_;
 
-			/**
-			 * Number of updates of the filter chain
-			 */
-            tbb::atomic<uint64_t> index_writes_;
+        /**
+         * Number of updates of the filter chain
+         */
+        tbb::atomic<uint64_t> index_writes_;
 
-            /**
-             * Total time spent checking the filter chain
-             */ 
-            dedupv1::base::Profile check_time_;
+        /**
+         * Total time spent checking the filter chain
+         */
+        dedupv1::base::Profile check_time_;
 
-            /**
-             * Total time spent updating the filter chain
-             */ 
-            dedupv1::base::Profile update_time_;
+        /**
+         * Total time spent updating the filter chain
+         */
+        dedupv1::base::Profile update_time_;
     };
 
     /**
@@ -115,10 +115,10 @@ class FilterChain : public StatisticProvider {
      * @return true iff ok, otherwise an error has occurred
      */
     bool CheckChunk(dedupv1::Session* session,
-            const dedupv1::blockindex::BlockMapping* block_mapping,
-            dedupv1::chunkindex::ChunkMapping* chunk_mapping,
-            dedupv1::base::ErrorContext* ec);
-    public:
+                    const dedupv1::blockindex::BlockMapping* block_mapping,
+                    dedupv1::chunkindex::ChunkMapping* chunk_mapping,
+                    dedupv1::base::ErrorContext* ec);
+public:
     /**
      * Constructor
      * @return
@@ -168,9 +168,10 @@ class FilterChain : public StatisticProvider {
      * @return true iff ok, otherwise an error has occurred
      */
     bool StoreChunkInfo(
-            dedupv1::Session* session,
-            dedupv1::chunkindex::ChunkMapping* chunk_mapping,
-            dedupv1::base::ErrorContext* ec);
+        dedupv1::Session* session,
+        const dedupv1::blockindex::BlockMapping* block_mapping,
+        dedupv1::chunkindex::ChunkMapping* chunk_mapping,
+        dedupv1::base::ErrorContext* ec);
 
     /**
      *
@@ -185,9 +186,9 @@ class FilterChain : public StatisticProvider {
      * @return true iff ok, otherwise an error has occurred
      */
     bool ReadChunkInfo(dedupv1::Session* session,
-            const dedupv1::blockindex::BlockMapping* block_mapping,
-            dedupv1::chunkindex::ChunkMapping* chunk_mapping,
-            dedupv1::base::ErrorContext* ec);
+                       const dedupv1::blockindex::BlockMapping* block_mapping,
+                       dedupv1::chunkindex::ChunkMapping* chunk_mapping,
+                       dedupv1::base::ErrorContext* ec);
 
     /**
      * Not implemented well. O(number of filters) operation
@@ -204,9 +205,9 @@ class FilterChain : public StatisticProvider {
      * @return true iff ok, otherwise an error has occurred
      */
     bool AbortChunkInfo(
-            dedupv1::Session* session,
-            dedupv1::chunkindex::ChunkMapping* chunk_mapping,
-            dedupv1::base::ErrorContext* ec);
+        dedupv1::Session* session,
+        dedupv1::chunkindex::ChunkMapping* chunk_mapping,
+        dedupv1::base::ErrorContext* ec);
 
     virtual bool PersistStatistics(std::string prefix, dedupv1::PersistStatistics* ps);
 

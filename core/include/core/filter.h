@@ -48,9 +48,9 @@ namespace filter {
  *
  */
 class Filter : public dedupv1::StatisticProvider {
-    private:
+private:
     DISALLOW_COPY_AND_ASSIGN(Filter);
-    public:
+public:
     /**
      * \ingroup filterchain
      * Enumerations about the possible result of an
@@ -97,7 +97,7 @@ class Filter : public dedupv1::StatisticProvider {
          */
         FILTER_ERROR = 0,
     };
-    private:
+private:
     /**
      * \ingroup filterchain
      *
@@ -130,7 +130,7 @@ class Filter : public dedupv1::StatisticProvider {
      * Factory for filter instances
      */
     static MetaFactory<Filter> factory_;
-    public:
+public:
 
     static MetaFactory<Filter>& Factory();
     /**
@@ -198,9 +198,10 @@ class Filter : public dedupv1::StatisticProvider {
      * @return
      */
     virtual enum filter_result Check(
-            dedupv1::Session* session,
-            const dedupv1::blockindex::BlockMapping* block_mapping, dedupv1::chunkindex::ChunkMapping* mapping,
-            dedupv1::base::ErrorContext* ec) = 0;
+        dedupv1::Session* session,
+        const dedupv1::blockindex::BlockMapping* block_mapping,
+        dedupv1::chunkindex::ChunkMapping* mapping,
+        dedupv1::base::ErrorContext* ec) = 0;
 
     /**
      * This method is called after the filter result of the complete filter chain
@@ -215,14 +216,20 @@ class Filter : public dedupv1::StatisticProvider {
      * @return true iff ok, otherwise an error has occurred
      */
     virtual bool Update(dedupv1::Session* session,
-            dedupv1::chunkindex::ChunkMapping* mapping,
-            dedupv1::base::ErrorContext* ec);
+                        const dedupv1::blockindex::BlockMapping* block_mapping,
+                        dedupv1::chunkindex::ChunkMapping* mapping,
+                        dedupv1::base::ErrorContext* ec);
+
+    virtual bool UpdateKnownChunk(dedupv1::Session* session,
+                                  const dedupv1::blockindex::BlockMapping* block_mapping,
+                                  dedupv1::chunkindex::ChunkMapping* mapping,
+                                  dedupv1::base::ErrorContext* ec);
 
     /**
      * @return true iff ok, otherwise an error has occurred
      */
     virtual bool Abort(dedupv1::Session* session, dedupv1::chunkindex::ChunkMapping* chunk_mapping,
-            dedupv1::base::ErrorContext* ec);
+                       dedupv1::base::ErrorContext* ec);
 
     /**
      * Closes the filter and frees all its resources.
