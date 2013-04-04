@@ -135,7 +135,7 @@ ChunkIndex::ChunkIndex() {
     this->bg_committer_ = NULL;
     info_store_ = NULL;
     tp_ = NULL;
-    this->bg_thread_count_ = 4;
+    this->bg_thread_count_ = 1;
     this->state_ = CREATED;
     is_replaying_ = false;
     import_if_replaying_ = true;
