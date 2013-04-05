@@ -25,12 +25,15 @@ import simplejson
 from time import sleep
 
 class SysTest:
-    def __init__(self, run, device_name = "/dev/disk/by-path/scsi-0:0:0:0", mount_point = "/mnt/dedup"):
+    def __init__(self,
+        run,
+        device_name = "/dev/disk/by-path/scsi-0:0:0:0",
+        mount_point = "/mnt/dedup"):
         self.device_name = device_name
         self.mount_point = mount_point
         self.run = run
-        
-    def prepare_part(self):        
+
+    def prepare_part(self):
         self.mk_part("40G")
         if self.run.code != 0:
             return
@@ -42,24 +45,26 @@ class SysTest:
         self.mount()
         if self.run.code != 0:
             return
-            
+
         sleep(5)
         if not os.path.ismount(self.mount_point):
             raise Exception("Mountpoint %s not mounted" % self.mount_mount)
-            
+
     def kernel_module_loaded(self, module_name):
         """ checks if a given module is loaded into the kernel """
-        return len(filter(lambda line: line.find(module_name) >= 0, file("/proc/modules").readlines())) > 0
-    
+        return len(filter(lambda line: line.find(module_name) >= 0,
+          file("/proc/modules").readlines())) > 0
+
     def mk_part(self, size):
         if not os.path.exists(self.device_name):
             raise Exception("Illegal device: %s" % self.device_name)
-        r = self.run('fdisk %s' % self.device_name, stdin="n\np\n1\n\n+%s\nw" % size)
+        r = self.run('fdisk %s' % self.device_name,
+            stdin="n\np\n1\n\n+%s\nw" % size)
         sleep(5)
         return r
-    
+
     def parted(self, cmd):
-        return self.run('parted -s %s %s' % (self.device_name, cmd))        
+        return self.run('parted -s %s %s' % (self.device_name, cmd))
 
     def statfs(self):
         return os.statvfs(self.mount_point)
@@ -70,18 +75,18 @@ class SysTest:
             raise Exception("Illegal device: %s" % full_device_name)
         r = self.run("mkfs.ext3 -q %s" % full_device_name)
         sleep(5)
-        return r        
-    
+        return r
+
     def fsck_ext3(self):
         return self.run("fsck.ext3 %s-part1 -n -f" % self.device_name)
-    
+
     def mount(self):
         if not os.path.isdir(self.mount_point):
             raise Exception("Illegal mount point: %s" % self.mount_point)
         r = self.run("mount %s-part1 %s" % (self.device_name, self.mount_point))
         sleep(5)
         return r
-    
+
     def get_devices(self):
         return os.listdir("/dev/disk/by-path")
 
@@ -90,29 +95,29 @@ class SysTest:
             return self.run("busybox sync")
         else:
             return self.run("sync")
-    
+
     def clear_cache(self):
         if os.path.exists("/bin/busybox"):
-            return self.run("busybox sync")
+            self.run("busybox sync")
         else:
-            return self.run("sync")
-            
+            self.run("sync")
+
         # drop caches
         f = open("/proc/sys/vm/drop_caches", "w")
         f.write("3\n")
-        
+
     def umount(self):
         if os.path.ismount(self.mount_point):
             r = self.run("umount %s" % self.mount_point)
             sleep(5)
             return r
-        
+
     def rm_scst_local(self):
         if self.kernel_module_loaded("scst_local"):
             r = self.run("rmmod scst_local")
             sleep(5)
             return r
-    
+
     def add_scst_local(self):
         if not self.kernel_module_loaded("scst_local"):
             r = self.run("modprobe scst_local")
