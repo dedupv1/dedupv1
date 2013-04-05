@@ -423,14 +423,21 @@ TEST_P(DedupSystemTest, OverwriteRequests) {
     }
 }
 
-bool MakeOverwriteRequest(tuple<DedupSystem*, int, int, bool> t) {
+bool MakeOverwriteRequest(tuple<DedupSystem*, int, int, bool, bool> t) {
     DedupSystem* system = std::tr1::get<0>(t);
     int thread_id = std::tr1::get<1>(t);
     int request_count = std::tr1::get<2>(t);
     bool overwrite = std::tr1::get<3>(t);
+    bool zero_data = std::tr1::get<4>(t);
 
     byte* buffer = new byte[system->block_size()];
     ScopedArray<byte> scoped_buffer(buffer);
+    if (zero_data) {
+      memset(buffer, 0, system->block_size());
+    } else {
+      LC_RNG rng(1024);
+      rng.GenerateBlock(buffer, system->block_size());
+    }
 
     DedupVolume* volume = system->GetVolume(0);
     CHECK(volume, "Failed to find volume");
@@ -459,7 +466,48 @@ TEST_P(DedupSystemTest, StrictOverwriteRequests) {
 
     Thread<bool>** threads = new Thread<bool>*[thread_count];
     for (int i = 0; i < thread_count; i++) {
-        threads[i] = new Thread<bool>(NewRunnable(&MakeOverwriteRequest, make_tuple(system, i, requests, true)),"write");
+        threads[i] = new Thread<bool>(
+            NewRunnable(&MakeOverwriteRequest, make_tuple(system, i, 
+                requests, true, false)),"write");
+    }
+    tbb::tick_count start = tbb::tick_count::now();
+    for (int i = 0; i < thread_count; i++) {
+        ASSERT_TRUE(threads[i]->Start());
+    }
+    for (int i = 0; i < thread_count; i++) {
+        bool result = false;
+        ASSERT_TRUE(threads[i]->Join(&result));
+        ASSERT_TRUE(result);
+    }
+    system->chunk_store()->Flush(NO_EC);
+    tbb::tick_count write_end_time = tbb::tick_count::now();
+    double overwrite_time = (write_end_time - start).seconds();
+    INFO("Overwrite time: " << overwrite_time);
+
+    DEBUG(system->block_index()->PrintProfile());
+    DEBUG(system->block_index()->PrintTrace());
+
+    for (int i = 0; i < thread_count; i++) {
+        delete threads[i];
+        threads[i] = NULL;
+    }
+    delete[] threads;
+    threads = NULL;
+}
+
+TEST_P(DedupSystemTest, StrictOverwriteZeroDataRequests) {
+    system = CreateDefaultSystem(GetParam(), &info_store, &tp);
+    ASSERT_TRUE(system);
+
+    int requests = 128;
+    int thread_count = 4;
+    // scope frees buffer
+
+    Thread<bool>** threads = new Thread<bool>*[thread_count];
+    for (int i = 0; i < thread_count; i++) {
+        threads[i] = new Thread<bool>(
+            NewRunnable(&MakeOverwriteRequest, make_tuple(system, i, 
+                requests, true, true)),"write");
     }
     tbb::tick_count start = tbb::tick_count::now();
     for (int i = 0; i < thread_count; i++) {
@@ -496,7 +544,9 @@ TEST_P(DedupSystemTest, StrictNoOverwriteRequests) {
 
     Thread<bool>** threads = new Thread<bool>*[thread_count];
     for (int i = 0; i < thread_count; i++) {
-        threads[i] = new Thread<bool>(NewRunnable(&MakeOverwriteRequest, make_tuple(system, i, requests, false)),"write");
+        threads[i] = new Thread<bool>(
+            NewRunnable(&MakeOverwriteRequest, make_tuple(system, i, 
+                requests, false, false)),"write");
     }
     tbb::tick_count start = tbb::tick_count::now();
     for (int i = 0; i < thread_count; i++) {
