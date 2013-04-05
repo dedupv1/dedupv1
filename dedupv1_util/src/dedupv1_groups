@@ -22,15 +22,15 @@
 import sys
 import os
 import optparse
-import simplejson
+import json
 
 if "DEDUPV1_ROOT" not in os.environ:
     DEDUPV1_ROOT= os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]),"../"))
     os.environ["DEDUPV1_ROOT"] = DEDUPV1_ROOT
 
 sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python")))
-for file in [f for f in os.listdir(os.path.join(DEDUPV1_ROOT, "lib/python2.6/site-packages/")) if f.endswith(".egg")]:
-    sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python2.6/site-packages/", file)))
+for file in [f for f in os.listdir(os.path.join(DEDUPV1_ROOT, "lib/python2.7/site-packages/")) if f.endswith(".egg")]:
+    sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python2.7/site-packages/", file)))
 import dedupv1
 import cmd
 import scst
@@ -46,7 +46,7 @@ from dedupv1_util import parse_params
 monitor = None
 
 def print_raw_data(data):
-    print simplejson.dumps(data, sort_keys=True, indent=4)
+    print json.dumps(data, sort_keys=True, indent=4)
 
 def add_initiator(options, args):
     config_params = omdict( [ ("op", "addinitiator") ] ) 
@@ -57,7 +57,7 @@ def add_initiator(options, args):
         raise Exception("Missing required option: initiator");
     if len(config_params.get_multi("initiator")) != 1:
         raise Exception("Illegal option: initiator");
-    
+
     group_name = config_params["name"]
     g = group.Group(group_name, config_params)
     validation_errors = g.validate()
@@ -70,14 +70,14 @@ def add_initiator(options, args):
                 log_warning(options, "Initiator pattern already existing")
             else:
                 raise Exception("Initiator pattern already existing")
-    
+
     monitor_data = monitor.read("group", config_params.items())
     if "ERROR" in monitor_data:
         raise Exception(monitor_data["ERROR"])
     else:
         if options.raw:
             print_raw_data(monitor_data)
-            
+
         for initiator_pattern in config_params.get_multi("initiator"):
             scst.add_initiator_pattern_to_group(
                 initiator_pattern, 
@@ -92,7 +92,7 @@ def rm_initiator(options, args):
         raise Exception("Missing required option: initiator");
     if len(config_params.get_multi("initiator")) != 1:
         raise Exception("Illegal option: initiator");
-    
+
     group_name = config_params["name"]
     g = group.read_group(monitor, group_name)
     validation_errors = g.validate()
@@ -105,7 +105,7 @@ def rm_initiator(options, args):
                 log_warning(options, "Initiator pattern not existing")
             else:
                 raise Exception("Initiator pattern not existing")
-    
+
     monitor_data = monitor.read("group", config_params.items())
     if "ERROR" in monitor_data:
         raise Exception(monitor_data["ERROR"])
@@ -118,28 +118,28 @@ def rm_initiator(options, args):
 def add_group(options, args):
     config_params = omdict( [ ("op", "add") ] )
     config_params = parse_params(config_params, args)
-    
+
     if not "name" in config_params:
         raise Exception("Missing required option: name")
     group.check_group_name(config_params["name"])
-    
+
     g = group.Group(config_params["name"], config_params)
     validation_errors = g.validate()
     if len(validation_errors) > 0:
         raise Exception("Illegal group: " + ",".join(validation_errors))
-    
+
     monitor_data = monitor.read("group", config_params.items());
     if "ERROR" in monitor_data:
         raise Exception(monitor_data["ERROR"])
     else:
         if options.raw:
             print_raw_data(monitor_data)
-            
+
         scst.add_group(g.name)
-        log_verbose(options, "Group %s registered" % g.name) 
-            
+        log_verbose(options, "Group %s registered" % g.name)
+
 def remove_group(options, args):
-    config_params = omdict( [ ("op", "remove") ] )   
+    config_params = omdict( [ ("op", "remove") ] )
     config_params = parse_params(config_params, args)
     if not "name" in config_params:
         raise Exception("Missing required option: name");
@@ -148,10 +148,10 @@ def remove_group(options, args):
     validation_errors = g.validate()
     if len(validation_errors) > 0:
         raise Exception("Illegal group: " << ",".join(validation_errors))
-    
+
     if len(scst.get_group_session(g.name)) > 0:
         raise Exception("Unable to remove group with active sessions")
-       
+
     # check that no volume is in the target
     vols = volume.read_all_volumes(monitor)
     for (vol_id, vol) in vols.items():
@@ -163,7 +163,7 @@ def remove_group(options, args):
                     log_warning(options, "Group %s has still assigned volumes" % (g.name))
                 else:
                     raise Exception("Group %s has still assigned volumes" % (g.name))
-       
+
     monitor_data = monitor.read("group", config_params.items());
     if "ERROR" in monitor_data:
         raise Exception(monitor_data["ERROR"])
@@ -172,7 +172,7 @@ def remove_group(options, args):
             print_raw_data(monitor_data)
         scst.rm_group(g.name)
         log_verbose(options, "Group %s unregistered" % g.name)
-            
+
 def show_groups(options):
     if options.raw:
         print_raw_data(monitor.read("group"))
@@ -189,9 +189,9 @@ if __name__ == "__main__":
     if not (dedupv1.check_root() or dedupv1.check_dedupv1_group()):
         print sys.stderr, "Permission denied"
         sys.exit(1)
-        
+
     usage = """usage: %prog (add | remove | initiator add | initiator remove | show) [options]
-    
+
 Examples:
 %prog add name=backups
 %prog remove name=backups
@@ -202,9 +202,9 @@ Examples:
 %prog --help
 """
     version = "%s (hash %s)" % (config.DEDUPV1_VERSION_STR, config.DEDUPV1_REVISION_STR)
-    
+
     parser = optparse.OptionParser(usage=usage, version=version)
-    
+
     parser.add_option("-p","--port", type="int", dest="port", help="port of the dedupv1d", default=config.DEDUPV1_DEFAULT_MONITOR_PORT)
     parser.add_option("--host", dest="hostname", help="hostname of the dedupv1d", default="localhost")
     parser.add_option("--raw", dest="raw", action="store_true", help="outputs in raw JSON format", default=False)
@@ -221,9 +221,9 @@ Examples:
         action="store_true",
         default=False)
     (options, args) = parser.parse_args()
-    
+
     monitor = Monitor(options.hostname, options.port);
-    
+
     if len(args) == 0:
         parser.error("No command specified")
         sys.exit(1)
@@ -246,11 +246,11 @@ Examples:
         elif cmd == "show":
             show_groups(options)
         else:
-            parser.error("Invalid command %s" % cmd)            
+            parser.error("Invalid command %s" % cmd)
             sys.exit(1)
     except KeyboardInterrupt:
-        sys.exit(1)    
+        sys.exit(1)
     except Exception as e:
         log_error(options, e)
-        sys.exit(1)  
+        sys.exit(1)
     sys.exit(0)

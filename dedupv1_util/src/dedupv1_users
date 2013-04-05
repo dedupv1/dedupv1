@@ -22,14 +22,14 @@
 import sys
 import os
 import optparse
-import simplejson
+import json
 if "DEDUPV1_ROOT" not in os.environ:
     DEDUPV1_ROOT= os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]),"../"))
     os.environ["DEDUPV1_ROOT"] = DEDUPV1_ROOT
 
 sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python")))
-for file in [f for f in os.listdir(os.path.join(DEDUPV1_ROOT, "lib/python2.6/site-packages/")) if f.endswith(".egg")]:
-    sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python2.6/site-packages/", file)))
+for file in [f for f in os.listdir(os.path.join(DEDUPV1_ROOT, "lib/python2.7/site-packages/")) if f.endswith(".egg")]:
+    sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python2.7/site-packages/", file)))
 import dedupv1
 from command import execute_cmd
 import scst
@@ -57,7 +57,7 @@ def print_raw_data(data):
         else:
             return d
     data = filter_data(data)
-    print simplejson.dumps(data, sort_keys=True, indent=4)
+    print json.dumps(data, sort_keys=True, indent=4)
 
 def addtotarget(options, args):
     config_params = omdict( [ ("op", "addtotarget") ] ) 
@@ -68,13 +68,13 @@ def addtotarget(options, args):
         raise Exception("Missing required option: target");
     if len(config_params.get_multi("target")) != 1:
         raise Exception("Illegal option: target");
-    
+
     user_name = config_params["name"]
     u = scst_user.User(user_name, config_params)
     validation_errors = u.validate()
     if len(validation_errors) > 0:
         raise Exception("Illegal user: " + ",".join(validation_errors))
-    
+
     u = scst_user.read_user(monitor, user_name)
     for target_name in config_params.get_multi("target"):
         for user_target_name in u.targets():
@@ -94,14 +94,14 @@ def addtotarget(options, args):
                 log_warning(options, "Target not existing")
             else:
                 raise Exception("Target not existing")
-    
+
     monitor_data = monitor.read("user", config_params.items())
     if "ERROR" in monitor_data:
         raise Exception(monitor_data["ERROR"])
     else:
         if options.raw:
             print_raw_data(monitor_data)
-            
+
         for target_name in config_params.get_multi("target"):
             t = target.read_target_by_name(monitor, target_name)
             iscsi_scst.add_user_to_target(u, t)
@@ -115,7 +115,7 @@ def rmfromtarget(options, args):
         raise Exception("Missing required option: target");
     if len(config_params.get_multi("target")) != 1:
         raise Exception("Illegal option: target");
-    
+
     user_name = config_params["name"]
     u = scst_user.read_user(monitor, user_name)
     validation_errors = u.validate()
@@ -128,7 +128,7 @@ def rmfromtarget(options, args):
                 log_warning(options, "Target not existing")
             else:
                 raise Exception("Target not existing")
-    
+
     monitor_data = monitor.read("user", config_params.items())
     if "ERROR" in monitor_data:
         raise Exception(monitor_data["ERROR"])
@@ -142,20 +142,20 @@ def rmfromtarget(options, args):
 def add_user(options, args):
     config_params = omdict( [ ("op", "add") ] )
     config_params = parse_params(config_params, args)
-    
+
     if not "name" in config_params:
         raise Exception("Missing required option: name");
     if not "secret-hash" in config_params:
         raise Exception("Missing required option: secret-hash");
-        
+
     user_name = config_params["name"]
     scst_user.check_user_name(user_name)
-    
+
     u = scst_user.User(user_name, config_params)
     validation_errors = u.validate()
     if len(validation_errors) > 0:
         raise Exception("Illegal user: " + ",".join(validation_errors))
-    
+
     targets = target.read_all_targets(monitor)
     for target_name in config_params.get_multi("target"):
         if not target_name in targets:
@@ -163,7 +163,7 @@ def add_user(options, args):
                 log_warning(options, "Target not existing")
             else:
                 raise Exception("Target not existing")
-    
+
     monitor_data = monitor.read("user", config_params.items());
     if "ERROR" in monitor_data:
         raise Exception(monitor_data["ERROR"])
@@ -171,15 +171,15 @@ def add_user(options, args):
         if options.raw:
             print_raw_data(monitor_data)
         u = scst_user.User(user_name, monitor_data[user_name])
-        
+
         for target_name in config_params.get_multi("target"):
             t = target.read_target_by_name(monitor, target_name)
             iscsi_scst.add_user_to_target(u, t)
         if options.verbose:
-            print "User %s registered" % u.name 
-            
+            print "User %s registered" % u.name
+
 def remove_user(options, args):
-    config_params = omdict( [ ("op", "remove") ] )   
+    config_params = omdict( [ ("op", "remove") ] )
     config_params = parse_params(config_params, args)
     if not "name" in config_params:
         raise Exception("Missing required option: name");
@@ -187,10 +187,10 @@ def remove_user(options, args):
     u = scst_user.read_user(monitor, config_params["name"])
     if not u:
         raise Exception("User not existing")
-    
+
     if len(u.targets()) > 0:
         raise Exception("Cannot delete user that is assigned to targets")
-       
+
     monitor_data = monitor.read("user", config_params.items());
     if("ERROR" in monitor_data):
         raise Exception(monitor_data["ERROR"])
@@ -201,9 +201,9 @@ def remove_user(options, args):
             t = target.read_target_by_name(monitor, target_name)
             iscsi_scst.rm_user_from_target(u, t)
         log_verbose(options, "User %s unregistered" % u.name)
-            
+
 def change_user(options, args):
-    config_params = omdict( [ ("op", "change") ] )   
+    config_params = omdict( [ ("op", "change") ] )
     config_params = parse_params(config_params, args)
     if not "name" in config_params:
         raise Exception("Missing required option: name");
@@ -243,9 +243,9 @@ def show_users(options):
             print "Targets: %s" % (", ".join(u.targets()))
             print
 
-if __name__ == "__main__":        
+if __name__ == "__main__":
     usage = """usage: %prog (add | remove | target add | target remove | show) [options]
-    
+
 Examples:
 %prog add name=admin1 secret-hash=secretpassword
 %prog change name=admin1 secret-hash=anothersecret
@@ -260,7 +260,7 @@ Examples:
 Create the secret-hash parameters using dedupv1_passwd
 """
     version = "%s (hash %s)" % (config.DEDUPV1_VERSION_STR, config.DEDUPV1_REVISION_STR)
-    
+
     parser = optparse.OptionParser(usage=usage, version=version)
     parser.add_option("-p","--port", type="int", dest="port", help="port of the dedupv1d", default=config.DEDUPV1_DEFAULT_MONITOR_PORT)
     parser.add_option("--host", dest="hostname", help="hostname of the dedupv1d", default="localhost")
@@ -278,14 +278,14 @@ Create the secret-hash parameters using dedupv1_passwd
         action="store_true",
         default=False)
     (options, args) = parser.parse_args()
-    
-    
+
+
     if not (dedupv1.check_root() or dedupv1.check_dedupv1_group()):
         print >> sys.stderr, "Permission denied"
         sys.exit(1)
-    
+
     monitor = Monitor(options.hostname, options.port);
-    
+
     if len(args) == 0:
         parser.error("No command specified")
         sys.exit(1)
@@ -310,11 +310,11 @@ Create the secret-hash parameters using dedupv1_passwd
         elif cmd == "show":
             show_users(options)
         else:
-            parser.error("Invalid command %s" % cmd)            
+            parser.error("Invalid command %s" % cmd)
             sys.exit(1)
     except KeyboardInterrupt:
-        sys.exit(1)  
+        sys.exit(1)
     except Exception as e:
-        log_error(options, e)  
+        log_error(options, e)
         sys.exit(1)
     sys.exit(0)

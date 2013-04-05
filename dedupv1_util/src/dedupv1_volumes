@@ -22,7 +22,7 @@
 import sys
 import os
 import optparse
-import simplejson
+import json
 
 if "DEDUPV1_ROOT" not in os.environ:
     DEDUPV1_ROOT = os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]), "../"))
@@ -31,8 +31,8 @@ else:
     DEDUPV1_ROOT = os.environ["DEDUPV1_ROOT"]
 
 sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python")))
-for file in [f for f in os.listdir(os.path.join(DEDUPV1_ROOT, "lib/python2.6/site-packages/")) if f.endswith(".egg")]:
-    sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python2.6/site-packages/", file)))
+for file in [f for f in os.listdir(os.path.join(DEDUPV1_ROOT, "lib/python2.7/site-packages/")) if f.endswith(".egg")]:
+    sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python2.7/site-packages/", file)))
 import dedupv1
 import cmd
 import scst
@@ -48,43 +48,43 @@ from dedupv1_util import to_storage_unit, format_storage_unit, parse_params
 monitor = None
 
 def print_raw_data(data):
-    print simplejson.dumps(data, sort_keys=True, indent=4)
+    print json.dumps(data, sort_keys=True, indent=4)
 
 def addtogroup(options, args):
-    config_params = omdict( [ ("op", "addtogroup") ] ) 
+    config_params = omdict( [ ("op", "addtogroup") ] )
     config_params = parse_params(config_params, args)
     if not "id" in config_params:
         raise Exception("Missing required option: id");
     if not "group" in config_params:
         raise Exception("Missing required option: group");
-    
+
     volume_id = config_params["id"]
     vol = volume.read_volume(monitor, volume_id)
     if not vol:
         raise Exception("Volume %s is in detaching state" % (volume_id))
-    
+
     for group_lun_pair in config_params.get_multi("group"):
         (group_name, lun) = check_group_lun(group_lun_pair)
         if group_name.startswith("Default_"):
             raise Exception("Illegal option: group")
-    
+
         for (vol_group_name, lun) in vol.groups():
             if vol_group_name == group_name:
                 raise Exception("Volume %s is assigned to group %s" % (volume_id, group_name))
-    
+
     monitor_data = monitor.read("volume", config_params.items())
     if "ERROR" in monitor_data:
         raise Exception(monitor_data["ERROR"])
     else:
         if options.raw:
             print_raw_data(monitor_data)
-        
+
         vol = volume.read_volume(monitor, volume_id)
         for group_name in config_params.get_multi("group"):
             scst.add_to_group(
                 vol, 
                 group_name)
-            
+
 def addtotarget(options, args):
     config_params = omdict( [ ("op", "addtotarget") ] ) 
     config_params = parse_params(config_params, args)

@@ -34,7 +34,7 @@ from monitor import Monitor
 from monitor import MonitorException
 from monitor import MonitorJSONException
 import iscsi_scst
-import simplejson
+import json
 import target
 import group
 import scst_user
@@ -88,12 +88,12 @@ def system_status(monitor, options, config):
     pid = is_running(config)
     if pid:
         if options.raw:
-            print simplejson.dumps({"state": "running"})
+            print json.dumps({"state": "running"})
         else:
             log_info(options, "dedupv1d running (pid = %s)" % pid)
     else:
         if options.raw:
-            print simplejson.dumps({"state": "stopped"})
+            print json.dumps({"state": "stopped"})
         else:
             log_info(options, "dedupv1d not running")
 

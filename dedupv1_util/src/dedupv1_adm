@@ -23,7 +23,7 @@
 import sys
 import os
 import optparse
-import simplejson
+import json
 from time import sleep
 
 if "DEDUPV1_ROOT" not in os.environ or len(os.environ["DEDUPV1_ROOT"]) == 0:
@@ -33,8 +33,8 @@ else:
     DEDUPV1_ROOT = os.environ["DEDUPV1_ROOT"]
 
 sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python")))
-for file in [f for f in os.listdir(os.path.join(DEDUPV1_ROOT, "lib/python2.6/site-packages/")) if f.endswith(".egg")]:
-    sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python2.6/site-packages/", file)))
+for file in [f for f in os.listdir(os.path.join(DEDUPV1_ROOT, "lib/python2.7/site-packages/")) if f.endswith(".egg")]:
+    sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python2.7/site-packages/", file)))
 import dedupv1
 import command
 import scst
@@ -51,14 +51,14 @@ def restart(options, config):
     old_force = options.force
     if options.force == 1:
         stop_options.force = False
-    
+
     dedupv1.stop_device(DEDUPV1_ROOT, monitor, stop_options, config)
     sleep(5)
 
     options.force = old_force
     dedupv1.start_device(DEDUPV1_ROOT, monitor, options, config)
-            
-if __name__ == "__main__":        
+
+if __name__ == "__main__":
     usage = """usage: %prog (start | stop | status) [options]
 
 Performs administrative action on the dedupv1 daemon.
@@ -90,22 +90,22 @@ Examples:
     parser.add_option("--debug", dest="debug", action="store_true", default=False)
     parser.add_option("--raw", dest="raw", action="store_true", help="outputs in raw JSON format", default=False)
     (options, argv) = parser.parse_args()
-  	
+
     if not os.path.exists(options.configfile):
         parser.error("%s not found" % options.configfile)
     configuration = Config(options.configfile)
     monitor = Monitor("localhost", configuration.get("monitor.port", config.DEDUPV1_DEFAULT_MONITOR_PORT, type=int))
-      
+
     if not (dedupv1.check_root() or dedupv1.check_dedupv1_group(configuration)):
         parser.error("Permission denied")
         sys.exit(1)
-      
+
     if options.raw and options.verbose:
         parser.error("Only specify --raw or --verbose, but not both")
         sys.exit(1)
     if len(argv) == 0:
         parser.error("No command specified")
-	sys.exit(1)
+        sys.exit(1)
     if len(argv) > 1:
         parser.error("Illegal command %s" % " ".join(argv))
         sys.exit(1)
@@ -129,7 +129,7 @@ Examples:
             sys.exit(1)
         else:
             parser.print_help()
-            sys.exit(1)            
+            sys.exit(1)
     except KeyboardInterrupt:
         sys.exit(1)
     except Exception as e:

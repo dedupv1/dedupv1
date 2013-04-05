@@ -23,7 +23,7 @@
 import sys
 import os
 import optparse
-import simplejson
+import json
 import zipfile
 from StringIO import StringIO
 import glob
@@ -38,8 +38,8 @@ else:
     DEDUPV1_ROOT = os.environ["DEDUPV1_ROOT"]
 
 sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python")))
-for file in [f for f in os.listdir(os.path.join(DEDUPV1_ROOT, "lib/python2.6/site-packages/")) if f.endswith(".egg")]:
-    sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python2.6/site-packages/", file)))
+for file in [f for f in os.listdir(os.path.join(DEDUPV1_ROOT, "lib/python2.7/site-packages/")) if f.endswith(".egg")]:
+    sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python2.7/site-packages/", file)))
 import dedupv1
 import command
 import scst
@@ -71,10 +71,10 @@ class Report:
         self.gather_scst_state()
         self.gather_time()
         self.gather_host_info()
-        
+
         if not self.options.no_core_dump:
-            self.gather_core_dump()    
-            
+            self.gather_core_dump()
+
     def gather_host_info(self):
         log_verbose(self.options, "Gather host info")
         try:
@@ -83,19 +83,19 @@ class Report:
             cpu_regex = re.compile(r"^.+\s+([\d\.]+)%us,\s+([\d\.]+)%sy,\s+([\d\.]+)%ni,\s+([\d\.]+)%id,\s+([\d\.]+)%wa,\s+([\d\.]+)%hi,\s+([\d\.]+)%si,\s+([\d\.]+)%st.*$")
             mem_regex = re.compile(r"^.+\s+(\d+)k\s+total,\s+(\d+)k\s+used,\s+(\d+)k\s+free,\s+(\d+)k\s+buffers.*$")
             swap_regex = re.compile(r"^.+\s+(\d+)k\s+total,\s+(\d+)k\s+used,\s+(\d+)k\s+free,\s+(\d+)k\s+cached.*$")
-            
+
             host_info = dict()
-            
+
             load_found = False
             tasks_found = False
             cpu_found = False
             mem_found = False
             swap_found = False
             process_found = False
-            
+
             top_data_raw = run("top -bn 1")
             top_data = top_data_raw.splitlines()
-            
+
             for line in top_data:
                 line = line.strip().lower()
                 if not load_found and line.startswith("top"):
@@ -188,16 +188,16 @@ class Report:
                         host_info["process"]["cpu_time"] = (float(cpu_time[0]) * 60) + float(cpu_time[1])
                         host_info["process"]["command"] = process[11]
                         break
-            
-            self.zip.writestr(os.path.join(self.prefix, "monitor/host"), simplejson.dumps(host_info, sort_keys=True, indent=4))
+
+            self.zip.writestr(os.path.join(self.prefix, "monitor/host"), json.dumps(host_info, sort_keys=True, indent=4))
         except Exception as e:
-            log_error(self.options, "Failed to gather host infos: " + str(e))
-    
+          log_error(self.options, "Failed to gather host infos: " + str(e))
+
     def gather_time(self):
         log_verbose(self.options, "Gather timestamp")
-        
+
         timestamp = "%s\n" % time.ctime()
-        
+
         self.zip.writestr(os.path.join(self.prefix, "timestamp"), timestamp) 
 
     def gather_scst_info(self):
@@ -206,8 +206,8 @@ class Report:
             # Devices
             d = scst.get_devices()
             self.zip.writestr(os.path.join(self.prefix, "device_info"),
-                              simplejson.dumps(d, sort_keys=True, indent=4))
-            
+                              json.dumps(d, sort_keys=True, indent=4))
+
             # Groups
             g = {}
             for group_name in scst.get_scst_groups():
@@ -215,8 +215,8 @@ class Report:
                 g[group_name]["devices"] = scst.get_devices_in_group(group_name)
                 g[group_name]["names"] = scst.get_initiator_pattern_in_group(group_name)
             self.zip.writestr(os.path.join(self.prefix, "group_info"),
-                              simplejson.dumps(g, sort_keys=True, indent=4))
-            
+                              json.dumps(g, sort_keys=True, indent=4))
+
             # Sessions
             sesson_data = open("/proc/scsi_tgt/sessions", "r").read()
             self.zip.writestr(os.path.join(self.prefix, "session_info"), sesson_data)
@@ -229,8 +229,8 @@ class Report:
             target_data = {}
             for (tid, t) in iscsi_scst.get_targets().items():
                 target_data[tid] = t.all()
-                
-            target_data = simplejson.dumps(target_data, sort_keys=True, indent=4)
+
+            target_data = json.dumps(target_data, sort_keys=True, indent=4)
             self.zip.writestr(os.path.join(self.prefix, "target_info"), target_data)
         except Exception as e:
             log_error(self.options, "Failed to gather iSCSI target infos: " + str(e))
@@ -242,7 +242,7 @@ class Report:
                 self.zip.write(config.DEDUPV1_DEFAULT_CONFIG, arcname=os.path.join(self.prefix, "dedupv1.conf"))
         except Exception as e:
             log_error(self.options, "Failed to gather default config: " + str(e))
-        
+
     def gather_dedupv1d_log(self):
         def gather_file(filename):
             # Set more accessible mode
@@ -252,7 +252,7 @@ class Report:
                 os.chmod(log_file, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH | stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH)
             except OSError:
                 changed_perm = False
-                
+
             self.zip.write(log_file, arcname=os.path.join(self.prefix, os.path.basename(log_file)))
             # restore original mode
             if changed_perm:
@@ -280,7 +280,7 @@ class Report:
                         self.zip.write(core_file, arcname=os.path.join(self.prefix, os.path.basename(file)))
                         p = core_file.rpartition(".")
                         new_filename = p[0] + "-reported.core"
-                        os.rename(core_file, new_filename)               
+                        os.rename(core_file, new_filename)
         except Exception as e:
             log_error(self.options, "Failed to get core dump: " + str(e))
 
@@ -295,42 +295,44 @@ class Report:
                     self.zip.writestr(os.path.join(self.prefix, zip_path), data)
         except Exception as e:
             log_error(self.options, "Failed to gather scst state: " + str(e))
-            
+
     def gather_monitor_data(self):
         def write_monitor(monitor_name):
             try:
                 data = self.monitor.read(monitor_name)
-                self.zip.writestr(os.path.join(self.prefix, "monitor/%s" % (monitor_name)), simplejson.dumps(data, sort_keys=True, indent=4))
+                self.zip.writestr(os.path.join(self.prefix, "monitor/%s" % (monitor_name)), 
+                    json.dumps(data, sort_keys=True, indent=4))
             except:
-                pass    
+                pass
         log_verbose(self.options, "Gather monitor data")
-        
+
         try:
             monitor_list = self.monitor.read("monitor")
-            self.zip.writestr(os.path.join(self.prefix, "monitor/monitor"), simplejson.dumps(monitor_list, sort_keys=True, indent=4))
+            self.zip.writestr(os.path.join(self.prefix, "monitor/monitor"), 
+                json.dumps(monitor_list, sort_keys=True, indent=4))
         except MonitorException as me:
             # empty monitor list
             monitor_list = { "adapters": []}
-        
+
         for monitor in monitor_list["adapters"]:
             if monitor != "monitor":
                 write_monitor(monitor)
-                  
+
 if __name__ == "__main__":
     if not (dedupv1.check_root() or dedupv1.check_dedupv1_group()):
         print >> sys.stderr, "Permission denied"
         sys.exit(1)
-        
-        
+
+
     usage = """usage: %prog <filename> [options]
-    
+
 Examples:
 %prog report.zip
 %prog --help
 %prog --version
 """
     version = "%s (hash %s)" % (config.DEDUPV1_VERSION_STR, config.DEDUPV1_REVISION_STR)
-    
+
     parser = optparse.OptionParser(usage=usage, version=version)
 
     parser.add_option("-p", "--port", type="int", dest="port", help="port of the dedupv1d", default=config.DEDUPV1_DEFAULT_MONITOR_PORT)
@@ -346,7 +348,7 @@ Examples:
         action="store_true",
         default=False)
     (options, args) = parser.parse_args()
-    
+
     if len(args) == 0:
         parser.error("No command specified")
         sys.exit(1)
@@ -355,7 +357,7 @@ Examples:
         sys.exit(1)
     cmd = args[0]
 
-    try:        
+    try:
         if cmd == "help":
             parser.print_help()
         elif cmd == "version":
@@ -373,5 +375,5 @@ Examples:
         sys.exit(1)
     except Exception as e:
         log_error(options, e)
-        sys.exit(1)     
+        sys.exit(1) 
     sys.exit(0)

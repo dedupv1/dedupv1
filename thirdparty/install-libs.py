@@ -229,11 +229,6 @@ def install_lz4(options):
     run("make -j%s CFLAGS=\"-fPIC -Wall -Winline -O2 -g -D_FILE_OFFSET_BITS=64\"" % get_cpu_count(), cwd="lz4-r53")
     run("make install PREFIX=/opt/dedupv1", cwd="lz4-r53")
 
-@install()
-def install_simplejson(options):
-    print "Install simplejson (py)"
-    run("tar -xzf simplejson-2.0.9.tar.gz")
-    run("sudo python setup.py install", cwd="simplejson-2.0.9")
     
 @install()
 def install_re2(options):
@@ -311,14 +306,14 @@ def install_snappy(options):
 def install_xmlreporting(options):
     print "Install xml reporting (py)"
     run("tar -xzf  dmeister-unittest-xml-reporting-1.0.3-9-gb6b1ce5.tar.gz")
-    run("sudo python setup.py install", cwd="dmeister-unittest-xml-reporting-b6b1ce5")
+    run("sudo python2.7 setup.py install", cwd="dmeister-unittest-xml-reporting-b6b1ce5")
 
 @install()
 def install_tcb_py(options):
-	print "Install tokyo cabinet bindungs (py)"
-	run("tar -xzf py-tcdb-0.3.tar.gz")
-        run("patch -p 1 < ../py-tcdb.patch", cwd="py-tcdb-0.3")
-	run("python setup.py install --prefix=/opt/dedupv1", cwd="py-tcdb-0.3")
+  print "Install tokyo cabinet bindungs (py)"
+  run("tar -xzf py-tcdb-0.3.tar.gz")
+  run("patch -p 1 < ../py-tcdb.patch", cwd="py-tcdb-0.3")
+  run("python2.7 setup.py install --prefix=/opt/dedupv1", cwd="py-tcdb-0.3")
 
 @install()
 def install_linenoise(options):
@@ -330,12 +325,12 @@ def install_linenoise(options):
 def install_protobuf_json(options):
     print "Install protobuf-json (py)"
     run ("tar -xf protobuf-json.tar.gz")
-    
-    dir_name = "/opt/dedupv1/lib/python2.6/site-packages/protobuf-json.egg"
+
+    dir_name = "/opt/dedupv1/lib/python2.7/site-packages/protobuf-json.egg"
     if not os.path.isdir(dir_name):
         os.mkdir(dir_name) 
     shutil.copy("protobuf-json/protobuf_json.py", dir_name)
-    
+
 @install()
 def install_valgrind_prod(options):
     print "Install valgrind production header"

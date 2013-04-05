@@ -26,7 +26,7 @@ import re
 import traceback
 import syslog
 import config
-import simplejson
+import json
 
 def is_syslog_enabled():
     """ checks if the syslog mode is enabled. The
@@ -77,7 +77,7 @@ def log_error(options, message_or_exception):
     """ logs an error message
     """
     if is_raw_enabled(options):
-        print >> sys.stderr, simplejson.dumps({"ERROR": str(message_or_exception)})
+        print >> sys.stderr, json.dumps({"ERROR": str(message_or_exception)})
     else:
         print >> sys.stderr, str(message_or_exception)
     if is_syslog_enabled():
