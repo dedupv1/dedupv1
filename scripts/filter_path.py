@@ -26,13 +26,13 @@ import os
 
 pattern_prefix = r"[0-9A-Za-z\-\_\\/]*"
 pattern = [("dedupv1_base_obj/", "base/src/"),
-               ("dedupv1_base_test/", "base/unit_test/"),
-               ("dedupv1_core_test/", "core/unit_test/"),
+               ("dedupv1_base_test/", "base/"),
+               ("dedupv1_core_test/", "core/"),
                ("dedupv1_core_obj/", "core/src/"),
                ("dedupv1d_obj/", "dedupv1d/src/"),
-               ("dedupv1d_test/", "dedupv1d/unit_test/"),
+               ("dedupv1d_test/", "dedupv1d/"),
                ("dedupv1_check/", "contrib/dedupv1_check/"),
-               ("dedupv1_contrib_test/", "contrib/unit_test/")]
+               ("dedupv1_contrib_test/", "contrib/")]
 
 compiled_pattern = [(re.compile(pattern_prefix + p[0]), p[1]) for p in pattern]
 
