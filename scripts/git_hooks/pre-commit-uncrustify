@@ -1,0 +1,24 @@
+#!/bin/bash
+
+case "${1}" in
+  --about )
+    echo "Check if code is formatted."
+    ;;
+  * )
+    RET=0
+    files=$(scripts/format_src.sh --filter $(git diff --cached --name-only))
+    for file in $files; do
+      if ! scripts/format_src.sh --check-file $file; then
+        echo "Style fix-ups required: $file. Please run: $PWD/scripts/format_src.sh $PWD/$file && git add $PWD/$file"
+        RET=1
+      fi
+    done
+
+    if [[ $RET = 1 ]]; then
+      echo
+      echo "Commit aborted!"
+      echo "Run the commands above to fix your files before committing."
+      echo "Alternatively, run \"$PWD/scripts/format_src.sh --staged\" and then re-stage affected files."
+    fi
+    exit $RET
+esac
