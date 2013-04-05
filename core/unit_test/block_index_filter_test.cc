@@ -65,7 +65,8 @@ namespace filter {
 
 INSTANTIATE_TEST_CASE_P(BlockIndexFilter,
     FilterTest,
-    ::testing::Values("block-index-filter"));
+    ::testing::Values("block-index-filter",
+      "block-index-filter;block-chunk-cache=true"));
 
 class BlockIndexFilterTest : public testing::Test  {
 protected:

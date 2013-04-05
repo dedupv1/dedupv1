@@ -50,6 +50,7 @@ using dedupv1::base::strutil::To;
 using dedupv1::Fingerprinter;
 using dedupv1::chunkstore::Storage;
 using dedupv1::base::ErrorContext;
+
 LOGGER("ChunkIndexFilter");
 
 namespace dedupv1 {
@@ -102,21 +103,27 @@ bool ChunkIndexFilter::AcquireChunkLock(const dedupv1::chunkindex::ChunkMapping&
     return this->chunk_index_->chunk_locks().Lock(mapping.fingerprint(), mapping.fingerprint_size());
 }
 
-Filter::filter_result ChunkIndexFilter::Check(Session* session, const BlockMapping* block_mapping,
-                                              ChunkMapping* mapping, ErrorContext* ec) {
+Filter::filter_result ChunkIndexFilter::Check(Session* session, 
+      const BlockMapping* block_mapping,
+      ChunkMapping* mapping, 
+      ErrorContext* ec) {
     DCHECK_RETURN(mapping, FILTER_ERROR, "Chunk mapping not set");
     enum filter_result result = FILTER_ERROR;
     ProfileTimer timer(this->stats_.time_);
     SlidingAverageProfileTimer timer2(this->stats_.average_latency_);
 
+    TRACE("Check " << mapping->DebugString());
+
     if (Fingerprinter::IsEmptyDataFingerprint(mapping->fingerprint(), mapping->fingerprint_size())) {
+        TRACE("Found zero-chunk fingerprint");
         mapping->set_data_address(Storage::EMPTY_DATA_STORAGE_ADDRESS);
         this->stats_.reads++;
         this->stats_.empty_fp_hits++;
         return FILTER_EXISTING;
     }
 
-    CHECK_RETURN(AcquireChunkLock(*mapping), FILTER_ERROR, "Failed to acquire chunk lock: " << mapping->DebugString());
+    CHECK_RETURN(AcquireChunkLock(*mapping), FILTER_ERROR, 
+        "Failed to acquire chunk lock: " << mapping->DebugString());
 
     this->stats_.reads++;
     enum lookup_result index_result = this->chunk_index_->Lookup(mapping, true, ec);
@@ -150,10 +157,14 @@ Filter::filter_result ChunkIndexFilter::Check(Session* session, const BlockMappi
     return result;
 }
 
-bool ChunkIndexFilter::Update(Session* session, ChunkMapping* mapping, ErrorContext* ec) {
+bool ChunkIndexFilter::Update(Session* session, 
+    const BlockMapping* block_mapping,
+    ChunkMapping* mapping, 
+    ErrorContext* ec) {
     ProfileTimer timer(this->stats_.time_);
 
     DCHECK(mapping, "Mapping must be set");
+    TRACE("Update " << mapping->DebugString());
     this->stats_.writes++;
 
     bool r = this->chunk_index_->Put(*mapping, ec);
@@ -164,8 +175,13 @@ bool ChunkIndexFilter::Update(Session* session, ChunkMapping* mapping, ErrorCont
     return r;
 }
 
-bool ChunkIndexFilter::Abort(Session* session, ChunkMapping* chunk_mapping, ErrorContext* ec) {
+bool ChunkIndexFilter::Abort(Session* session, 
+    const BlockMapping* block_mapping,
+    ChunkMapping* chunk_mapping, 
+    ErrorContext* ec) {
     DCHECK(chunk_mapping, "Chunk mapping not set");
+
+    TRACE("Abort " << chunk_mapping->DebugString());
 
     // if we have the empty fingerprint, we do not need to release the chunk lock
     if (chunk_mapping->data_address() == Storage::EMPTY_DATA_STORAGE_ADDRESS) {

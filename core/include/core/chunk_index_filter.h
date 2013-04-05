@@ -138,7 +138,8 @@ class ChunkIndexFilter: public Filter {
          * @return
          */
         virtual enum filter_result Check(dedupv1::Session* session,
-                const dedupv1::blockindex::BlockMapping* block_mapping, dedupv1::chunkindex::ChunkMapping* mapping,
+                const dedupv1::blockindex::BlockMapping* block_mapping, 
+                dedupv1::chunkindex::ChunkMapping* chunk_mapping,
                 dedupv1::base::ErrorContext* ec);
 
         /**
@@ -152,7 +153,9 @@ class ChunkIndexFilter: public Filter {
          * @param ec Error context that can be filled if case of special errors
          * @return true iff ok, otherwise an error has occurred
          */
-        virtual bool Update(dedupv1::Session* session, dedupv1::chunkindex::ChunkMapping* mapping,
+        virtual bool Update(dedupv1::Session* session,
+                const dedupv1::blockindex::BlockMapping* block_mapping,
+                dedupv1::chunkindex::ChunkMapping* chunk_mapping,
                 dedupv1::base::ErrorContext* ec);
 
         /**
@@ -162,7 +165,9 @@ class ChunkIndexFilter: public Filter {
          * chunk mapping. The chunk index filter is releasing the chunk lock
          * @return true iff ok, otherwise an error has occurred
          */
-        virtual bool Abort(dedupv1::Session* session, dedupv1::chunkindex::ChunkMapping* chunk_mapping,
+        virtual bool Abort(dedupv1::Session* session,
+                const dedupv1::blockindex::BlockMapping* block_mapping,
+                dedupv1::chunkindex::ChunkMapping* chunk_mapping,
                 dedupv1::base::ErrorContext* ec);
 
         /**

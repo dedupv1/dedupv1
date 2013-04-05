@@ -58,7 +58,7 @@ BlockIndexFilter::BlockIndexFilter()
     : Filter("block-index-filter", FILTER_STRONG_MAYBE) {
     block_index_ = NULL;
     block_chunk_cache_ = new BlockChunkCache();
-    use_block_chunk_cache_ = true;
+    use_block_chunk_cache_ = false;
 }
 
 BlockIndexFilter::Statistics::Statistics() : average_latency_(256) {
@@ -142,6 +142,10 @@ Filter::filter_result BlockIndexFilter::Check(Session* session,
                     mapping->fingerprint(),
                     mapping->fingerprint_size()) == 0) {
                 mapping->set_data_address(i->data_address());
+
+                TRACE("Found in previous block: " <<
+                    "block mapping item " << i->DebugString() <<
+                    ", chunk mapping " << mapping->DebugString());
 
                 this->stats_.hits_++;
                 result = FILTER_STRONG_MAYBE;

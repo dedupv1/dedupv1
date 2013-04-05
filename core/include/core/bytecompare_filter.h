@@ -103,7 +103,8 @@ class ByteCompareFilter: public Filter {
          * @return
          */
         virtual enum filter_result Check(dedupv1::Session* session,
-                const dedupv1::blockindex::BlockMapping* block_mapping, dedupv1::chunkindex::ChunkMapping* mapping,
+                const dedupv1::blockindex::BlockMapping* block_mapping, 
+                dedupv1::chunkindex::ChunkMapping* mapping,
                 dedupv1::base::ErrorContext* ec);
 
         /**

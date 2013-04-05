@@ -206,6 +206,7 @@ public:
      */
     bool AbortChunkInfo(
         dedupv1::Session* session,
+        const dedupv1::blockindex::BlockMapping* block_mapping,
         dedupv1::chunkindex::ChunkMapping* chunk_mapping,
         dedupv1::base::ErrorContext* ec);
 

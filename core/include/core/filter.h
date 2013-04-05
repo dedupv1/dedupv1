@@ -216,20 +216,22 @@ public:
      * @return true iff ok, otherwise an error has occurred
      */
     virtual bool Update(dedupv1::Session* session,
-                        const dedupv1::blockindex::BlockMapping* block_mapping,
-                        dedupv1::chunkindex::ChunkMapping* mapping,
-                        dedupv1::base::ErrorContext* ec);
+        const dedupv1::blockindex::BlockMapping* block_mapping,
+        dedupv1::chunkindex::ChunkMapping* mapping,
+        dedupv1::base::ErrorContext* ec);
 
     virtual bool UpdateKnownChunk(dedupv1::Session* session,
-                                  const dedupv1::blockindex::BlockMapping* block_mapping,
-                                  dedupv1::chunkindex::ChunkMapping* mapping,
-                                  dedupv1::base::ErrorContext* ec);
+        const dedupv1::blockindex::BlockMapping* block_mapping,
+        dedupv1::chunkindex::ChunkMapping* mapping,
+        dedupv1::base::ErrorContext* ec);
 
     /**
      * @return true iff ok, otherwise an error has occurred
      */
-    virtual bool Abort(dedupv1::Session* session, dedupv1::chunkindex::ChunkMapping* chunk_mapping,
-                       dedupv1::base::ErrorContext* ec);
+    virtual bool Abort(dedupv1::Session* session,
+          const dedupv1::blockindex::BlockMapping* block_mapping,
+          dedupv1::chunkindex::ChunkMapping* chunk_mapping,
+          dedupv1::base::ErrorContext* ec);
 
     /**
      * Closes the filter and frees all its resources.

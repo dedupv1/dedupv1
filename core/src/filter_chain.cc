@@ -121,7 +121,7 @@ bool FilterChain::Start(DedupSystem* system) {
 }
 
 bool FilterChain::StoreChunkInfo(Session* session,
-                                 const dedupv1::blockindex::BlockMapping* block_mapping,
+                                 const BlockMapping* block_mapping,
                                  ChunkMapping* chunk_mapping,
                                  ErrorContext* ec) {
     DCHECK(session, "Session not set");
@@ -162,7 +162,7 @@ bool FilterChain::StoreChunkInfo(Session* session,
         for (list<Filter*>::iterator j = this->chain_.begin(); j != this->chain_.end(); j++) {
             Filter* filter = *j;
             if (session->is_filter_enabled(filter)) {
-                if (!filter->Abort(session, chunk_mapping, ec)) {
+                if (!filter->Abort(session, block_mapping, chunk_mapping, ec)) {
                     if (ec) {
                         ERROR("Abort of filter failed: " << chunk_mapping->DebugString() << " because " << ec->DebugString());
                     } else {
@@ -208,6 +208,10 @@ bool FilterChain::CheckChunk(Session* session,
                             ", chunk mapping " << chunk_mapping->DebugString());
                     }
                     break;
+                } else {
+                  TRACE("Filter result: filter " << filter->GetName() <<
+                      ", chunk mapping " << chunk_mapping->DebugString() <<
+                      ", result " << Filter::GetFilterResultName(result));
                 }
             }
         }
@@ -219,7 +223,7 @@ bool FilterChain::CheckChunk(Session* session,
             Filter* filter = *k;
             if (filter) {
                 if (session->is_filter_enabled(filter)) {
-                    if (!filter->Abort(session, chunk_mapping, ec)) {
+                    if (!filter->Abort(session, block_mapping, chunk_mapping, ec)) {
                         WARNING("Failed to abort filter: " << filter->GetName() << ", chunk " << chunk_mapping->DebugString());
                     }
                 }
@@ -256,6 +260,7 @@ bool FilterChain::ReadChunkInfo(Session* session,
 
 bool FilterChain::AbortChunkInfo(
     Session* session,
+    const BlockMapping* block_mapping,
     ChunkMapping* chunk_mapping,
     ErrorContext* ec) {
     list<Filter*>::iterator j;
@@ -268,7 +273,7 @@ bool FilterChain::AbortChunkInfo(
         Filter* filter = *j;
         DCHECK(filter, "Filter not set");
         if (session->is_filter_enabled(filter)) {
-            if (!filter->Abort(session, chunk_mapping, ec)) {
+            if (!filter->Abort(session, block_mapping, chunk_mapping, ec)) {
                 ERROR("Abort of filter failed: " << chunk_mapping->DebugString());
                 failed = true;
             }

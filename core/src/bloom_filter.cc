@@ -62,6 +62,7 @@ using dedupv1::base::BloomSet;
 using dedupv1::base::ScopedReadWriteLock;
 using dedupv1::base::ErrorContext;
 using dedupv1::base::Option;
+using dedupv1::chunkstore::Storage;
 
 LOGGER("BloomFilter");
 

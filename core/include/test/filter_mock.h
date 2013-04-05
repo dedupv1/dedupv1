@@ -36,11 +36,14 @@ public:
                 dedupv1::chunkindex::ChunkMapping* mapping,
                 dedupv1::base::ErrorContext* ec));
 
-    MOCK_METHOD3(Update, bool(dedupv1::Session* session,
+    MOCK_METHOD4(Update, bool(dedupv1::Session* session,
+                const dedupv1::blockindex::BlockMapping* block_mapping,
                 dedupv1::chunkindex::ChunkMapping* mapping,
                 dedupv1::base::ErrorContext* ec));
 
-    MOCK_METHOD3(Abort, bool(dedupv1::Session* session, dedupv1::chunkindex::ChunkMapping* chunk_mapping,
+    MOCK_METHOD4(Abort, bool(dedupv1::Session* session, 
+                const dedupv1::blockindex::BlockMapping* block_mapping,
+                dedupv1::chunkindex::ChunkMapping* chunk_mapping,
                 dedupv1::base::ErrorContext* ec));
 
 

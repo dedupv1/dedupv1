@@ -726,7 +726,7 @@ bool ContentStorage::ProcessChunkFilterChain(std::tr1::tuple<Session*, const Blo
         FAULT_POINT("content-storage.handle.post-filter-update");
 
     } else {
-        if (!filter_chain_->AbortChunkInfo(session, chunk_mapping, ec)) {
+        if (!filter_chain_->AbortChunkInfo(session, block_mapping, chunk_mapping, ec)) {
             ERROR("Failed to abort chunk mapping filter: " << chunk_mapping->DebugString());
             // failed already set to true
         }

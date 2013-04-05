@@ -73,10 +73,11 @@ bool Filter::UpdateKnownChunk(Session* session,
                               const dedupv1::blockindex::BlockMapping* block_mapping,
                               ChunkMapping* mapping,
                               ErrorContext* ec) {
-    return Abort(session, mapping, ec);
+    return Abort(session, block_mapping, mapping, ec);
 }
 
 bool Filter::Abort(Session* session,
+    const dedupv1::blockindex::BlockMapping* block_mapping,
                    ChunkMapping* chunk_mapping,
                    ErrorContext* ec) {
     return true;
