@@ -414,7 +414,7 @@ bool DiskHashCacheEntry::ParseFrom(uint32_t offset) {
         "key " << ToHexString(key(), key_size()) <<
         ", key size " << key_size_ <<
         ", value size " << value_size_ <<
-        ", state " << ToHexString(state) <<
+        ", state " << static_cast<uint32_t>(state) <<
         ", offset " << offset_);
     return true;
 }
@@ -431,7 +431,6 @@ void DiskHashCacheEntry::Store() {
 
 bool DiskHashCacheEntry::AssignKey(const void* key, size_t key_size) {
     key_size_ = key_size;
-    memcpy(this->buffer_, &key_size, sizeof(uint32_t));
     void* key_buf = const_cast<void*>(this->key());
     memcpy(key_buf, key, key_size);
     this->key_size_ = key_size;
