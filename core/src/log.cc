@@ -72,6 +72,7 @@ using dedupv1::base::strutil::StartsWith;
 using dedupv1::base::strutil::FriendlySubstr;
 using dedupv1::base::ProfileTimer;
 using dedupv1::base::MutexLock;
+using dedupv1::base::timed_bool;
 using dedupv1::base::ScopedLock;
 using dedupv1::base::ScopedReadWriteLock;
 using dedupv1::base::TIMED_FALSE;
@@ -97,6 +98,7 @@ using google::protobuf::Message;
 using google::protobuf::FieldDescriptor;
 using dedupv1::base::make_option;
 using dedupv1::base::ThreadUtil;
+
 LOGGER("Log");
 
 namespace dedupv1 {
@@ -125,8 +127,8 @@ public:
                    const dedupv1::log::LogReplayContext& context);
 };
 
-Log::Log() :
-    replay_thread_(NewRunnable(this, &Log::ReplayLoop), "log direct"), replay_thread_start_barrier_(2) {
+Log::Log() : replay_thread_(NewRunnable(this, &Log::ReplayLoop), "log direct"), 
+  replay_thread_start_barrier_(2) {
     this->state_ = LOG_STATE_CREATED;
     this->log_data_ = NULL;
     this->log_id_ = 1;
@@ -489,7 +491,6 @@ bool Log::ReplayLoop() {
             std::map<uint64_t, LogReplayEntry>::iterator i = delayed_entry_map.begin();
             if (last_directly_replayed_log_id_ + 1 == i->first) {
                 LogReplayEntry& replay_entry(i->second);
-
                 TRACE("Replay event (delay direct): " << replay_entry.DebugString());
 
                 if (!ReplayDirectReplayEntry(replay_entry)) {
@@ -513,7 +514,7 @@ bool Log::ReplayLoop() {
                 if (!log_condition_lock_.AcquireLock()) {
                     WARNING("Failed to acquire lock");
                 }
-                dedupv1::base::timed_bool t = this->log_condition_.ConditionWaitTimeout(&log_condition_lock_, 1);
+                timed_bool t = this->log_condition_.ConditionWaitTimeout(&log_condition_lock_, 1);
                 if (t == TIMED_FALSE) {
                     WARNING("Failed to wait for log entry");
                 }
@@ -800,9 +801,9 @@ bool Log::WriteEntry(int64_t first_id, int64_t id_count, const LogEventData& log
     DCHECK(this->log_data_, "Log data not set");
     ProfileTimer timer(this->stats_.write_time_);
 
-    TRACE("Write log entry: type " << Log::GetEventTypeName(static_cast<enum event_type>(log_event.event_type()))
-                                   << ", event value " << FriendlySubstr(log_event.ShortDebugString(), 0, 256, "...") << ", first id "
-                                   << first_id << ", first position " << this->GetLogPositionFromId(first_id) << ", count " << id_count);
+    TRACE("Write log entry: type " << Log::GetEventTypeName(static_cast<enum event_type> (log_event.event_type()))
+      << ", event value " << FriendlySubstr(log_event.ShortDebugString(), 0, 256, "...") << ", first id "
+      << first_id << ", first position " << this->GetLogPositionFromId(first_id) << ", count " << id_count);
 
     bytestring buffer;
     CHECK(SerializeMessageToString(log_event, &buffer),
@@ -878,10 +879,10 @@ Log::log_read Log::ReadEntry(int64_t id, LogEntryData* log_entry, bytestring* lo
     }
     if ((event_data.has_partial_count() && event_data.partial_index() != 0)) {
         DEBUG("Tried to read partial log entry: " <<
-            "current id " << id <<
-            ", current position " << pos <<
-            ", partial index " << event_data.partial_index() <<
-            ", partial count " << event_data.partial_count());
+                "current id " << id <<
+                ", current position " << pos <<
+                ", partial index " << event_data.partial_index() <<
+                ", partial count " << event_data.partial_count());
         return LOG_READ_PARTIAL;
     }
 
@@ -1019,9 +1020,9 @@ bool Log::CommitEvent(enum event_type event_type, const google::protobuf::Messag
     int64_t current_log_id = 0;
     uint32_t current_log_id_count = 0;
 
-    TRACE("Prepare commit: " << Log::GetEventTypeName(event_type) << ", event value " << (message ? FriendlySubstr(
-                                                                                              message->ShortDebugString(), 0, 256, " ...") : "null") << ", event size " << (message ? message->ByteSize()
-                                                                                                                                                                            : 0));
+    TRACE("Prepare commit: " << Log::GetEventTypeName(event_type) << 
+        ", event value " << (message ? FriendlySubstr(message->ShortDebugString(), 0, 256, " ...") : "null") 
+        << ", event size " << (message ? message->ByteSize() : 0));
 
     const EventTypeInfo& event_type_info(EventTypeInfo::GetInfo(event_type));
     LogEventData event_data;
@@ -1045,10 +1046,12 @@ bool Log::CommitEvent(enum event_type event_type, const google::protobuf::Messag
             }
             return false;
         }
-        DEBUG("Committed event: " << "event log id " << current_log_id << ", entry count " << current_log_id_count
-                                  << ", type " << Log::GetEventTypeName(event_type) << ", event value " << (message ? FriendlySubstr(
-                                                                                          message->ShortDebugString(), 0, 256, " ...") : "null") << ", event size "
-                                  << (message ? message->ByteSize() : 0));
+        DEBUG("Committed event: "
+            << "event log id " << current_log_id <<
+            ", entry count " << current_log_id_count <<
+            ", type " << Log::GetEventTypeName(event_type) << 
+            ", event value " << (message ? FriendlySubstr(message->ShortDebugString(), 0, 256, " ...") : "null") << 
+            ", event size " << (message ? message->ByteSize() : 0));
         if (commit_log_id) {
             *commit_log_id = current_log_id;
         }
@@ -1225,16 +1228,16 @@ bool Log::ReplayStart(enum replay_mode replay_mode, bool is_full_replay, bool co
     return true;
 }
 
-log_replay_result Log::Replay(enum replay_mode replay_mode, uint32_t number_to_replay, uint64_t* replayed_log_id,
-                              uint32_t* number_replayed) {
+log_replay_result Log::Replay(enum replay_mode replay_mode,
+    uint32_t number_to_replay,
+    uint64_t* replayed_log_id,
+    uint32_t* number_replayed) {
     // We divide the problem in three tasks:
     // 0.) Some initialization...
     // 1.) Process Events
     // 2.) Delete Events (if Background run)
 
     // Initialization
-    // //////////////////////////////////////////////////////////////////////////////////////////////////////
-    // //////////////////////////////////////////////////////////////////////////////////////////////////////
     CHECK_RETURN(replay_mode != EVENT_REPLAY_MODE_DIRECT, LOG_REPLAY_ERROR, "Illegal replay mode");
 
     if (number_replayed) {
@@ -1264,8 +1267,6 @@ log_replay_result Log::Replay(enum replay_mode replay_mode, uint32_t number_to_r
     }
 
     // Process the events
-    // //////////////////////////////////////////////////////////////////////////////////////////////////////
-    // //////////////////////////////////////////////////////////////////////////////////////////////////////
     int32_t processed_entries = 0;
     int64_t last_processed_id = current_replay_id;
     log_replay_result result = LOG_REPLAY_OK;
@@ -1283,7 +1284,7 @@ log_replay_result Log::Replay(enum replay_mode replay_mode, uint32_t number_to_r
     }
     // if we are running (aka if we have direct replay) only replay items that are already replayed in the
     // direct replay queue. It is very hard to deal with this
-    if (likely(this->state_ == LOG_STATE_RUNNING) && unlikely(replay_id_ > last_directly_replayed_log_id_)) {
+    if (likely(this->state_ == LOG_STATE_RUNNING) && unlikely(next_replay_id >= last_directly_replayed_log_id_)) {
         return LOG_REPLAY_NO_MORE_EVENTS;
     }
 
@@ -1337,21 +1338,27 @@ log_replay_result Log::Replay(enum replay_mode replay_mode, uint32_t number_to_r
 
     if (read_result != LOG_READ_OK) {
         is_last_read_event_data_valid_ = false;
-        ERROR("Error while reading event " << next_replay_id << ", result was " << read_result <<
-            ", current log id is " << current_log_id << ", current last fully written id is " <<
-            current_last_fully_written_log_id << ", current last empty log id is " << current_last_empty_log_id);
+        ERROR("Error while reading event " << next_replay_id <<
+            ", result was " << read_result <<
+            ", current log id is " << current_log_id <<
+            ", current last fully written id is " <<
+            current_last_fully_written_log_id <<
+            ", current last empty log id is " << current_last_empty_log_id);
         result = LOG_REPLAY_ERROR;
     }
 
-    TRACE("After publishing " << processed_entries << " events next replay is " << next_replay_id << ", last processed id is " << last_processed_id);
+    TRACE("After publishing " << processed_entries << " events" <<
+        ", next replay id " << next_replay_id <<
+        ", last processed id is " << last_processed_id);
     // Delete events
-    // //////////////////////////////////////////////////////////////////////////////////////////////////////
-    // //////////////////////////////////////////////////////////////////////////////////////////////////////
     if ((replay_mode == EVENT_REPLAY_MODE_REPLAY_BG) && (next_replay_id != current_replay_id)) {
-        // We persist the replay ID only when replaying in Background mode, not during Dirty Restart.
+        // We persist the replay ID only when replaying in Background mode, not 
+        // during Dirty Restart.
         if (log_empty) {
-            // I think it is a good idea to update the current log_id_ and the last_fully_written_log_id_ here,
-            // because the Publishing could have taken some time and therefore it might be possible that the
+            // I think it is a good idea to update the current log_id_ and the 
+            // last_fully_written_log_id_ here,
+            // because the Publishing could have taken some time and therefore 
+            // it might be possible that the
             // log is no more empty.
             spin_mutex::scoped_lock l2(this->lock_);
             current_log_id = this->log_id_;
