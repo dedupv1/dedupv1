@@ -299,35 +299,52 @@ class GarbageCollector: public dedupv1::log::LogConsumer,
          * @param context log context
          * @return true iff ok, otherwise an error has occurred
          */
-        bool ProcessDeletedBlockMapping(const dedupv1::blockindex::BlockMapping& orig_mapping,
-                const dedupv1::log::LogReplayContext& context);
+        bool ProcessDeletedBlockMapping(
+            const dedupv1::blockindex::BlockMapping& orig_mapping,
+            const dedupv1::log::LogReplayContext& context);
 
-        bool ProcessDeletedBlockMappingDirect(const dedupv1::blockindex::BlockMapping& orig_mapping,
-                const dedupv1::log::LogReplayContext& context);
+        bool ProcessDeletedBlockMappingDirect(
+            const dedupv1::blockindex::BlockMapping& orig_mapping,
+            const dedupv1::log::LogReplayContext& context);
 
-        bool ProcessDeletedBlockMappingDirtyStart(const dedupv1::blockindex::BlockMapping& orig_mapping,
-                const dedupv1::log::LogReplayContext& context);
+        bool ProcessDeletedBlockMappingDirtyStart(
+            const dedupv1::blockindex::BlockMapping& orig_mapping,
+            const dedupv1::log::LogReplayContext& context);
 
-        bool ProcessFailedBlockMapping(const dedupv1::blockindex::BlockMappingPair& mapping_pair,
-                dedupv1::base::Option<int64_t> write_event_committed, const dedupv1::log::LogReplayContext& context);
+        bool ProcessFailedBlockMapping(
+            const dedupv1::blockindex::BlockMappingPair& mapping_pair,
+            dedupv1::base::Option<int64_t> write_event_committed, 
+            const dedupv1::log::LogReplayContext& context);
 
-        bool ProcessFailedBlockMappingDirect(const dedupv1::blockindex::BlockMappingPair& mapping_pair,
-                dedupv1::base::Option<int64_t> write_event_committed, const dedupv1::log::LogReplayContext& context);
+        bool ProcessFailedBlockMappingDirect(
+            const dedupv1::blockindex::BlockMappingPair& mapping_pair,
+            dedupv1::base::Option<int64_t> write_event_committed, 
+            const dedupv1::log::LogReplayContext& context);
 
-        bool ProcessFailedBlockMappingDirtyStart(const dedupv1::blockindex::BlockMappingPair& mapping_pair,
-                dedupv1::base::Option<int64_t> write_event_committed, const dedupv1::log::LogReplayContext& context);
+        bool ProcessFailedBlockMappingDirtyStart(
+            const dedupv1::blockindex::BlockMappingPair& mapping_pair,
+            dedupv1::base::Option<int64_t> write_event_committed, 
+            const dedupv1::log::LogReplayContext& context);
 
-        bool ProcessBlockMappingDirect(const dedupv1::blockindex::BlockMappingPair& mapping_pair,
-                const dedupv1::log::LogReplayContext& context);
+        bool ProcessBlockMappingDirect(
+            const dedupv1::blockindex::BlockMappingPair& mapping_pair,
+            const dedupv1::log::LogReplayContext& context);
 
-        bool ProcessBlockMappingDirtyStart(const dedupv1::blockindex::BlockMappingPair& mapping_pair,
-                const dedupv1::log::LogReplayContext& context);
+        bool ProcessBlockMappingDirtyStart(
+            const dedupv1::blockindex::BlockMappingPair& mapping_pair,
+            const dedupv1::log::LogReplayContext& context);
 
-        bool ProcessDiffDirtyStart(dedupv1::chunkindex::ChunkMapping* mapping, int usage_modifier,
-                const dedupv1::log::LogReplayContext& context);
+        bool ProcessDiffDirtyStart(
+            dedupv1::chunkindex::ChunkMapping* mapping,
+            uint64_t block_id,
+            int usage_modifier,
+            const dedupv1::log::LogReplayContext& context);
 
-        bool ProcessDiffDirect(dedupv1::chunkindex::ChunkMapping* mapping, int usage_modifier,
-                const dedupv1::log::LogReplayContext& context);
+        bool ProcessDiffDirect(
+            dedupv1::chunkindex::ChunkMapping* mapping,
+            uint64_t block_id,
+            int usage_modifier,
+            const dedupv1::log::LogReplayContext& context);
 
         /**
          * Calculates the difference between the two block mappings.
@@ -338,11 +355,14 @@ class GarbageCollector: public dedupv1::log::LogConsumer,
          * @return true iff ok, otherwise an error has occurred
          */
         bool Diff(const dedupv1::blockindex::BlockMapping& original_block_mapping,
-                const dedupv1::blockindex::BlockMapping& modified_block_mapping, std::map<bytestring, std::pair<int,
-                        uint64_t> >* diff);
+                const dedupv1::blockindex::BlockMapping& modified_block_mapping,
+                std::map<bytestring, std::pair<int,
+                uint64_t> >* diff);
 
-        bool ProcessBlockMappingParallel(const std::map<bytestring, std::pair<int, uint64_t> >& diff,
-                bool invert_failed_write, const dedupv1::log::LogReplayContext& context);
+        bool ProcessBlockMappingParallel(
+            const std::map<bytestring, std::pair<int, uint64_t> >& diff,
+            bool invert_failed_write, 
+            const dedupv1::log::LogReplayContext& context);
 
         bool DumpMetaInfo();
 
