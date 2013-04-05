@@ -76,7 +76,7 @@ def install_apr(options):
     run("./configure --prefix=/opt/dedupv1", cwd="apr-1.3.8")
     run("make -j%s" % get_cpu_count(), cwd="apr-1.3.8")
     run("make install", cwd="apr-1.3.8")
-    
+
 @install()
 def install_apr_util(options):
     print "Install apr-util"
@@ -98,16 +98,21 @@ def install_log4cxx(options):
 @install()
 def install_protobuf(options):
     print "Install protobuf"
-    run("tar -zxf protobuf-2.3.0.tar.gz")
-    run("./configure --prefix=/opt/dedupv1", cwd="protobuf-2.3.0")
-    run("make -j%s" % get_cpu_count(), cwd="protobuf-2.3.0")
-    run("make install", cwd="protobuf-2.3.0")
-    
-    if not os.path.exists("/opt/dedupv1/lib/python2.6"):
-        os.mkdir("/opt/dedupv1/lib/python2.6")
-    if not os.path.exists("/opt/dedupv1/lib/python2.6/site-packages"):
-        os.mkdir("/opt/dedupv1/lib/python2.6/site-packages")
-    run("python2.6 setup.py install --prefix=/opt/dedupv1", cwd="protobuf-2.3.0/python", env = {"PYTHONPATH": "/opt/dedupv1/lib/python2.6/site-packages"})
+    run("tar -zxf protobuf-2.5.0.tar.gz")
+    run("./configure --prefix=/opt/dedupv1", cwd="protobuf-2.5.0")
+    run("make -j%s" % get_cpu_count(), cwd="protobuf-2.5.0")
+    run("make install", cwd="protobuf-2.5.0")
+
+    if not os.path.exists("/opt/dedupv1/lib/python2.7"):
+        os.mkdir("/opt/dedupv1/lib/python2.7")
+    if not os.path.exists("/opt/dedupv1/lib/python2.7/site-packages"):
+        os.mkdir("/opt/dedupv1/lib/python2.7/site-packages")
+    run("python2.7 setup.py build",
+        cwd="protobuf-2.5.0/python",
+        env = {"PYTHONPATH": "/opt/dedupv1/lib/python2.7/site-packages"})
+    run("python2.7 setup.py install --prefix=/opt/dedupv1",
+        cwd="protobuf-2.5.0/python",
+        env = {"PYTHONPATH": "/opt/dedupv1/lib/python2.7/site-packages"})
 
 @install("test")
 def install_gtest(options):

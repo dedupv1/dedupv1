@@ -230,8 +230,8 @@ conf = Configure(env, custom_tests = {
   "CheckExecutable": CheckExecutable,
   "CheckModprobe": CheckModprobe,
   "CheckMHDVersion": CheckMHDVersion})
-if not conf.CheckExecutable("python"):
-  print "Python must be installed"
+if not conf.CheckExecutable("python2.7"):
+  print "Python 2.7 must be installed"
   Exit(1)
 if GetOption("clang") and GetOption("icc"):
   print "Do not provide --clang and --icc. Pick one compiler"
