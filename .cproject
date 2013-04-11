@@ -30,6 +30,9 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dedupv1-1/dedupv1d/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dedupv1-1/test_util/include}&quot;"/>
 								</option>
+								<option id="gnu.cpp.compiler.option.preprocessor.def.487521756" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="LOGGING_LOG4CXX"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.884429645" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.base.61987913" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.base">
