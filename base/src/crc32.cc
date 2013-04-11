@@ -37,6 +37,11 @@ namespace base {
 
 LOGGER_CLASS CRC::logger_ = GET_LOGGER("CRC");
 
+#ifndef CRYPTO_CRC
+static StaticCRCHolder staticCRCHolder;
+crcutil_interface::CRC* CRC::crc_gen2 = staticCRCHolder.getCRC();
+#endif
+
 string CRC::GetValue(size_t crc_size) {
     // Note: This function is based on work by
     // Eric Durbin, Kentucky Cancer Registry, University of Kentucky, October 14, 1998

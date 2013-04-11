@@ -23,15 +23,17 @@
  */
 #ifndef __DEDUPV1_CRC32_H__ // NOLINT
 #define __DEDUPV1_CRC32_H__ // NOLINT
-
 #include <base/base.h>
 #include <base/profile.h>
 #include <base/logging.h>
 
 #include <string>
+#ifdef CRYPTO_CRC
 #include <cryptopp/cryptlib.h>
 #include <cryptopp/crc.h>
-
+#else
+#include <crcutil/interface.h>
+#endif
 namespace dedupv1 {
 namespace base {
 
@@ -69,8 +71,8 @@ class CRC {
         /**
          * Returns the CRC32 hash value as formatted
          * string.
-		 * TODO (dmeister): Returning an empty string is not a good solution for error handling. However
-		 * as long a crc_size between 9 and 99 is used there is no reason to fail
+         * TODO (dmeister): Returning an empty string is not a good solution for error handling. However
+         * as long a crc_size between 9 and 99 is used there is no reason to fail
          * @param crc_size
          * @return crc string or an empty string if an error occurred
          */
@@ -81,6 +83,11 @@ class CRC {
          * @return
          */
         inline uint32_t GetRawValue();
+
+        /**
+         * Rest the CRC to calculate a new one.
+         */
+        inline void Reset();
 
         /**
          * Standard size of the crc string
@@ -99,11 +106,23 @@ class CRC {
 
         DISALLOW_COPY_AND_ASSIGN(CRC);
     private:
+#ifdef CRYPTO_CRC
         /**
          * Instance of cryptopp::CRC32, but we want to avoid
          * exporting cryptopp here.
          */
         CryptoPP::CRC32 crc_gen;
+#else
+        /**
+         * Instance of crcutil implementation of crc
+         */
+        static crcutil_interface::CRC* crc_gen2;
+
+        /**
+         * Actual value of the calculated crc
+         */
+        crcutil_interface::UINT64 crc_value;
+#endif
 
         /**
          * Logger to use by the crc32 class
@@ -111,6 +130,27 @@ class CRC {
         static LOGGER_CLASS logger_;
 
 };
+
+#ifndef CRYPTO_CRC
+class StaticCRCHolder {
+    public:
+        StaticCRCHolder() {
+            crc = crcutil_interface::CRC::Create(0xEB31D82E, 0, 32, true, 0x1111, 0, 4,
+                    crcutil_interface::CRC::IsSSE42Available(), NULL);
+        }
+
+        ~StaticCRCHolder() {
+            crc->Delete();
+        }
+
+        crcutil_interface::CRC* getCRC() {
+            return crc;
+        }
+
+    private:
+        crcutil_interface::CRC* crc;
+};
+#endif
 
 /**
  * Short function that calculates the CRC-32 value of the given
@@ -126,6 +166,9 @@ inline std::string crc(const void* value, size_t value_size, size_t crc_size = d
 inline uint32_t crc_raw(const void* value, size_t value_size);
 
 CRC::CRC() {
+#ifndef CRYPTO_CRC
+    crc_value = 0; // This is crc("")
+#endif
 }
 
 CRC::~CRC() {
@@ -138,14 +181,30 @@ bool CRC::Update(const void* data, size_t data_size) {
         return false;
     }
 #endif
+#ifdef CRYPTO_CRC
     crc_gen.Update(static_cast<const byte*>(data), data_size);
+#else
+    crc_gen2->Compute(data, data_size, &crc_value);
+#endif
     return true;
 }
 
 uint32_t CRC::GetRawValue() {
+#ifdef CRYPTO_CRC
     uint32_t crc_value;
     crc_gen.Final(reinterpret_cast<byte*>(&crc_value));
     return crc_value;
+#else
+    return static_cast<uint64_t>(crc_value);
+#endif
+}
+
+void CRC::Reset() {
+#ifdef CRYPTO_CRC
+    crc_gen.Restart();
+#else
+    crc_value = 0;
+#endif
 }
 
 std::string crc(const void* value, size_t value_size, size_t crc_size) {

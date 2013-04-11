@@ -46,6 +46,25 @@ def install(*args, **kwargs):
     return _install_fn
 
 @install()
+def install_crcutil(options):
+    print "Install crcutil"
+    run("tar -zxf crcutil-1.0.tar.gz")
+    run("./configure --prefix=/opt/dedupv1/", cwd="crcutil-1.0/")
+
+    if not os.path.exists("crcutil-1.0/build"):
+        os.mkdir("crcutil-1.0/build")
+    run("for i in code/*.cc ; do g++ -DHAVE_CONFIG_H -I. -fPIC -DCRCUTIL_USE_MM_CRC32=1 -Wall -msse2 -Icode -g -O3 -fomit-frame-pointer -c -o build/`basename $i .cc`.o $i ; done", cwd="crcutil-1.0/")
+    run("g++ -DHAVE_CONFIG_H -I. -fPIC -Iexamples -Itests  -DCRCUTIL_USE_MM_CRC32=1 -Wall -msse2 -Icode -g -O3 -fomit-frame-pointer -c -o build/interface.o examples/interface.cc", cwd="crcutil-1.0/")
+    run("ar rcs libcrcutil.a *.o", cwd="crcutil-1.0/build/")
+    run("cp libcrcutil.a /opt/dedupv1/lib", cwd="crcutil-1.0/build/")
+    if not os.path.exists("/opt/dedupv1/include/crcutil"):
+        os.mkdir("/opt/dedupv1/include/crcutil")
+    run("cp *.h /opt/dedupv1/include/crcutil", cwd="crcutil-1.0/code/")
+    run("cp interface.h /opt/dedupv1/include/crcutil", cwd="crcutil-1.0/examples/")
+    run("cp aligned_alloc.h /opt/dedupv1/include/crcutil", cwd="crcutil-1.0/tests/")
+    #run("sudo ldconfig", cwd="crcutil-1.0/")
+
+@install()
 def install_tc(options):
     print "Install tokyocabinet"
     run("tar -zxf dmeister-tokyocabinet-5ad8b9b.tar.gz") 

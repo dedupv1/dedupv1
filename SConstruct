@@ -49,7 +49,7 @@ os_libs = ["m", "pthread"]
 libs = ["microhttpd", "curl", "apr-1", "aprutil-1", 
   "protobuf", "tokyocabinet", "z", "bz2", "json", 
   "cryptopp", "tbb", "sqlite3", "gflags", "snappy",
-  "icuuc", "icui18n", "icudata", "lz4", "leveldb"]
+  "icuuc", "icui18n", "icudata", "lz4", "leveldb", "crcutil"]
 build_test = True
 build_dedupv1d = True
 build_contrib = True
@@ -353,7 +353,9 @@ else:
   if not conf.CheckLib("re2"):
     print "re2 not installed."
     Exit(1)
-
+if not conf.CheckLib("crcutil"):
+    print "crcutil is not installed. Application performance might be reduced."
+    config.append("CRYPTO_CRC")
 if GetOption("coverage"):
   # do not do this before the lib checks
   if not conf.CheckExecutable("lcov"):
