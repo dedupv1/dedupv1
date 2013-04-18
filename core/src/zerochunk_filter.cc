@@ -81,9 +81,9 @@ Filter* ZeroChunkFilter::CreateFilter() {
 }
 
 Filter::filter_result ZeroChunkFilter::Check(Session* session,
-    const BlockMapping* block_mapping,
-    ChunkMapping* mapping,
-    dedupv1::base::ErrorContext* ec) {
+                                             const BlockMapping* block_mapping,
+                                             ChunkMapping* mapping,
+                                             dedupv1::base::ErrorContext* ec) {
     // session not always set
     // block mapping not always set
     CHECK_RETURN(mapping, FILTER_ERROR, "Chunk mapping not set");
@@ -91,6 +91,7 @@ Filter::filter_result ZeroChunkFilter::Check(Session* session,
     stats_.reads_++;
     if (Fingerprinter::IsEmptyDataFingerprint(mapping->fingerprint(), mapping->fingerprint_size())) {
         TRACE("Found zero-chunk fingerprint");
+        mapping->set_indexed(false);
         mapping->set_data_address(Storage::EMPTY_DATA_STORAGE_ADDRESS);
         this->stats_.existing_hits_++;
         return FILTER_EXISTING;

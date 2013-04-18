@@ -47,6 +47,9 @@
 #include <core/chunk_store.h>
 #include <test_util/log_assert.h>
 
+#include <cryptopp/cryptlib.h>
+#include <cryptopp/rng.h>
+
 #include "dedupv1d.h"
 #include "dedupv1d_volume.h"
 #include "scst_handle.h"
@@ -72,15 +75,18 @@ using dedupv1::REQUEST_WRITE;
 using dedupv1::REQUEST_READ;
 using dedupv1::log::EVENT_REPLAY_MODE_DIRTY_START;
 using dedupv1::chunkstore::ContainerStorage;
+using namespace CryptoPP;
 
 LOGGER("Dedupv1dExecutionTest");
 
 #define LARGE_SIZE (32 * 1024 * 1024)
 
 static string dedupv1d_test_read(dedupv1d::Dedupv1d* ds);
-static string dedupv1d_test_write(dedupv1d::Dedupv1d* ds);
-static string dedupv1d_test_write_2vol(dedupv1d::Dedupv1d* ds);
-static std::list<std::string> dedupv1d_test_write_large(dedupv1d::Dedupv1d* ds);
+static string dedupv1d_test_write(dedupv1d::Dedupv1d* ds, int seed, uint64_t offset);
+static string dedupv1d_test_write_2vol(dedupv1d::Dedupv1d* ds, int seed, uint64_t offset);
+static std::list<std::string> dedupv1d_test_write_large(dedupv1d::Dedupv1d* ds,
+                                                        int seed,
+                                                        uint64_t offset);
 static std::list<std::string> dedupv1d_test_read_large(dedupv1d::Dedupv1d* ds);
 
 class Dedupv1dExecutionTest : public testing::TestWithParam<const char*> {
@@ -133,10 +139,10 @@ protected:
         t.Start();
         sleep(2);
 
-        string write_result = RunThread(NewRunnable(dedupv1d_test_write, ds));
+        string write_result = RunThread(NewRunnable(dedupv1d_test_write, ds, 12, 0UL));
         CHECK(write_result.size() > 0,"Write thread error");
 
-        string write_result2 = RunThread(NewRunnable(dedupv1d_test_write, ds));
+        string write_result2 = RunThread(NewRunnable(dedupv1d_test_write, ds, 11, 0UL));
         CHECK(write_result2.size() > 0,"Write thread error");
 
         string read_result = RunThread(NewRunnable(dedupv1d_test_read, ds));
@@ -150,11 +156,12 @@ protected:
     }
 
     bool WriteCloseRead() {
+
         Thread<bool> t_run(NewRunnable(ds, &dedupv1d::Dedupv1d::Wait),"runner");
         t_run.Start();
         sleep(2);
 
-        string write_result = RunThread(NewRunnable(dedupv1d_test_write, ds));
+        string write_result = RunThread(NewRunnable(dedupv1d_test_write, ds, 10, 0UL));
         CHECK(write_result.size() > 0,"Write thread error");
 
         CHECK(ds->Shutdown(dedupv1::StopContext::FastStopContext()), "Failed to shutdown dedupv1");
@@ -189,7 +196,7 @@ protected:
         t.Start();
         sleep(2);
 
-        string write_result = RunThread(NewRunnable(dedupv1d_test_write, ds));
+        string write_result = RunThread(NewRunnable(dedupv1d_test_write, ds, 9, 0UL));
         CHECK(write_result.size() > 0,"Write thread error");
 
         string read_result = RunThread(NewRunnable(dedupv1d_test_read, ds));
@@ -210,7 +217,8 @@ protected:
         t.Start();
         sleep(2);
 
-        std::list<std::string> fp_write = RunThread(NewRunnable(dedupv1d_test_write_large, ds));
+        std::list<std::string> fp_write =
+            RunThread(NewRunnable(dedupv1d_test_write_large, ds, 8, 0UL));
         CHECK(fp_write.size() > 1, "Write thread error");
         DEBUG("Finished writing");
         sleep(2);
@@ -231,7 +239,7 @@ protected:
         t.Start();
         sleep(2);
 
-        string write_result = RunThread(NewRunnable(dedupv1d_test_write_2vol, ds));
+        string write_result = RunThread(NewRunnable(dedupv1d_test_write_2vol, ds, 7, 0UL));
         CHECK(write_result.size() > 0,"Write thread error");
 
         CHECK(ds->Shutdown(dedupv1::StopContext::FastStopContext()), "Failed to shutdown dedupv1");
@@ -239,16 +247,6 @@ protected:
         return true;
     }
 };
-
-INSTANTIATE_TEST_CASE_P(Dedupv1dExecution,
-    Dedupv1dExecutionTest,
-    ::testing::Values("data/dedupv1_test.conf",
-        "data/dedupv1_test.conf;storage.compression=lz4",
-        "data/dedupv1_test.conf;storage.compression=snappy",
-        "data/dedupv1_sqlite_test.conf",
-        "data/dedupv1_leveldb_test.conf",
-        "data/dedupv1_test.conf;chunking.avg-chunk-size=16K;chunking.min-chunk-size=4K;chunking.max-chunk-size=64K",
-        "data/dedupv1_test.conf;chunking.avg-chunk-size=4K;chunking.min-chunk-size=1K;chunking.max-chunk-size=16K"));
 
 TEST_P(Dedupv1dExecutionTest, PrintStatistics) {
     ds = Create(GetParam());
@@ -391,6 +389,32 @@ TEST_P(Dedupv1dExecutionTest, SimpleWriteWriteRead) {
     ASSERT_TRUE(WriteWriteRead());
 }
 
+TEST_P(Dedupv1dExecutionTest, WriteOffsetWriteRead) {
+    ds = Create(GetParam());
+    ASSERT_TRUE(ds);
+    ASSERT_TRUE(ds->Start(dedupv1::StartContext())) << "Cannot start application";
+    ASSERT_TRUE(ds->Run());
+
+    Thread<bool> t(NewRunnable(ds, &dedupv1d::Dedupv1d::Wait),"runner");
+    t.Start();
+    sleep(2);
+
+    string write_result = RunThread(NewRunnable(dedupv1d_test_write, ds, 6, 0UL));
+    ASSERT_TRUE(write_result.size() > 0) << "Write thread error";
+
+    string write_result2 = RunThread(NewRunnable(dedupv1d_test_write, ds, 6,
+            4UL * ds->dedup_system()->block_size()));
+    ASSERT_TRUE(write_result2.size() > 0) << "Write thread error";
+
+    string read_result = RunThread(NewRunnable(dedupv1d_test_read, ds));
+    ASSERT_TRUE(read_result.size() > 0) << "Write thread error";
+
+    ASSERT_TRUE(ds->Shutdown(dedupv1::StopContext::FastStopContext())) << "Failed to shutdown dedupv1";
+    ASSERT_TRUE(t.Join(NULL)) << "Failed to join run thread";
+
+    ASSERT_TRUE(write_result == read_result) << "Data is not the same";
+}
+
 TEST_P(Dedupv1dExecutionTest, ReadWriteLarge) {
     ds = Create(GetParam());
     ASSERT_TRUE(ds);
@@ -425,7 +449,8 @@ TEST_P(Dedupv1dExecutionTest, WriteOverwriteWhileIdle) {
 
     dedupv1::base::ThreadUtil::Sleep(2, dedupv1::base::ThreadUtil::SECONDS);
 
-    std::list<std::string> fp_write = RunThread(NewRunnable(dedupv1d_test_write_large, ds));
+    std::list<std::string> fp_write =
+        RunThread(NewRunnable(dedupv1d_test_write_large, ds, 5, 0UL));
     ASSERT_TRUE(fp_write.size() > 0) << "Write thread error";
 
     dedupv1::base::ThreadUtil::Sleep(2, dedupv1::base::ThreadUtil::SECONDS);
@@ -433,7 +458,7 @@ TEST_P(Dedupv1dExecutionTest, WriteOverwriteWhileIdle) {
     ASSERT_TRUE(ds->dedup_system()->idle_detector()->ForceIdle(true));
 
     for (int i = 0; i < 16; i++) {
-        fp_write = RunThread(NewRunnable(dedupv1d_test_write_large, ds));
+        fp_write = RunThread(NewRunnable(dedupv1d_test_write_large, ds, 4, 0UL));
         ASSERT_TRUE(fp_write.size() > 0) << "Write thread error";
 
         dedupv1::base::ThreadUtil::Sleep(4, dedupv1::base::ThreadUtil::SECONDS);
@@ -472,7 +497,8 @@ TEST_P(Dedupv1dExecutionTest, WriteReadCloseRead) {
 
     sleep(2);
 
-    std::list<std::string> fp_write1 = RunThread(NewRunnable(dedupv1d_test_write_large, ds));
+    std::list<std::string> fp_write1 =
+        RunThread(NewRunnable(dedupv1d_test_write_large, ds, 3, 0UL));
     ASSERT_TRUE(fp_write1.size() > 0) << "Write thread error";
 
     sleep(2);
@@ -517,7 +543,8 @@ TEST_P(Dedupv1dExecutionTest, WriteReadCloseReadWriteRead) {
 
     sleep(2);
 
-    std::list<std::string> fp_write1 = RunThread(NewRunnable(dedupv1d_test_write_large,ds));
+    std::list<std::string> fp_write1 =
+        RunThread(NewRunnable(dedupv1d_test_write_large,ds, 2, 0UL));
     ASSERT_TRUE(fp_write1.size() > 0) << "Write thread error";
     INFO("Write 1 finished");
 
@@ -535,7 +562,9 @@ TEST_P(Dedupv1dExecutionTest, WriteReadCloseReadWriteRead) {
     ds->Close();
     ds = NULL;
 
-    dedupv1::StartContext start_context2(dedupv1::StartContext::NON_CREATE, dedupv1::StartContext::DIRTY, dedupv1::StartContext::NO_FORCE);
+    dedupv1::StartContext start_context2(dedupv1::StartContext::NON_CREATE,
+                                         dedupv1::StartContext::DIRTY,
+                                         dedupv1::StartContext::NO_FORCE);
     ds = Create(GetParam());
     ASSERT_TRUE(ds);
     ASSERT_TRUE(ds->Start(start_context2)) << "Cannot start application";
@@ -550,7 +579,7 @@ TEST_P(Dedupv1dExecutionTest, WriteReadCloseReadWriteRead) {
 
     ASSERT_TRUE(fp_read2 == fp_read1);
 
-    std::list<std::string> fp_write2 = RunThread(NewRunnable(dedupv1d_test_write_large, ds));
+    std::list<std::string> fp_write2 = RunThread(NewRunnable(dedupv1d_test_write_large, ds, 1, 0UL));
     ASSERT_TRUE(fp_write2.size() > 0) << "Write thread error";
     INFO("Write 2 finished");
 
@@ -564,46 +593,41 @@ TEST_P(Dedupv1dExecutionTest, WriteReadCloseReadWriteRead) {
     ASSERT_TRUE(t_run2.Join(NULL)) <<  "Failed to join run thread";
 }
 
-string dedupv1d_test_write(dedupv1d::Dedupv1d* ds) {
-    int random_file = 0;
-    int r = 0;
+string dedupv1d_test_write(dedupv1d::Dedupv1d* ds, int seed, uint64_t offset) {
     Dedupv1dVolume* volume = NULL;
     volume = ds->volume_info()->FindVolume(0, NULL);
     CHECK_RETURN(volume, "", "Volume not set");
-    random_file = open("/dev/urandom", O_RDONLY);
 
-    byte buffer[64 * 1024];
-    r = read(random_file, buffer, 64 * 1024);
-    if (r != 64 * 1024) {
-        return NULL;
-    }
+    LC_RNG rng(seed);
+    byte buffer[ds->dedup_system()->block_size()];
+    rng.GenerateBlock(buffer, ds->dedup_system()->block_size());
 
-    CHECK_RETURN(volume->MakeRequest(REQUEST_WRITE, 0, 64 * 1024, buffer, NO_EC), "", "Cannot write");
-    close(random_file);
-    return crc(buffer, 64 * 1024);
+    CHECK_RETURN(volume->MakeRequest(REQUEST_WRITE,
+            offset, ds->dedup_system()->block_size(), buffer, NO_EC),
+        "",
+        "Cannot write");
+    return crc(buffer, ds->dedup_system()->block_size());
 }
 
-string dedupv1d_test_write_2vol(dedupv1d::Dedupv1d* ds) {
-    int random_file = 0;
-    int r = 0;
-
-    random_file = open("/dev/urandom", O_RDONLY);
-
-    byte buffer[64 * 1024];
-    r = read(random_file, buffer, 64 * 1024);
-    if (r != 64 * 1024) {
-        return NULL;
-    }
-    close(random_file);
+string dedupv1d_test_write_2vol(dedupv1d::Dedupv1d* ds, int seed, uint64_t offset) {
+    LC_RNG rng(seed);
+    byte buffer[ds->dedup_system()->block_size()];
+    rng.GenerateBlock(buffer, ds->dedup_system()->block_size());
 
     Dedupv1dVolume* volume = NULL;
     for (int i = 0; i <= 1; i++) {
         volume = ds->volume_info()->FindVolume(i, NULL);
         CHECK_RETURN(volume, "", "Volume not set (" + ToString(i) + ")");
-        CHECK_RETURN(volume->MakeRequest(REQUEST_WRITE, 0, 64 * 1024, buffer, NO_EC), "", "Cannot write");
+        CHECK_RETURN(
+            volume->MakeRequest(REQUEST_WRITE,
+                offset,
+                ds->dedup_system()->block_size(),
+                buffer,
+                NO_EC),
+            "", "Cannot write");
     }
 
-    return crc(buffer, 64 * 1024);
+    return crc(buffer, ds->dedup_system()->block_size());
 }
 
 string dedupv1d_test_read(dedupv1d::Dedupv1d* ds) {
@@ -611,16 +635,16 @@ string dedupv1d_test_read(dedupv1d::Dedupv1d* ds) {
     volume = ds->volume_info()->FindVolume(0, NULL);
     CHECK_RETURN(volume, "READ", "Volume not set");
 
-    byte result[64 * 1024];
-    memset(result, 0, 64 * 1024);
-    CHECK_RETURN(volume->MakeRequest(REQUEST_READ, 0, 64 * 1024, result, NO_EC), "READ", "Cannot read");
-    return crc(result, 64 * 1024);
+    byte result[ds->dedup_system()->block_size()];
+    memset(result, 0, ds->dedup_system()->block_size());
+    CHECK_RETURN(volume->MakeRequest(REQUEST_READ, 0,
+            ds->dedup_system()->block_size(), result, NO_EC), "READ", "Cannot read");
+    return crc(result, ds->dedup_system()->block_size());
 }
 
-std::list<std::string> dedupv1d_test_write_large(dedupv1d::Dedupv1d* ds) {
+std::list<std::string> dedupv1d_test_write_large(dedupv1d::Dedupv1d* ds, int seed, uint64_t offset) {
     int i = 0;
-    int random_file = 0;
-    byte buffer[64 * 1024];
+    byte buffer[ds->dedup_system()->block_size()];
     long bytes = 0;
     int r = 0;
     std::list<std::string> fp_list;
@@ -628,25 +652,24 @@ std::list<std::string> dedupv1d_test_write_large(dedupv1d::Dedupv1d* ds) {
     Dedupv1dVolume* volume = NULL;
     volume = ds->volume_info()->FindVolume(0, NULL);
 
-    random_file = open("/dev/urandom", O_RDONLY);
     bytes = LARGE_SIZE;
+    LC_RNG rng(seed);
 
     i = bytes;
     while (i > 0) {
-        r = read(random_file, buffer, 64 * 1024);
+        rng.GenerateBlock(buffer, ds->dedup_system()->block_size());
+        r = ds->dedup_system()->block_size();
         if (r > i) {
             r = i;
         }
         string crc_value = crc(buffer, r);
         fp_list.push_back(crc_value);
 
-        uint64_t offset = bytes - i;
-        DEBUG("Write offset " << offset << ", size " << r << ", data " << crc_value);
-        CHECK_GOTO(volume->MakeRequest(REQUEST_WRITE, bytes - i, r, buffer, NO_EC), "Cannot write");
+        DEBUG("Write offset " << (offset + bytes - i) << ", size " << r << ", data " << crc_value);
+        CHECK_GOTO(volume->MakeRequest(REQUEST_WRITE, offset + bytes - i, r, buffer, NO_EC), "Cannot write");
         i -= r;
     }
     INFO("Write finished");
-    close(random_file);
     return fp_list;
 error:
     fp_list.push_back("WRITE ERROR");
@@ -655,7 +678,7 @@ error:
 
 std::list<std::string> dedupv1d_test_read_large(dedupv1d::Dedupv1d* ds) {
     int i = 0;
-    byte buffer[64 * 1024];
+    byte buffer[ds->dedup_system()->block_size()];
     long bytes = 0;
     int r = 0;
     std::list<std::string> fp_list;
@@ -667,7 +690,7 @@ std::list<std::string> dedupv1d_test_read_large(dedupv1d::Dedupv1d* ds) {
 
     i = bytes;
     while (i > 0) {
-        r = 64 * 1024;
+        r = ds->dedup_system()->block_size();
         if (r > i) {
             r = i;
         }
@@ -686,3 +709,14 @@ error:
     fp_list.push_back("READ ERROR");
     return fp_list;
 }
+
+INSTANTIATE_TEST_CASE_P(Dedupv1dExecution,
+    Dedupv1dExecutionTest,
+    ::testing::Values("data/dedupv1_test.conf",
+        "data/dedupv1_test.conf;storage.compression=lz4",
+        "data/dedupv1_test.conf;storage.compression=snappy",
+        "data/dedupv1_sqlite_test.conf",
+        "data/dedupv1_leveldb_test.conf",
+        "data/dedupv1_sampling_test.conf",
+        "data/dedupv1_test.conf;chunking.avg-chunk-size=16K;chunking.min-chunk-size=4K;chunking.max-chunk-size=64K",
+        "data/dedupv1_test.conf;chunking.avg-chunk-size=4K;chunking.min-chunk-size=1K;chunking.max-chunk-size=16K"));

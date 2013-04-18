@@ -1536,6 +1536,15 @@ bool UsageCountGarbageCollector::ProcessDiffDirtyStart(ChunkMapping* mapping,
                                                        const dedupv1::log::LogReplayContext& context) {
     DCHECK(mapping, "Mapping not set");
 
+    Option<bool> anchor_result =
+        chunk_index_->sampling_strategy()->IsAnchor(*mapping);
+    DCHECK(anchor_result.valid(), "Failed to check anchor state");
+
+    if (!anchor_result.value()) {
+      TRACE("Skip gc dirty start: mapping " << mapping->DebugString());
+      return true;
+    }
+
     Option<bool> r = chunk_index_->IsContainerImported(mapping->data_address());
     CHECK(r.valid(), "Failed to check container import state " << mapping->DebugString());
     if (r.value()) {
@@ -1590,6 +1599,7 @@ bool UsageCountGarbageCollector::ProcessDiffDirtyStart(ChunkMapping* mapping,
                 ", log id " << context.log_id());
         }
     } else {
+
         // container not imported before
         ChunkMapping aux_mapping(mapping->fingerprint(), mapping->fingerprint_size());
         // if the container was not imported before, we there is need to go to disk

@@ -1970,7 +1970,9 @@ bool ContainerStorageSession::WriteNew(const void* key, size_t key_size,
         "Illegal container id: " << write_container->primary_id());
     *address = container_id;
 
-    TRACE("Write new key " << Fingerprinter::DebugString((byte *) key, key_size) << " to container " << container_id <<
+    TRACE("Write new key " << Fingerprinter::DebugString((byte *) key, key_size) <<
+        ", container " << container_id <<
+        ", indexed " << ToString(is_indexed) <<
         ", data size " << data_size <<
         ", active container data size " << write_container->active_data_size());
 

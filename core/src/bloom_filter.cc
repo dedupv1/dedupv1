@@ -84,6 +84,7 @@ BloomFilter::BloomFilter() : Filter("bloom filter", FILTER_WEAK_MAYBE) {
     bloom_set_ = NULL;
     size_ = 0;
     filter_file_ = NULL;
+    chunk_index_ = NULL;
 }
 
 BloomFilter::Statistics::Statistics() {
@@ -118,6 +119,9 @@ bool BloomFilter::Start(DedupSystem* system) {
     DCHECK(system, "System not set");
     INFO("Starting bloom filter");
     INFO("Usage of the bloom filter is unsafe and is only advised for research and development");
+
+    chunk_index_ = system->chunk_index();
+    DCHECK(chunk_index_, "Chunk index not set");
 
     CHECK(this->size_ > 0 && this->filter_filename_.size() > 0,
         "Bloom filter not configured");
@@ -203,6 +207,7 @@ Filter::filter_result BloomFilter::Check( Session* session,
     CHECK_RETURN(lr != LOOKUP_ERROR, FILTER_ERROR, "Failed to lookup bloom set");
     if (lr == LOOKUP_NOT_FOUND) {
         this->stats_.miss_++;
+
         return FILTER_NOT_EXISTING;
     } else {
         this->stats_.weak_hits_++;

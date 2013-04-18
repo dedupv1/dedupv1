@@ -50,12 +50,8 @@ private:
     uint32_t prefetchWindow_;
 
     uint32_t min_diff_value_;
-    bool decrease_diff_value_on_miss_;
-    bool decrease_diff_value_on_lookup_not_found_;
     bool remove_diff_value_on_lookup_not_found_;
-    bool eager_diff_insert_;
 
-    tbb::atomic<uint64_t> touch_diff_count_;
     std::tr1::unordered_map<int64_t, int> diff_map_;
     dedupv1::base::LRUCacheStrategy<int64_t> diff_map_cache_strategy_;
     tbb::spin_mutex diff_mutex_;

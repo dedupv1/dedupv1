@@ -18,6 +18,7 @@
 #include <base/fileutil.h>
 #include <core/container_storage.h>
 #include <core/log.h>
+#include <core/chunk_index.h>
 #include <base/bloom_set.h>
 #include <string>
 #include <set>
@@ -27,42 +28,42 @@ namespace filter {
 
 /**
 * A bloom filter is a probabilistic data structure with set like operations.
-* It allows to add items and to test for membership. However, the membership test 
-* operations are special. If the membership test failed, we can be sure that the 
-* search key is stored in the bloom filter. If the membership test succeeds, 
+* It allows to add items and to test for membership. However, the membership test
+* operations are special. If the membership test failed, we can be sure that the
+* search key is stored in the bloom filter. If the membership test succeeds,
 * there is a small probability that the key isn't in the set, too.
 *
 * After n inserted object, a bloom filter with k hash functions and m bits of RAM
-* returns with a probability of (1−(1− 1 )kn)k m a false positive answer. This 
-* means that the bloom filter states that the key is member of the set, but is 
-* is actually not the case. We use a bloom filter because it is a much more compact 
+* returns with a probability of (1−(1− 1 )kn)k m a false positive answer. This
+* means that the bloom filter states that the key is member of the set, but is
+* is actually not the case. We use a bloom filter because it is a much more compact
 * representation of the index data.
 *
-* In a deduplication system, an obvious way to reduce index accesses is the use 
-* a bloom filter before the ChunkIndexFilter. Here, we insert every new 
-* fingerprint into the bloom filter and test the bloom filter for every fingerprint 
-* during the Lookup. If the fingerprint is not known, we can be sure that we 
-* haven't stored the fingerprint yet ( NOT_EXISTING). If the fingerprint seems 
-* to be known, we return A WEAK_MAYBE, because we cannot be sure with a very 
+* In a deduplication system, an obvious way to reduce index accesses is the use
+* a bloom filter before the ChunkIndexFilter. Here, we insert every new
+* fingerprint into the bloom filter and test the bloom filter for every fingerprint
+* during the Lookup. If the fingerprint is not known, we can be sure that we
+* haven't stored the fingerprint yet ( NOT_EXISTING). If the fingerprint seems
+* to be known, we return A WEAK_MAYBE, because we cannot be sure with a very
 * high probability (and we cannot set a data address).
 *
-* We have to make sure that the bloom filter works correct even after restarts. 
+* We have to make sure that the bloom filter works correct even after restarts.
 * So we backup the bloom filter to disk.
 *
 * NOTE: Currently the bloom filter never deletes data or is refreshed.
-* Therefore the filter has an increasing false positive rate when chunks are 
+* Therefore the filter has an increasing false positive rate when chunks are
 * garbage collected.
 *
 * IMPORTANT NOTE: The bloom filter is currently not crash-safe as it overwrites
 * the file which might lead to inconsistent on-disk state and the bloom filter
 * is currently not recovering the chunk index state after a crash.
 *
-* Bloom filters are developed by Bloom and published in "B. H. Bloom. Space/time 
+* Bloom filters are developed by Bloom and published in "B. H. Bloom. Space/time
 * trade-offs  in hash coding with allowable errors. Communications of the ACM, 1970.".
 * In the context of deduplication, a similar filter is used at least in some
-* version of the Venti system and it is also proposed in "B. Zhu, K. Li, and 
-* H. Patterson. Avoiding the disk bottleneck in the data domain deduplication 
-* file system. In 6th Usenix Conference on File and Storage Technologies, 
+* version of the Venti system and it is also proposed in "B. Zhu, K. Li, and
+* H. Patterson. Avoiding the disk bottleneck in the data domain deduplication
+* file system. In 6th Usenix Conference on File and Storage Technologies,
 * pages 269–282, February 2008.".
 *
 * \ingroup filterchain
@@ -85,6 +86,8 @@ class BloomFilter: public Filter {
 
         dedupv1::base::Profile time_;
     };
+
+    dedupv1::chunkindex::ChunkIndex* chunk_index_;
 
     /**
     * Bloom set
@@ -181,7 +184,7 @@ class BloomFilter: public Filter {
     * @param mapping
     * @return
     */
-    virtual bool Update(dedupv1::Session* session, 
+    virtual bool Update(dedupv1::Session* session,
         const dedupv1::blockindex::BlockMapping* block_mapping,
         dedupv1::chunkindex::ChunkMapping* mapping,
         dedupv1::base::ErrorContext* ec);

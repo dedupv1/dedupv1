@@ -123,14 +123,13 @@ LOGGER("GarbageCollector");
 namespace dedupv1 {
 namespace gc {
 
-
 void NoneGarbageCollector::RegisterGC() {
-  GarbageCollector::Factory().Register("none",
-      &NoneGarbageCollector::CreateGC);
+    GarbageCollector::Factory().Register("none",
+        &NoneGarbageCollector::CreateGC);
 }
 
 GarbageCollector* NoneGarbageCollector::CreateGC() {
-  return new NoneGarbageCollector();
+    return new NoneGarbageCollector();
 }
 
 NoneGarbageCollector::NoneGarbageCollector() :
@@ -161,7 +160,7 @@ bool NoneGarbageCollector::ResumeProcessing() {
 }
 
 bool NoneGarbageCollector::Start(const StartContext& start_context,
-    DedupSystem* system) {
+                                 DedupSystem* system) {
     CHECK(system, "System not set");
     CHECK(this->state_ == CREATED, "GC already started");
 
@@ -222,7 +221,7 @@ bool NoneGarbageCollector::Close() {
 }
 
 bool NoneGarbageCollector::SetOption(const std::string& option_name,
-    const std::string& option) {
+                                     const std::string& option) {
     ERROR("Illegal option: " << option_name << "=" << option);
     return false;
 }
@@ -307,9 +306,16 @@ bool NoneGarbageCollector::StopProcessing() {
 }
 
 bool NoneGarbageCollector::ProcessDiffDirtyStart(ChunkMapping* mapping,
-                                                       uint64_t block_id,
-                                                       const dedupv1::log::LogReplayContext& context) {
+                                                 uint64_t block_id,
+                                                 const dedupv1::log::LogReplayContext& context) {
     DCHECK(mapping, "Mapping not set");
+
+    Option<bool> is_indexed = chunk_index_->sampling_strategy()->IsAnchor(*mapping);
+    CHECK(is_indexed.valid(), "Failed to check indexing state:" <<
+        mapping->DebugString());
+    if (!is_indexed.value()) {
+        return true;
+    }
 
     Option<bool> r = chunk_index_->IsContainerImported(mapping->data_address());
     CHECK(r.valid(), "Failed to check container import state " << mapping->DebugString());
@@ -322,7 +328,7 @@ bool NoneGarbageCollector::ProcessDiffDirtyStart(ChunkMapping* mapping,
         CHECK(ci_lr != LOOKUP_ERROR,
             "Failed to lookup chunk index: " << mapping->DebugString());
         if (ci_lr == LOOKUP_NOT_FOUND) {
-          // the chunk is not in the chunk index, here the block hint is not updated
+            // the chunk is not in the chunk index, here the block hint is not updated
         } else if (aux_mapping.usage_count_change_log_id() < context.log_id()) {
             DEBUG(
                 "Load chunk into gc startup index: " << mapping->DebugString() <<
@@ -347,9 +353,16 @@ bool NoneGarbageCollector::ProcessDiffDirtyStart(ChunkMapping* mapping,
 }
 
 bool NoneGarbageCollector::ProcessDiffDirect(ChunkMapping* mapping,
-                                                   uint64_t block_id,
-                                                   const dedupv1::log::LogReplayContext& context) {
+                                             uint64_t block_id,
+                                             const dedupv1::log::LogReplayContext& context) {
     DCHECK(mapping, "Mapping not set");
+
+    Option<bool> is_indexed = chunk_index_->sampling_strategy()->IsAnchor(*mapping);
+    CHECK(is_indexed.valid(), "Failed to check indexing state:" <<
+        mapping->DebugString());
+    if (!is_indexed.value()) {
+        return true;
+    }
 
     bool failed = false;
     ChunkLocks& chunk_locks(chunk_index_->chunk_locks());
@@ -398,7 +411,7 @@ bool NoneGarbageCollector::ProcessDiffDirect(ChunkMapping* mapping,
 }
 
 bool NoneGarbageCollector::ProcessBlockMappingDirect(const BlockMappingPair& mapping_pair,
-                                                           const dedupv1::log::LogReplayContext& context) {
+                                                     const dedupv1::log::LogReplayContext& context) {
 
     DEBUG("Process block mapping (direct): " << mapping_pair.DebugString() <<
         ", log id " << context.log_id());
@@ -440,7 +453,7 @@ bool NoneGarbageCollector::ProcessBlockMappingDirect(const BlockMappingPair& map
 }
 
 bool NoneGarbageCollector::ProcessBlockMappingDirtyStart(const BlockMappingPair& mapping_pair,
-                                                               const dedupv1::log::LogReplayContext& context) {
+                                                         const dedupv1::log::LogReplayContext& context) {
 
     DEBUG("Process process block mapping (dirty start): " << mapping_pair.DebugString() <<
         ", log id " << context.log_id());
@@ -474,8 +487,8 @@ bool NoneGarbageCollector::ProcessBlockMappingDirtyStart(const BlockMappingPair&
 }
 
 Option<bool> NoneGarbageCollector::IsGCCandidate(uint64_t address,
-                                                       const void* fp,
-                                                       size_t fp_size) {
+                                                 const void* fp,
+                                                 size_t fp_size) {
     return make_option(false);
 }
 
@@ -486,7 +499,7 @@ bool NoneGarbageCollector::PutGCCandidates(
 }
 
 bool NoneGarbageCollector::LogReplay(enum event_type event_type, const LogEventData& event_value,
-                                           const LogReplayContext& context) {
+                                     const LogReplayContext& context) {
 
     Profile* profile = NULL;
     if (context.replay_mode() == EVENT_REPLAY_MODE_DIRECT) {
@@ -506,7 +519,7 @@ bool NoneGarbageCollector::LogReplay(enum event_type event_type, const LogEventD
             "Cannot copy block mapping: " << event_data.mapping_pair().ShortDebugString());
 
         if (context.replay_mode() == EVENT_REPLAY_MODE_REPLAY_BG) {
-          // pass
+            // pass
         } else if (context.replay_mode() == EVENT_REPLAY_MODE_DIRECT) {
             CHECK(ProcessBlockMappingDirect(mapping_pair, context),
                 "Cannot processes committed block mapping (direct): " << mapping_pair.DebugString());
@@ -535,7 +548,7 @@ bool NoneGarbageCollector::RestoreStatistics(std::string prefix, dedupv1::Persis
 string NoneGarbageCollector::PrintStatistics() {
     stringstream sstr;
     sstr << "{";
-    sstr << "\"processed blocks\": " << this->stats_.processed_blocks_ << "," << std::endl;
+    sstr << "\"processed blocks\": " << this->stats_.processed_blocks_ << std::endl;
     sstr << "}";
     return sstr.str();
 }
@@ -545,17 +558,14 @@ string NoneGarbageCollector::PrintProfile() {
     sstr << "{";
     sstr << "\"direct replay time\": " << this->stats_.direct_log_replay_time_.GetSum() << "," << std::endl;
     sstr << "\"dirty start replay time\": " << this->stats_.dirty_start_log_replay_time_.GetSum() << "," << std::endl;
-    sstr << "\"log replay time\": " << this->stats_.log_replay_time_.GetSum()  << std::endl;
+    sstr << "\"log replay time\": " << this->stats_.log_replay_time_.GetSum() << std::endl;
 
     sstr << "}";
     return sstr.str();
 }
 
 string NoneGarbageCollector::PrintTrace() {
-    stringstream sstr;
-    sstr << "{";
-    sstr << "}";
-    return sstr.str();
+    return "null";
 }
 
 string NoneGarbageCollector::PrintLockStatistics() {

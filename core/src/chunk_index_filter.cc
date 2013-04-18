@@ -50,6 +50,8 @@ using dedupv1::base::strutil::To;
 using dedupv1::Fingerprinter;
 using dedupv1::chunkstore::Storage;
 using dedupv1::base::ErrorContext;
+using dedupv1::chunkindex::ChunkIndexSamplingStrategy;
+using dedupv1::base::Option;
 
 LOGGER("ChunkIndexFilter");
 
@@ -57,13 +59,13 @@ namespace dedupv1 {
 namespace filter {
 
 ChunkIndexFilter::Statistics::Statistics() : average_latency_(256) {
-    hits = 0;
-    miss = 0;
-    reads = 0;
-    writes = 0;
-    lock_free = 0;
-    lock_busy = 0;
-    failures = 0;
+    strong_hits_ = 0;
+    weak_hits_ = 0;
+    miss_ = 0;
+    reads_ = 0;
+    writes_ = 0;
+    failures_ = 0;
+    anchor_count_ = 0;
 }
 
 ChunkIndexFilter::ChunkIndexFilter() :
@@ -103,43 +105,50 @@ bool ChunkIndexFilter::AcquireChunkLock(const dedupv1::chunkindex::ChunkMapping&
 }
 
 Filter::filter_result ChunkIndexFilter::Check(Session* session,
-      const BlockMapping* block_mapping,
-      ChunkMapping* mapping,
-      ErrorContext* ec) {
+                                              const BlockMapping* block_mapping,
+                                              ChunkMapping* mapping,
+                                              ErrorContext* ec) {
     DCHECK_RETURN(mapping, FILTER_ERROR, "Chunk mapping not set");
     enum filter_result result = FILTER_ERROR;
     ProfileTimer timer(this->stats_.time_);
     SlidingAverageProfileTimer timer2(this->stats_.average_latency_);
 
     TRACE("Check " << mapping->DebugString());
+    this->stats_.reads_++;
+
+    if (!mapping->is_indexed()) {
+        // no anchor => no indexing
+        stats_.weak_hits_++;
+        return FILTER_WEAK_MAYBE;
+    }
+    stats_.anchor_count_++;
+
+    TRACE("Chunk is anchor: " << mapping->DebugString());
 
     CHECK_RETURN(AcquireChunkLock(*mapping), FILTER_ERROR,
         "Failed to acquire chunk lock: " << mapping->DebugString());
 
-    this->stats_.reads++;
     enum lookup_result index_result = this->chunk_index_->Lookup(mapping, true, ec);
     if (index_result == LOOKUP_NOT_FOUND) {
         if (likely(chunk_index_->IsAcceptingNewChunks())) {
             result = FILTER_NOT_EXISTING;
-            this->stats_.miss++;
+            this->stats_.miss_++;
         } else {
             if (ec) {
                 ec->set_full();
             }
-            stats_.failures++;
+            stats_.failures_++;
             result = FILTER_ERROR;
         }
         // with the normal chunk index filter, all chunks are indexed
-        mapping->set_indexed(true);
     } else if (index_result == LOOKUP_FOUND) {
-        mapping->set_indexed(true);
         mapping->set_usage_count(0); // TODO (dmeister): Why???
-        this->stats_.hits++;
+        this->stats_.strong_hits_++;
         result = FILTER_STRONG_MAYBE;
     } else if (index_result == LOOKUP_ERROR) {
         ERROR("Chunk index filter lookup failed: " <<
             "mapping " << mapping->DebugString());
-        stats_.failures++;
+        stats_.failures_++;
         result = FILTER_ERROR;
     }
     if (result == FILTER_ERROR) {
@@ -152,14 +161,18 @@ Filter::filter_result ChunkIndexFilter::Check(Session* session,
 }
 
 bool ChunkIndexFilter::Update(Session* session,
-    const BlockMapping* block_mapping,
-    ChunkMapping* mapping,
-    ErrorContext* ec) {
+                              const BlockMapping* block_mapping,
+                              ChunkMapping* mapping,
+                              ErrorContext* ec) {
     ProfileTimer timer(this->stats_.time_);
 
     DCHECK(mapping, "Mapping must be set");
     TRACE("Update " << mapping->DebugString());
-    this->stats_.writes++;
+
+    if (!mapping->is_indexed()) {
+        return true;
+    }
+    this->stats_.writes_++;
 
     bool r = this->chunk_index_->Put(*mapping, ec);
 
@@ -170,12 +183,16 @@ bool ChunkIndexFilter::Update(Session* session,
 }
 
 bool ChunkIndexFilter::Abort(Session* session,
-    const BlockMapping* block_mapping,
-    ChunkMapping* chunk_mapping,
-    ErrorContext* ec) {
+                             const BlockMapping* block_mapping,
+                             ChunkMapping* chunk_mapping,
+                             ErrorContext* ec) {
     DCHECK(chunk_mapping, "Chunk mapping not set");
 
     TRACE("Abort " << chunk_mapping->DebugString());
+
+    if (!chunk_mapping->is_indexed()) {
+        return true;
+    }
 
     // if we have the empty fingerprint, we do not need to release the chunk lock
     if (chunk_mapping->data_address() == Storage::EMPTY_DATA_STORAGE_ADDRESS) {
@@ -190,11 +207,13 @@ bool ChunkIndexFilter::Abort(Session* session,
 
 bool ChunkIndexFilter::PersistStatistics(std::string prefix, dedupv1::PersistStatistics* ps) {
     ChunkIndexFilterStatsData data;
-    data.set_hit_count(this->stats_.hits);
-    data.set_miss_count(this->stats_.miss);
-    data.set_read_count(this->stats_.reads);
-    data.set_write_count(this->stats_.writes);
-    data.set_failure_count(stats_.failures);
+    data.set_strong_hit_count(stats_.strong_hits_);
+    data.set_weak_hit_count(stats_.weak_hits_);
+    data.set_anchor_count(stats_.anchor_count_);
+    data.set_miss_count(stats_.miss_);
+    data.set_read_count(stats_.reads_);
+    data.set_write_count(stats_.writes_);
+    data.set_failure_count(stats_.failures_);
     CHECK(ps->Persist(prefix, data), "Failed to persist chunk index filter stats");
     return true;
 }
@@ -202,36 +221,32 @@ bool ChunkIndexFilter::PersistStatistics(std::string prefix, dedupv1::PersistSta
 bool ChunkIndexFilter::RestoreStatistics(std::string prefix, dedupv1::PersistStatistics* ps) {
     ChunkIndexFilterStatsData data;
     CHECK(ps->Restore(prefix, &data), "Failed to restore chunk index filter stats");
-    this->stats_.reads = data.read_count();
-    this->stats_.hits = data.hit_count();
-    this->stats_.miss = data.miss_count();
-    this->stats_.writes = data.write_count();
-
-    if (data.has_failure_count()) {
-        stats_.failures = data.failure_count();
-    }
+    stats_.reads_ = data.read_count();
+    stats_.strong_hits_ = data.strong_hit_count();
+    stats_.weak_hits_ = data.weak_hit_count();
+    stats_.anchor_count_ = data.anchor_count();
+    stats_.miss_ = data.miss_count();
+    stats_.writes_ = data.write_count();
+    stats_.failures_ = data.failure_count();
     return true;
 }
 
 string ChunkIndexFilter::PrintStatistics() {
     stringstream sstr;
     sstr << "{";
-    sstr << "\"reads\": " << this->stats_.reads << "," << std::endl;
-    sstr << "\"writes\": " << this->stats_.writes << "," << std::endl;
-    sstr << "\"strong\": " << this->stats_.hits << "," << std::endl;
-    sstr << "\"failures\": " << this->stats_.failures << "," << std::endl;
-    sstr << "\"miss\": " << this->stats_.miss << std::endl;
+    sstr << "\"reads\": " << this->stats_.reads_ << "," << std::endl;
+    sstr << "\"writes\": " << this->stats_.writes_ << "," << std::endl;
+    sstr << "\"strong\": " << this->stats_.strong_hits_ << "," << std::endl;
+    sstr << "\"weak\": " << this->stats_.weak_hits_ << "," << std::endl;
+    sstr << "\"failures\": " << this->stats_.failures_ << "," << std::endl;
+    sstr << "\"anchor count\": " << this->stats_.anchor_count_ << "," << std::endl;
+    sstr << "\"miss\": " << this->stats_.miss_ << std::endl;
     sstr << "}";
     return sstr.str();
 }
 
 string ChunkIndexFilter::PrintLockStatistics() {
-    stringstream sstr;
-    sstr << "{";
-    sstr << "\"lock free\": " << this->stats_.lock_free << "," << std::endl;
-    sstr << "\"lock busy\": " << this->stats_.lock_busy << std::endl;
-    sstr << "}";
-    return sstr.str();
+    return "null";
 }
 
 string ChunkIndexFilter::PrintProfile() {

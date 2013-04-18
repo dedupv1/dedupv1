@@ -190,7 +190,7 @@ bool BlockIndexFilter::UpdateKnownChunk(Session* session,
         return true;
     }
 
-    DEBUG("Filter update: " <<
+    DEBUG("Filter update known chunk: " <<
         "chunk " << mapping->DebugString() <<
         ", block mapping " << (block_mapping ? block_mapping->DebugString() : "null"));
 

@@ -55,14 +55,10 @@ namespace filter {
 BlockChunkCache::BlockChunkCache() {
     block_index_ = NULL;
     prefetchWindow_ = 0;
-    min_diff_value_ = 16;
-    decrease_diff_value_on_miss_ = false;
-    remove_diff_value_on_lookup_not_found_ = true;
-    eager_diff_insert_ = true;
+    min_diff_value_ = 0;
     diff_cache_size_ = 16;
     block_cache_size_ = 256;
     prefetchWindow_ = 0;
-    touch_diff_count_ = 0;
 }
 
 bool BlockChunkCache::Start(BlockIndex* block_index) {
@@ -231,6 +227,10 @@ bool BlockChunkCache::Contains(const ChunkMapping* mapping,
              diff_iterator++) {
             if (diff_map_[*diff_iterator] >= min_diff_value_) {
                 diff_list.push_back(*diff_iterator);
+            } else {
+                TRACE("Skip diff " << (*diff_iterator) <<
+                    ", diff value " << diff_map_[*diff_iterator] <<
+                    ", min diff value not reached");
             }
         }
         scoped_diff_lock2.release();
@@ -329,14 +329,13 @@ bool BlockChunkCache::Contains(const ChunkMapping* mapping,
             }
         }
 
-        if (eager_diff_insert_ && !touched_one && block_set.size() == 1) {
+        if (!touched_one && block_set.size() == 1) {
             int64_t diff = (*block_set.begin()) - current_block_id;
             TouchDiff(diff, true);
         }
 
         result = true;
     }
-
     if (result) {
         stats_.hits_++;
     } else {
@@ -435,10 +434,6 @@ bool BlockChunkCache::TouchDiff(int64_t diff, bool allow_insert) {
     ProfileTimer timer2(this->stats_.diff_handling_time_);
 
     tbb::spin_mutex::scoped_lock scoped_lock(diff_mutex_);
-
-    if (touch_diff_count_++ % 8 != 0) {
-        return true;
-    }
 
     if (this->diff_map_.find(diff) == diff_map_.end()) {
         // diff not found

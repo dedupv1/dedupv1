@@ -18,19 +18,24 @@
  * You should have received a copy of the GNU General Public License along with dedupv1. If not, see http://www.gnu.org/licenses/.
  */
 
+#include "filter_test.h"
+#include <test_util/log_assert.h>
 #include "dedup_system_test.h"
 
-namespace dedupv1 {
+#include <core/filter.h>
+#include <gtest/gtest.h>
 
-INSTANTIATE_TEST_CASE_P(DedupSystemDefault,
-    DedupSystemTest,
-    ::testing::Values(
-        "data/dedupv1_test.conf",
-        "data/dedupv1_test.conf;storage.compression=lz4",
-        "data/dedupv1_test.conf;storage.compression=snappy",
-        "data/dedupv1_test.conf;chunking.avg-chunk-size=16K;chunking.min-chunk-size=4K;chunking.max-chunk-size=64K",
-        // sqlite
-        "data/dedupv1_sqlite_test.conf",
-        "data/dedupv1_leveldb_test.conf"
-        ));
+#include <string>
+
+using std::string;
+
+namespace dedupv1 {
+namespace filter {
+
+INSTANTIATE_TEST_CASE_P(SamplingFilter,
+    FilterTest,
+    ::testing::Values("sampling-filter"));
+
 }
+}
+

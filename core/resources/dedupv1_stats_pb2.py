@@ -13,7 +13,7 @@ from google.protobuf import descriptor_pb2
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='dedupv1_stats.proto',
   package='',
-  serialized_pb='\n\x13\x64\x65\x64upv1_stats.proto\"Y\n\x13\x43hunkIndexStatsData\x12 \n\x18imported_container_count\x18\x01 \x01(\x04\x12 \n\x18index_full_failure_count\x18\x02 \x01(\x04\"\xaa\x01\n\x13\x42lockIndexStatsData\x12\x18\n\x10index_read_count\x18\x01 \x01(\x04\x12\x19\n\x11index_write_count\x18\x02 \x01(\x04\x12\x1e\n\x16index_real_write_count\x18\x03 \x01(\x04\x12\x1c\n\x14imported_block_count\x18\x04 \x01(\x04\x12 \n\x18\x66\x61iled_block_write_count\x18\x05 \x01(\x04\"X\n\x13\x43hunkStoreStatsData\x12\x12\n\nread_count\x18\x01 \x01(\x04\x12\x13\n\x0bwrite_count\x18\x02 \x01(\x04\x12\x18\n\x10real_write_count\x18\x03 \x01(\x04\"a\n#ContainerStorageWriteCacheStatsData\x12\x11\n\thit_count\x18\x01 \x01(\x04\x12\x12\n\nmiss_count\x18\x02 \x01(\x04\x12\x13\n\x0b\x63heck_count\x18\x03 \x01(\x04\"\xb2\x02\n\x19\x43ontainerStorageStatsData\x12\x12\n\nread_count\x18\x01 \x01(\x04\x12\x1d\n\x15write_cache_hit_count\x18\x02 \x01(\x04\x12\x1f\n\x17\x63ontainer_timeout_count\x18\x03 \x01(\x04\x12\x1e\n\x16readed_container_count\x18\x04 \x01(\x04\x12!\n\x19\x63ommitted_container_count\x18\x05 \x01(\x04\x12\x1d\n\x15moved_container_count\x18\x06 \x01(\x04\x12\x1e\n\x16merged_container_count\x18\x07 \x01(\x04\x12\x1e\n\x16\x66\x61iled_container_count\x18\x08 \x01(\x04\x12\x1f\n\x17\x64\x65leted_container_count\x18\t \x01(\x04\"v\n\"ContainerStorageReadCacheStatsData\x12\x11\n\thit_count\x18\x01 \x01(\x04\x12\x12\n\nmiss_count\x18\x02 \x01(\x04\x12\x13\n\x0b\x63heck_count\x18\x03 \x01(\x04\x12\x14\n\x0cupdate_count\x18\x04 \x01(\x04\"V\n\x19\x42lockIndexFilterStatsData\x12\x11\n\thit_count\x18\x01 \x01(\x04\x12\x12\n\nmiss_count\x18\x02 \x01(\x04\x12\x12\n\nread_count\x18\x03 \x01(\x04\"V\n\x18\x42lockChunkCacheStatsData\x12\x13\n\x0b\x66\x65tch_count\x18\x01 \x01(\x04\x12\x11\n\thit_count\x18\x02 \x01(\x04\x12\x12\n\nmiss_count\x18\x03 \x01(\x04\"f\n\x14\x42loomFilterStatsData\x12\x11\n\thit_count\x18\x01 \x01(\x04\x12\x12\n\nmiss_count\x18\x02 \x01(\x04\x12\x12\n\nread_count\x18\x03 \x01(\x04\x12\x13\n\x0bwrite_count\x18\x04 \x01(\x04\"W\n\x1a\x42yteCompareFilterStatsData\x12\x11\n\thit_count\x18\x01 \x01(\x04\x12\x12\n\nmiss_count\x18\x02 \x01(\x04\x12\x12\n\nread_count\x18\x03 \x01(\x04\"\x82\x01\n\x19\x43hunkIndexFilterStatsData\x12\x11\n\thit_count\x18\x01 \x01(\x04\x12\x12\n\nmiss_count\x18\x02 \x01(\x04\x12\x12\n\nread_count\x18\x03 \x01(\x04\x12\x13\n\x0bwrite_count\x18\x04 \x01(\x04\x12\x15\n\rfailure_count\x18\x06 \x01(\x04\"b\n\x18ZeroChunkFilterStatsData\x12\x1a\n\x12\x65xisting_hit_count\x18\x01 \x01(\x04\x12\x16\n\x0eweak_hit_count\x18\x02 \x01(\x04\x12\x12\n\nread_count\x18\x03 \x01(\x04\"\xbd\x01\n\x1fSparseChunkIndexFilterStatsData\x12\x18\n\x10strong_hit_count\x18\x01 \x01(\x04\x12\x12\n\nmiss_count\x18\x02 \x01(\x04\x12\x12\n\nread_count\x18\x03 \x01(\x04\x12\x13\n\x0bwrite_count\x18\x04 \x01(\x04\x12\x15\n\rfailure_count\x18\x06 \x01(\x04\x12\x14\n\x0c\x61nchor_count\x18\x07 \x01(\x04\x12\x16\n\x0eweak_hit_count\x18\x08 \x01(\x04\"\xc3\x01\n\x19GarbageCollectorStatsData\x12\x1d\n\x15processed_block_count\x18\x01 \x01(\x04\x12$\n\x1cprocessed_gc_candidate_count\x18\x02 \x01(\x04\x12\x1b\n\x13skipped_chunk_count\x18\x03 \x01(\x04\x12%\n\x1d\x61lready_processed_chunk_count\x18\x04 \x01(\x04\x12\x1d\n\x15processed_chunk_count\x18\x05 \x01(\x04\"o\n\x15RabinChunkerStatsData\x12\x13\n\x0b\x63hunk_count\x18\x01 \x01(\x04\x12\x1f\n\x17size_forced_chunk_count\x18\x02 \x01(\x04\x12 \n\x18\x63lose_forced_chunk_count\x18\x03 \x01(\x04\"i\n\x17\x43ontentStorageStatsData\x12\x12\n\nread_count\x18\x01 \x01(\x04\x12\x13\n\x0bwrite_count\x18\x02 \x01(\x04\x12\x11\n\tread_size\x18\x03 \x01(\x04\x12\x12\n\nwrite_size\x18\x04 \x01(\x04\"\xa5\x01\n\x0cLogStatsData\x12\x13\n\x0b\x65vent_count\x18\x01 \x01(\x04\x12\x1c\n\x14replayed_event_count\x18\x02 \x01(\x04\x12\x33\n\rlogtype_count\x18\x03 \x03(\x0b\x32\x1c.LogStatsData.LogTypeCounter\x1a-\n\x0eLogTypeCounter\x12\x0c\n\x04type\x18\x01 \x01(\x05\x12\r\n\x05\x63ount\x18\x02 \x01(\x04')
+  serialized_pb='\n\x13\x64\x65\x64upv1_stats.proto\"Y\n\x13\x43hunkIndexStatsData\x12 \n\x18imported_container_count\x18\x01 \x01(\x04\x12 \n\x18index_full_failure_count\x18\x02 \x01(\x04\"\xaa\x01\n\x13\x42lockIndexStatsData\x12\x18\n\x10index_read_count\x18\x01 \x01(\x04\x12\x19\n\x11index_write_count\x18\x02 \x01(\x04\x12\x1e\n\x16index_real_write_count\x18\x03 \x01(\x04\x12\x1c\n\x14imported_block_count\x18\x04 \x01(\x04\x12 \n\x18\x66\x61iled_block_write_count\x18\x05 \x01(\x04\"X\n\x13\x43hunkStoreStatsData\x12\x12\n\nread_count\x18\x01 \x01(\x04\x12\x13\n\x0bwrite_count\x18\x02 \x01(\x04\x12\x18\n\x10real_write_count\x18\x03 \x01(\x04\"a\n#ContainerStorageWriteCacheStatsData\x12\x11\n\thit_count\x18\x01 \x01(\x04\x12\x12\n\nmiss_count\x18\x02 \x01(\x04\x12\x13\n\x0b\x63heck_count\x18\x03 \x01(\x04\"\xb2\x02\n\x19\x43ontainerStorageStatsData\x12\x12\n\nread_count\x18\x01 \x01(\x04\x12\x1d\n\x15write_cache_hit_count\x18\x02 \x01(\x04\x12\x1f\n\x17\x63ontainer_timeout_count\x18\x03 \x01(\x04\x12\x1e\n\x16readed_container_count\x18\x04 \x01(\x04\x12!\n\x19\x63ommitted_container_count\x18\x05 \x01(\x04\x12\x1d\n\x15moved_container_count\x18\x06 \x01(\x04\x12\x1e\n\x16merged_container_count\x18\x07 \x01(\x04\x12\x1e\n\x16\x66\x61iled_container_count\x18\x08 \x01(\x04\x12\x1f\n\x17\x64\x65leted_container_count\x18\t \x01(\x04\"v\n\"ContainerStorageReadCacheStatsData\x12\x11\n\thit_count\x18\x01 \x01(\x04\x12\x12\n\nmiss_count\x18\x02 \x01(\x04\x12\x13\n\x0b\x63heck_count\x18\x03 \x01(\x04\x12\x14\n\x0cupdate_count\x18\x04 \x01(\x04\"V\n\x19\x42lockIndexFilterStatsData\x12\x11\n\thit_count\x18\x01 \x01(\x04\x12\x12\n\nmiss_count\x18\x02 \x01(\x04\x12\x12\n\nread_count\x18\x03 \x01(\x04\"V\n\x18\x42lockChunkCacheStatsData\x12\x13\n\x0b\x66\x65tch_count\x18\x01 \x01(\x04\x12\x11\n\thit_count\x18\x02 \x01(\x04\x12\x12\n\nmiss_count\x18\x03 \x01(\x04\"f\n\x14\x42loomFilterStatsData\x12\x11\n\thit_count\x18\x01 \x01(\x04\x12\x12\n\nmiss_count\x18\x02 \x01(\x04\x12\x12\n\nread_count\x18\x03 \x01(\x04\x12\x13\n\x0bwrite_count\x18\x04 \x01(\x04\"W\n\x1a\x42yteCompareFilterStatsData\x12\x11\n\thit_count\x18\x01 \x01(\x04\x12\x12\n\nmiss_count\x18\x02 \x01(\x04\x12\x12\n\nread_count\x18\x03 \x01(\x04\"\xb7\x01\n\x19\x43hunkIndexFilterStatsData\x12\x18\n\x10strong_hit_count\x18\x01 \x01(\x04\x12\x16\n\x0eweak_hit_count\x18\x08 \x01(\x04\x12\x12\n\nmiss_count\x18\x02 \x01(\x04\x12\x12\n\nread_count\x18\x03 \x01(\x04\x12\x13\n\x0bwrite_count\x18\x04 \x01(\x04\x12\x15\n\rfailure_count\x18\x06 \x01(\x04\x12\x14\n\x0c\x61nchor_count\x18\x07 \x01(\x04\"E\n\x17SamplingFilterStatsData\x12\x16\n\x0eweak_hit_count\x18\x01 \x01(\x04\x12\x12\n\nread_count\x18\x02 \x01(\x04\"b\n\x18ZeroChunkFilterStatsData\x12\x1a\n\x12\x65xisting_hit_count\x18\x01 \x01(\x04\x12\x16\n\x0eweak_hit_count\x18\x02 \x01(\x04\x12\x12\n\nread_count\x18\x03 \x01(\x04\"\xc3\x01\n\x19GarbageCollectorStatsData\x12\x1d\n\x15processed_block_count\x18\x01 \x01(\x04\x12$\n\x1cprocessed_gc_candidate_count\x18\x02 \x01(\x04\x12\x1b\n\x13skipped_chunk_count\x18\x03 \x01(\x04\x12%\n\x1d\x61lready_processed_chunk_count\x18\x04 \x01(\x04\x12\x1d\n\x15processed_chunk_count\x18\x05 \x01(\x04\"o\n\x15RabinChunkerStatsData\x12\x13\n\x0b\x63hunk_count\x18\x01 \x01(\x04\x12\x1f\n\x17size_forced_chunk_count\x18\x02 \x01(\x04\x12 \n\x18\x63lose_forced_chunk_count\x18\x03 \x01(\x04\"i\n\x17\x43ontentStorageStatsData\x12\x12\n\nread_count\x18\x01 \x01(\x04\x12\x13\n\x0bwrite_count\x18\x02 \x01(\x04\x12\x11\n\tread_size\x18\x03 \x01(\x04\x12\x12\n\nwrite_size\x18\x04 \x01(\x04\"\xa5\x01\n\x0cLogStatsData\x12\x13\n\x0b\x65vent_count\x18\x01 \x01(\x04\x12\x1c\n\x14replayed_event_count\x18\x02 \x01(\x04\x12\x33\n\rlogtype_count\x18\x03 \x03(\x0b\x32\x1c.LogStatsData.LogTypeCounter\x1a-\n\x0eLogTypeCounter\x12\x0c\n\x04type\x18\x01 \x01(\x05\x12\r\n\x05\x63ount\x18\x02 \x01(\x04')
 
 
 
@@ -509,36 +509,50 @@ _CHUNKINDEXFILTERSTATSDATA = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='hit_count', full_name='ChunkIndexFilterStatsData.hit_count', index=0,
+      name='strong_hit_count', full_name='ChunkIndexFilterStatsData.strong_hit_count', index=0,
       number=1, type=4, cpp_type=4, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='miss_count', full_name='ChunkIndexFilterStatsData.miss_count', index=1,
+      name='weak_hit_count', full_name='ChunkIndexFilterStatsData.weak_hit_count', index=1,
+      number=8, type=4, cpp_type=4, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='miss_count', full_name='ChunkIndexFilterStatsData.miss_count', index=2,
       number=2, type=4, cpp_type=4, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='read_count', full_name='ChunkIndexFilterStatsData.read_count', index=2,
+      name='read_count', full_name='ChunkIndexFilterStatsData.read_count', index=3,
       number=3, type=4, cpp_type=4, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='write_count', full_name='ChunkIndexFilterStatsData.write_count', index=3,
+      name='write_count', full_name='ChunkIndexFilterStatsData.write_count', index=4,
       number=4, type=4, cpp_type=4, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='failure_count', full_name='ChunkIndexFilterStatsData.failure_count', index=4,
+      name='failure_count', full_name='ChunkIndexFilterStatsData.failure_count', index=5,
       number=6, type=4, cpp_type=4, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='anchor_count', full_name='ChunkIndexFilterStatsData.anchor_count', index=6,
+      number=7, type=4, cpp_type=4, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -553,7 +567,42 @@ _CHUNKINDEXFILTERSTATSDATA = _descriptor.Descriptor(
   is_extendable=False,
   extension_ranges=[],
   serialized_start=1275,
-  serialized_end=1405,
+  serialized_end=1458,
+)
+
+
+_SAMPLINGFILTERSTATSDATA = _descriptor.Descriptor(
+  name='SamplingFilterStatsData',
+  full_name='SamplingFilterStatsData',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='weak_hit_count', full_name='SamplingFilterStatsData.weak_hit_count', index=0,
+      number=1, type=4, cpp_type=4, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='read_count', full_name='SamplingFilterStatsData.read_count', index=1,
+      number=2, type=4, cpp_type=4, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  extension_ranges=[],
+  serialized_start=1460,
+  serialized_end=1529,
 )
 
 
@@ -594,78 +643,8 @@ _ZEROCHUNKFILTERSTATSDATA = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1407,
-  serialized_end=1505,
-)
-
-
-_SPARSECHUNKINDEXFILTERSTATSDATA = _descriptor.Descriptor(
-  name='SparseChunkIndexFilterStatsData',
-  full_name='SparseChunkIndexFilterStatsData',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='strong_hit_count', full_name='SparseChunkIndexFilterStatsData.strong_hit_count', index=0,
-      number=1, type=4, cpp_type=4, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='miss_count', full_name='SparseChunkIndexFilterStatsData.miss_count', index=1,
-      number=2, type=4, cpp_type=4, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='read_count', full_name='SparseChunkIndexFilterStatsData.read_count', index=2,
-      number=3, type=4, cpp_type=4, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='write_count', full_name='SparseChunkIndexFilterStatsData.write_count', index=3,
-      number=4, type=4, cpp_type=4, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='failure_count', full_name='SparseChunkIndexFilterStatsData.failure_count', index=4,
-      number=6, type=4, cpp_type=4, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='anchor_count', full_name='SparseChunkIndexFilterStatsData.anchor_count', index=5,
-      number=7, type=4, cpp_type=4, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='weak_hit_count', full_name='SparseChunkIndexFilterStatsData.weak_hit_count', index=6,
-      number=8, type=4, cpp_type=4, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  extension_ranges=[],
-  serialized_start=1508,
-  serialized_end=1697,
+  serialized_start=1531,
+  serialized_end=1629,
 )
 
 
@@ -720,8 +699,8 @@ _GARBAGECOLLECTORSTATSDATA = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1700,
-  serialized_end=1895,
+  serialized_start=1632,
+  serialized_end=1827,
 )
 
 
@@ -762,8 +741,8 @@ _RABINCHUNKERSTATSDATA = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1897,
-  serialized_end=2008,
+  serialized_start=1829,
+  serialized_end=1940,
 )
 
 
@@ -811,8 +790,8 @@ _CONTENTSTORAGESTATSDATA = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=2010,
-  serialized_end=2115,
+  serialized_start=1942,
+  serialized_end=2047,
 )
 
 
@@ -846,8 +825,8 @@ _LOGSTATSDATA_LOGTYPECOUNTER = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=2238,
-  serialized_end=2283,
+  serialized_start=2170,
+  serialized_end=2215,
 )
 
 _LOGSTATSDATA = _descriptor.Descriptor(
@@ -887,8 +866,8 @@ _LOGSTATSDATA = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=2118,
-  serialized_end=2283,
+  serialized_start=2050,
+  serialized_end=2215,
 )
 
 _LOGSTATSDATA_LOGTYPECOUNTER.containing_type = _LOGSTATSDATA;
@@ -904,8 +883,8 @@ DESCRIPTOR.message_types_by_name['BlockChunkCacheStatsData'] = _BLOCKCHUNKCACHES
 DESCRIPTOR.message_types_by_name['BloomFilterStatsData'] = _BLOOMFILTERSTATSDATA
 DESCRIPTOR.message_types_by_name['ByteCompareFilterStatsData'] = _BYTECOMPAREFILTERSTATSDATA
 DESCRIPTOR.message_types_by_name['ChunkIndexFilterStatsData'] = _CHUNKINDEXFILTERSTATSDATA
+DESCRIPTOR.message_types_by_name['SamplingFilterStatsData'] = _SAMPLINGFILTERSTATSDATA
 DESCRIPTOR.message_types_by_name['ZeroChunkFilterStatsData'] = _ZEROCHUNKFILTERSTATSDATA
-DESCRIPTOR.message_types_by_name['SparseChunkIndexFilterStatsData'] = _SPARSECHUNKINDEXFILTERSTATSDATA
 DESCRIPTOR.message_types_by_name['GarbageCollectorStatsData'] = _GARBAGECOLLECTORSTATSDATA
 DESCRIPTOR.message_types_by_name['RabinChunkerStatsData'] = _RABINCHUNKERSTATSDATA
 DESCRIPTOR.message_types_by_name['ContentStorageStatsData'] = _CONTENTSTORAGESTATSDATA
@@ -977,17 +956,17 @@ class ChunkIndexFilterStatsData(_message.Message):
 
   # @@protoc_insertion_point(class_scope:ChunkIndexFilterStatsData)
 
+class SamplingFilterStatsData(_message.Message):
+  __metaclass__ = _reflection.GeneratedProtocolMessageType
+  DESCRIPTOR = _SAMPLINGFILTERSTATSDATA
+
+  # @@protoc_insertion_point(class_scope:SamplingFilterStatsData)
+
 class ZeroChunkFilterStatsData(_message.Message):
   __metaclass__ = _reflection.GeneratedProtocolMessageType
   DESCRIPTOR = _ZEROCHUNKFILTERSTATSDATA
 
   # @@protoc_insertion_point(class_scope:ZeroChunkFilterStatsData)
-
-class SparseChunkIndexFilterStatsData(_message.Message):
-  __metaclass__ = _reflection.GeneratedProtocolMessageType
-  DESCRIPTOR = _SPARSECHUNKINDEXFILTERSTATSDATA
-
-  # @@protoc_insertion_point(class_scope:SparseChunkIndexFilterStatsData)
 
 class GarbageCollectorStatsData(_message.Message):
   __metaclass__ = _reflection.GeneratedProtocolMessageType

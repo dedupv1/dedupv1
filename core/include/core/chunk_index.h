@@ -36,6 +36,7 @@
 #include <base/error.h>
 #include <core/chunk_locks.h>
 #include <core/chunk_index_in_combat.h>
+#include <core/chunk_index_sampling_strategy.h>
 #include <core/info_store.h>
 #include <core/container.h>
 #include <base/threadpool.h>
@@ -87,17 +88,17 @@ class ChunkIndexBackgroundCommitter;
  * container y < x should be stored in the main index.
  *
  */
-class ChunkIndex: public dedupv1::log::LogConsumer, public dedupv1::StatisticProvider {
+class ChunkIndex : public dedupv1::log::LogConsumer, public dedupv1::StatisticProvider {
     friend class ChunkIndexBackgroundCommitter;
     friend class ImportTask;
-    private:
+private:
     DISALLOW_COPY_AND_ASSIGN(ChunkIndex);
 
     /**
      * Factory for all chunk index instance
      */
     static MetaFactory<ChunkIndex> factory_;
-    public:
+public:
 
     static MetaFactory<ChunkIndex>& Factory();
 
@@ -105,55 +106,55 @@ class ChunkIndex: public dedupv1::log::LogConsumer, public dedupv1::StatisticPro
      * States of the chunk index
      */
     enum chunk_index_state {
-        CREATED,//!< CREATED
-        STARTED,//!< STARTED
+        CREATED, // !< CREATED
+        STARTED, // !< STARTED
         STOPPED
-        //!< STOPPED
+        // !< STOPPED
     };
 
     /**
      * Type for statistics about the chunk index
      */
     class Statistics {
-        public:
-            Statistics();
-            /**
-             * Profiling information
-             */
-            dedupv1::base::Profile profiling_;
+public:
+        Statistics();
+        /**
+         * Profiling information
+         */
+        dedupv1::base::Profile profiling_;
 
-            dedupv1::base::Profile update_time_;
+        dedupv1::base::Profile update_time_;
 
-            dedupv1::base::Profile lookup_time_;
+        dedupv1::base::Profile lookup_time_;
 
-            dedupv1::base::Profile replay_time_;
+        dedupv1::base::Profile replay_time_;
 
-            dedupv1::base::Profile import_time_;
+        dedupv1::base::Profile import_time_;
 
-            tbb::atomic<uint64_t> index_full_failure_count_;
+        tbb::atomic<uint64_t> index_full_failure_count_;
 
-            tbb::atomic<uint64_t> imported_container_count_;
+        tbb::atomic<uint64_t> imported_container_count_;
 
-            /**
-             * How often have we tried to import a container into the
-             * persistent index from the log replay while at the same time
-             * a bg thread is already active importing the same container. In
-             * these situation, we pause the log replay to ensure that
-             * the container is fully committed.
-             */
-            tbb::atomic<uint64_t> bg_container_import_wait_count_;
+        /**
+         * How often have we tried to import a container into the
+         * persistent index from the log replay while at the same time
+         * a bg thread is already active importing the same container. In
+         * these situation, we pause the log replay to ensure that
+         * the container is fully committed.
+         */
+        tbb::atomic<uint64_t> bg_container_import_wait_count_;
 
-            tbb::atomic<uint32_t> lock_free_;
+        tbb::atomic<uint32_t> lock_free_;
 
-            tbb::atomic<uint32_t> lock_busy_;
+        tbb::atomic<uint32_t> lock_busy_;
 
-            dedupv1::base::SimpleSlidingAverage average_lookup_latency_;
+        dedupv1::base::SimpleSlidingAverage average_lookup_latency_;
 
-            tbb::atomic<uint64_t> throttle_count_;
+        tbb::atomic<uint64_t> throttle_count_;
 
-            dedupv1::base::Profile throttle_time_;
+        dedupv1::base::Profile throttle_time_;
     };
-    private:
+private:
 
     /**
      * State of the chunk index.
@@ -251,6 +252,8 @@ class ChunkIndex: public dedupv1::log::LogConsumer, public dedupv1::StatisticPro
      */
     uint32_t import_delay_;
 
+    ChunkIndexSamplingStrategy* sampling_strategy_;
+
     ThrottleHelper throttling_;
 
     /**
@@ -304,10 +307,10 @@ class ChunkIndex: public dedupv1::log::LogConsumer, public dedupv1::StatisticPro
      * trying to import containers.
      */
     enum import_result {
-        IMPORT_ERROR = 0, //!< IMPORT_ERROR
-        IMPORT_NO_MORE = 1, //!< IMPORT_NO_MORE
+        IMPORT_ERROR = 0, // !< IMPORT_ERROR
+        IMPORT_NO_MORE = 1, // !< IMPORT_NO_MORE
         IMPORT_BATCH_FINISHED = 2
-        //!< IMPORT_BATCH_FINISHED
+                                // !< IMPORT_BATCH_FINISHED
     };
 
     /**
@@ -339,8 +342,7 @@ class ChunkIndex: public dedupv1::log::LogConsumer, public dedupv1::StatisticPro
      * @return true iff ok, otherwise an error has occurred
      */
     bool HandleContainerCommitFailed(const ContainerCommitFailedEventData& event_data);
-
-    protected:
+protected:
 
     /**
      * Returns the storage
@@ -392,10 +394,10 @@ class ChunkIndex: public dedupv1::log::LogConsumer, public dedupv1::StatisticPro
     bool ImportContainerItem(const dedupv1::chunkstore::ContainerItem& item, dedupv1::base::ErrorContext* ec);
 
     bool ImportContainerParallel(uint64_t container_id, const dedupv1::chunkstore::Container& container,
-            dedupv1::base::ErrorContext* ec);
+                                 dedupv1::base::ErrorContext* ec);
 
 #ifdef DEDUPV1_CORE_TEST
-    public:
+public:
 #endif
 
     /**
@@ -408,8 +410,7 @@ class ChunkIndex: public dedupv1::log::LogConsumer, public dedupv1::StatisticPro
      * no locking is used.
      */
     bool LoadContainerIntoCache(uint64_t container_id, dedupv1::base::ErrorContext* ec);
-
-    public:
+public:
     /**
      * Creates a new chunk index
      * @return
@@ -513,8 +514,9 @@ class ChunkIndex: public dedupv1::log::LogConsumer, public dedupv1::StatisticPro
      *
      * @return
      */
-    virtual dedupv1::base::lookup_result Lookup(ChunkMapping* mapping, bool add_as_in_combat,
-            dedupv1::base::ErrorContext* ec);
+    virtual dedupv1::base::lookup_result Lookup(ChunkMapping* mapping,
+                                                bool add_as_in_combat,
+                                                dedupv1::base::ErrorContext* ec);
 
     /**
      * Performs a lookup limited to the auxiliary index.
@@ -531,8 +533,9 @@ class ChunkIndex: public dedupv1::log::LogConsumer, public dedupv1::StatisticPro
      * @param ec error context (can be NULL)
      * @return
      */
-    dedupv1::base::lookup_result LookupIndex(dedupv1::base::Index* index, ChunkMapping* mapping,
-            dedupv1::base::ErrorContext* ec);
+    dedupv1::base::lookup_result LookupIndex(dedupv1::base::Index* index,
+                                             ChunkMapping* mapping,
+                                             dedupv1::base::ErrorContext* ec);
 
     /**
      * Performs a lookup limited to the persistent index.
@@ -546,9 +549,9 @@ class ChunkIndex: public dedupv1::log::LogConsumer, public dedupv1::StatisticPro
      * @return
      */
     dedupv1::base::lookup_result LookupPersistentIndex(ChunkMapping* mapping,
-            dedupv1::base::cache_lookup_method cache_lookup_type,
-            dedupv1::base::cache_dirty_mode dirty_mode,
-            dedupv1::base::ErrorContext* ec);
+                                                       dedupv1::base::cache_lookup_method cache_lookup_type,
+                                                       dedupv1::base::cache_dirty_mode dirty_mode,
+                                                       dedupv1::base::ErrorContext* ec);
     /**
      * Note: Currently only the garbage collector is every overwriting chunk mappings,
      * If gc is therefore save to do it without locking. However, if this assumption becomes
@@ -563,8 +566,8 @@ class ChunkIndex: public dedupv1::log::LogConsumer, public dedupv1::StatisticPro
      * @return true iff ok, otherwise an error has occurred
      */
     virtual bool PutPersistentIndex(const ChunkMapping& mapping, bool ensure_persistence,
-            bool pin,
-            dedupv1::base::ErrorContext* ec);
+                                    bool pin,
+                                    dedupv1::base::ErrorContext* ec);
 
     /**
      * Ensures that any dirty version of the fingerprint of the mapping is persistent.
@@ -618,7 +621,7 @@ class ChunkIndex: public dedupv1::log::LogConsumer, public dedupv1::StatisticPro
      * @return true iff ok, otherwise an error has occurred
      */
     virtual bool LogReplay(dedupv1::log::event_type event_type, const LogEventData& event_value,
-            const dedupv1::log::LogReplayContext& context);
+                           const dedupv1::log::LogReplayContext& context);
 
     bool FinishDirtyLogReplay();
 
@@ -672,7 +675,6 @@ class ChunkIndex: public dedupv1::log::LogConsumer, public dedupv1::StatisticPro
      */
     inline dedupv1::base::IndexIterator* CreatePersistentIterator();
 
-
     /**
      * Checks that all indices are set correctly.
      *
@@ -695,7 +697,7 @@ class ChunkIndex: public dedupv1::log::LogConsumer, public dedupv1::StatisticPro
      * @return true iff ok, otherwise an error has occurred
      */
     bool PutIndex(dedupv1::base::Index* index, const ChunkMapping& mapping,
-            dedupv1::base::ErrorContext* ec);
+                  dedupv1::base::ErrorContext* ec);
 
     /**
      * Returns the container tracker of the chunk index
@@ -749,9 +751,10 @@ class ChunkIndex: public dedupv1::log::LogConsumer, public dedupv1::StatisticPro
      * The direct access should be avoided.
      */
     dedupv1::base::PersistentIndex* persistent_index() {
-      return chunk_index_;
+        return chunk_index_;
     }
 
+    inline ChunkIndexSamplingStrategy* sampling_strategy();
 #ifdef DEDUPV1_CORE_TEST
     /**
      * Test if the persistent Index is a DiskHashImage. This is used for unit tests.
@@ -779,21 +782,24 @@ class ChunkIndex: public dedupv1::log::LogConsumer, public dedupv1::StatisticPro
  * Used by the configuration system to inject different implementations.
  */
 class ChunkIndexFactory {
-        DISALLOW_COPY_AND_ASSIGN(ChunkIndexFactory);
-    public:
-        ChunkIndexFactory();
-        bool Register(const std::string& name, ChunkIndex*(*factory)(void));
-        static ChunkIndex* Create(const std::string& name);
+    DISALLOW_COPY_AND_ASSIGN(ChunkIndexFactory);
+public:
+    ChunkIndexFactory();
+    bool Register(const std::string & name, ChunkIndex * (*factory)(void));
+    static ChunkIndex* Create(const std::string& name);
 
-        static ChunkIndexFactory* GetFactory() {
-            return &factory;
-        }
+    static ChunkIndexFactory* GetFactory() {
+        return &factory;
+    }
+private:
+    std::map<std::string, ChunkIndex*(*)(void)> factory_map;
 
-    private:
-        std::map<std::string, ChunkIndex*(*)(void)> factory_map;
-
-        static ChunkIndexFactory factory;
+    static ChunkIndexFactory factory;
 };
+
+ChunkIndexSamplingStrategy* ChunkIndex::sampling_strategy() {
+    return sampling_strategy_;
+}
 
 dedupv1::chunkstore::Storage* ChunkIndex::storage() {
     return this->storage_;
@@ -823,9 +829,8 @@ ChunkIndex::chunk_index_state ChunkIndex::state() const {
     return this->state_;
 }
 
-
 inline uint64_t ChunkIndex::GetDirtyCount() {
-  return this->chunk_index_->GetDirtyItemCount();
+    return this->chunk_index_->GetDirtyItemCount();
 }
 
 inline uint64_t ChunkIndex::GetPersistentCount() {
@@ -838,11 +843,11 @@ inline dedupv1::base::IndexIterator* ChunkIndex::CreatePersistentIterator() {
 
 #ifdef DEDUPV1_CORE_TEST
 inline bool ChunkIndex::TestPersistentIndexIsDiskHashIndex() {
-    return dynamic_cast<dedupv1::base::DiskHashIndex*> (this->chunk_index_);
+    return dynamic_cast<dedupv1::base::DiskHashIndex*>(this->chunk_index_);
 }
 
 inline size_t ChunkIndex::TestPersistentIndexAsDiskHashIndexMaxKeySize() {
-    dedupv1::base::DiskHashIndex* di = dynamic_cast<dedupv1::base::DiskHashIndex*> (this->chunk_index_);
+    dedupv1::base::DiskHashIndex* di = dynamic_cast<dedupv1::base::DiskHashIndex*>(this->chunk_index_);
     if (!di) {
         return 0;
     }

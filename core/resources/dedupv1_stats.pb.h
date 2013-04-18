@@ -42,8 +42,8 @@ class BlockChunkCacheStatsData;
 class BloomFilterStatsData;
 class ByteCompareFilterStatsData;
 class ChunkIndexFilterStatsData;
+class SamplingFilterStatsData;
 class ZeroChunkFilterStatsData;
-class SparseChunkIndexFilterStatsData;
 class GarbageCollectorStatsData;
 class RabinChunkerStatsData;
 class ContentStorageStatsData;
@@ -1216,12 +1216,19 @@ class ChunkIndexFilterStatsData : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // optional uint64 hit_count = 1;
-  inline bool has_hit_count() const;
-  inline void clear_hit_count();
-  static const int kHitCountFieldNumber = 1;
-  inline ::google::protobuf::uint64 hit_count() const;
-  inline void set_hit_count(::google::protobuf::uint64 value);
+  // optional uint64 strong_hit_count = 1;
+  inline bool has_strong_hit_count() const;
+  inline void clear_strong_hit_count();
+  static const int kStrongHitCountFieldNumber = 1;
+  inline ::google::protobuf::uint64 strong_hit_count() const;
+  inline void set_strong_hit_count(::google::protobuf::uint64 value);
+
+  // optional uint64 weak_hit_count = 8;
+  inline bool has_weak_hit_count() const;
+  inline void clear_weak_hit_count();
+  static const int kWeakHitCountFieldNumber = 8;
+  inline ::google::protobuf::uint64 weak_hit_count() const;
+  inline void set_weak_hit_count(::google::protobuf::uint64 value);
 
   // optional uint64 miss_count = 2;
   inline bool has_miss_count() const;
@@ -1251,10 +1258,19 @@ class ChunkIndexFilterStatsData : public ::google::protobuf::Message {
   inline ::google::protobuf::uint64 failure_count() const;
   inline void set_failure_count(::google::protobuf::uint64 value);
 
+  // optional uint64 anchor_count = 7;
+  inline bool has_anchor_count() const;
+  inline void clear_anchor_count();
+  static const int kAnchorCountFieldNumber = 7;
+  inline ::google::protobuf::uint64 anchor_count() const;
+  inline void set_anchor_count(::google::protobuf::uint64 value);
+
   // @@protoc_insertion_point(class_scope:ChunkIndexFilterStatsData)
  private:
-  inline void set_has_hit_count();
-  inline void clear_has_hit_count();
+  inline void set_has_strong_hit_count();
+  inline void clear_has_strong_hit_count();
+  inline void set_has_weak_hit_count();
+  inline void clear_has_weak_hit_count();
   inline void set_has_miss_count();
   inline void clear_has_miss_count();
   inline void set_has_read_count();
@@ -1263,17 +1279,21 @@ class ChunkIndexFilterStatsData : public ::google::protobuf::Message {
   inline void clear_has_write_count();
   inline void set_has_failure_count();
   inline void clear_has_failure_count();
+  inline void set_has_anchor_count();
+  inline void clear_has_anchor_count();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::google::protobuf::uint64 hit_count_;
+  ::google::protobuf::uint64 strong_hit_count_;
+  ::google::protobuf::uint64 weak_hit_count_;
   ::google::protobuf::uint64 miss_count_;
   ::google::protobuf::uint64 read_count_;
   ::google::protobuf::uint64 write_count_;
   ::google::protobuf::uint64 failure_count_;
+  ::google::protobuf::uint64 anchor_count_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(7 + 31) / 32];
 
   friend void  protobuf_AddDesc_dedupv1_5fstats_2eproto();
   friend void protobuf_AssignDesc_dedupv1_5fstats_2eproto();
@@ -1281,6 +1301,98 @@ class ChunkIndexFilterStatsData : public ::google::protobuf::Message {
 
   void InitAsDefaultInstance();
   static ChunkIndexFilterStatsData* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class SamplingFilterStatsData : public ::google::protobuf::Message {
+ public:
+  SamplingFilterStatsData();
+  virtual ~SamplingFilterStatsData();
+
+  SamplingFilterStatsData(const SamplingFilterStatsData& from);
+
+  inline SamplingFilterStatsData& operator=(const SamplingFilterStatsData& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const SamplingFilterStatsData& default_instance();
+
+  void Swap(SamplingFilterStatsData* other);
+
+  // implements Message ----------------------------------------------
+
+  SamplingFilterStatsData* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const SamplingFilterStatsData& from);
+  void MergeFrom(const SamplingFilterStatsData& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional uint64 weak_hit_count = 1;
+  inline bool has_weak_hit_count() const;
+  inline void clear_weak_hit_count();
+  static const int kWeakHitCountFieldNumber = 1;
+  inline ::google::protobuf::uint64 weak_hit_count() const;
+  inline void set_weak_hit_count(::google::protobuf::uint64 value);
+
+  // optional uint64 read_count = 2;
+  inline bool has_read_count() const;
+  inline void clear_read_count();
+  static const int kReadCountFieldNumber = 2;
+  inline ::google::protobuf::uint64 read_count() const;
+  inline void set_read_count(::google::protobuf::uint64 value);
+
+  // @@protoc_insertion_point(class_scope:SamplingFilterStatsData)
+ private:
+  inline void set_has_weak_hit_count();
+  inline void clear_has_weak_hit_count();
+  inline void set_has_read_count();
+  inline void clear_has_read_count();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::uint64 weak_hit_count_;
+  ::google::protobuf::uint64 read_count_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
+
+  friend void  protobuf_AddDesc_dedupv1_5fstats_2eproto();
+  friend void protobuf_AssignDesc_dedupv1_5fstats_2eproto();
+  friend void protobuf_ShutdownFile_dedupv1_5fstats_2eproto();
+
+  void InitAsDefaultInstance();
+  static SamplingFilterStatsData* default_instance_;
 };
 // -------------------------------------------------------------------
 
@@ -1383,148 +1495,6 @@ class ZeroChunkFilterStatsData : public ::google::protobuf::Message {
 
   void InitAsDefaultInstance();
   static ZeroChunkFilterStatsData* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class SparseChunkIndexFilterStatsData : public ::google::protobuf::Message {
- public:
-  SparseChunkIndexFilterStatsData();
-  virtual ~SparseChunkIndexFilterStatsData();
-
-  SparseChunkIndexFilterStatsData(const SparseChunkIndexFilterStatsData& from);
-
-  inline SparseChunkIndexFilterStatsData& operator=(const SparseChunkIndexFilterStatsData& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
-    return _unknown_fields_;
-  }
-
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
-    return &_unknown_fields_;
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const SparseChunkIndexFilterStatsData& default_instance();
-
-  void Swap(SparseChunkIndexFilterStatsData* other);
-
-  // implements Message ----------------------------------------------
-
-  SparseChunkIndexFilterStatsData* New() const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const SparseChunkIndexFilterStatsData& from);
-  void MergeFrom(const SparseChunkIndexFilterStatsData& from);
-  void Clear();
-  bool IsInitialized() const;
-
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // optional uint64 strong_hit_count = 1;
-  inline bool has_strong_hit_count() const;
-  inline void clear_strong_hit_count();
-  static const int kStrongHitCountFieldNumber = 1;
-  inline ::google::protobuf::uint64 strong_hit_count() const;
-  inline void set_strong_hit_count(::google::protobuf::uint64 value);
-
-  // optional uint64 miss_count = 2;
-  inline bool has_miss_count() const;
-  inline void clear_miss_count();
-  static const int kMissCountFieldNumber = 2;
-  inline ::google::protobuf::uint64 miss_count() const;
-  inline void set_miss_count(::google::protobuf::uint64 value);
-
-  // optional uint64 read_count = 3;
-  inline bool has_read_count() const;
-  inline void clear_read_count();
-  static const int kReadCountFieldNumber = 3;
-  inline ::google::protobuf::uint64 read_count() const;
-  inline void set_read_count(::google::protobuf::uint64 value);
-
-  // optional uint64 write_count = 4;
-  inline bool has_write_count() const;
-  inline void clear_write_count();
-  static const int kWriteCountFieldNumber = 4;
-  inline ::google::protobuf::uint64 write_count() const;
-  inline void set_write_count(::google::protobuf::uint64 value);
-
-  // optional uint64 failure_count = 6;
-  inline bool has_failure_count() const;
-  inline void clear_failure_count();
-  static const int kFailureCountFieldNumber = 6;
-  inline ::google::protobuf::uint64 failure_count() const;
-  inline void set_failure_count(::google::protobuf::uint64 value);
-
-  // optional uint64 anchor_count = 7;
-  inline bool has_anchor_count() const;
-  inline void clear_anchor_count();
-  static const int kAnchorCountFieldNumber = 7;
-  inline ::google::protobuf::uint64 anchor_count() const;
-  inline void set_anchor_count(::google::protobuf::uint64 value);
-
-  // optional uint64 weak_hit_count = 8;
-  inline bool has_weak_hit_count() const;
-  inline void clear_weak_hit_count();
-  static const int kWeakHitCountFieldNumber = 8;
-  inline ::google::protobuf::uint64 weak_hit_count() const;
-  inline void set_weak_hit_count(::google::protobuf::uint64 value);
-
-  // @@protoc_insertion_point(class_scope:SparseChunkIndexFilterStatsData)
- private:
-  inline void set_has_strong_hit_count();
-  inline void clear_has_strong_hit_count();
-  inline void set_has_miss_count();
-  inline void clear_has_miss_count();
-  inline void set_has_read_count();
-  inline void clear_has_read_count();
-  inline void set_has_write_count();
-  inline void clear_has_write_count();
-  inline void set_has_failure_count();
-  inline void clear_has_failure_count();
-  inline void set_has_anchor_count();
-  inline void clear_has_anchor_count();
-  inline void set_has_weak_hit_count();
-  inline void clear_has_weak_hit_count();
-
-  ::google::protobuf::UnknownFieldSet _unknown_fields_;
-
-  ::google::protobuf::uint64 strong_hit_count_;
-  ::google::protobuf::uint64 miss_count_;
-  ::google::protobuf::uint64 read_count_;
-  ::google::protobuf::uint64 write_count_;
-  ::google::protobuf::uint64 failure_count_;
-  ::google::protobuf::uint64 anchor_count_;
-  ::google::protobuf::uint64 weak_hit_count_;
-
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(7 + 31) / 32];
-
-  friend void  protobuf_AddDesc_dedupv1_5fstats_2eproto();
-  friend void protobuf_AssignDesc_dedupv1_5fstats_2eproto();
-  friend void protobuf_ShutdownFile_dedupv1_5fstats_2eproto();
-
-  void InitAsDefaultInstance();
-  static SparseChunkIndexFilterStatsData* default_instance_;
 };
 // -------------------------------------------------------------------
 
@@ -2966,37 +2936,59 @@ inline void ByteCompareFilterStatsData::set_read_count(::google::protobuf::uint6
 
 // ChunkIndexFilterStatsData
 
-// optional uint64 hit_count = 1;
-inline bool ChunkIndexFilterStatsData::has_hit_count() const {
+// optional uint64 strong_hit_count = 1;
+inline bool ChunkIndexFilterStatsData::has_strong_hit_count() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void ChunkIndexFilterStatsData::set_has_hit_count() {
+inline void ChunkIndexFilterStatsData::set_has_strong_hit_count() {
   _has_bits_[0] |= 0x00000001u;
 }
-inline void ChunkIndexFilterStatsData::clear_has_hit_count() {
+inline void ChunkIndexFilterStatsData::clear_has_strong_hit_count() {
   _has_bits_[0] &= ~0x00000001u;
 }
-inline void ChunkIndexFilterStatsData::clear_hit_count() {
-  hit_count_ = GOOGLE_ULONGLONG(0);
-  clear_has_hit_count();
+inline void ChunkIndexFilterStatsData::clear_strong_hit_count() {
+  strong_hit_count_ = GOOGLE_ULONGLONG(0);
+  clear_has_strong_hit_count();
 }
-inline ::google::protobuf::uint64 ChunkIndexFilterStatsData::hit_count() const {
-  return hit_count_;
+inline ::google::protobuf::uint64 ChunkIndexFilterStatsData::strong_hit_count() const {
+  return strong_hit_count_;
 }
-inline void ChunkIndexFilterStatsData::set_hit_count(::google::protobuf::uint64 value) {
-  set_has_hit_count();
-  hit_count_ = value;
+inline void ChunkIndexFilterStatsData::set_strong_hit_count(::google::protobuf::uint64 value) {
+  set_has_strong_hit_count();
+  strong_hit_count_ = value;
+}
+
+// optional uint64 weak_hit_count = 8;
+inline bool ChunkIndexFilterStatsData::has_weak_hit_count() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void ChunkIndexFilterStatsData::set_has_weak_hit_count() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void ChunkIndexFilterStatsData::clear_has_weak_hit_count() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void ChunkIndexFilterStatsData::clear_weak_hit_count() {
+  weak_hit_count_ = GOOGLE_ULONGLONG(0);
+  clear_has_weak_hit_count();
+}
+inline ::google::protobuf::uint64 ChunkIndexFilterStatsData::weak_hit_count() const {
+  return weak_hit_count_;
+}
+inline void ChunkIndexFilterStatsData::set_weak_hit_count(::google::protobuf::uint64 value) {
+  set_has_weak_hit_count();
+  weak_hit_count_ = value;
 }
 
 // optional uint64 miss_count = 2;
 inline bool ChunkIndexFilterStatsData::has_miss_count() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
+  return (_has_bits_[0] & 0x00000004u) != 0;
 }
 inline void ChunkIndexFilterStatsData::set_has_miss_count() {
-  _has_bits_[0] |= 0x00000002u;
+  _has_bits_[0] |= 0x00000004u;
 }
 inline void ChunkIndexFilterStatsData::clear_has_miss_count() {
-  _has_bits_[0] &= ~0x00000002u;
+  _has_bits_[0] &= ~0x00000004u;
 }
 inline void ChunkIndexFilterStatsData::clear_miss_count() {
   miss_count_ = GOOGLE_ULONGLONG(0);
@@ -3012,13 +3004,13 @@ inline void ChunkIndexFilterStatsData::set_miss_count(::google::protobuf::uint64
 
 // optional uint64 read_count = 3;
 inline bool ChunkIndexFilterStatsData::has_read_count() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
+  return (_has_bits_[0] & 0x00000008u) != 0;
 }
 inline void ChunkIndexFilterStatsData::set_has_read_count() {
-  _has_bits_[0] |= 0x00000004u;
+  _has_bits_[0] |= 0x00000008u;
 }
 inline void ChunkIndexFilterStatsData::clear_has_read_count() {
-  _has_bits_[0] &= ~0x00000004u;
+  _has_bits_[0] &= ~0x00000008u;
 }
 inline void ChunkIndexFilterStatsData::clear_read_count() {
   read_count_ = GOOGLE_ULONGLONG(0);
@@ -3034,13 +3026,13 @@ inline void ChunkIndexFilterStatsData::set_read_count(::google::protobuf::uint64
 
 // optional uint64 write_count = 4;
 inline bool ChunkIndexFilterStatsData::has_write_count() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
+  return (_has_bits_[0] & 0x00000010u) != 0;
 }
 inline void ChunkIndexFilterStatsData::set_has_write_count() {
-  _has_bits_[0] |= 0x00000008u;
+  _has_bits_[0] |= 0x00000010u;
 }
 inline void ChunkIndexFilterStatsData::clear_has_write_count() {
-  _has_bits_[0] &= ~0x00000008u;
+  _has_bits_[0] &= ~0x00000010u;
 }
 inline void ChunkIndexFilterStatsData::clear_write_count() {
   write_count_ = GOOGLE_ULONGLONG(0);
@@ -3056,13 +3048,13 @@ inline void ChunkIndexFilterStatsData::set_write_count(::google::protobuf::uint6
 
 // optional uint64 failure_count = 6;
 inline bool ChunkIndexFilterStatsData::has_failure_count() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
+  return (_has_bits_[0] & 0x00000020u) != 0;
 }
 inline void ChunkIndexFilterStatsData::set_has_failure_count() {
-  _has_bits_[0] |= 0x00000010u;
+  _has_bits_[0] |= 0x00000020u;
 }
 inline void ChunkIndexFilterStatsData::clear_has_failure_count() {
-  _has_bits_[0] &= ~0x00000010u;
+  _has_bits_[0] &= ~0x00000020u;
 }
 inline void ChunkIndexFilterStatsData::clear_failure_count() {
   failure_count_ = GOOGLE_ULONGLONG(0);
@@ -3074,6 +3066,76 @@ inline ::google::protobuf::uint64 ChunkIndexFilterStatsData::failure_count() con
 inline void ChunkIndexFilterStatsData::set_failure_count(::google::protobuf::uint64 value) {
   set_has_failure_count();
   failure_count_ = value;
+}
+
+// optional uint64 anchor_count = 7;
+inline bool ChunkIndexFilterStatsData::has_anchor_count() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void ChunkIndexFilterStatsData::set_has_anchor_count() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void ChunkIndexFilterStatsData::clear_has_anchor_count() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void ChunkIndexFilterStatsData::clear_anchor_count() {
+  anchor_count_ = GOOGLE_ULONGLONG(0);
+  clear_has_anchor_count();
+}
+inline ::google::protobuf::uint64 ChunkIndexFilterStatsData::anchor_count() const {
+  return anchor_count_;
+}
+inline void ChunkIndexFilterStatsData::set_anchor_count(::google::protobuf::uint64 value) {
+  set_has_anchor_count();
+  anchor_count_ = value;
+}
+
+// -------------------------------------------------------------------
+
+// SamplingFilterStatsData
+
+// optional uint64 weak_hit_count = 1;
+inline bool SamplingFilterStatsData::has_weak_hit_count() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void SamplingFilterStatsData::set_has_weak_hit_count() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void SamplingFilterStatsData::clear_has_weak_hit_count() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void SamplingFilterStatsData::clear_weak_hit_count() {
+  weak_hit_count_ = GOOGLE_ULONGLONG(0);
+  clear_has_weak_hit_count();
+}
+inline ::google::protobuf::uint64 SamplingFilterStatsData::weak_hit_count() const {
+  return weak_hit_count_;
+}
+inline void SamplingFilterStatsData::set_weak_hit_count(::google::protobuf::uint64 value) {
+  set_has_weak_hit_count();
+  weak_hit_count_ = value;
+}
+
+// optional uint64 read_count = 2;
+inline bool SamplingFilterStatsData::has_read_count() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void SamplingFilterStatsData::set_has_read_count() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void SamplingFilterStatsData::clear_has_read_count() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void SamplingFilterStatsData::clear_read_count() {
+  read_count_ = GOOGLE_ULONGLONG(0);
+  clear_has_read_count();
+}
+inline ::google::protobuf::uint64 SamplingFilterStatsData::read_count() const {
+  return read_count_;
+}
+inline void SamplingFilterStatsData::set_read_count(::google::protobuf::uint64 value) {
+  set_has_read_count();
+  read_count_ = value;
 }
 
 // -------------------------------------------------------------------
@@ -3144,164 +3206,6 @@ inline ::google::protobuf::uint64 ZeroChunkFilterStatsData::read_count() const {
 inline void ZeroChunkFilterStatsData::set_read_count(::google::protobuf::uint64 value) {
   set_has_read_count();
   read_count_ = value;
-}
-
-// -------------------------------------------------------------------
-
-// SparseChunkIndexFilterStatsData
-
-// optional uint64 strong_hit_count = 1;
-inline bool SparseChunkIndexFilterStatsData::has_strong_hit_count() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void SparseChunkIndexFilterStatsData::set_has_strong_hit_count() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void SparseChunkIndexFilterStatsData::clear_has_strong_hit_count() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void SparseChunkIndexFilterStatsData::clear_strong_hit_count() {
-  strong_hit_count_ = GOOGLE_ULONGLONG(0);
-  clear_has_strong_hit_count();
-}
-inline ::google::protobuf::uint64 SparseChunkIndexFilterStatsData::strong_hit_count() const {
-  return strong_hit_count_;
-}
-inline void SparseChunkIndexFilterStatsData::set_strong_hit_count(::google::protobuf::uint64 value) {
-  set_has_strong_hit_count();
-  strong_hit_count_ = value;
-}
-
-// optional uint64 miss_count = 2;
-inline bool SparseChunkIndexFilterStatsData::has_miss_count() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void SparseChunkIndexFilterStatsData::set_has_miss_count() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void SparseChunkIndexFilterStatsData::clear_has_miss_count() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void SparseChunkIndexFilterStatsData::clear_miss_count() {
-  miss_count_ = GOOGLE_ULONGLONG(0);
-  clear_has_miss_count();
-}
-inline ::google::protobuf::uint64 SparseChunkIndexFilterStatsData::miss_count() const {
-  return miss_count_;
-}
-inline void SparseChunkIndexFilterStatsData::set_miss_count(::google::protobuf::uint64 value) {
-  set_has_miss_count();
-  miss_count_ = value;
-}
-
-// optional uint64 read_count = 3;
-inline bool SparseChunkIndexFilterStatsData::has_read_count() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void SparseChunkIndexFilterStatsData::set_has_read_count() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void SparseChunkIndexFilterStatsData::clear_has_read_count() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void SparseChunkIndexFilterStatsData::clear_read_count() {
-  read_count_ = GOOGLE_ULONGLONG(0);
-  clear_has_read_count();
-}
-inline ::google::protobuf::uint64 SparseChunkIndexFilterStatsData::read_count() const {
-  return read_count_;
-}
-inline void SparseChunkIndexFilterStatsData::set_read_count(::google::protobuf::uint64 value) {
-  set_has_read_count();
-  read_count_ = value;
-}
-
-// optional uint64 write_count = 4;
-inline bool SparseChunkIndexFilterStatsData::has_write_count() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
-}
-inline void SparseChunkIndexFilterStatsData::set_has_write_count() {
-  _has_bits_[0] |= 0x00000008u;
-}
-inline void SparseChunkIndexFilterStatsData::clear_has_write_count() {
-  _has_bits_[0] &= ~0x00000008u;
-}
-inline void SparseChunkIndexFilterStatsData::clear_write_count() {
-  write_count_ = GOOGLE_ULONGLONG(0);
-  clear_has_write_count();
-}
-inline ::google::protobuf::uint64 SparseChunkIndexFilterStatsData::write_count() const {
-  return write_count_;
-}
-inline void SparseChunkIndexFilterStatsData::set_write_count(::google::protobuf::uint64 value) {
-  set_has_write_count();
-  write_count_ = value;
-}
-
-// optional uint64 failure_count = 6;
-inline bool SparseChunkIndexFilterStatsData::has_failure_count() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
-}
-inline void SparseChunkIndexFilterStatsData::set_has_failure_count() {
-  _has_bits_[0] |= 0x00000010u;
-}
-inline void SparseChunkIndexFilterStatsData::clear_has_failure_count() {
-  _has_bits_[0] &= ~0x00000010u;
-}
-inline void SparseChunkIndexFilterStatsData::clear_failure_count() {
-  failure_count_ = GOOGLE_ULONGLONG(0);
-  clear_has_failure_count();
-}
-inline ::google::protobuf::uint64 SparseChunkIndexFilterStatsData::failure_count() const {
-  return failure_count_;
-}
-inline void SparseChunkIndexFilterStatsData::set_failure_count(::google::protobuf::uint64 value) {
-  set_has_failure_count();
-  failure_count_ = value;
-}
-
-// optional uint64 anchor_count = 7;
-inline bool SparseChunkIndexFilterStatsData::has_anchor_count() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
-}
-inline void SparseChunkIndexFilterStatsData::set_has_anchor_count() {
-  _has_bits_[0] |= 0x00000020u;
-}
-inline void SparseChunkIndexFilterStatsData::clear_has_anchor_count() {
-  _has_bits_[0] &= ~0x00000020u;
-}
-inline void SparseChunkIndexFilterStatsData::clear_anchor_count() {
-  anchor_count_ = GOOGLE_ULONGLONG(0);
-  clear_has_anchor_count();
-}
-inline ::google::protobuf::uint64 SparseChunkIndexFilterStatsData::anchor_count() const {
-  return anchor_count_;
-}
-inline void SparseChunkIndexFilterStatsData::set_anchor_count(::google::protobuf::uint64 value) {
-  set_has_anchor_count();
-  anchor_count_ = value;
-}
-
-// optional uint64 weak_hit_count = 8;
-inline bool SparseChunkIndexFilterStatsData::has_weak_hit_count() const {
-  return (_has_bits_[0] & 0x00000040u) != 0;
-}
-inline void SparseChunkIndexFilterStatsData::set_has_weak_hit_count() {
-  _has_bits_[0] |= 0x00000040u;
-}
-inline void SparseChunkIndexFilterStatsData::clear_has_weak_hit_count() {
-  _has_bits_[0] &= ~0x00000040u;
-}
-inline void SparseChunkIndexFilterStatsData::clear_weak_hit_count() {
-  weak_hit_count_ = GOOGLE_ULONGLONG(0);
-  clear_has_weak_hit_count();
-}
-inline ::google::protobuf::uint64 SparseChunkIndexFilterStatsData::weak_hit_count() const {
-  return weak_hit_count_;
-}
-inline void SparseChunkIndexFilterStatsData::set_weak_hit_count(::google::protobuf::uint64 value) {
-  set_has_weak_hit_count();
-  weak_hit_count_ = value;
 }
 
 // -------------------------------------------------------------------

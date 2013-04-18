@@ -128,7 +128,7 @@ public:
 };
 
 Log::Log() : replay_thread_(NewRunnable(this, &Log::ReplayLoop), "log direct"),
-  replay_thread_start_barrier_(2) {
+    replay_thread_start_barrier_(2) {
     this->state_ = LOG_STATE_CREATED;
     this->log_data_ = NULL;
     this->log_id_ = 1;
@@ -801,9 +801,9 @@ bool Log::WriteEntry(int64_t first_id, int64_t id_count, const LogEventData& log
     DCHECK(this->log_data_, "Log data not set");
     ProfileTimer timer(this->stats_.write_time_);
 
-    TRACE("Write log entry: type " << Log::GetEventTypeName(static_cast<enum event_type> (log_event.event_type()))
-      << ", event value " << FriendlySubstr(log_event.ShortDebugString(), 0, 256, "...") << ", first id "
-      << first_id << ", first position " << this->GetLogPositionFromId(first_id) << ", count " << id_count);
+    TRACE("Write log entry: type " << Log::GetEventTypeName(static_cast<enum event_type>(log_event.event_type()))
+                                   << ", event value " << FriendlySubstr(log_event.ShortDebugString(), 0, 256, "...") << ", first id "
+                                   << first_id << ", first position " << this->GetLogPositionFromId(first_id) << ", count " << id_count);
 
     bytestring buffer;
     CHECK(SerializeMessageToString(log_event, &buffer),
@@ -879,10 +879,10 @@ Log::log_read Log::ReadEntry(int64_t id, LogEntryData* log_entry, bytestring* lo
     }
     if ((event_data.has_partial_count() && event_data.partial_index() != 0)) {
         DEBUG("Tried to read partial log entry: " <<
-                "current id " << id <<
-                ", current position " << pos <<
-                ", partial index " << event_data.partial_index() <<
-                ", partial count " << event_data.partial_count());
+            "current id " << id <<
+            ", current position " << pos <<
+            ", partial index " << event_data.partial_index() <<
+            ", partial count " << event_data.partial_count());
         return LOG_READ_PARTIAL;
     }
 
@@ -1022,7 +1022,7 @@ bool Log::CommitEvent(enum event_type event_type, const google::protobuf::Messag
 
     TRACE("Prepare commit: " << Log::GetEventTypeName(event_type) <<
         ", event value " << (message ? FriendlySubstr(message->ShortDebugString(), 0, 256, " ...") : "null")
-        << ", event size " << (message ? message->ByteSize() : 0));
+                             << ", event size " << (message ? message->ByteSize() : 0));
 
     const EventTypeInfo& event_type_info(EventTypeInfo::GetInfo(event_type));
     LogEventData event_data;
@@ -1229,9 +1229,9 @@ bool Log::ReplayStart(enum replay_mode replay_mode, bool is_full_replay, bool co
 }
 
 log_replay_result Log::Replay(enum replay_mode replay_mode,
-    uint32_t number_to_replay,
-    uint64_t* replayed_log_id,
-    uint32_t* number_replayed) {
+                              uint32_t number_to_replay,
+                              uint64_t* replayed_log_id,
+                              uint32_t* number_replayed) {
     // We divide the problem in three tasks:
     // 0.) Some initialization...
     // 1.) Process Events
@@ -1374,7 +1374,7 @@ log_replay_result Log::Replay(enum replay_mode replay_mode,
                 ", current last empty log id " << current_last_empty_log_id <<
                 ", current last fully written log id " << current_last_fully_written_log_id);
         }
-        if (log_empty) {
+        if (log_empty && next_replay_id > current_last_empty_log_id) {
             is_last_read_event_data_valid_ = false;
             TRACE("Will commit empty event");
             int64_t empty_log_id = 0;

@@ -149,8 +149,8 @@ ContentStorage::Statistics::Statistics() :
 }
 
 bool ContentStorage::InitEmptyFingerprint(Chunker* chunker,
-    Fingerprinter* fp_gen,
-    bytestring* empty_fp) {
+                                          Fingerprinter* fp_gen,
+                                          bytestring* empty_fp) {
     DCHECK(chunker, "Chunker not set");
     DCHECK(empty_fp, "Empty fp not set");
     DCHECK(fp_gen, "FP generator not set");
@@ -171,14 +171,14 @@ bool ContentStorage::InitEmptyFingerprint(Chunker* chunker,
 }
 
 bool ContentStorage::Start(dedupv1::base::Threadpool* tp,
-    dedupv1::blockindex::BlockIndex* block_index,
-    dedupv1::chunkindex::ChunkIndex* chunk_index,
-    ChunkStore* chunk_store,
-    FilterChain* filter_chain,
-    ResourceManagement<Chunk>* chunk_management,
-    Log* log,
-    BlockLocks* block_locks,
-    uint32_t block_size) {
+                           dedupv1::blockindex::BlockIndex* block_index,
+                           dedupv1::chunkindex::ChunkIndex* chunk_index,
+                           ChunkStore* chunk_store,
+                           FilterChain* filter_chain,
+                           ResourceManagement<Chunk>* chunk_management,
+                           Log* log,
+                           BlockLocks* block_locks,
+                           uint32_t block_size) {
     DCHECK(tp, "Threadpool not set");
 
     this->tp_ = tp;
@@ -220,7 +220,7 @@ bool ContentStorage::Close() {
 }
 
 Session* ContentStorage::CreateSession(Chunker* chunker,
-    const std::set<std::string>* enabled_filter_names) {
+                                       const std::set<std::string>* enabled_filter_names) {
     ProfileTimer timer(this->stats_.profiling_);
     CHECK_RETURN(log_, NULL, "Content storage not started");
     CHECK_RETURN(filter_chain_, NULL, "Filter chain not set");
@@ -309,9 +309,9 @@ bool ContentStorage::SetOption(const string& option_name, const string& option) 
 }
 
 bool ContentStorage::ReadBlock(Session* session,
-    Request* request,
-    RequestStatistics* request_stats,
-    dedupv1::base::ErrorContext* ec) {
+                               Request* request,
+                               RequestStatistics* request_stats,
+                               dedupv1::base::ErrorContext* ec) {
     ProfileTimer timer(this->stats_.profiling_);
 
     DCHECK(session, "Session not set");
@@ -371,11 +371,11 @@ bool ContentStorage::ReadBlock(Session* session,
 }
 
 bool ContentStorage::FastCopyBlock(uint64_t src_block_id,
-    uint64_t src_offset,
-    uint64_t target_block_id,
-    uint64_t target_offset,
-    uint64_t size,
-    dedupv1::base::ErrorContext* ec) {
+                                   uint64_t src_offset,
+                                   uint64_t target_block_id,
+                                   uint64_t target_offset,
+                                   uint64_t size,
+                                   dedupv1::base::ErrorContext* ec) {
 
     DEBUG("Fast copy block: src block " << src_block_id <<
         ", target block " << target_block_id <<
@@ -656,12 +656,12 @@ bool ContentStorage::WriteBlock(Session* session, Request* request, RequestStati
 }
 
 bool ContentStorage::FingerprintChunks(Session* session,
-    Request* request,
-    RequestStatistics* request_stats,
-    Fingerprinter* fingerprinter,
-    const list<Chunk*>& chunks,
-    vector<ChunkMapping>* chunk_mappings,
-    ErrorContext* ec) {
+                                       Request* request,
+                                       RequestStatistics* request_stats,
+                                       Fingerprinter* fingerprinter,
+                                       const list<Chunk*>& chunks,
+                                       vector<ChunkMapping>* chunk_mappings,
+                                       ErrorContext* ec) {
     DCHECK(chunk_mappings, "Chunk mappings not set");
     DCHECK(fingerprinter, "Fingerprinter not set");
     DCHECK(chunk_mappings->size() == 0, "Chunk mapping not empty");
@@ -716,7 +716,6 @@ bool ContentStorage::ProcessChunkFilterChain(std::tr1::tuple<Session*, const Blo
     ErrorContext* ec = std::tr1::get<5>(t);
 
     DCHECK(block_mapping, "Block mapping not set");
-    DCHECK(filter_chain_failed, "Filter chain failed not set");
 
     tbb::tick_count start_step_tick, end_step_tick;
     NESTED_LOG_CONTEXT("block " + ToString(block_mapping->block_id()));
@@ -737,7 +736,8 @@ bool ContentStorage::ProcessChunkFilterChain(std::tr1::tuple<Session*, const Blo
     // Write data to data storage for every chunk with an unknown data address
     FAULT_POINT("content-storage.handle.pre-chunk-store");
     if (likely(!failed)) {
-        SlidingAverageProfileTimer method_timer2(this->stats_.average_process_chunk_filter_chain_write_block_latency_);
+        SlidingAverageProfileTimer method_timer2(
+            this->stats_.average_process_chunk_filter_chain_write_block_latency_);
         if (!this->chunk_store_->WriteBlock(session->storage_session(), chunk_mapping, ec)) {
             ERROR("Storing of chunk data failed: " <<
                 "block mapping " << (block_mapping ? block_mapping->DebugString() : "<no block mapping>") <<
@@ -752,9 +752,9 @@ bool ContentStorage::ProcessChunkFilterChain(std::tr1::tuple<Session*, const Blo
         // Store the chunks
         FAULT_POINT("content-storage.handle.pre-filter-update");
         if (!filter_chain_->StoreChunkInfo(session,
-              block_mapping,
-              chunk_mapping,
-              ec)) {
+                block_mapping,
+                chunk_mapping,
+                ec)) {
             ERROR("Storing of chunk failed: " << chunk_mapping->DebugString());
             failed = true;
         }
@@ -777,11 +777,11 @@ bool ContentStorage::ProcessChunkFilterChain(std::tr1::tuple<Session*, const Blo
 }
 
 bool ContentStorage::ProcessFilterChain(Session* session,
-    Request* request,
-    RequestStatistics* request_stats,
-    const BlockMapping* block_mapping,
-    vector<ChunkMapping>* chunk_mappings,
-    ErrorContext* ec) {
+                                        Request* request,
+                                        RequestStatistics* request_stats,
+                                        const BlockMapping* block_mapping,
+                                        vector<ChunkMapping>* chunk_mappings,
+                                        ErrorContext* ec) {
     DCHECK(chunk_mappings, "Chunk mappings not set");
 
     stats_.threads_in_filter_chain_++;
@@ -796,10 +796,11 @@ bool ContentStorage::ProcessFilterChain(Session* session,
         for (i = chunk_mappings->begin(); i != chunk_mappings->end(); i++) {
             ChunkMapping* chunk_mapping = &(*i);
             DCHECK(chunk_mapping, "Chunk mapping not set");
+            chunk_mapping->set_indexed(true);
 
             TRACE("Create task for chunk: " << chunk_mapping->DebugString());
             Runnable<bool>* t = NewRunnable(this, &ContentStorage::ProcessChunkFilterChain, make_tuple(session,
-                block_mapping, chunk_mapping, &barrier, &filter_chain_failed, ec));
+                    block_mapping, chunk_mapping, &barrier, &filter_chain_failed, ec));
             tp_->SubmitNoFuture(t, Threadpool::HIGH_PRIORITY, Threadpool::CALLER_RUNS);
         }
 
@@ -816,14 +817,16 @@ bool ContentStorage::ProcessFilterChain(Session* session,
         for (i = chunk_mappings->begin(); i != chunk_mappings->end(); i++) {
             ChunkMapping* chunk_mapping = &(*i);
             DCHECK(chunk_mapping, "Chunk mapping not set");
+            chunk_mapping->set_indexed(true);
+
             bool r = ProcessChunkFilterChain(make_tuple(session,
-                block_mapping,
-                chunk_mapping,
-                (MultiSignalCondition*)NULL,
-                (tbb::atomic<bool>*)NULL, ec));
+                    block_mapping,
+                    chunk_mapping,
+                    (MultiSignalCondition *) NULL,
+                    (tbb::atomic<bool>*)NULL, ec));
             if (!r) {
-              failed = true;
-              break;
+                failed = true;
+                break;
             }
         }
     }
@@ -837,15 +840,15 @@ bool ContentStorage::ProcessFilterChain(Session* session,
 }
 
 bool ContentStorage::MergeChunksIntoCurrentRequest(uint64_t block_id,
-    RequestStatistics* request_stats,
-    unsigned int block_offset,
-    unsigned long open_chunk_pos,
-    bool already_failed,
-    Session* session,
-    const BlockMapping* original_block_mapping,
-    const BlockMapping* updated_block_mapping,
-    vector<ChunkMapping>* chunk_mappings,
-    ErrorContext* ec) {
+                                                   RequestStatistics* request_stats,
+                                                   unsigned int block_offset,
+                                                   unsigned long open_chunk_pos,
+                                                   bool already_failed,
+                                                   Session* session,
+                                                   const BlockMapping* original_block_mapping,
+                                                   const BlockMapping* updated_block_mapping,
+                                                   vector<ChunkMapping>* chunk_mappings,
+                                                   ErrorContext* ec) {
     DCHECK(session->open_chunk_position() <= chunk_mappings->at(0).chunk()->size(),
         "Illegal open chunk position");
 
