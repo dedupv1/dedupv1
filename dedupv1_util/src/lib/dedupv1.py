@@ -4,15 +4,15 @@
 # (C) 2008 Dirk Meister
 # (C) 2009 - 2011, Dirk Meister, Paderborn Center for Parallel Computing
 # (C) 2012 Dirk Meister, Johannes Gutenberg University Mainz
-# 
+#
 # This file is part of dedupv1.
 #
-# dedupv1 is free software: you can redistribute it and/or modify it under the terms of the 
-# GNU General Public License as published by the Free Software Foundation, either version 3 
+# dedupv1 is free software: you can redistribute it and/or modify it under the terms of the
+# GNU General Public License as published by the Free Software Foundation, either version 3
 # of the License, or (at your option) any later version.
 #
-# dedupv1 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without 
-# even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+# dedupv1 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 # General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along with dedupv1. If not, see http://www.gnu.org/licenses/.
@@ -33,14 +33,14 @@ import shutil
 from monitor import Monitor
 from monitor import MonitorException
 from monitor import MonitorJSONException
+from dedupv1d_pb2 import DirtyFileData
+from protobuf_util import read_sized_message
 import iscsi_scst
 import json
 import target
 import group
 import scst_user
 import volume
-from dedupv1d_pb2 import DirtyFileData
-from protobuf_util import read_sized_message
 from dedupv1logging import log_error, log_info, log_warning, log_verbose
 import config as cfg
 from xml.dom import minidom
@@ -52,7 +52,7 @@ class Dedupv1Exception(Exception):
         Exception.__init__(self)
         self.msg = message
         self.base = base
-        
+
     def __str__(self):
         if self.base == None:
             return self.msg
@@ -66,7 +66,7 @@ def handle_exception(options, ex):
     if options.force:
         log_warning(options, ex)
     else:
-        raise 
+        raise
 
 def is_process_running(pid):
     """ Checks if the process with the given process id (pid)
@@ -107,11 +107,11 @@ def get_daemon_pid(config):
         return pid
     except Exception as e:
         raise scst.ScstException("Failed to get daemon pid", e)
-    
+
 def is_running(config, result_if_lockfile_missing=False):
     """ checks if dedupv1d seems to run based on the process id (pid) given in
         the standard lock file
-    
+
         returns True if the daemon is running or False if it is not running"
     """
     lock_filename = config.get("daemon.lockfile")
@@ -128,7 +128,7 @@ def is_running(config, result_if_lockfile_missing=False):
             return result_if_lockfile_missing
         else:
             raise
-            
+
 def stop_device(dedupv1_root, monitor, options, config, writeback_stop = False):
     """ stops dedupv1d.
         This function can take a very long time to finish when writeback_stop is True. In this case
@@ -136,7 +136,7 @@ def stop_device(dedupv1_root, monitor, options, config, writeback_stop = False):
     """
     def on_stop():
         dirty_file = config.get("daemon.dirtyfile")
-        
+
         if os.path.exists(dirty_file):
             dirty_data = DirtyFileData()
             content = open(dirty_file, "r").read()
@@ -144,7 +144,7 @@ def stop_device(dedupv1_root, monitor, options, config, writeback_stop = False):
             if not dirty_data.stopped:
                 raise Exception("dedupv1d stopped with errors")
         log_info(options, "\ndedupv1d stopped")
-    
+
     lock_filename = config.get("daemon.lockfile")
     pid = None
     not_running = not is_running(config)
@@ -155,23 +155,23 @@ def stop_device(dedupv1_root, monitor, options, config, writeback_stop = False):
             raise Exception("dedupv1d not running")
     else:
         pid = get_daemon_pid(config)
-    
+
     try:
         session_count = 0
         for (tid, t) in iscsi_scst.get_targets().items():
             session_count = session_count + len(t["sessions"])
             for session in t["sessions"]:
                 log_warning(options, "Target %s has still open session with initiator %s" % (t["name"], session["initiator"]))
-    
+
         if session_count > 0:
             if options.force:
                 log_warning(options, "iSCSI targets have still open sessions")
             else:
                 raise Exception("iSCSI targets have still open sessions")
-            
+
     except scst.ScstException as e:
         handle_exception(options, e)
-        
+
     if options.force:
         try:
             unregister_users(monitor, options, config)
@@ -180,7 +180,7 @@ def stop_device(dedupv1_root, monitor, options, config, writeback_stop = False):
                 log_verbose(options, "Unregister users failed")
             else:
                 log_warning(options, "Unregister users failed")
-            
+
         try:
             unregister_volumes(monitor, options, config)
         except Exception as e:
@@ -188,7 +188,7 @@ def stop_device(dedupv1_root, monitor, options, config, writeback_stop = False):
                 log_verbose(options, "Unregister volumes failed")
             else:
                 log_warning(options, "Unregister volumes failed")
-            
+
         try:
             unregister_targets(monitor, options, config)
         except:
@@ -196,7 +196,7 @@ def stop_device(dedupv1_root, monitor, options, config, writeback_stop = False):
                 log_verbose(options, "Unregister targets failed")
             else:
                 log_warning(options, "Unregister targets failed")
-        
+
         try:
             unregister_groups(monitor, options, config)
         except:
@@ -209,7 +209,7 @@ def stop_device(dedupv1_root, monitor, options, config, writeback_stop = False):
         unregister_volumes(monitor, options, config)
         unregister_targets(monitor, options, config)
         unregister_groups(monitor, options, config)
-        
+
     try:
         new_state = "stop"
         if writeback_stop:
@@ -230,11 +230,11 @@ def stop_device(dedupv1_root, monitor, options, config, writeback_stop = False):
             # raw mode
             if not options.raw:
                 print "dedupv1d stopping",
-                
+
             for i in xrange(128):
                 if not is_process_running(pid):
                     on_stop()
-                    break    
+                    break
                 if not options.raw:
                     sys.stdout.write(".")
                     sys.stdout.flush()
@@ -250,7 +250,7 @@ def stop_device(dedupv1_root, monitor, options, config, writeback_stop = False):
 def check_connection(monitor):
     """ checks if the dedupv1d on the given host, port pair is in ok state by reading the status monitor
     """
-    try:    
+    try:
         status = monitor.read("status")
         if status["state"] == "ok":
             return True
@@ -259,7 +259,7 @@ def check_connection(monitor):
     except Exception as e:
         pass
     return False
-    
+
 def unregister_volumes(monitor, options, config):
     """ unregisters the volumes of the dedupv1d
         not used anymore
@@ -274,7 +274,7 @@ def unregister_volumes(monitor, options, config):
                 handle_exception(options, e)
     except IOError:
         handle_exception(options, e)
-        
+
 def unregister_users_direct(options, config):
     """ unregisters the users configured at SCST. This
 	function bypasses the information given by the monitor. Therefore
@@ -292,7 +292,7 @@ def unregister_users_direct(options, config):
                     log_error(options, "Failed to remove user %s from %s: %s" % (u.name, t.name(), str(e)))
     except scst.ScstException as e:
         log_error(options, "Failed to remove users: %s" % (str(e)))
-        
+
 def unregister_groups_direct(options, config):
     """ unregisters the groups configured at SCST. This
 	function bypasses the information given by the monitor. Therefore
@@ -306,17 +306,17 @@ def unregister_groups_direct(options, config):
                     log_info(options, "Remove group %s" % (group_name))
                 for ip in scst.get_initiator_pattern_in_group(group_name):
                     scst.rm_initiator_pattern_from_group(ip, group_name)
-                    
+
                 for device_name in scst.get_devices_in_group(group_name):
                     scst.rm_from_group(device_name, group_name)
-                    
+
                 if group_name != "Default":
                     scst.rm_group(group_name)
             except scst.ScstException as e:
                 log_error(options,  "Failed to remove group %s: %s" % (group_name, e))
     except scst.ScstException as e:
         log_error(options, "Failed to remove groups: %s" % (e))
-            
+
 def unregister_group_direct(option, config, groups):
     try:
         all_groups = scst.get_scst_groups()
@@ -324,20 +324,20 @@ def unregister_group_direct(option, config, groups):
             try:
                 if options.verbose:
                     log_verbose(options, "Remove group %s" % (group_name))
-                
+
                 if not group_name in all_groups:
                     raise scst.ScstException("Group %s not existing" % (group_name))
                 for ip in scst.get_initiator_pattern_in_group(group_name):
                     scst.rm_initiator_pattern_from_group(ip, group_name)
-                    
+
                 if group_name != "Default":
                     scst.rm_group(group_name)
             except scst.ScstException as e:
                 log_error(options, "Failed to remove group %s: %s" % (group_name, e))
     except scst.ScstException as e:
         log_error("Failed to remove groups: %s" % (e))
-        
-def unregister_targets_direct(options, config):    
+
+def unregister_targets_direct(options, config):
     """ unregister a given configured at SCST. This
 	function bypasses the information given by the monitor. Therefore
 	this function can be used to unregister a target if dedupv1d is not
@@ -349,10 +349,10 @@ def unregister_targets_direct(options, config):
                 log_verbose(options, "Remove target %s" % (t.name()))
                 iscsi_scst.unregister_target(t)
             except scst.ScstException as e:
-                log_warning(options, "Failed to unregister target %s: %s" % (t.name(), str(e)))       
+                log_warning(options, "Failed to unregister target %s: %s" % (t.name(), str(e)))
     except scst.ScstException as e:
         log_warning("Failed to unregister targets: %s" % (str(e)))
-        
+
 def unregister_targets(monitor, options, config):
     """ unregisters the targets configured at SCST. This
 	function bypasses the information given by the monitor. Therefore
@@ -360,15 +360,15 @@ def unregister_targets(monitor, options, config):
 	available
     """
     try:
-        for (tid, t) in target.read_all_targets(monitor).items():  
+        for (tid, t) in target.read_all_targets(monitor).items():
             try:
                 if iscsi_scst.is_target_registered(t):
                     iscsi_scst.unregister_target(t)
-                    
+
                 group_name = "Default_" + t.name()
                 if len(t.volumes()) > 0 and scst.exists_group(group_name):
                     scst.rm_group(group_name)
-                    
+
                 log_verbose(options, "Target %s unregistered" % t.name())
             except scst.ScstException as e:
                 if options.force:
@@ -381,55 +381,55 @@ def unregister_targets(monitor, options, config):
 def unregister_groups(monitor, options, config):
     """ unregisters the groups of the dedupv1d
     """
-    for (group_name, g) in group.read_all_groups(monitor).items():  
+    for (group_name, g) in group.read_all_groups(monitor).items():
         try:
             for pattern in g.initiator_pattern():
                 scst.rm_initiator_pattern_from_group(pattern, group_name)
             if not group_name == "Default" and scst.exists_group(group_name):
                 # The Default group cannot be deleted
                 scst.rm_group(group_name)
-                
+
             log_verbose(options, "Group %s unregistered" % group_name)
         except scst.ScstException as e:
             handle_exception(options, e)
-    
+
 def unregister_users(monitor, options, config):
     """ unregisters the users of the dedupv1d
-    """        
-    for (user_name, u) in scst_user.read_all_users(monitor).items():  
-        try:
-            for target_name in u.targets():
-                t = target.read_target_by_name(monitor, target_name)
-                
-                if not iscsi_scst.is_target_registered(t):
-                    continue
-                if not iscsi_scst.is_user_in_target(user_name, t):
-                    continue
-                
-                iscsi_scst.rm_user_from_target(u, t)
-                
-            log_verbose(options, "User %s unregistered" % user_name)
-        except scst.ScstException as e:
-            handle_exception(options, e)
-
-def register_users(monitor, options):   
-    """ registers a SCST user
-    """    
+    """
     for (user_name, u) in scst_user.read_all_users(monitor).items():
         try:
             for target_name in u.targets():
                 t = target.read_target_by_name(monitor, target_name)
-                
+
                 if not iscsi_scst.is_target_registered(t):
-                    raise scst.ScstException("Target %s not registered" % target_name)
-                
-                iscsi_scst.add_user_to_target(u, t)
-                
-            log_verbose(options, "User %s registered" % user_name) 
+                    continue
+                if not iscsi_scst.is_user_in_target(user_name, t):
+                    continue
+
+                iscsi_scst.rm_user_from_target(u, t)
+
+            log_verbose(options, "User %s unregistered" % user_name)
         except scst.ScstException as e:
             handle_exception(options, e)
 
-def register_groups(monitor, options, config):       
+def register_users(monitor, options):
+    """ registers a SCST user
+    """
+    for (user_name, u) in scst_user.read_all_users(monitor).items():
+        try:
+            for target_name in u.targets():
+                t = target.read_target_by_name(monitor, target_name)
+
+                if not iscsi_scst.is_target_registered(t):
+                    raise scst.ScstException("Target %s not registered" % target_name)
+
+                iscsi_scst.add_user_to_target(u, t)
+
+            log_verbose(options, "User %s registered" % user_name)
+        except scst.ScstException as e:
+            handle_exception(options, e)
+
+def register_groups(monitor, options, config):
     """ register SCST groups
     """
     for (group_name, g) in group.read_all_groups(monitor).items():
@@ -439,24 +439,24 @@ def register_groups(monitor, options, config):
                 scst.add_group(group_name)
             for pattern in g.initiator_pattern():
                 scst.add_initiator_pattern_to_group(pattern, group_name)
-            
-            log_verbose(options, "Group %s registered" % group_name) 
+
+            log_verbose(options, "Group %s registered" % group_name)
         except scst.ScstException as e:
             handle_exception(options, e)
-            
-def register_targets(monitor, options, config):   
+
+def register_targets(monitor, options, config):
     """ Register SCST targets
-    """    
+    """
     for (tid, t) in target.read_all_targets(monitor).items():
         try:
-            iscsi_scst.register_target(t)        
+            iscsi_scst.register_target(t)
             if len(t.volumes()) > 0:
                 scst.add_group("Default_" + t.name())
-                
-            log_verbose(options, "Target %s registered" % t.name())   
+
+            log_verbose(options, "Target %s registered" % t.name())
         except scst.ScstException as e:
-            handle_exception(options, e)   
-            
+            handle_exception(options, e)
+
 def register_volumes(monitor, options, config):
     """ Registers SCST volumes
     """
@@ -466,10 +466,10 @@ def register_volumes(monitor, options, config):
                 # the volume is currently in detaching mode and is only still listed without a value
                 continue
             scst.register_volume(vol)
-        
-            log_verbose(options, "Volume %s registered" % vol.name())   
+
+            log_verbose(options, "Volume %s registered" % vol.name())
         except scst.ScstException as e:
-            handle_exception(options, e) 
+            handle_exception(options, e)
 
 def bootstrap_system(dedupv1_root, monitor, options, config):
     """ bootstraps the SCST system
@@ -477,7 +477,7 @@ def bootstrap_system(dedupv1_root, monitor, options, config):
     if not check_root():
         log_error(options, "Permission denied")
         sys.exit(1)
-    
+
     if is_running(config):
         if options.force:
             log_info(options, "Lock file exists. Forcing start")
@@ -491,12 +491,12 @@ def bootstrap_system(dedupv1_root, monitor, options, config):
     daemon_group = config.get("daemon.group")
     daemon_port = config.get("iscsi.port", None)
     daemon_host = config.get("iscsi.host", None)
-    
+
     check_iscsi = True
     no_iscsi = config.get("daemon.no-iscsi", "False")
     if no_iscsi == "True" or no_iscsi == "true":
         check_iscsi = False
-        
+
     validate_dedupv1(dedupv1_root, daemon_user, daemon_group)
     scst.check_scst(group_name = daemon_group)
     scst.validate_scst(group_name = daemon_group)
@@ -508,7 +508,7 @@ def bootstrap_system(dedupv1_root, monitor, options, config):
                 port = daemon_port,
                 host = daemon_host)
         iscsi_scst.validate_iscsi()
-        
+
 def validate_dedupv1(dedupv1_root, user_name, group_name):
     """ validates the dedupv1 installation
     """
@@ -519,7 +519,7 @@ def validate_dedupv1(dedupv1_root, user_name, group_name):
             pw = pwd.getpwnam(user_name)
             if not pw:
                 raise ScstException("user %s (daemon.user) doesn't exists" % (user_name))
-        
+
         if group_name:
             g = grp.getgrnam(group_name)
             if not g:
@@ -547,7 +547,7 @@ def validate_dedupv1(dedupv1_root, user_name, group_name):
             raise scst.ScstException("Wrong mode for dedupv1 starter (group execute check failed)")
         if not st.st_mode & stat.S_ISUID:
             raise scst.ScstException("Wrong mode for dedupv1 starter (uid execute failed)")
-    
+
 def start_device(dedupv1_root, monitor, options, config, bypass = False):
     """ starts the dedupv1 daemon
     """
@@ -558,10 +558,10 @@ def start_device(dedupv1_root, monitor, options, config, bypass = False):
                 if param_name == "filename":
                     return ref.getAttribute("value")
         return None
-    
+
     def uses_log4cxx():
         return "LOGGING_LOG4CXX" in dir(cfg) and cfg.LOGGING_LOG4CXX
-    
+
     if is_running(config):
         if options.force:
             log_info(options, "Lock file exists. Forcing start")
@@ -578,16 +578,16 @@ def start_device(dedupv1_root, monitor, options, config, bypass = False):
     no_iscsi = config.get("daemon.no-iscsi", "False")
     if no_iscsi == "True" or no_iscsi == "true":
         check_iscsi = False
-        
+
     if check_root() and not daemon_user and not daemon_group:
         bootstrap_system(dedupv1_root, monitor, options, config)
-        
+
     # check and start scst
     validate_dedupv1(dedupv1_root, daemon_user, daemon_group)
     scst.validate_scst(group_name = daemon_group)
     if check_iscsi:
         iscsi_scst.validate_iscsi()
-    
+
     logging_config_file = None
     if uses_log4cxx():
         logging_config_file = config.get("logging")
@@ -596,8 +596,8 @@ def start_device(dedupv1_root, monitor, options, config, bypass = False):
                 raise Exception("Logging configuration file %s doesn't exists" % logging_config_file)
             if not os.path.isabs(logging_config_file):
                 raise Exception("Logging configuration file %s must be absolute" % logging_config_file)
-            
-            # We are trying to create to logging output file with the correct user/group data if possible        
+
+            # We are trying to create to logging output file with the correct user/group data if possible
             logging_output_file = get_logging_output_file(logging_config_file)
             if logging_output_file and uses_log4cxx():
                 if not os.path.exists(logging_output_file):
@@ -612,7 +612,7 @@ def start_device(dedupv1_root, monitor, options, config, bypass = False):
     else:
         # bypassing dedupv1_starter. Must run as root
         command = " ".join([os.path.join(dedupv1_root, "bin/dedupv1d"), sh_escape(options.configfile)])
-        
+
     if options.create:
         command = command + " --create"
     if options.force:
@@ -620,11 +620,11 @@ def start_device(dedupv1_root, monitor, options, config, bypass = False):
     if logging_config_file:
         command = command + " --logging \"" + logging_config_file + "\""
     execute_cmd(command, direct_output = True)
-    
+
     # Here we are doing tricks with starting dots
     if not options.raw:
         print "dedupv1d starting",
-    
+
     try:
         found_running = False
         i = 0
@@ -632,7 +632,7 @@ def start_device(dedupv1_root, monitor, options, config, bypass = False):
             if not options.raw:
                 sys.stdout.write(".")
                 sys.stdout.flush()
-            
+
             run_state = is_running(config, result_if_lockfile_missing = None)
             if run_state != None:
                 if run_state and not found_running:
@@ -647,17 +647,17 @@ def start_device(dedupv1_root, monitor, options, config, bypass = False):
                     if i > 4:
                         raise Exception("Failed to start dedupv1")
             else:
-                # If the system has not written a valid pid for so long, something bad as happened            
+                # If the system has not written a valid pid for so long, something bad as happened
                 if i > 4:
                     raise Exception("Failed to start dedupv1: Failed to check run state")
             time.sleep(2 * i) # backoff
             i = i + 1
-        
+
         # Cleanup SCST state, e.g. after a crash
         unregister_users_direct(options, config)
         unregister_targets_direct(options, config)
-        unregister_groups_direct(options, config)    
-                    
+        unregister_groups_direct(options, config)
+
         register_groups(monitor, options, config)
         register_targets(monitor, options, config)
         register_volumes(monitor, options, config)
@@ -667,13 +667,13 @@ def start_device(dedupv1_root, monitor, options, config, bypass = False):
             print "dedupv1d started"
     except Exception as e:
         print "dedupv1 start (partly) failed. Shutting down remaining components."
-        
+
         monitor_exception_raised = False;
         try:
             monitor.read("status", [("change-state", "fast-stop")])
         except:
             monitor_exception_raised = True
-            
+
         # Normally we use raise, but in this situation
         # We really want raise e, because we want that the original exception
         # is propagated and not any exception from monitor.read() that is here
@@ -683,7 +683,7 @@ def start_device(dedupv1_root, monitor, options, config, bypass = False):
         else:
             # no one destroyed the re-raise exception
             raise
-        
+
 def parse_options(args):
     """ parse options
     """
@@ -701,14 +701,14 @@ def check_dedupv1_group(config = None):
     group_name = "dedupv1"
     if config:
         group_name = config.get("daemon.group", "dedupv1")
-    
+
     u = pwd.getpwuid(os.geteuid())
     g = grp.getgrnam(group_name)
     for gm in g.gr_mem:
         if gm == u.pw_name:
             return True
     return False
-  
+
 def check_root():
     """ checks if the executing user is root
     """
@@ -727,7 +727,7 @@ def clean_device(monitor, options, config):
               shutil.rmtree(filename)
             else:
               os.remove(filename)
-            
+
     if is_running(config):
         raise Exception("dedupv1d running")
 
@@ -737,7 +737,7 @@ def clean_device(monitor, options, config):
 
     lock_filename = config.get("daemon.lockfile")
     remove_file(lock_filename)
-    
+
     for (key, value) in config.items():
         if not key.endswith("filename"):
             continue
@@ -748,10 +748,10 @@ def clean_device(monitor, options, config):
         # Remove the sqlite write-ahead log and shared memory files if existing
         remove_file(value + "-wal")
         remove_file(value + "-shm")
-            
+
         # Remove the tc write-ahead log files if existing
         remove_file(value + ".wal")
-        
+
         # Special case for the detacher
         if key.endswith("volume-info.filename"):
             detaching_filename = value + "_detaching_state"

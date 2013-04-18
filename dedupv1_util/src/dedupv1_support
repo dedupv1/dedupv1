@@ -5,15 +5,15 @@
 # (C) 2008 Dirk Meister
 # (C) 2009 - 2011, Dirk Meister, Paderborn Center for Parallel Computing
 # (C) 2012 Dirk Meister, Johannes Gutenberg University Mainz
-# 
+#
 # This file is part of dedupv1.
 #
-# dedupv1 is free software: you can redistribute it and/or modify it under the terms of the 
-# GNU General Public License as published by the Free Software Foundation, either version 3 
+# dedupv1 is free software: you can redistribute it and/or modify it under the terms of the
+# GNU General Public License as published by the Free Software Foundation, either version 3
 # of the License, or (at your option) any later version.
 #
-# dedupv1 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without 
-# even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+# dedupv1 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 # General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along with dedupv1. If not, see http://www.gnu.org/licenses/.
@@ -34,10 +34,9 @@ if "DEDUPV1_ROOT" not in os.environ or len(os.environ["DEDUPV1_ROOT"]) == 0:
 else:
     DEDUPV1_ROOT = os.environ["DEDUPV1_ROOT"]
 
-sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python")))
-sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python2.7/site-packages/")))
+sys.path.insert(0, os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python")))
 for file in [f for f in os.listdir(os.path.join(DEDUPV1_ROOT, "lib/python2.7/site-packages/")) if f.endswith(".egg")]:
-    sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python2.7/site-packages/", file)))
+    sys.path.insert(0, os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python2.7/site-packages/", file)))
 import dedupv1
 import command
 import scst
@@ -74,7 +73,7 @@ def unregister_all(options, config):
     remove_lock(options, config, fail_if_missing=False)
     dedupv1.unregister_users_direct(options, config)
     dedupv1.unregister_targets_direct(options, config)
-    dedupv1.unregister_groups_direct(options, config) 
+    dedupv1.unregister_groups_direct(options, config)
 
 def unregister_users(options, config):
     """ unregisters all users using SCST information
@@ -89,7 +88,7 @@ def unregister_targets(options, config):
 def unregister_groups(options, config):
     """ unregister all groups
     """
-    dedupv1.unregister_groups_direct(options, config) 
+    dedupv1.unregister_groups_direct(options, config)
 
 def unregister_group(options, config, groups):
     """ unregisters a given group
@@ -98,7 +97,7 @@ def unregister_group(options, config, groups):
 
 def start_app(options, config):
     config_file = options.configfile
-    cmd_line = " ".join([os.path.join(DEDUPV1_ROOT, "bin/dedupv1d") , config_file, 
+    cmd_line = " ".join([os.path.join(DEDUPV1_ROOT, "bin/dedupv1d") , config_file,
       " --no-daemon"])
 
     command.execute_cmd(cmd_line, direct_output = True)
@@ -321,7 +320,7 @@ Examples:
 
 %prog unregister-all
 %prog unregister-users
-%prog unregister-targets 
+%prog unregister-targets
 %prog unregister-groups
 
 %prog unregister-group backup_group
@@ -360,12 +359,13 @@ Examples:
     if not os.path.exists(options.configfile):
         print >> sys.stderr, options.configfile, "not found"
         sys.exit(1)
+
     configuration = Config(options.configfile)
     monitor = Monitor("localhost", configuration.get("monitor.port", config.DEDUPV1_DEFAULT_MONITOR_PORT, type=int))
 
     if len(argv) == 0:
         parser.error("No command specified")
-    sys.exit(1)
+        sys.exit(1)
     cmd = argv[0]
     result = 0
     try:

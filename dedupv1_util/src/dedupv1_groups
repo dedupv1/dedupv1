@@ -5,15 +5,15 @@
 # (C) 2008 Dirk Meister
 # (C) 2009 - 2011, Dirk Meister, Paderborn Center for Parallel Computing
 # (C) 2012 Dirk Meister, Johannes Gutenberg University Mainz
-# 
+#
 # This file is part of dedupv1.
 #
-# dedupv1 is free software: you can redistribute it and/or modify it under the terms of the 
-# GNU General Public License as published by the Free Software Foundation, either version 3 
+# dedupv1 is free software: you can redistribute it and/or modify it under the terms of the
+# GNU General Public License as published by the Free Software Foundation, either version 3
 # of the License, or (at your option) any later version.
 #
-# dedupv1 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without 
-# even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+# dedupv1 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 # General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along with dedupv1. If not, see http://www.gnu.org/licenses/.
@@ -28,9 +28,9 @@ if "DEDUPV1_ROOT" not in os.environ:
     DEDUPV1_ROOT= os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]),"../"))
     os.environ["DEDUPV1_ROOT"] = DEDUPV1_ROOT
 
-sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python")))
+sys.path.insert(0, os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python")))
 for file in [f for f in os.listdir(os.path.join(DEDUPV1_ROOT, "lib/python2.7/site-packages/")) if f.endswith(".egg")]:
-    sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python2.7/site-packages/", file)))
+    sys.path.insert(0, os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python2.7/site-packages/", file)))
 import dedupv1
 import cmd
 import scst
@@ -49,7 +49,7 @@ def print_raw_data(data):
     print json.dumps(data, sort_keys=True, indent=4)
 
 def add_initiator(options, args):
-    config_params = omdict( [ ("op", "addinitiator") ] ) 
+    config_params = omdict( [ ("op", "addinitiator") ] )
     config_params = parse_params(config_params, args)
     if not "name" in config_params:
         raise Exception("Missing required option: name");
@@ -80,7 +80,7 @@ def add_initiator(options, args):
 
         for initiator_pattern in config_params.get_multi("initiator"):
             scst.add_initiator_pattern_to_group(
-                initiator_pattern, 
+                initiator_pattern,
                 group_name)
 
 def rm_initiator(options, args):
@@ -235,7 +235,7 @@ Examples:
             remove_group(options, args[1:])
         elif cmd == "initiator":
             if len(args) == 1:
-                parser.error("No sub command for command %s" % cmd)  
+                parser.error("No sub command for command %s" % cmd)
             subcmd = args[1]
             if subcmd == "add":
                 add_initiator(options, args[2:])

@@ -5,15 +5,15 @@
 # (C) 2008 Dirk Meister
 # (C) 2009 - 2011, Dirk Meister, Paderborn Center for Parallel Computing
 # (C) 2012 Dirk Meister, Johannes Gutenberg University Mainz
-# 
+#
 # This file is part of dedupv1.
 #
-# dedupv1 is free software: you can redistribute it and/or modify it under the terms of the 
-# GNU General Public License as published by the Free Software Foundation, either version 3 
+# dedupv1 is free software: you can redistribute it and/or modify it under the terms of the
+# GNU General Public License as published by the Free Software Foundation, either version 3
 # of the License, or (at your option) any later version.
 #
-# dedupv1 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without 
-# even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+# dedupv1 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 # General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along with dedupv1. If not, see http://www.gnu.org/licenses/.
@@ -27,9 +27,9 @@ if "DEDUPV1_ROOT" not in os.environ:
     DEDUPV1_ROOT= os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]),"../"))
     os.environ["DEDUPV1_ROOT"] = DEDUPV1_ROOT
 
-sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python")))
+sys.path.insert(0, os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python")))
 for file in [f for f in os.listdir(os.path.join(DEDUPV1_ROOT, "lib/python2.7/site-packages/")) if f.endswith(".egg")]:
-    sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python2.7/site-packages/", file)))
+    sys.path.insert(0, os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python2.7/site-packages/", file)))
 import dedupv1
 from command import execute_cmd
 import scst
@@ -60,7 +60,7 @@ def print_raw_data(data):
     print json.dumps(data, sort_keys=True, indent=4)
 
 def addtotarget(options, args):
-    config_params = omdict( [ ("op", "addtotarget") ] ) 
+    config_params = omdict( [ ("op", "addtotarget") ] )
     config_params = parse_params(config_params, args)
     if not "name" in config_params:
         raise Exception("Missing required option: name");
@@ -209,17 +209,17 @@ def change_user(options, args):
         raise Exception("Missing required option: name");
     if not "secret-hash" in config_params:
         raise Exception("Missing required option: secret-hash");
-    
-    user_name = config_params["name"] 
+
+    user_name = config_params["name"]
     u = scst_user.read_user(monitor, user_name)
     validation_errors = u.validate()
     if len(validation_errors) > 0:
         raise Exception("Illegal user: " + ",".join(validation_errors))
-    
+
     u = scst_user.read_user(monitor, user_name)
     if not u:
         raise Exception("User not existing")
-       
+
     monitor_data = monitor.read("user", config_params.items());
     if "ERROR" in monitor_data:
         raise Exception(monitor_data["ERROR"])
@@ -231,7 +231,7 @@ def change_user(options, args):
             iscsi_scst.update_user_in_target(u, t)
         if options.verbose:
             print "Update user %s" % u.name
-            
+
 def show_users(options):
     if options.raw:
         print_raw_data(monitor.read("user"))
@@ -299,7 +299,7 @@ Create the secret-hash parameters using dedupv1_passwd
             change_user(options, args[1:])
         elif cmd == "target":
             if len(args) == 1:
-                parser.error("No sub command for command %s" % cmd)  
+                parser.error("No sub command for command %s" % cmd)
             subcmd = args[1]
             if subcmd == "add":
                 addtotarget(options, args[2:])

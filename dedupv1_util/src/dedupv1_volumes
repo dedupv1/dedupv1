@@ -5,15 +5,15 @@
 # (C) 2008 Dirk Meister
 # (C) 2009 - 2011, Dirk Meister, Paderborn Center for Parallel Computing
 # (C) 2012 Dirk Meister, Johannes Gutenberg University Mainz
-# 
+#
 # This file is part of dedupv1.
 #
-# dedupv1 is free software: you can redistribute it and/or modify it under the terms of the 
-# GNU General Public License as published by the Free Software Foundation, either version 3 
+# dedupv1 is free software: you can redistribute it and/or modify it under the terms of the
+# GNU General Public License as published by the Free Software Foundation, either version 3
 # of the License, or (at your option) any later version.
 #
-# dedupv1 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without 
-# even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+# dedupv1 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 # General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along with dedupv1. If not, see http://www.gnu.org/licenses/.
@@ -30,9 +30,9 @@ if "DEDUPV1_ROOT" not in os.environ:
 else:
     DEDUPV1_ROOT = os.environ["DEDUPV1_ROOT"]
 
-sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python")))
+sys.path.insert(0, os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python")))
 for file in [f for f in os.listdir(os.path.join(DEDUPV1_ROOT, "lib/python2.7/site-packages/")) if f.endswith(".egg")]:
-    sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python2.7/site-packages/", file)))
+    sys.path.insert(0, os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python2.7/site-packages/", file)))
 import dedupv1
 import cmd
 import scst
@@ -82,11 +82,11 @@ def addtogroup(options, args):
         vol = volume.read_volume(monitor, volume_id)
         for group_name in config_params.get_multi("group"):
             scst.add_to_group(
-                vol, 
+                vol,
                 group_name)
 
 def addtotarget(options, args):
-    config_params = omdict( [ ("op", "addtotarget") ] ) 
+    config_params = omdict( [ ("op", "addtotarget") ] )
     config_params = parse_params(config_params, args)
     if not "id" in config_params:
         raise Exception("Missing required option: id");
@@ -96,11 +96,11 @@ def addtotarget(options, args):
     volume_id = config_params["id"]
     vol = volume.read_volume(monitor, volume_id)
     if not vol:
-        raise Exception("Volume %s is in detaching state" % (volume_id))    
-    
+        raise Exception("Volume %s is in detaching state" % (volume_id))
+
     for target_lun_pair in config_params.get_multi("target"):
         (target_name, lun) = check_target_lun(target_lun_pair)
-        
+
         for (vol_target_name, lun) in vol.targets():
             if vol_target_name == target_name:
                 raise Exception("Volume %s is assigned to target %s" % (volume_id, target_name))
@@ -111,19 +111,19 @@ def addtotarget(options, args):
     else:
         if options.raw:
             print_raw_data(monitor_data)
-        
+
         vol = volume.read_volume(monitor, volume_id)
         for target_lun in config_params.get_multi("target"):
             (target_name, lun) = check_target_lun(target_lun)
-            
+
             group_name = "Default_" + target_name
             if not group_name in scst.get_scst_groups():
                 scst.add_group(group_name)
-            
+
             scst.add_to_group(
-                vol, 
+                vol,
                 "Default_" + target_name + ":" + str(lun))
-    
+
 def rmfromgroup(options, args):
     config_params = omdict( [ ("op", "rmfromgroup") ] )
     config_params = parse_params(config_params, args)
@@ -133,40 +133,40 @@ def rmfromgroup(options, args):
         raise Exception("Missing required option: group");
     if len(config_params.get_multi("group")) != 1:
         raise Exception("Illegal option: group")
-    
+
     volume_id = config_params["id"]
     group_name = config_params["group"]
     check_group(group_name)
-    
+
     vol = volume.read_volume(monitor, volume_id)
     if not vol:
         raise Exception("Volume %s is in detaching state" % (config_params["src-id"]))
-    
+
     for (vol_group_name, lun) in vol.groups():
         if vol_group_name == group_name:
             break
     else:
         raise Exception("Volume %s is not assigned to group %s" % (volume_id, group_name))
-    
+
     if group_name.startswith("Default_"):
         raise Exception("Illegal option: group")
-    
+
     if len(scst.get_group_session(group_name)) > 0:
         if options.force:
             log_warning(options, "Group has still open sessions")
         else:
             raise Exception("Group has still open sessions")
-    
+
     monitor_data = monitor.read("volume", config_params.items())
     if "ERROR" in monitor_data:
         raise Exception(monitor_data["ERROR"])
     else:
         if options.raw:
             print_raw_data(monitor_data)
-        
+
         vol = volume.read_volume(monitor, volume_id)
         if not vol:
-            raise Exception("Volume %s is in detaching state" % volume_id)  
+            raise Exception("Volume %s is in detaching state" % volume_id)
         scst.rm_from_group(vol.name(), group_name)
 
 def rmfromtarget(options, args):
@@ -180,18 +180,18 @@ def rmfromtarget(options, args):
         raise Exception("Illegal option: target");
     target_name = config_params["target"]
     volume_id = config_params["id"]
-    
+
     tid = check_target(target_name)
     vol = volume.read_volume(monitor, volume_id)
     if not vol:
-        raise Exception("Volume %s is in detaching state" % (config_params["id"]))    
-    
+        raise Exception("Volume %s is in detaching state" % (config_params["id"]))
+
     for (vol_target_name, lun) in vol.targets():
         if vol_target_name == target_name:
             break
     else:
         raise Exception("Volume %s is not assigned to target %s" % (volume_id, target_name))
-    
+
     scst_target = iscsi_scst.get_targets().get(tid, None)
     if scst_target:
         for session in scst_target["sessions"]:
@@ -201,7 +201,7 @@ def rmfromtarget(options, args):
                 log_warning(options, "iSCSI target has still open sessions")
             else:
                 raise Exception("iSCSI target has still open sessions")
-    
+
     monitor_data = monitor.read("volume", config_params.items())
     if "ERROR" in monitor_data:
         raise Exception(monitor_data["ERROR"])
@@ -210,51 +210,51 @@ def rmfromtarget(options, args):
             print_raw_data(monitor_data)
         vol = volume.read_volume(monitor, volume_id)
         group_name = "Default_%s" % (target_name)
-        if group_name in scst.get_scst_groups(): 
-            log_verbose(options, "Remove volume %s from group %s" % (vol.name(), group_name))           
+        if group_name in scst.get_scst_groups():
+            log_verbose(options, "Remove volume %s from group %s" % (vol.name(), group_name))
             scst.rm_from_group(
-                vol.name(), 
+                vol.name(),
                 group_name)
-            
+
             t = target.read_target_by_name(monitor, target_name)
             if len(t.volumes()) == 0:
                 log_verbose(options, "Remove target group %s" % (group_name))
                 # The last one has been removed
                 scst.rm_group(group_name)
-        
+
 
 def clone_volume(options, args):
     """ clones a volume
-    
+
         By default the new volume as the same filter and chunking configuraiton as the clone source. However,
         this default can be overwritten by using the same parameters as a normal volume attach call.
     """
     config_params = omdict()
     config_params = parse_params(config_params, args)
-    
+
     if not "id" in config_params:
         raise Exception("Missing required option: id")
     if not "src-id" in config_params:
         raise Exception("Missing required option: src-id")
     if "logical-size" in config_params:
         raise Exception("Unsupported option: logical-size")
-    
+
     target_volume_id = config_params["id"]
     src_volume_id = config_params["src-id"]
     vol = volume.read_volume(monitor, src_volume_id)
     if not vol:
         raise Exception("Volume %s is in detaching state" % (config_params["src-id"]))
-    
+
     filter_config = vol["filter"]
     chunking_config = vol["chunking"]
-    
+
     attach_args = ["%s=%s" % (a[0], a[2]) for a in [a.partition("=") for a in args] if a[0] != "src-id"]
     attach_args.append("maintenance=true")
     attach_args.append("logical-size=%s" % vol.logical_size())
-    
+
     contains_new_filter = any(a.partition("=")[0].startswith("filter") for a in args)
     contains_new_chunking = any(a.partition("=")[0].startswith("chunking") for a in args)
-        
+
     if not contains_new_filter and filter_config and len(filter_config):
         attach_args.extend("filter=%s" % f for f in filter_config)
     if not contains_new_chunking and chunking_config and len(chunking_config):
@@ -267,7 +267,7 @@ def clone_volume(options, args):
     try:
         attach_volume(options, attach_args)
         attached = True
-        
+
         fast_copy_args = ["src-id=%s" % (src_volume_id),
                           "target-id=%s" % (target_volume_id),
                           "size=%s" % vol.logical_size()]
@@ -280,24 +280,24 @@ def clone_volume(options, args):
             except:
                 pass
         raise dedupv1.Dedupv1Exception("Failed to clone volume", e)
-    
+
 def attach_volume(options, args):
     config_params = omdict( [ ("op", "attach") ] )
     config_params = parse_params(config_params, args)
-    
+
     if not "id" in config_params:
         raise Exception("Missing required option: id")
-       
+
     volume_id = config_params["id"]
     for group_lun_pair in config_params.get_multi("group"):
         check_group_lun(group_lun_pair)
     for target_lun_pair in config_params.get_multi("target"):
         check_target_lun(target_lun_pair)
-    
+
     if not "device-name" in config_params:
         raise Exception("Missing required option: device-name")
     volume.check_volume_name(config_params["device-name"])
-    
+
     if not "logical-size" in config_params:
         raise Exception("Missing required option: logical-size")
     try:
@@ -310,7 +310,7 @@ def attach_volume(options, args):
             raise Exception("Negative or zero logical size not allowed")
     except Exception as e:
         raise dedupv1.Dedupv1Exception("Invalid logical size", e)
-    
+
     volume_data = monitor.read("volume")
     if config_params["id"] in volume_data:
         raise Exception("Volume %s already attached" % (config_params["id"]))
@@ -328,11 +328,11 @@ def attach_volume(options, args):
             group_name = "Default_" + target_name
             if not group_name in scst.get_scst_groups():
                 scst.add_group(group_name)
-    
+
         vol = volume.read_volume(monitor, volume_id)
         scst.register_volume(vol)
 
-def check_target_lun(target_lun_pair):    
+def check_target_lun(target_lun_pair):
     s = target_lun_pair.rpartition(":")
     if len(s[0]) == 0 or len(s[2]) == 0:
         raise Exception("Illegal target: " + target_lun_pair)
@@ -340,18 +340,18 @@ def check_target_lun(target_lun_pair):
         raise Exception("Illegal target: " + target_lun_pair)
     target_name = s[0]
     lun = int(s[2])
-    
+
     check_target(target_name)
     return (target_name, lun)
 
-def check_target(target_name):      
+def check_target(target_name):
     for (tid, t) in iscsi_scst.get_targets().items():
         if t.name() == target_name:
             return tid
     else:
         raise Exception("Target %s not found" % target_name)
 
-def check_group_lun(group_lun_pair):    
+def check_group_lun(group_lun_pair):
     s = group_lun_pair.rpartition(":")
     if len(s[0]) == 0 or len(s[2]) == 0:
         raise Exception("Illegal group:lun: " + group_lun_pair)
@@ -359,7 +359,7 @@ def check_group_lun(group_lun_pair):
         raise Exception("Illegal group:lun: " + group_lun_pair)
     group_name = s[0]
     lun = int(s[2])
-    
+
     check_group(group_name)
     return (group_name, lun)
 
@@ -368,18 +368,18 @@ def check_group(group_name):
         raise Exception("Unknown group: " + group_name)
 
 def change_size(options, args):
-    config_params = omdict( [ ("op", "change-size") ] )   
+    config_params = omdict( [ ("op", "change-size") ] )
     config_params = parse_params(config_params, args)
     if not "id" in config_params:
         raise Exception("Missing required option: id");
     if not "logical-size" in config_params:
         raise Exception("Missing required option: logical-size");
-    
+
     volume_id = config_params["id"]
     vol = volume.read_volume(monitor, volume_id)
     if not vol:
         raise Exception("Volume %s is in detaching state" % (config_params["id"]))
-    
+
     try:
         logical_size = config_params["logical-size"]
         if len(logical_size) > 1 and (logical_size[-1] == "B" or logical_size[-1] == "b"):
@@ -392,7 +392,7 @@ def change_size(options, args):
             raise Exception("New size must be larger than previous volume size: new logical size %s, old logical size %s" % (logical_size, vol.logical_size()))
     except Exception as e:
         raise dedupv1.Dedupv1Exception("Invalid logical size", e)
-    
+
     monitor_data = monitor.read("volume", config_params.items());
     if "ERROR" in monitor_data:
         raise Exception(monitor_data["ERROR"])
@@ -400,20 +400,20 @@ def change_size(options, args):
         # Success
         if options.raw:
             print_raw_data(monitor_data)
-            
+
 def change_options(options, args):
-    config_params = omdict( [ ("op", "change-options") ] )   
+    config_params = omdict( [ ("op", "change-options") ] )
     config_params = parse_params(config_params, args)
     if not "id" in config_params:
         raise Exception("Missing required option: id");
-    
+
     volume_id = config_params["id"]
     vol = volume.read_volume(monitor, volume_id)
     if not vol:
         raise Exception("Volume %s is in detaching state" % (config_params["id"]))
     if vol.state() != "maintenance":
         raise Exception("Volume %s is not in maintenance mode" % (config_params["id"]))
-    
+
     monitor_data = monitor.read("volume", config_params.items());
     if "ERROR" in monitor_data:
         raise Exception(monitor_data["ERROR"])
@@ -421,15 +421,15 @@ def change_options(options, args):
         # Success
         if options.raw:
             print_raw_data(monitor_data)
-            
+
 def change_state(options, args):
-    config_params = omdict( [ ("op", "change-state") ] )   
+    config_params = omdict( [ ("op", "change-state") ] )
     config_params = parse_params(config_params, args)
     if not "id" in config_params:
         raise Exception("Missing required option: id");
     if not "state" in config_params:
         raise Exception("Missing required option: state");
-    
+
     volume_id = config_params["id"]
     volume_state = config_params["state"]
     vol = volume.read_volume(monitor, volume_id)
@@ -437,7 +437,7 @@ def change_state(options, args):
         raise Exception("Volume %s is in detaching state" % (volume_id))
     if volume_state == "maintenance" and vol.session_count() != 0:
         raise Exception("Volume %s has still open sessions" % (volume_id))
-    
+
     monitor_data = monitor.read("volume", config_params.items());
     if "ERROR" in monitor_data:
         raise Exception(monitor_data["ERROR"])
@@ -445,9 +445,9 @@ def change_state(options, args):
         # Success
         if options.raw:
             print_raw_data(monitor_data)
-         
+
 def fast_copy(options, args):
-    config_params = omdict( [ ("op", "fast-copy") ] )   
+    config_params = omdict( [ ("op", "fast-copy") ] )
     config_params = parse_params(config_params, args)
     if not "src-id" in config_params:
         raise Exception("Missing required option: src-id");
@@ -455,25 +455,25 @@ def fast_copy(options, args):
         raise Exception("Missing required option: target-id");
     if not "size" in config_params:
         raise Exception("Missing required option: size");
-    
+
     volume_data = monitor.read("volume")
     if not config_params["src-id"] in volume_data:
         raise Exception("Volume %s not existing" % (config_params["src-id"]))
     if not config_params["target-id"] in volume_data:
         raise Exception("Volume %s not existing" % (config_params["target-id"]))
-    
+
     src_volume_data = volume_data[config_params["src-id"]]
     if not src_volume_data:
         raise Exception("Volume %s is in detaching state" % (config_params["src-id"]))
     if src_volume_data["state"] == "running":
         raise Exception("Volume %s is not in maintenance mode" % (config_params["src-id"]))
-    
+
     target_volume_data = volume_data[config_params["target-id"]]
     if not target_volume_data:
         raise Exception("Volume %s is in detaching state" % (config_params["target-id"]))
     if target_volume_data["state"] == "running":
-        raise Exception("Volume %s is not in maintenance mode" % (config_params["target-id"]))    
-     
+        raise Exception("Volume %s is not in maintenance mode" % (config_params["target-id"]))
+
     monitor_data = monitor.read("volume", config_params.items());
     print monitor_data
     if "ERROR" in monitor_data:
@@ -481,9 +481,9 @@ def fast_copy(options, args):
     else:
         if options.raw:
             print_raw_data(monitor_data)
-                
+
 def detach_volume(options, args):
-    config_params = omdict( [ ("op", "detach") ] )   
+    config_params = omdict( [ ("op", "detach") ] )
     config_params = parse_params(config_params, args)
     if not "id" in config_params:
         raise Exception("Missing required option: id");
@@ -500,7 +500,7 @@ def detach_volume(options, args):
         raise Exception("Volume %s is assigned to targets" % (volume_id))
     if len(vol.fast_copy()) > 0:
         raise Exception("Volume %s has still fast copy jobs" % (volume_id))
-    
+
     monitor_data = monitor.read("volume", config_params.items());
     if "ERROR" in monitor_data:
         raise Exception(monitor_data["ERROR"])
@@ -508,8 +508,8 @@ def detach_volume(options, args):
         if options.raw:
             print_raw_data(monitor_data)
         # Unregistering is not needed
-        
-def show_volumes(options):    
+
+def show_volumes(options):
     if options.raw:
         volume_data = monitor.read("volume")
         print_raw_data(volume_data)
@@ -527,15 +527,15 @@ def show_volumes(options):
             else:
                 print "Volume: %s" % id
                 print "State: detaching"
-                
+
 if __name__ == "__main__":
     if not (dedupv1.check_root() or dedupv1.check_dedupv1_group()):
         print >> sys.stderr, "Permission denied"
         sys.exit(1)
-        
-        
+
+
     usage = """usage: %prog (attach | detach | show | group add | group remove | target add | target remove | change-state | change-size | change-options) [options]
-    
+
 Examples:
 %prog attach id=1 device-name=backup1 logical-size=500G group=Default:1
 %prog attach id=1 device-name=backup1 logical-size=1TB filter=block-index-filter filter=chunk-index-filter
@@ -557,7 +557,7 @@ Examples:
 %prog --help
 """
     version = "%s (hash %s)" % (config.DEDUPV1_VERSION_STR, config.DEDUPV1_REVISION_STR)
-    
+
     parser = optparse.OptionParser(usage=usage, version=version)
     parser.add_option("-p","--port", type="int", dest="port", help="port of the dedupv1d", default=config.DEDUPV1_DEFAULT_MONITOR_PORT)
     parser.add_option("--host", dest="hostname", help="hostname of the dedupv1d", default="localhost")
@@ -575,9 +575,9 @@ Examples:
         action="store_true",
         default=False)
     (options, args) = parser.parse_args()
-    
+
     monitor = Monitor(options.hostname, options.port);
-    
+
     if len(args) == 0:
         parser.error("No command specified")
         sys.exit(1)
@@ -589,7 +589,7 @@ Examples:
             detach_volume(options, args[1:])
         elif cmd == "group":
             if len(args) == 1:
-                parser.error("No sub command for command %s" % cmd)  
+                parser.error("No sub command for command %s" % cmd)
             subcmd = args[1]
             if subcmd == "add":
                 addtogroup(options, args[2:])
@@ -599,7 +599,7 @@ Examples:
                 parser.error("Illegal subcommand for command %s" % cmd)
         elif cmd == "target":
             if len(args) == 1:
-                parser.error("No sub command for command %s" % cmd)  
+                parser.error("No sub command for command %s" % cmd)
             subcmd = args[1]
             if subcmd == "add":
                 addtotarget(options, args[2:])
@@ -616,15 +616,15 @@ Examples:
         elif cmd == "fast-copy":
             fast_copy(options, args[1:])
         elif cmd == "clone":
-            clone_volume(options, args[1:])       
+            clone_volume(options, args[1:])
         elif cmd == "show":
             show_volumes(options)
         else:
-            parser.error("Invalid command %s" % cmd)            
+            parser.error("Invalid command %s" % cmd)
             sys.exit(1)
     except KeyboardInterrupt:
         sys.exit(1)
     except Exception as e:
-        log_error(options, e)  
+        log_error(options, e)
         sys.exit(1)
     sys.exit(0)

@@ -33,9 +33,9 @@ if "DEDUPV1_ROOT" not in os.environ:
 else:
     DEDUPV1_ROOT = os.environ["DEDUPV1_ROOT"]
 
-sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python")))
+sys.path.insert(0, os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python")))
 for file in [f for f in os.listdir(os.path.join(DEDUPV1_ROOT, "lib/python2.7/site-packages/")) if f.endswith(".egg")]:
-    sys.path.append(os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python2.7/site-packages/", file)))
+    sys.path.insert(0, os.path.normpath(os.path.join(DEDUPV1_ROOT, "lib/python2.7/site-packages/", file)))
 import monitor
 import config
 from dedupv1logging import log_error, log_info, log_warning, log_verbose
