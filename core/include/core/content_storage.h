@@ -114,6 +114,14 @@ class ContentStorage : public dedupv1::StatisticProvider {
      */
     dedupv1::base::ResourceManagement<Chunk>* chunk_management_;
 
+    /**
+     * if true, the filter chain for chunks of a request is executed in parallel
+     * thread pool jobs.
+     * If false, the filter chain for the chunks of a request are executed
+     * in order.
+     */
+    bool parallel_filter_chain_;
+
     class Statistics {
         public:
             Statistics();
@@ -295,7 +303,7 @@ class ContentStorage : public dedupv1::StatisticProvider {
      * Destructor
      */
     virtual ~ContentStorage();
- 
+
     /**
      * Starts the content storage system.
      *

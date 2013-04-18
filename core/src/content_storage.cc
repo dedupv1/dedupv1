@@ -97,6 +97,7 @@ using dedupv1::base::NewRunnable;
 using dedupv1::filter::Filter;
 using dedupv1::base::Threadpool;
 using dedupv1::base::MultiSignalCondition;
+
 LOGGER("ContentStorage");
 
 namespace dedupv1 {
@@ -109,6 +110,7 @@ ContentStorage::ContentStorage() {
     chunk_management_ = NULL;
     filter_chain_ = NULL;
     tp_ = NULL;
+    parallel_filter_chain_ = true;
 
     log_ = 0;
     fingerprinter_name_ = "sha1";
@@ -123,10 +125,17 @@ ContentStorage::~ContentStorage() {
 }
 
 ContentStorage::Statistics::Statistics() :
-    average_write_block_latency_(256), average_processing_time_(256), average_filter_chain_time_(256),
-    average_chunking_latency_(256), average_fingerprint_latency_(256), average_chunk_store_latency_(256),
-    average_block_read_latency_(256), average_sync_latency_(256), average_open_request_handling_latency_(256),
-    average_block_storing_latency_(256), average_process_chunk_filter_chain_latency_(256),
+    average_write_block_latency_(256),
+    average_processing_time_(256),
+    average_filter_chain_time_(256),
+    average_chunking_latency_(256),
+    average_fingerprint_latency_(256),
+    average_chunk_store_latency_(256),
+    average_block_read_latency_(256),
+    average_sync_latency_(256),
+    average_open_request_handling_latency_(256),
+    average_block_storing_latency_(256),
+    average_process_chunk_filter_chain_latency_(256),
     average_process_filter_chain_barrier_wait_latency_(256),
     average_process_chunk_filter_chain_read_chunk_info_latency_(256),
     average_process_chunk_filter_chain_write_block_latency_(256),
@@ -139,7 +148,9 @@ ContentStorage::Statistics::Statistics() :
     threads_in_filter_chain_ = 0;
 }
 
-bool ContentStorage::InitEmptyFingerprint(Chunker* chunker, Fingerprinter* fp_gen, bytestring* empty_fp) {
+bool ContentStorage::InitEmptyFingerprint(Chunker* chunker,
+    Fingerprinter* fp_gen,
+    bytestring* empty_fp) {
     DCHECK(chunker, "Chunker not set");
     DCHECK(empty_fp, "Empty fp not set");
     DCHECK(fp_gen, "FP generator not set");
@@ -159,9 +170,15 @@ bool ContentStorage::InitEmptyFingerprint(Chunker* chunker, Fingerprinter* fp_ge
     return !failed;
 }
 
-bool ContentStorage::Start(dedupv1::base::Threadpool* tp, dedupv1::blockindex::BlockIndex* block_index,
-                           dedupv1::chunkindex::ChunkIndex* chunk_index, ChunkStore* chunk_store, FilterChain* filter_chain,
-                           ResourceManagement<Chunk>* chunk_management, Log* log, BlockLocks* block_locks, uint32_t block_size) {
+bool ContentStorage::Start(dedupv1::base::Threadpool* tp,
+    dedupv1::blockindex::BlockIndex* block_index,
+    dedupv1::chunkindex::ChunkIndex* chunk_index,
+    ChunkStore* chunk_store,
+    FilterChain* filter_chain,
+    ResourceManagement<Chunk>* chunk_management,
+    Log* log,
+    BlockLocks* block_locks,
+    uint32_t block_size) {
     DCHECK(tp, "Threadpool not set");
 
     this->tp_ = tp;
@@ -202,7 +219,8 @@ bool ContentStorage::Close() {
     return !failed;
 }
 
-Session* ContentStorage::CreateSession(Chunker* chunker, const std::set<std::string>* enabled_filter_names) {
+Session* ContentStorage::CreateSession(Chunker* chunker,
+    const std::set<std::string>* enabled_filter_names) {
     ProfileTimer timer(this->stats_.profiling_);
     CHECK_RETURN(log_, NULL, "Content storage not started");
     CHECK_RETURN(filter_chain_, NULL, "Filter chain not set");
@@ -267,6 +285,11 @@ bool ContentStorage::SetOption(const string& option_name, const string& option) 
         fingerprint->Close();
         return true;
     }
+    if (option_name == "filter-chain.parallel") {
+        CHECK(To<bool>(option).valid(), "Illegal option");
+        this->parallel_filter_chain_ = To<bool>(option).value();
+        return true;
+    }
     if (option_name == "chunking") {
         CHECK(!this->default_chunker_, "Chunker already set");
         this->default_chunker_ = Chunker::Factory().Create(option);
@@ -285,8 +308,10 @@ bool ContentStorage::SetOption(const string& option_name, const string& option) 
     return false;
 }
 
-bool ContentStorage::ReadBlock(Session* session, Request* request, RequestStatistics* request_stats,
-                               dedupv1::base::ErrorContext* ec) {
+bool ContentStorage::ReadBlock(Session* session,
+    Request* request,
+    RequestStatistics* request_stats,
+    dedupv1::base::ErrorContext* ec) {
     ProfileTimer timer(this->stats_.profiling_);
 
     DCHECK(session, "Session not set");
@@ -300,8 +325,10 @@ bool ContentStorage::ReadBlock(Session* session, Request* request, RequestStatis
     DEBUG("Read block: request " << request->DebugString());
 
     BlockMapping mapping(request->block_id(), block_size_);
-    CHECK(this->block_index_->ReadBlockInfo(session, &mapping, ec), "Reading block info failed");
-    DCHECK(mapping.item_count() != 0, "Illegal block mapping: " << mapping.DebugString());
+    CHECK(this->block_index_->ReadBlockInfo(session, &mapping, ec),
+        "Reading block info failed");
+    DCHECK(mapping.item_count() != 0,
+        "Illegal block mapping: " << mapping.DebugString());
 
     // Append the chunks/mapping items to each other.
     // data_pos denotes the current position
@@ -343,8 +370,12 @@ bool ContentStorage::ReadBlock(Session* session, Request* request, RequestStatis
     return true;
 }
 
-bool ContentStorage::FastCopyBlock(uint64_t src_block_id, uint64_t src_offset, uint64_t target_block_id,
-                                   uint64_t target_offset, uint64_t size, dedupv1::base::ErrorContext* ec) {
+bool ContentStorage::FastCopyBlock(uint64_t src_block_id,
+    uint64_t src_offset,
+    uint64_t target_block_id,
+    uint64_t target_offset,
+    uint64_t size,
+    dedupv1::base::ErrorContext* ec) {
 
     DEBUG("Fast copy block: src block " << src_block_id <<
         ", target block " << target_block_id <<
@@ -624,9 +655,13 @@ bool ContentStorage::WriteBlock(Session* session, Request* request, RequestStati
     return result;
 }
 
-bool ContentStorage::FingerprintChunks(Session* session, Request* request, RequestStatistics* request_stats,
-                                       Fingerprinter* fingerprinter, const list<Chunk*>& chunks, vector<ChunkMapping>* chunk_mappings,
-                                       ErrorContext* ec) {
+bool ContentStorage::FingerprintChunks(Session* session,
+    Request* request,
+    RequestStatistics* request_stats,
+    Fingerprinter* fingerprinter,
+    const list<Chunk*>& chunks,
+    vector<ChunkMapping>* chunk_mappings,
+    ErrorContext* ec) {
     DCHECK(chunk_mappings, "Chunk mappings not set");
     DCHECK(fingerprinter, "Fingerprinter not set");
     DCHECK(chunk_mappings->size() == 0, "Chunk mapping not empty");
@@ -731,10 +766,12 @@ bool ContentStorage::ProcessChunkFilterChain(std::tr1::tuple<Session*, const Blo
             // failed already set to true
         }
     }
-    if (failed) {
+    if (failed && filter_chain_failed) {
         filter_chain_failed->compare_and_swap(true, false); // mark as failed
     }
-    barrier->Signal();
+    if (barrier) {
+        barrier->Signal();
+    }
     TRACE("Finished filter chain task: " << chunk_mapping->DebugString() << ", failed " << ToString(failed));
     return !failed;
 }
@@ -752,27 +789,43 @@ bool ContentStorage::ProcessFilterChain(Session* session,
     REQUEST_STATS_START(request_stats, RequestStatistics::FILTER_CHAIN);
     vector<ChunkMapping>::iterator i;
 
-    tbb::atomic<bool> filter_chain_failed;
-    filter_chain_failed = false;
-    MultiSignalCondition barrier(chunk_mappings->size());
-    for (i = chunk_mappings->begin(); i != chunk_mappings->end(); i++) {
-        ChunkMapping* chunk_mapping = &(*i);
-        DCHECK(chunk_mapping, "Chunk mapping not set");
+    if (parallel_filter_chain_) {
+        tbb::atomic<bool> filter_chain_failed;
+        filter_chain_failed = false;
+        MultiSignalCondition barrier(chunk_mappings->size());
+        for (i = chunk_mappings->begin(); i != chunk_mappings->end(); i++) {
+            ChunkMapping* chunk_mapping = &(*i);
+            DCHECK(chunk_mapping, "Chunk mapping not set");
 
-        TRACE("Create task for chunk: " << chunk_mapping->DebugString());
-        Runnable<bool>* t = NewRunnable(this, &ContentStorage::ProcessChunkFilterChain, make_tuple(session,
+            TRACE("Create task for chunk: " << chunk_mapping->DebugString());
+            Runnable<bool>* t = NewRunnable(this, &ContentStorage::ProcessChunkFilterChain, make_tuple(session,
                 block_mapping, chunk_mapping, &barrier, &filter_chain_failed, ec));
-        tp_->SubmitNoFuture(t, Threadpool::HIGH_PRIORITY, Threadpool::CALLER_RUNS);
-    }
+            tp_->SubmitNoFuture(t, Threadpool::HIGH_PRIORITY, Threadpool::CALLER_RUNS);
+        }
 
-    {
-        SlidingAverageProfileTimer timer(this->stats_.average_process_filter_chain_barrier_wait_latency_);
-        CHECK(barrier.Wait(), "Failed to wait for filter chain chunks");
-    }
+        {
+            SlidingAverageProfileTimer timer(this->stats_.average_process_filter_chain_barrier_wait_latency_);
+            CHECK(barrier.Wait(), "Failed to wait for filter chain chunks");
+        }
 
-    if (filter_chain_failed) {
-        // the error was reported (and better) before this
-        failed = true;
+        if (filter_chain_failed) {
+            // the error was reported (and better) before this
+            failed = true;
+        }
+    } else {
+        for (i = chunk_mappings->begin(); i != chunk_mappings->end(); i++) {
+            ChunkMapping* chunk_mapping = &(*i);
+            DCHECK(chunk_mapping, "Chunk mapping not set");
+            bool r = ProcessChunkFilterChain(make_tuple(session,
+                block_mapping,
+                chunk_mapping,
+                (MultiSignalCondition*)NULL,
+                (tbb::atomic<bool>*)NULL, ec));
+            if (!r) {
+              failed = true;
+              break;
+            }
+        }
     }
     TRACE("Filter chain tasks finished");
     REQUEST_STATS_FINISH(request_stats, RequestStatistics::FILTER_CHAIN);
@@ -783,7 +836,7 @@ bool ContentStorage::ProcessFilterChain(Session* session,
     return !failed;
 }
 
-bool ContentStorage::MergeChunksIntoCurrentRequest(uint64_t block_id, 
+bool ContentStorage::MergeChunksIntoCurrentRequest(uint64_t block_id,
     RequestStatistics* request_stats,
     unsigned int block_offset,
     unsigned long open_chunk_pos,
@@ -798,7 +851,7 @@ bool ContentStorage::MergeChunksIntoCurrentRequest(uint64_t block_id,
 
     BlockMappingItem request(session->open_chunk_position(), chunk_mappings->at(0).chunk()->size()
                              - session->open_chunk_position());
-    CHECK(request.Convert(chunk_mappings->at(0)), 
+    CHECK(request.Convert(chunk_mappings->at(0)),
         "Failed to convert chunk mapping: " << chunk_mappings->at(0).DebugString());
 
     // TODO(fermat): Is this necessary? Is is used anywhere? It is also set in the last line of this method.
