@@ -50,6 +50,7 @@
 #include <core/sparse_chunk_index_filter.h>
 #include <core/block_index_filter.h>
 #include <core/bytecompare_filter.h>
+#include <core/zerochunk_filter.h>
 #include <core/bloom_filter.h>
 #include <core/chunker.h>
 #include <core/static_chunker.h>
@@ -199,7 +200,7 @@ bool DedupSystem::LoadOptions(const string& filename) {
     CHECK(this->state_ == CREATED, "Dedup system already started");
 
     ConfigLoader config_load(NewCallback(this, &DedupSystem::SetOption));
-    CHECK(config_load.ProcessFile(filename), 
+    CHECK(config_load.ProcessFile(filename),
         "Cannot process configuration file: " << filename);
     return true;
 }
@@ -465,7 +466,7 @@ bool DedupSystem::Stop(const dedupv1::StopContext& stop_context) {
     }
     // we also want to make sure that there is no container open in the background
     // committing system.
-    // By the way: I don't think that the timeout thread is a problem because 
+    // By the way: I don't think that the timeout thread is a problem because
     // either the timeout thread commits a due container before the flush or the flush does it.
     dedupv1::chunkstore::ContainerStorage* cs = dynamic_cast<dedupv1::chunkstore::ContainerStorage*>(this->storage());
     if (cs) {
@@ -1295,6 +1296,7 @@ void DedupSystem::RegisterDefaults() {
     dedupv1::filter::BlockIndexFilter::RegisterFilter();
     dedupv1::filter::ByteCompareFilter::RegisterFilter();
     dedupv1::filter::BloomFilter::RegisterFilter();
+    dedupv1::filter::ZeroChunkFilter::RegisterFilter();
 
     dedupv1::StaticChunker::RegisterChunker();
     dedupv1::RabinChunker::RegisterChunker();

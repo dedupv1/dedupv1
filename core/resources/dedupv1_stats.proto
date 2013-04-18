@@ -75,18 +75,26 @@ message ChunkIndexFilterStatsData {
     optional uint64 write_count = 4;
     optional uint64 failure_count = 6;
 
-    optional uint64 empty_fp_hit_count = 5;
+    // tag 5 is deprecated
+}
+
+message ZeroChunkFilterStatsData {
+    optional uint64 existing_hit_count = 1;
+    optional uint64 weak_hit_count = 2;
+    optional uint64 read_count = 3;
 }
 
 message SparseChunkIndexFilterStatsData {
-    optional uint64 hit_count = 1;
+    optional uint64 strong_hit_count = 1;
     optional uint64 miss_count = 2;
     optional uint64 read_count = 3;
     optional uint64 write_count = 4;
+    // tag 5 is deprecated
     optional uint64 failure_count = 6;
     optional uint64 anchor_count = 7;
 
-    optional uint64 empty_fp_hit_count = 5;
+    optional uint64 weak_hit_count = 8;
+
 }
 
 message GarbageCollectorStatsData {
