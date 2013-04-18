@@ -43,9 +43,6 @@ from SysTest import SysTest
 import random
 import socket
 
-output_dir = None
-configuration = {}
-
 def print_json(d):
     print simplejson.dumps(d, sort_keys=True, indent=4)
 
@@ -68,26 +65,19 @@ def dict_diff(a, b):
             r[key] = (None, value)
         return r
 
-def get_listening_process(run, port):
-    l = run("lsof -i :%s" % port).split("\n")[1:]
-    if len(l) > 0:
-        for line in l:
-            if line.find("LISTEN") < 0:
-                continue
-            col = line.split()
-            process_name = col[0]
-            pid = col[1]
-            return (process_name, pid)
-    return (None, None)
-
 class Dedupv1BaseSystemTest(unittest.TestCase):
+
+    def __init__(self, configuration, output_dir, test_case_name):
+      unittest.TestCase.__init__(self, test_case_name)
+      self.configuration = configuration
+      self.output_dir = output_dir
 
     def setUp(self):
         print
-        self.device_name = configuration.get("device-name", "/dev/disk/by-path/scsi-0:0:0:0")
-        self.mnt_point = configuration.get("moint-point", "/mnt/dedup")
-        self.user = configuration.get("user", None)
-        self.dedupv1_config_file = configuration.get("config", "/opt/dedupv1/etc/dedupv1/dedupv1.conf")
+        self.device_name = self.configuration.get("device-name", "/dev/disk/by-path/scsi-0:0:0:0")
+        self.mnt_point = self.configuration.get("moint-point", "/mnt/dedup")
+        self.user = self.configuration.get("user", None)
+        self.dedupv1_config_file = self.configuration.get("config", "/opt/dedupv1/etc/dedupv1/dedupv1.conf")
         if not self.dedupv1_config_file.startswith("/"):
             self.dedupv1_config_file = os.path.join(os.getcwd(), self.dedupv1_config_file)
 
@@ -98,7 +88,7 @@ class Dedupv1BaseSystemTest(unittest.TestCase):
         self.open_iscsi = OpeniSCSITest(self.run)
         self.data = DataTest(self.run, mnt_point=self.mnt_point, device_name=self.device_name)
 
-        (process_name, pid) = get_listening_process(self.run, 9001)
+        (process_name, pid) = self.get_listening_process(self.run, 9001)
         if (process_name):
             print "Found process %s (pid %s) listening on port 9001" % (process_name, pid)
             os.kill(int(pid), 9)
@@ -140,7 +130,19 @@ volume.threads=24
                 self.dedupv1.check("--logging=/opt/dedupv1/etc/dedupv1/logging.xml")
             self.assertExitcode(0)
 
-    def prepare_part(self, sys=None, mnt_point=None, size=40):
+    def get_listening_process(self, run, port):
+      l = run("lsof -i :%s" % port).split("\n")[1:]
+      if len(l) > 0:
+        for line in l:
+            if line.find("LISTEN") < 0:
+                continue
+            col = line.split()
+            process_name = col[0]
+            pid = col[1]
+            return (process_name, pid)
+      return (None, None)
+
+    def prepare_part(self, sys=None, mnt_point=None, size=500):
         if (sys == None):
             sys = self.sys
         if (mnt_point == None):
@@ -213,7 +215,7 @@ volume.threads=24
         if "dedupv1" in self.__dict__:
             filename = self.id() + ".zip"
             filename = ".".join(filename.split(".")[-2:]) # use only test_<test case name>
-            report_file = os.path.join(output_dir, filename)
+            report_file = os.path.join(self.output_dir, filename)
             self.dedupv1.report('"%s"' % report_file)
             print "Stored report", report_file
 
@@ -246,7 +248,7 @@ volume.threads=24
         return filename
 
     def get_urandom_file(self, size):
-        test_data_dir = configuration.get("test data dir", None)
+        test_data_dir = self.configuration["test data dir"]
         filename = os.path.join(test_data_dir, "random-%s" % size)
         if not os.path.exists(filename) or not os.path.getsize(filename) * (size * 1024 * 1024):
             self.run("dd if=/dev/urandom of=%s bs=1M count=%s" % (filename, size))
@@ -2732,8 +2734,8 @@ class Dedupv1ISCSISystemTest(Dedupv1BaseSystemTest):
         self.start_default_system()
 
         copied_image_count = 0
-        number_of_images = configuration.get("acronis image count", 12)
-        test_data_dir = configuration.get("test data dir", None)
+        number_of_images = self.configuration.get("acronis image count", 12)
+        test_data_dir = self.configuration.get("test data dir", None)
         image_path = os.path.join(test_data_dir, "acronis-images", "pc1")
         self.assertTrue(os.path.exists(image_path), "Image path doesn't exists")
 
@@ -3090,7 +3092,7 @@ class Dedupv1DataSystemTest(Dedupv1BaseSystemTest):
             name = "linux-2.6.%s.%s.tar" % (major, minor)
             shutil.copy(os.path.join(kernel_path, name), self.mnt_point)
 
-        test_data_dir = configuration.get("test data dir", None)
+        test_data_dir = self.configuration.get("test data dir", None)
         kernel_path = os.path.join(test_data_dir, "kernel")
         kernel_versions = [(31, 1), (31, 2), (31, 3), (31, 4), (31, 5), (31, 6), (31, 7), (31, 8), (31, 9), (31, 10), (31, 11), (31, 12),
                    (32, 1), (32, 2), (32, 3), (32, 4), (32, 5), (32, 6), (32, 7), (32, 8)
@@ -3741,8 +3743,8 @@ class Dedupv1DataSystemTest(Dedupv1BaseSystemTest):
 
         self.sys.prepare_part()
 
-        number_of_images = configuration.get("acronis image count", 12)
-        test_data_dir = configuration.get("test data dir", None)
+        number_of_images = self.configuration.get("acronis image count", 12)
+        test_data_dir = self.configuration.get("test data dir", None)
         image_path = os.path.join(test_data_dir, "acronis-images", "pc1")
 
         copied_image_count = 0
@@ -3815,8 +3817,8 @@ class Dedupv1DataSystemTest(Dedupv1BaseSystemTest):
         self.prepare_part()
 
         copied_image_count = 0
-        number_of_images = configuration.get("acronis image count", 12)
-        test_data_dir = configuration.get("test data dir", None)
+        number_of_images = self.configuration.get("acronis image count", 12)
+        test_data_dir = self.configuration.get("test data dir", None)
         image_path = os.path.join(test_data_dir, "acronis-images", "pc1")
 
         os.mkdir(os.path.join(self.mnt_point, "images"))
@@ -3890,7 +3892,7 @@ class Dedupv1DataSystemTest(Dedupv1BaseSystemTest):
 
         copied_image_count = 0
         number_of_images = 2
-        test_data_dir = configuration.get("test data dir", None)
+        test_data_dir = self.configuration.get("test data dir", None)
         image_path = os.path.join(test_data_dir, "acronis-images", "pc1")
 
         os.mkdir(os.path.join(self.mnt_point, "images"))
@@ -3951,8 +3953,8 @@ class Dedupv1DataSystemTest(Dedupv1BaseSystemTest):
 
         self.prepare_part()
 
-        number_of_images = configuration.get("acronis image count", 12)
-        test_data_dir = configuration.get("test data dir", None)
+        number_of_images = self.configuration.get("acronis image count", 12)
+        test_data_dir = self.configuration.get("test data dir", None)
         image_path = os.path.join(test_data_dir, "acronis-images", "pc1")
 
         os.mkdir(os.path.join(self.mnt_point, "images"))
@@ -4034,8 +4036,8 @@ class Dedupv1DataSystemTest(Dedupv1BaseSystemTest):
         total_data_size = 0
 
         copied_image_count = 0
-        number_of_images = configuration.get("acronis image count", 12)
-        test_data_dir = configuration.get("test data dir", None)
+        number_of_images = self.configuration.get("acronis image count", 12)
+        test_data_dir = self.configuration.get("test data dir", None)
         image_path = os.path.join(test_data_dir, "acronis-images", "pc1")
 
         os.mkdir(os.path.join(self.mnt_point, "images"))
@@ -4103,8 +4105,8 @@ class Dedupv1DataSystemTest(Dedupv1BaseSystemTest):
         self.prepare_part()
 
         copied_image_count = 0
-        number_of_images = configuration.get("acronis image count", 5)
-        test_data_dir = configuration.get("test data dir", None)
+        number_of_images = self.configuration.get("acronis image count", 5)
+        test_data_dir = self.configuration.get("test data dir", None)
         image_path = os.path.join(test_data_dir, "acronis-images", "pc1")
 
         os.mkdir(os.path.join(self.mnt_point, "images"))
@@ -4152,8 +4154,8 @@ class Dedupv1DataSystemTest(Dedupv1BaseSystemTest):
         self.prepare_part()
 
         copied_image_count = 0
-        number_of_images = configuration.get("acronis image count", 12)
-        test_data_dir = configuration.get("test data dir", None)
+        number_of_images = self.configuration.get("acronis image count", 12)
+        test_data_dir = self.configuration.get("test data dir", None)
         image_path = os.path.join(test_data_dir, "acronis-images", "pc1")
 
         os.mkdir(os.path.join(self.mnt_point, "images"))
@@ -4212,7 +4214,7 @@ class Dedupv1DataSystemTest(Dedupv1BaseSystemTest):
         """
         self.start_default_system()
 
-        size = int(configuration.get("max urandom size", 8 * 1024))
+        size = int(self.configuration.get("max urandom size", 8 * 1024))
 
         filename = self.get_urandom_file(size)
 
@@ -4405,8 +4407,8 @@ class Dedupv1DataSystemTest(Dedupv1BaseSystemTest):
                     self.sys.sync()
                     os.unlink(temp_filename)
 
-        extra_test_data_dir = configuration.get("extra test data dir", None)
-        test_data_dir = configuration.get("test data dir", None)
+        extra_test_data_dir = self.configuration.get("extra test data dir", None)
+        test_data_dir = self.configuration.get("test data dir", None)
         if extra_test_data_dir is None:
             print "Skip this test"
             return
@@ -4721,7 +4723,7 @@ def perform_systemtest(system_test_classes, option_args=None):
         parser.add_option("--config", dest="config", default=None)
         return parser
 
-    def get_test_suite(argv):
+    def get_test_suite(argv, configuration, output_dir):
         suite = unittest.TestSuite()
 
         regex_match = []
@@ -4750,7 +4752,9 @@ def perform_systemtest(system_test_classes, option_args=None):
                             append = False
                             break
                 if append:
-                    suite.addTest(system_test_class(test_case_name))
+                    suite.addTest(system_test_class(configuration,
+                      output_dir,
+                      test_case_name))
 
         return suite
 
@@ -4788,7 +4792,7 @@ def perform_systemtest(system_test_classes, option_args=None):
         while True:
             if options.repeat_until_error:
                 print "Iteration", repeat_count
-            suite = get_test_suite(argv)
+            suite = get_test_suite(argv, configuration, output_dir)
             runner = get_test_runner()
             result = runner.run(suite)
             if not options.repeat_until_error or not result.wasSuccessful():
