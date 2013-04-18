@@ -68,6 +68,8 @@
 #include <core/container_storage_alloc.h>
 #include <core/idle_detector.h>
 #include <core/garbage_collector.h>
+#include <core/usage_count_garbage_collector.h>
+#include <core/none_garbage_collector.h>
 #include <core/container_storage.h>
 #include <core/container_storage_bg.h>
 #include <core/session.h>
@@ -93,6 +95,7 @@ using dedupv1::OpenRequest;
 using dedupv1::base::ResourceManagement;
 using dedupv1::log::Log;
 using dedupv1::gc::GarbageCollector;
+using dedupv1::gc::UsageCountGarbageCollector;
 using dedupv1::chunkindex::ChunkIndexFactory;
 using dedupv1::chunkindex::ChunkIndex;
 using dedupv1::log::EVENT_TYPE_SYSTEM_START;
@@ -126,9 +129,9 @@ const uint32_t DedupSystem::kDefaultBlockSize = 256 * 1024;
 const uint32_t DedupSystem::kDefaultSessionCount = 128;
 
 const ScsiResult DedupSystem::kFullError(dedupv1::scsi::SCSI_CHECK_CONDITION,
-    dedupv1::scsi::SCSI_KEY_HARDWARE_ERROR, 0x03, 0x00);
+                                         dedupv1::scsi::SCSI_KEY_HARDWARE_ERROR, 0x03, 0x00);
 const ScsiResult DedupSystem::kReadChecksumError(dedupv1::scsi::SCSI_CHECK_CONDITION,
-    dedupv1::scsi::SCSI_KEY_MEDIUM_ERROR, 0x11, 0x04);
+                                                 dedupv1::scsi::SCSI_KEY_MEDIUM_ERROR, 0x11, 0x04);
 
 DedupSystem::Statistics::Statistics() : average_waiting_time_(256) {
     active_session_count_ = 0;
@@ -189,8 +192,7 @@ bool DedupSystem::Init() {
     this->volume_info_ = new DedupVolumeInfo();
     CHECK(this->volume_info_, "cannot create volume info");
 
-    gc_ = new GarbageCollector();
-    CHECK(gc_, "GC creation failed");
+    gc_ = NULL;
 
     state_ = CREATED;
     return true;
@@ -308,11 +310,17 @@ bool DedupSystem::SetOption(const string& option_name, const string& option) {
 
     // gc
     if (option_name == "gc") {
-        WARNING("Option gc is depreciated");
+        CHECK(gc_ == NULL, "GC already set");
+        gc_ = GarbageCollector::Factory().Create(option);
+        CHECK(gc_, "Failed to create garbage collector");
         return true;
     }
     if (StartsWith(option_name, "gc.")) {
-        CHECK(this->gc_, "GC not set");
+        if (gc_ == NULL) {
+            // GC not set, use default
+            gc_ = GarbageCollector::Factory().Create("usage-count");
+            CHECK(gc_, "Failed to create garbage collector");
+        }
         return this->gc_->SetOption(option_name.substr(strlen("gc.")), option);
     }
 
@@ -324,8 +332,8 @@ bool DedupSystem::SetOption(const string& option_name, const string& option) {
     }
     if (StartsWith(option_name, "block-locks.")) {
         CHECK(this->block_locks_.SetOption(
-              option_name.substr(strlen("block-locks.")),
-              option),
+                option_name.substr(strlen("block-locks.")),
+                option),
             "Block locks configuration failed");
         return true;
     }
@@ -337,8 +345,8 @@ bool DedupSystem::SetOption(const string& option_name, const string& option) {
 #ifdef DEDUPV1_CORE_TEST
     if (StartsWith(option_name, "raw-volume.")) {
         CHECK(this->volume_info_->SetOption(
-              option_name.substr(strlen("raw-volume.")),
-              option),
+                option_name.substr(strlen("raw-volume.")),
+                option),
             "Raw volume configuration failed");
         return true;
     }
@@ -348,12 +356,11 @@ bool DedupSystem::SetOption(const string& option_name, const string& option) {
 }
 
 bool DedupSystem::Start(const StartContext& start_context,
-    dedupv1::InfoStore* info_store,
-    dedupv1::base::Threadpool* tp) {
+                        dedupv1::InfoStore* info_store,
+                        dedupv1::base::Threadpool* tp) {
     CHECK(this->state_ == CREATED, "Dedup system already started");
     CHECK(this->block_size_ > 0, "Dedup system not ready: Block size not set");
     CHECK(this->chunk_index_, "Dedup system not ready: Chunk index not ready");
-    CHECK(this->gc_, "Garbage collector not configured");
     CHECK(this->chunk_store_, "Chunk store not configured");
 
     dedupv1::base::Walltimer startup_timer;
@@ -361,6 +368,12 @@ bool DedupSystem::Start(const StartContext& start_context,
     DEBUG("Started dedup system: " << start_context.DebugString());
 
     readonly_ = start_context.readonly();
+
+    if (gc_ == NULL) {
+        // use default gc
+        gc_ = GarbageCollector::Factory().Create("usage-count");
+        CHECK(gc_, "Failed to create garbage collector");
+    }
 
     this->chunk_management_ = new ResourceManagement<Chunk>();
     CHECK(this->chunk_management_, "Cannot create chunk resource management");
@@ -412,7 +425,7 @@ bool DedupSystem::Start(const StartContext& start_context,
         event_data.set_forced(start_context.force());
         event_data.set_dirty(start_context.dirty());
         CHECK(this->log_->CommitEvent(EVENT_TYPE_SYSTEM_START,
-              &event_data, NULL, NULL, NO_EC),
+                &event_data, NULL, NULL, NO_EC),
             "Cannot log system start event");
     }
     DEBUG("Started dedup system (startup time: " << startup_timer.GetTime() << "ms)");
@@ -495,8 +508,8 @@ bool DedupSystem::Stop(const dedupv1::StopContext& stop_context) {
     }
     if (this->block_index_) {
         block_index_stop_thread = new Thread<bool>(NewRunnable(this->block_index(),
-              &BlockIndex::Stop, stop_context),
-            "block index stop");
+                                                       &BlockIndex::Stop, stop_context),
+                                                   "block index stop");
     }
 
     bool start1 = false;
@@ -703,9 +716,9 @@ bool DedupSystem::FastBlockCopy(
         locked_block_list.clear();
         unlocked_block_list.clear();
         CHECK(block_locks_.TryWriteLocks(blocks,
-              &locked_block_list,
-              &unlocked_block_list,
-              LOCK_LOCATION_INFO),
+                &locked_block_list,
+                &unlocked_block_list,
+                LOCK_LOCATION_INFO),
             "Failed to acquire locks for block list");
 
         if (locked_block_list.size() == blocks.size()) {
@@ -1302,6 +1315,9 @@ void DedupSystem::RegisterDefaults() {
     dedupv1::RabinChunker::RegisterChunker();
 
     dedupv1::CryptoFingerprinter::RegisterFingerprinter();
+
+    dedupv1::gc::UsageCountGarbageCollector::RegisterGC();
+    dedupv1::gc::NoneGarbageCollector::RegisterGC();
 
     dedupv1::chunkstore::GreedyContainerGCStrategy::RegisterGC();
 

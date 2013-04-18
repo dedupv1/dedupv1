@@ -77,7 +77,7 @@ bool Filter::UpdateKnownChunk(Session* session,
 }
 
 bool Filter::Abort(Session* session,
-    const dedupv1::blockindex::BlockMapping* block_mapping,
+                   const dedupv1::blockindex::BlockMapping* block_mapping,
                    ChunkMapping* chunk_mapping,
                    ErrorContext* ec) {
     return true;
@@ -91,11 +91,12 @@ bool Filter::Close() {
 bool Filter::SetOption(const string& option_name, const string& option) {
     if (option_name == "enabled") {
         Option<bool> b = To<bool>(option);
-        CHECK(b.valid(), "Illegal option value: " << option_name << "=" << option);
+        CHECK(b.valid(), "Illegal option: " << option_name << "=" << option);
         enabled_by_default_ = b.value();
         return true;
     }
-    ERROR("Illegal option" << option_name);
+    ERROR("Illegal option: " << option_name << "=" << option <<
+        " for filter " << name_);
     return false;
 }
 

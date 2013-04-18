@@ -129,7 +129,10 @@ Filter::filter_result ChunkIndexFilter::Check(Session* session,
             stats_.failures++;
             result = FILTER_ERROR;
         }
+        // with the normal chunk index filter, all chunks are indexed
+        mapping->set_indexed(true);
     } else if (index_result == LOOKUP_FOUND) {
+        mapping->set_indexed(true);
         mapping->set_usage_count(0); // TODO (dmeister): Why???
         this->stats_.hits++;
         result = FILTER_STRONG_MAYBE;

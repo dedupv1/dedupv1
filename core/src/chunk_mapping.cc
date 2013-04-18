@@ -52,6 +52,7 @@ ChunkMapping::ChunkMapping() {
     this->usage_count_failed_write_change_log_id_ = 0;
     this->chunk_ = NULL;
     this->clear_block_hint();
+    this->is_indexed_ = false;
 }
 
 ChunkMapping::ChunkMapping(const byte* fp, size_t fp_size) {
@@ -64,6 +65,7 @@ ChunkMapping::ChunkMapping(const byte* fp, size_t fp_size) {
     this->usage_count_change_log_id_ = 0;
     this->usage_count_failed_write_change_log_id_ = 0;
     this->chunk_ = NULL;
+    this->is_indexed_ = false;
     this->clear_block_hint();
 }
 
@@ -77,6 +79,7 @@ ChunkMapping::ChunkMapping(const bytestring& fp) {
     this->usage_count_change_log_id_ = 0;
     this->usage_count_failed_write_change_log_id_ = 0;
     this->chunk_ = NULL;
+    this->is_indexed_ = false;
     this->clear_block_hint();
 }
 
@@ -171,6 +174,9 @@ string ChunkMapping::DebugString() const {
     }
     if (known_chunk_) {
         s << ", known chunk";
+    }
+    if (is_indexed_) {
+      s << ", indexed";
     }
     s << "]";
     return s.str();

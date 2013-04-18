@@ -46,6 +46,7 @@ using std::string;
 using std::vector;
 using dedupv1::scsi::SCSI_OK;
 using dedupv1::chunkindex::ChunkIndex;
+using dedupv1::gc::GarbageCollector;
 using dedupv1::base::Index;
 using dedupv1::base::PersistentIndex;
 using dedupv1::base::IndexIterator;
@@ -258,7 +259,7 @@ TEST_P(Dedupv1CheckerTest, CheckWithNoGCCandidateError)
     ASSERT_TRUE(system->Init());
     ASSERT_TRUE(system->LoadOptions("data/dedupv1_test.conf"));
     ASSERT_TRUE(system->Start(dedupv1::StartContext()));
-    ASSERT_TRUE(system->dedup_system()->garbage_collector()->Pause());
+    ASSERT_TRUE(system->dedup_system()->garbage_collector()->PauseProcessing());
     ASSERT_TRUE(system->Run());
     FILE* file = fopen("data/random","r");
     ASSERT_TRUE(file);
@@ -431,6 +432,13 @@ TEST_P(Dedupv1CheckerTest, RepairWithUsageCountError)
     ASSERT_TRUE(system->Init());
     ASSERT_TRUE(system->LoadOptions("data/dedupv1_test.conf"));
     ASSERT_TRUE(system->Start(dedupv1::StartContext()));
+
+    if (system->dedup_system()->garbage_collector()->gc_concept() != GarbageCollector::USAGE_COUNT) {
+        // skip this test
+        ASSERT_TRUE(system->Close());
+        return;
+    }
+
     ASSERT_TRUE(system->Run());
     FILE* file = fopen("data/random","r");
     ASSERT_TRUE(file);
@@ -530,6 +538,13 @@ TEST_P(Dedupv1CheckerTest, RepairWithNoGCCandidateError)
     ASSERT_TRUE(system->Init());
     ASSERT_TRUE(system->LoadOptions("data/dedupv1_test.conf"));
     ASSERT_TRUE(system->Start(dedupv1::StartContext()));
+
+    if (system->dedup_system()->garbage_collector()->gc_concept() != GarbageCollector::USAGE_COUNT) {
+        // skip this test
+        ASSERT_TRUE(system->Close());
+        return;
+    }
+
     ASSERT_TRUE(system->Run());
     FILE* file = fopen("data/random","r");
     ASSERT_TRUE(file);

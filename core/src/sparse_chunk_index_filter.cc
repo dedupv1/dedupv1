@@ -157,6 +157,8 @@ Filter::filter_result SparseChunkIndexFilter::Check(Session* session,
 
     this->stats_.reads_++;
     if (!IsAnchor(*mapping)) {
+        // no anchor => no indexing
+        mapping->set_indexed(false);
         stats_.weak_hits_++;
         return FILTER_WEAK_MAYBE;
     }
@@ -177,7 +179,9 @@ Filter::filter_result SparseChunkIndexFilter::Check(Session* session,
             stats_.failures_++;
             result = FILTER_ERROR;
         }
+        mapping->set_indexed(true);
     } else if (index_result == LOOKUP_FOUND) {
+        mapping->set_indexed(true);
         mapping->set_usage_count(0); // TODO (dmeister): Why???
         this->stats_.strong_hits_++;
         result = FILTER_STRONG_MAYBE;

@@ -1905,7 +1905,9 @@ ContainerStorageSession::ContainerStorageSession(ContainerStorage* storage) {
 }
 
 bool ContainerStorageSession::WriteNew(const void* key, size_t key_size,
-                                       const void* data, size_t data_size, uint64_t* address,
+                                       const void* data, size_t data_size,
+                                       bool is_indexed,
+                                       uint64_t* address,
                                        ErrorContext* ec) {
     ContainerStorage* c = this->storage_;
     ProfileTimer timer(storage_->stats_.total_write_time_);
@@ -1978,6 +1980,7 @@ bool ContainerStorageSession::WriteNew(const void* key, size_t key_size,
     {
         ProfileTimer add_timer(this->storage_->stats_.add_time_);
         CHECK(write_container->AddItem((byte *) key, key_size, (byte *) data, data_size,
+                is_indexed,
                 c->compression_),
             "Cannot add item: fp " << Fingerprinter::DebugString((const byte *) key, key_size) << ", data size " << data_size << ", write container " << write_container->DebugString());
     }

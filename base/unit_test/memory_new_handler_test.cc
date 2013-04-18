@@ -89,12 +89,12 @@ TEST_F(NewHandlerTest, RegisterAndCallNewsHandler) {
     // Force a failed allocation
     int* tooLarge;
     tooLarge = new (std::nothrow) int signed [-1];
-    EXPECT_EQ(NULL, tooLarge);
+    EXPECT_FALSE( tooLarge);
     EXPECT_EQ(1, mock_listener.outOfMemoryEventReceived());
 
     // Force a failed allocation again. Should not call the listener again.
     tooLarge = new (std::nothrow) int signed [-1];
-    EXPECT_EQ(NULL, tooLarge);
+    EXPECT_FALSE(tooLarge);
     EXPECT_EQ(1, mock_listener.outOfMemoryEventReceived());
 }
 

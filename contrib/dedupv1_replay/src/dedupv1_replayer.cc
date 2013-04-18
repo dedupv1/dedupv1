@@ -67,14 +67,18 @@ bool Dedupv1Replayer::Initialize(const std::string& filename) {
 
     CHECK(system_->OpenLockfile(), "Failed to acquire lock on lockfile");
 
-    StartContext start_context(StartContext::NON_CREATE, StartContext::DIRTY, StartContext::NO_FORCE, false);
+    StartContext start_context(StartContext::NON_CREATE,
+                               StartContext::DIRTY,
+                               StartContext::NO_FORCE,
+                               false);
     CHECK(system_->Start(start_context), "Failed to start dedupv1 system");
     // Will force system busy, so no bg replay will start
     CHECK(system_->dedup_system()->idle_detector()->ForceBusy(true), "Failed to force system busy");
 
     if (gc_paused_) {
         DEBUG("Will pause GC before running it.");
-        CHECK(system_->dedup_system()->garbage_collector()->Pause(), "Failed to pause Garbage Collector");
+        CHECK(system_->dedup_system()->garbage_collector()->PauseProcessing(),
+            "Failed to pause Garbage Collector");
     }
 
     CHECK(system_->dedup_system()->Run(), "Failed to run dedupv1 system");
@@ -88,7 +92,7 @@ bool Dedupv1Replayer::PauseGC() {
     gc_paused_ = true;
     if (started_) {
         DEBUG("GC is startet, so it will be paused");
-        return system_->dedup_system()->garbage_collector()->Pause();
+        return system_->dedup_system()->garbage_collector()->PauseProcessing();
     }
     return true;
 }
@@ -98,7 +102,7 @@ bool Dedupv1Replayer::UnPauseGC() {
     gc_paused_ = false;
     if (started_) {
         DEBUG("GC is startet, so it will be unpaused");
-        return system_->dedup_system()->garbage_collector()->UnPause();
+        return system_->dedup_system()->garbage_collector()->ResumeProcessing();
     }
     return true;
 }

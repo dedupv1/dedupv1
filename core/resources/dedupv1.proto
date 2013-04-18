@@ -73,6 +73,7 @@ message ContainerItemData {
     optional uint32 item_size = 3;
     optional uint32 raw_size = 4;
     optional bool deleted = 5;
+    optional bool indexed = 7;
 
     optional uint64 original_id = 6;
 }

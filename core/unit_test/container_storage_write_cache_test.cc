@@ -184,6 +184,7 @@ TEST_F(ContainerStorageWriteCacheTest, RoundRobin) {
                 container_helper->fingerprint(i).size(),
                 d,
                 TEST_DATA_SIZE,
+                true,
                 container_helper->mutable_data_address(i),
                 NO_EC))
         << "Write " << i << " failed";
@@ -211,6 +212,7 @@ TEST_F(ContainerStorageWriteCacheTest, EarliestFreeWithoutLocking) {
                 container_helper->fingerprint(i).size(),
                 d,
                 TEST_DATA_SIZE,
+                true,
                 container_helper->mutable_data_address(i),
                 NO_EC))
         << "Write " << i << " failed";
@@ -238,6 +240,7 @@ TEST_F(ContainerStorageWriteCacheTest, EarliestFreeWithLocking) {
                 container_helper->fingerprint(i).size(),
                 d,
                 TEST_DATA_SIZE,
+                true,
                 container_helper->mutable_data_address(i),
                 NO_EC)) << "Write " << i << " failed";
         ASSERT_EQ(i + 1, container_helper->data_address(i));

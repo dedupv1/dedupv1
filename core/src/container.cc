@@ -110,8 +110,13 @@ bool Container::UnserializeMetadata(bool verify_checksum) {
             // backward mode
             original_id = container_data.primary_id();
         }
-        ContainerItem* item = new ContainerItem((byte *) item_data.fp().data(), item_data.fp().size(),
-            item_data.position_offset(), item_data.raw_size(), item_data.item_size(), original_id);
+        ContainerItem* item = new ContainerItem((byte *) item_data.fp().data(),
+            item_data.fp().size(),
+            item_data.position_offset(),
+            item_data.raw_size(),
+            item_data.item_size(),
+            original_id,
+            item_data.indexed());
 
         CHECK(item, "Alloc item failed");
         if (item_data.has_deleted() && item_data.deleted()) {
@@ -165,6 +170,9 @@ size_t Container::SerializeMetadata(bool calculate_checksum) {
         item_data->set_original_id(item->original_id_);
         if (item->is_deleted()) {
             item_data->set_deleted(true);
+        }
+        if (item->is_indexed()) {
+          item_data->set_indexed(true);
         }
         TRACE("" << item->DebugString() << ": " << item_data->ShortDebugString() << ", size " << item_data->ByteSize());
     }
@@ -375,7 +383,8 @@ bool Container::CopyItem(const Container& parent_container, const ContainerItem&
         this->pos_,
         item.raw_size(),
         item.item_size(),
-        item.original_id());
+        item.original_id(),
+        item.is_indexed());
     CHECK(new_item, "Alloc container item failed");
 
     if (item.is_deleted()) {
@@ -393,9 +402,12 @@ bool Container::CopyItem(const Container& parent_container, const ContainerItem&
     return true;
 }
 
-bool Container::AddItem(const byte* key, size_t key_size,
-                        const byte* data, size_t data_size,
-                        Compression* comp) {
+bool Container::AddItem(const byte* key,
+    size_t key_size,
+    const byte* data,
+    size_t data_size,
+    bool is_indexed,
+    Compression* comp) {
     CHECK(this->stored_ == false, "Cannot add items to a stored container: container " << this->primary_id());
     CHECK(key, "Key not set");
     CHECK(data, "Data not set");
@@ -467,7 +479,13 @@ bool Container::AddItem(const byte* key, size_t key_size,
 
     size_t item_size = message_size.value() + value_data.on_disk_size();
 
-    ContainerItem* item = new ContainerItem(key, key_size, offset, data_size, item_size, this->primary_id());
+    ContainerItem* item = new ContainerItem(key,
+        key_size,
+        offset,
+        data_size,
+        item_size,
+        this->primary_id(),
+        is_indexed);
     CHECK(item, "Alloc container item failed");
 
     TRACE("Add item " << item->key_string() << ": container " << this->primary_id() <<
@@ -486,13 +504,18 @@ bool Container::AddItem(const byte* key, size_t key_size,
 }
 
 ContainerItem::ContainerItem(const byte* key, size_t key_size,
-                             size_t offset, size_t raw_size, size_t item_size, uint64_t original_id) {
+                             size_t offset,
+                             size_t raw_size,
+                             size_t item_size,
+                             uint64_t original_id,
+                             bool is_indexed) {
     memcpy(this->key_, key, key_size);
     this->key_size_ = key_size;
     this->offset_ = offset;
     this->item_size_ = item_size;
     this->raw_size_ = raw_size;
     this->deleted_ = false;
+    this->is_indexed_ = is_indexed;
     this->original_id_ = original_id;
 }
 
@@ -556,7 +579,8 @@ bool Container::CopyFrom(const Container& container, bool copyId) {
     for (vector<ContainerItem*>::const_iterator i = container.items_.begin(); i != container.items_.end(); i++) {
         const ContainerItem* item = *i;
         ContainerItem* copy_item = new ContainerItem(item->key(), item->key_size(),
-            item->offset(), item->raw_size(), item->item_size(), item->original_id());
+            item->offset(), item->raw_size(), item->item_size(), item->original_id(),
+            item->is_indexed());
         CHECK(copy_item, "Alloc container item failed");
         if (item->is_deleted()) {
             copy_item->deleted_ = true;

@@ -130,7 +130,7 @@ protected:
     void FillDefaultContainer(Container* container, int begin, int count) {
         for (int i = 0; i < count; i++) {
             // Use small items to avoid an overflow
-            ASSERT_TRUE(container->AddItem((byte *) &test_fp[begin + i], sizeof(test_fp[begin + i]), (byte *) test_data[begin + i], (size_t) 16 * 1024))
+            ASSERT_TRUE(container->AddItem((byte *) &test_fp[begin + i], sizeof(test_fp[begin + i]), (byte *) test_data[begin + i], (size_t) 16 * 1024, true, NULL))
             << "Add item " << begin + i << " failed";
         }
     }

@@ -31,6 +31,7 @@
 #include <core/block_mapping.h>
 #include <base/memory.h>
 #include <core/garbage_collector.h>
+#include <core/usage_count_garbage_collector.h>
 #include <base/protobuf_util.h>
 #include <base/strutil.h>
 
@@ -80,6 +81,7 @@ using dedupv1::log::LogConsumer;
 using dedupv1::log::Log;
 using dedupv1::base::strutil::ToHexString;
 using dedupv1::base::MessageEquals;
+
 LOGGER("GarbageCollectorTest");
 
 namespace dedupv1 {
@@ -121,10 +123,10 @@ public:
 
 /**
  * This class tests the garbage collector, but in contrast to the
- * GarbageCollectorTest class, we here use the full suite. So it is
+ * UsageCountGarbageCollectorTest class, we here use the full suite. So it is
  * more an integration test as usual unit test.
  */
-class GarbageCollectorIntegrationTest : public testing::TestWithParam<const char*> {
+class UsageCountGarbageCollectorIntegrationTest : public testing::TestWithParam<const char*> {
 protected:
     USE_LOGGING_EXPECTATION();
 
@@ -134,7 +136,7 @@ protected:
     DedupSystem* system;
     DedupSystem* crashed_system;
 
-    GarbageCollector* gc;
+    UsageCountGarbageCollector* gc;
     BlockIndex* block_index;
 
     ContainerTestHelper* container_test_helper;
@@ -151,7 +153,8 @@ protected:
         system = DedupSystemTest::CreateDefaultSystem(GetParam(), &info_store, &tp);
         ASSERT_TRUE(system);
 
-        gc = system->garbage_collector();
+        gc = dynamic_cast<UsageCountGarbageCollector*>(
+            system->garbage_collector());
         ASSERT_TRUE(gc);
         block_index = system->block_index();
         ASSERT_TRUE(block_index);
@@ -171,7 +174,7 @@ protected:
 
         system = DedupSystemTest::CreateDefaultSystem(GetParam(), &info_store, &tp, true, true, true);
 
-        gc = system->garbage_collector();
+        gc = dynamic_cast<UsageCountGarbageCollector*>(system->garbage_collector());
         ASSERT_TRUE(gc);
         block_index = system->block_index();
         ASSERT_TRUE(block_index);
@@ -186,7 +189,7 @@ protected:
 
         system = DedupSystemTest::CreateDefaultSystem(GetParam(), &info_store, &tp, true, true);
 
-        gc = system->garbage_collector();
+        gc = dynamic_cast<UsageCountGarbageCollector*>(system->garbage_collector());
         ASSERT_TRUE(gc);
         block_index = system->block_index();
         ASSERT_TRUE(block_index);
@@ -210,7 +213,7 @@ protected:
     }
 };
 
-TEST_P(GarbageCollectorIntegrationTest, FailedBlockMappingWrite) {
+TEST_P(UsageCountGarbageCollectorIntegrationTest, FailedBlockMappingWrite) {
     EXPECT_LOGGING(dedupv1::test::INFO).Matches("Current event has already been processed.*").Repeatedly();
 
     LastEntryLogConsumer c;
@@ -249,12 +252,12 @@ TEST_P(GarbageCollectorIntegrationTest, FailedBlockMappingWrite) {
 
     ASSERT_TRUE(system->log()->PerformFullReplayBackgroundMode());
 
-    system->garbage_collector()->no_gc_candidates_during_last_try_ = false;
-    ASSERT_TRUE(system->garbage_collector()->StartProcessing());
+    gc->no_gc_candidates_during_last_try_ = false;
+    ASSERT_TRUE(gc->StartProcessing());
     do {
         sleep(4);
-    } while (!system->garbage_collector()->no_gc_candidates_during_last_try_);
-    ASSERT_TRUE(system->garbage_collector()->StopProcessing());
+    } while (!gc->no_gc_candidates_during_last_try_);
+    ASSERT_TRUE(gc->StopProcessing());
 
     ChunkMapping cm2(container_test_helper->fingerprint(0));
     lookup_result lr = system->chunk_index()->Lookup(&cm2, false, NO_EC);
@@ -275,7 +278,7 @@ TEST_P(GarbageCollectorIntegrationTest, FailedBlockMappingWrite) {
  * The gc should be detect that the 3. entry has been executed twice. The after the log replay usage
  * count should be 1 and not 0. At the end the usage counter should be zero.
  */
-TEST_P(GarbageCollectorIntegrationTest, NoChunkMappingFoundAfterLogReplay) {
+TEST_P(UsageCountGarbageCollectorIntegrationTest, NoChunkMappingFoundAfterLogReplay) {
     EXPECT_LOGGING(dedupv1::test::INFO).Matches("Current event has already been processed.*").Repeatedly();
 
     LastEntryLogConsumer c;
@@ -308,9 +311,9 @@ TEST_P(GarbageCollectorIntegrationTest, NoChunkMappingFoundAfterLogReplay) {
     INFO("Replay all");
 
     ASSERT_TRUE(system->log()->PerformFullReplayBackgroundMode());
-    ASSERT_TRUE(system->garbage_collector()->StartProcessing());
+    ASSERT_TRUE(gc->StartProcessing());
     sleep(8);
-    ASSERT_TRUE(system->garbage_collector()->StopProcessing());
+    ASSERT_TRUE(gc->StopProcessing());
 
     INFO("Re-replay the last event");
     EXPECT_TRUE(system->log()->UnregisterConsumer("c"));
@@ -337,12 +340,12 @@ TEST_P(GarbageCollectorIntegrationTest, NoChunkMappingFoundAfterLogReplay) {
 
     INFO("Replay all");
     ASSERT_TRUE(system->log()->PerformFullReplayBackgroundMode());
-    system->garbage_collector()->no_gc_candidates_during_last_try_ = false;
-    ASSERT_TRUE(system->garbage_collector()->StartProcessing());
+    gc->no_gc_candidates_during_last_try_ = false;
+    ASSERT_TRUE(gc->StartProcessing());
     do {
         sleep(4);
-    } while (!system->garbage_collector()->no_gc_candidates_during_last_try_);
-    ASSERT_TRUE(system->garbage_collector()->StopProcessing());
+    } while (!gc->no_gc_candidates_during_last_try_);
+    ASSERT_TRUE(gc->StopProcessing());
 
     EXPECT_TRUE(system->log()->UnregisterConsumer("c"));
 
@@ -351,7 +354,7 @@ TEST_P(GarbageCollectorIntegrationTest, NoChunkMappingFoundAfterLogReplay) {
     EXPECT_EQ(LOOKUP_NOT_FOUND, lr) << "Fingerprint should not be in chunk index anymore";
 }
 
-TEST_P(GarbageCollectorIntegrationTest, InCombatChunk) {
+TEST_P(UsageCountGarbageCollectorIntegrationTest, InCombatChunk) {
     byte buffer[64 * 1024];
     memset(buffer, 0, 64 * 1024);
 
@@ -380,9 +383,9 @@ TEST_P(GarbageCollectorIntegrationTest, InCombatChunk) {
     uint64_t item_count = system->chunk_index()->GetPersistentCount();
 
     // here we trigger the gc
-    ASSERT_TRUE(system->garbage_collector()->StartProcessing());
+    ASSERT_TRUE(gc->StartProcessing());
     sleep(8);
-    ASSERT_TRUE(system->garbage_collector()->StopProcessing());
+    ASSERT_TRUE(gc->StopProcessing());
 
     // Check that there are not delete operations
     uint64_t item_count2 = system->chunk_index()->GetPersistentCount();
@@ -393,7 +396,7 @@ TEST_P(GarbageCollectorIntegrationTest, InCombatChunk) {
  * This unit tests checks if the recheck of the usage count of a gc candidate
  * is correctly done.
  */
-TEST_P(GarbageCollectorIntegrationTest, UCRecheck) {
+TEST_P(UsageCountGarbageCollectorIntegrationTest, UCRecheck) {
     byte buffer[64 * 1024];
     memset(buffer, 0, 64 * 1024);
 
@@ -419,9 +422,9 @@ TEST_P(GarbageCollectorIntegrationTest, UCRecheck) {
     ASSERT_TRUE(system->log()->PerformFullReplayBackgroundMode());
 
     // here we trigger the gc
-    ASSERT_TRUE(system->garbage_collector()->StartProcessing());
+    ASSERT_TRUE(gc->StartProcessing());
     sleep(8);
-    ASSERT_TRUE(system->garbage_collector()->StopProcessing());
+    ASSERT_TRUE(gc->StopProcessing());
 
     volume = system->GetVolume(0);
     ASSERT_TRUE(volume);
@@ -432,7 +435,7 @@ TEST_P(GarbageCollectorIntegrationTest, UCRecheck) {
     ASSERT_TRUE(volume->MakeRequest(REQUEST_READ, 0, 4 * 1024, buffer, NO_EC));
 }
 
-TEST_P(GarbageCollectorIntegrationTest, InCombatChunkRestart) {
+TEST_P(UsageCountGarbageCollectorIntegrationTest, InCombatChunkRestart) {
     byte buffer[64 * 1024];
     memset(buffer, 0, 64 * 1024);
 
@@ -463,9 +466,9 @@ TEST_P(GarbageCollectorIntegrationTest, InCombatChunkRestart) {
     ASSERT_TRUE(system->log()->Replay(dedupv1::log::EVENT_REPLAY_MODE_REPLAY_BG, 1, NULL, NULL));
 
     // here we trigger the gc
-    ASSERT_TRUE(system->garbage_collector()->StartProcessing());
+    ASSERT_TRUE(gc->StartProcessing());
     sleep(8);
-    ASSERT_TRUE(system->garbage_collector()->StopProcessing());
+    ASSERT_TRUE(gc->StopProcessing());
 
     // Check that there are no wrong delete operations
     DEBUG("Read");
@@ -477,7 +480,7 @@ TEST_P(GarbageCollectorIntegrationTest, InCombatChunkRestart) {
     ASSERT_TRUE(volume->MakeRequest(REQUEST_READ, 0, 4 * 1024, buffer, NO_EC));
 }
 
-TEST_P(GarbageCollectorIntegrationTest, InCombatChunkRestartReplay) {
+TEST_P(UsageCountGarbageCollectorIntegrationTest, InCombatChunkRestartReplay) {
     byte buffer[64 * 1024];
     memset(buffer, 0, 64 * 1024);
 
@@ -506,9 +509,9 @@ TEST_P(GarbageCollectorIntegrationTest, InCombatChunkRestartReplay) {
     ASSERT_TRUE(system->log()->PerformFullReplayBackgroundMode());
 
     // here we trigger the gc
-    ASSERT_TRUE(system->garbage_collector()->StartProcessing());
+    ASSERT_TRUE(gc->StartProcessing());
     sleep(8);
-    ASSERT_TRUE(system->garbage_collector()->StopProcessing());
+    ASSERT_TRUE(gc->StopProcessing());
 
     // Check that there are no wrong delete operations
     DEBUG("Read");
@@ -526,7 +529,7 @@ TEST_P(GarbageCollectorIntegrationTest, InCombatChunkRestartReplay) {
  * - The block mapping m_1 is overwritten and does not reference fp_1 anymore. I call this mapping m_1'. m_1' is committed at that time.
  * - c_1 is committed and the now commitable m_1 is also committed.
  */
-TEST_P(GarbageCollectorIntegrationTest, OutrunnedBlockMapping) {
+TEST_P(UsageCountGarbageCollectorIntegrationTest, OutrunnedBlockMapping) {
     ASSERT_TRUE(container_test_helper->WriteDefaultData(system, 0, 1)); // only one fingerprint
 
     BlockMapping orig(0, 64 * 1024);
@@ -580,7 +583,7 @@ TEST_P(GarbageCollectorIntegrationTest, OutrunnedBlockMapping) {
  * - The block mapping m_1 is overwritten and does not reference fp_1 anymore. I call this mapping m_1'. m_1' is committed at that time.
  * - c_1 is committed and the now commitable m_1 is also committed.
  */
-TEST_P(GarbageCollectorIntegrationTest, OutrunnedBlockMappingChain) {
+TEST_P(UsageCountGarbageCollectorIntegrationTest, OutrunnedBlockMappingChain) {
 
     ASSERT_TRUE(container_test_helper->WriteDefaultData(system, 1, 2)); // only two fingerprint
     ASSERT_TRUE(system->storage()->Flush(NO_EC));
@@ -643,7 +646,7 @@ TEST_P(GarbageCollectorIntegrationTest, OutrunnedBlockMappingChain) {
  * - The block mapping m_1 is overwritten and does not reference fp_1 anymore. I call this mapping m_1'. m_1' is committed at that time.
  * - c_1 is committed and the now comittable m_1 is also committed.
  */
-TEST_P(GarbageCollectorIntegrationTest, OutrunnedBlockMappingChainCrash) {
+TEST_P(UsageCountGarbageCollectorIntegrationTest, OutrunnedBlockMappingChainCrash) {
     EXPECT_LOGGING(dedupv1::test::WARN).Logger("ContainerStorageWriteCache").Repeatedly();
     EXPECT_LOGGING(dedupv1::test::WARN).Matches("Missing container for import").Times(0, 2);
     EXPECT_LOGGING(dedupv1::test::WARN).Matches("Mapping has open containers that cannot be recovered").Repeatedly();
@@ -700,7 +703,7 @@ TEST_P(GarbageCollectorIntegrationTest, OutrunnedBlockMappingChainCrash) {
     ASSERT_TRUE(check_mapping.Equals(final_mapping)) << check_mapping.DebugString() << " => " << final_mapping.DebugString();
 }
 
-TEST_P(GarbageCollectorIntegrationTest, OutrunnedBlockMappingChainCrashPartialFlush) {
+TEST_P(UsageCountGarbageCollectorIntegrationTest, OutrunnedBlockMappingChainCrashPartialFlush) {
     EXPECT_LOGGING(dedupv1::test::WARN).Logger("ContainerStorageWriteCache").Repeatedly();
     EXPECT_LOGGING(dedupv1::test::WARN).Matches("Missing container for import").Times(0, 2);
     EXPECT_LOGGING(dedupv1::test::WARN).Matches("Mapping has open containers that cannot be recovered").Repeatedly();
@@ -763,8 +766,8 @@ TEST_P(GarbageCollectorIntegrationTest, OutrunnedBlockMappingChainCrashPartialFl
     ASSERT_TRUE(check_mapping.Equals(final_mapping)) << check_mapping.DebugString() << " => " << final_mapping.DebugString();
 }
 
-INSTANTIATE_TEST_CASE_P(GarbageCollector,
-    GarbageCollectorIntegrationTest,
+INSTANTIATE_TEST_CASE_P(UsageCountGarbageCollector,
+    UsageCountGarbageCollectorIntegrationTest,
     ::testing::Values(
         "data/dedupv1_test.conf",
         "data/dedupv1_leveldb_test.conf"));

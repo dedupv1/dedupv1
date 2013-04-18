@@ -114,7 +114,8 @@ protected:
     void WriteTestData(ChunkIndex* chunk_index, StorageSession* session) {
         for (int i = 0; i < kTestDataCount; i++) {
             ASSERT_TRUE(session->WriteNew(&test_fp[i],
-                    sizeof(test_fp[i]), test_data[i], kTestDataSize, &test_address[i], NO_EC))
+                    sizeof(test_fp[i]), test_data[i], kTestDataSize, true,
+                    &test_address[i], NO_EC))
             << "Write " << i << " failed";
 
             ChunkMapping mapping((byte *) &test_fp[i], sizeof(test_fp[i]));
@@ -181,7 +182,8 @@ TEST_P(ChunkIndexTest, UsageCountUpdate) {
 
     StorageSession* session = system->chunk_store()->CreateSession();
     EXPECT_TRUE(session->WriteNew(&test_fp[0],
-            sizeof(test_fp[0]), test_data[0], kTestDataSize, &test_address[0], NO_EC))
+            sizeof(test_fp[0]), test_data[0], kTestDataSize, true,
+            &test_address[0], NO_EC))
     << "Write failed";
     EXPECT_TRUE(session->Close());
 
@@ -260,7 +262,8 @@ TEST_P(ChunkIndexTest, LogReplayAfterMerge) {
     ASSERT_TRUE(session);
     for (int i = 0; i < kTestDataCount; i++) {
         ASSERT_TRUE(session->WriteNew(&test_fp[i],
-                sizeof(test_fp[i]), test_data[i], 16 * 1024, &test_address[i], NO_EC))
+                sizeof(test_fp[i]), test_data[i], 16 * 1024, true,
+                &test_address[i], NO_EC))
         << "Write " << i << " failed";
 
         ChunkMapping mapping((byte *) &test_fp[i], sizeof(test_fp[i]));

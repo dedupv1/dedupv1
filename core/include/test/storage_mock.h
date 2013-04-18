@@ -30,8 +30,8 @@
 class MockStorageSession : public dedupv1::chunkstore::StorageSession {
     public:
         MOCK_METHOD1(Sync, bool(dedupv1::base::ErrorContext* ec));
-        MOCK_METHOD6(WriteNew, bool(const void* key, size_t key_size, const void* data,
-                size_t data_size, uint64_t* address, dedupv1::base::ErrorContext* ec));
+        MOCK_METHOD7(WriteNew, bool(const void* key, size_t key_size, const void* data,
+                size_t data_size, bool is_indexed, uint64_t* address, dedupv1::base::ErrorContext* ec));
         MOCK_METHOD6(Read, bool(uint64_t address, const void* key, size_t key_size,
                 void* data, size_t* data_size, dedupv1::base::ErrorContext* ec));
         MOCK_METHOD4(Delete, bool(uint64_t address, const void* key, size_t key_size, dedupv1::base::ErrorContext* ec));

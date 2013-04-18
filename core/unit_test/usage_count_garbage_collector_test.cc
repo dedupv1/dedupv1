@@ -32,6 +32,7 @@
 #include <core/block_mapping_pair.h>
 #include <base/memory.h>
 #include <core/garbage_collector.h>
+#include <core/usage_count_garbage_collector.h>
 
 #include "block_mapping_test.h"
 #include <test_util/log_assert.h>
@@ -83,7 +84,7 @@ LOGGER("GarbageCollectorTest");
 namespace dedupv1 {
 namespace gc {
 
-class GarbageCollectorTest : public testing::TestWithParam<int> {
+class UsageCountGarbageCollectorTest : public testing::TestWithParam<int> {
 protected:
     USE_LOGGING_EXPECTATION();
 
@@ -91,7 +92,7 @@ protected:
     MockLog log;
     ChunkIndex* chunk_index;
     MockBlockIndex block_index;
-    GarbageCollector * gc;
+    UsageCountGarbageCollector* gc;
     MockContainerStorage storage;
     MockStorageSession storage_session;
     MemoryInfoStore info_store;
@@ -136,7 +137,7 @@ protected:
 
         EXPECT_CALL(system, chunk_index()).WillRepeatedly(Return(chunk_index));
 
-        gc = new GarbageCollector();
+        gc = new UsageCountGarbageCollector();
         ASSERT_TRUE(gc);
     }
 
@@ -161,7 +162,10 @@ protected:
         ASSERT_TRUE(gc->SetOption("max-item-count", "4M"));
     }
 
-    static void ReplayWrittenLogEntry(GarbageCollector * gc, const LogReplayContext& replay_context, const BlockMapping& previous_block_mapping, const BlockMapping& updated_block_mapping) {
+    static void ReplayWrittenLogEntry(UsageCountGarbageCollector * gc,
+                                      const LogReplayContext& replay_context,
+                                      const BlockMapping& previous_block_mapping,
+                                      const BlockMapping& updated_block_mapping) {
         BlockMappingWrittenEventData event_data;
 
         BlockMappingPair mapping_pair(updated_block_mapping.block_size());
@@ -174,7 +178,9 @@ protected:
         ASSERT_TRUE(gc->LogReplay(EVENT_TYPE_BLOCK_MAPPING_WRITTEN, event_value, replay_context));
     }
 
-    static void ReplayDeletedLogEntry(GarbageCollector * gc, const LogReplayContext& replay_context, const BlockMapping& previous_block_mapping) {
+    static void ReplayDeletedLogEntry(UsageCountGarbageCollector* gc,
+                                      const LogReplayContext& replay_context,
+                                      const BlockMapping& previous_block_mapping) {
         BlockMappingDeletedEventData event_data;
         ASSERT_TRUE(previous_block_mapping.SerializeTo(event_data.mutable_original_block_mapping(), true, false));
 
@@ -184,32 +190,34 @@ protected:
         ASSERT_TRUE(gc->LogReplay(EVENT_TYPE_BLOCK_MAPPING_DELETED, event_value, replay_context));
     }
 
-    static void PerformDiff(GarbageCollector* gc, const BlockMapping& original_block_mapping, const BlockMapping& modified_block_mapping,
+    static void PerformDiff(UsageCountGarbageCollector* gc,
+                            const BlockMapping& original_block_mapping,
+                            const BlockMapping& modified_block_mapping,
                             map<bytestring, pair<int, uint64_t> >* diff) {
         ASSERT_TRUE(gc->Diff(original_block_mapping, modified_block_mapping, diff));
     }
 };
 
-INSTANTIATE_TEST_CASE_P(GarbageCollector,
-    GarbageCollectorTest,
+INSTANTIATE_TEST_CASE_P(UsageCountGarbageCollector,
+    UsageCountGarbageCollectorTest,
     ::testing::Values(1, 2, 4));
 
-TEST_P(GarbageCollectorTest, Init) {
+TEST_P(UsageCountGarbageCollectorTest, Init) {
     // do nothing
 }
 
-TEST_P(GarbageCollectorTest, StartWithoutConfig) {
+TEST_P(UsageCountGarbageCollectorTest, StartWithoutConfig) {
     EXPECT_LOGGING(dedupv1::test::ERROR).Once();
 
     ASSERT_FALSE(gc->Start(StartContext(), &system));
 }
 
-TEST_P(GarbageCollectorTest, Start) {
+TEST_P(UsageCountGarbageCollectorTest, Start) {
     SetDefaultOptions(gc);
     ASSERT_TRUE(gc->Start(StartContext(), &system));
 }
 
-TEST_P(GarbageCollectorTest, StartIdleStop) {
+TEST_P(UsageCountGarbageCollectorTest, StartIdleStop) {
     SetDefaultOptions(gc);
     ASSERT_TRUE(gc->Start(StartContext(), &system));
     ASSERT_TRUE(gc->Run());
@@ -226,7 +234,7 @@ TEST_P(GarbageCollectorTest, StartIdleStop) {
     ASSERT_TRUE(gc->Stop(StopContext::FastStopContext()));
 }
 
-TEST_P(GarbageCollectorTest, DoubleStart) {
+TEST_P(UsageCountGarbageCollectorTest, DoubleStart) {
     EXPECT_LOGGING(dedupv1::test::ERROR).Once();
 
     SetDefaultOptions(gc);
@@ -234,44 +242,44 @@ TEST_P(GarbageCollectorTest, DoubleStart) {
     ASSERT_FALSE(gc->Start(StartContext(), &system)) << "The second start should fail";
 }
 
-TEST_P(GarbageCollectorTest, StopWithoutRun) {
+TEST_P(UsageCountGarbageCollectorTest, StopWithoutRun) {
     SetDefaultOptions(gc);
     ASSERT_TRUE(gc->Start(StartContext(), &system));
     ASSERT_TRUE(gc->Stop(StopContext::FastStopContext()));
 }
 
-TEST_P(GarbageCollectorTest, StopWithoutStart) {
+TEST_P(UsageCountGarbageCollectorTest, StopWithoutStart) {
     SetDefaultOptions(gc);
     ASSERT_TRUE(gc->Stop(StopContext::FastStopContext()));
 }
 
-TEST_P(GarbageCollectorTest, RunAndStop) {
+TEST_P(UsageCountGarbageCollectorTest, RunAndStop) {
     SetDefaultOptions(gc);
     ASSERT_TRUE(gc->Start(StartContext(), &system));
     ASSERT_TRUE(gc->Run());
     ASSERT_TRUE(gc->Stop(StopContext::FastStopContext()));
 }
 
-TEST_P(GarbageCollectorTest, RunAndFastStop) {
+TEST_P(UsageCountGarbageCollectorTest, RunAndFastStop) {
     SetDefaultOptions(gc);
     ASSERT_TRUE(gc->Start(StartContext(), &system));
     ASSERT_TRUE(gc->Run());
     ASSERT_TRUE(gc->Stop(dedupv1::StopContext(dedupv1::StopContext::FAST)));
 }
 
-TEST_P(GarbageCollectorTest, RunWithoutStop) {
+TEST_P(UsageCountGarbageCollectorTest, RunWithoutStop) {
     SetDefaultOptions(gc);
     ASSERT_TRUE(gc->Start(StartContext(), &system));
     ASSERT_TRUE(gc->Run());
 }
 
-TEST_P(GarbageCollectorTest, RunWithoutStart) {
+TEST_P(UsageCountGarbageCollectorTest, RunWithoutStart) {
     EXPECT_LOGGING(dedupv1::test::ERROR).Once();
 
     ASSERT_FALSE(gc->Run());
 }
 
-TEST_P(GarbageCollectorTest, DifferenceSimple) {
+TEST_P(UsageCountGarbageCollectorTest, DifferenceSimple) {
     SetDefaultOptions(gc);
     ASSERT_TRUE(gc->Start(StartContext(), &system));
 
@@ -290,7 +298,7 @@ TEST_P(GarbageCollectorTest, DifferenceSimple) {
     ASSERT_EQ(diff[BlockMappingTest::FingerprintString(20)].first, 1);
 }
 
-TEST_P(GarbageCollectorTest, DifferenceDoubleFP) {
+TEST_P(UsageCountGarbageCollectorTest, DifferenceDoubleFP) {
     SetDefaultOptions(gc);
     ASSERT_TRUE(gc->Start(StartContext(), &system));
 
@@ -309,7 +317,7 @@ TEST_P(GarbageCollectorTest, DifferenceDoubleFP) {
     ASSERT_EQ(diff[BlockMappingTest::FingerprintString(7)].first, 1);
 }
 
-TEST_P(GarbageCollectorTest, DifferenceDelete) {
+TEST_P(UsageCountGarbageCollectorTest, DifferenceDelete) {
     SetDefaultOptions(gc);
     ASSERT_TRUE(gc->Start(StartContext(), &system));
 
@@ -330,7 +338,7 @@ TEST_P(GarbageCollectorTest, DifferenceDelete) {
     ASSERT_EQ(diff.size(), 2U);
 }
 
-TEST_P(GarbageCollectorTest, DifferenceDeleteMultiple) {
+TEST_P(UsageCountGarbageCollectorTest, DifferenceDeleteMultiple) {
     SetDefaultOptions(gc);
     ASSERT_TRUE(gc->Start(StartContext(), &system));
 
@@ -353,7 +361,7 @@ TEST_P(GarbageCollectorTest, DifferenceDeleteMultiple) {
     ASSERT_EQ(diff.size(), 4U);
 }
 
-TEST_P(GarbageCollectorTest, DifferenceDeleteNone) {
+TEST_P(UsageCountGarbageCollectorTest, DifferenceDeleteNone) {
     SetDefaultOptions(gc);
     ASSERT_TRUE(gc->Start(StartContext(), &system));
 
@@ -382,7 +390,7 @@ TEST_P(GarbageCollectorTest, DifferenceDeleteNone) {
     ASSERT_EQ(diff.size(), 2U);
 }
 
-TEST_P(GarbageCollectorTest, ProcessBlockMappingDirect) {
+TEST_P(UsageCountGarbageCollectorTest, ProcessBlockMappingDirect) {
     SetDefaultOptions(gc);
     ASSERT_TRUE(gc->Start(StartContext(), &system));
 
@@ -397,7 +405,7 @@ TEST_P(GarbageCollectorTest, ProcessBlockMappingDirect) {
     ReplayWrittenLogEntry(gc, replay_context, orig, m1);
 }
 
-TEST_P(GarbageCollectorTest, ProcessBlockMappingWrittenReplayCommitted) {
+TEST_P(UsageCountGarbageCollectorTest, ProcessBlockMappingWrittenReplayCommitted) {
     EXPECT_CALL(storage, IsCommitted(_)).WillRepeatedly(Return(STORAGE_ADDRESS_COMMITED));
 
     SetDefaultOptions(gc);
@@ -432,7 +440,7 @@ TEST_P(GarbageCollectorTest, ProcessBlockMappingWrittenReplayCommitted) {
     }
 }
 
-TEST_P(GarbageCollectorTest, ProcessBlockMappingDeletedReplay) {
+TEST_P(UsageCountGarbageCollectorTest, ProcessBlockMappingDeletedReplay) {
     EXPECT_CALL(storage, IsCommitted(_)).WillRepeatedly(Return(STORAGE_ADDRESS_COMMITED));
 
     SetDefaultOptions(gc);
@@ -468,7 +476,7 @@ TEST_P(GarbageCollectorTest, ProcessBlockMappingDeletedReplay) {
     }
 }
 
-TEST_P(GarbageCollectorTest, ProcessBlockMappingWrittenWithUpdatedMapping) {
+TEST_P(UsageCountGarbageCollectorTest, ProcessBlockMappingWrittenWithUpdatedMapping) {
     EXPECT_CALL(storage, IsCommitted(_)).WillRepeatedly(Return(STORAGE_ADDRESS_COMMITED));
 
     SetDefaultOptions(gc);
@@ -551,7 +559,7 @@ TEST_P(GarbageCollectorTest, ProcessBlockMappingWrittenWithUpdatedMapping) {
     ASSERT_TRUE(found[BlockMappingTest::FingerprintString(4)]);
 }
 
-TEST_P(GarbageCollectorTest, TriggerByIdleStart) {
+TEST_P(UsageCountGarbageCollectorTest, TriggerByIdleStart) {
     uint64_t container_id = 10;
     EXPECT_CALL(storage_session, Delete(container_id, _, _, _)).WillRepeatedly(Return(true));
 
@@ -579,7 +587,7 @@ TEST_P(GarbageCollectorTest, TriggerByIdleStart) {
 
         multimap<uint64_t, ChunkMapping> gc_chunks;
         gc_chunks.insert(make_pair(container_id, chunk));
-        ASSERT_TRUE(gc->Put(gc_chunks, false));
+        ASSERT_TRUE(gc->PutGCCandidates(gc_chunks, false));
     }
 
     // here we assume that the log is empty
@@ -602,7 +610,7 @@ TEST_P(GarbageCollectorTest, TriggerByIdleStart) {
     ASSERT_EQ(0, index->GetItemCount());
 }
 
-TEST_P(GarbageCollectorTest, TriggerByIdleStartLogReplayed) {
+TEST_P(UsageCountGarbageCollectorTest, TriggerByIdleStartLogReplayed) {
     uint64_t container_id = 10;
     EXPECT_CALL(storage_session, Delete(container_id, _, _, _)).WillRepeatedly(Return(true));
     EXPECT_CALL(log, IsReplaying()).WillRepeatedly(Return(false));
@@ -635,7 +643,7 @@ TEST_P(GarbageCollectorTest, TriggerByIdleStartLogReplayed) {
 
         multimap<uint64_t, ChunkMapping> gc_chunks;
         gc_chunks.insert(make_pair(container_id, chunk));
-        ASSERT_TRUE(gc->Put(gc_chunks, false));
+        ASSERT_TRUE(gc->PutGCCandidates(gc_chunks, false));
     }
     // here we assume that the log is empty
     ASSERT_TRUE(chunk_index->in_combats().Clear());
@@ -658,7 +666,7 @@ TEST_P(GarbageCollectorTest, TriggerByIdleStartLogReplayed) {
     ASSERT_EQ(0, index->GetItemCount());
 }
 
-TEST_P(GarbageCollectorTest, TriggerByStartProcessing) {
+TEST_P(UsageCountGarbageCollectorTest, TriggerByStartProcessing) {
     uint64_t container_id = 10;
     EXPECT_CALL(storage_session, Delete(container_id, _, _, _)).WillRepeatedly(Return(true));
 
@@ -686,7 +694,7 @@ TEST_P(GarbageCollectorTest, TriggerByStartProcessing) {
 
         multimap<uint64_t, ChunkMapping> gc_chunks;
         gc_chunks.insert(make_pair(container_id, chunk));
-        ASSERT_TRUE(gc->Put(gc_chunks, false));
+        ASSERT_TRUE(gc->PutGCCandidates(gc_chunks, false));
     }
 
     // here we assume that the log is empty

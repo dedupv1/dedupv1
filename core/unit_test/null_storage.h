@@ -48,9 +48,13 @@ class NullStorage : public Storage {
 
         virtual StorageSession* CreateSession();
 
-        virtual enum storage_commit_state IsCommittedWait(uint64_t address) { return STORAGE_ADDRESS_NOT_COMMITED; }
+        virtual enum storage_commit_state IsCommittedWait(uint64_t address) {
+          return STORAGE_ADDRESS_NOT_COMMITED;
+        }
 
-        virtual enum storage_commit_state IsCommitted(uint64_t address) { return STORAGE_ADDRESS_NOT_COMMITED; }
+        virtual enum storage_commit_state IsCommitted(uint64_t address) {
+          return STORAGE_ADDRESS_NOT_COMMITED;
+        }
 
 
 };
@@ -60,12 +64,16 @@ class NullStorageSession : public StorageSession {
         NullStorageSession() {}
 
         virtual bool WriteNew(const void* key, size_t key_size, const void* data,
-                size_t data_size, uint64_t* address, dedupv1::base::ErrorContext* ec) {
+                size_t data_size, bool is_indexed,
+                uint64_t* address, dedupv1::base::ErrorContext* ec) {
             *address = 0;
             return true;
         }
 
-        virtual bool Read(uint64_t address, const void* key, size_t key_size, void* data, size_t* data_siz, dedupv1::base::ErrorContext* ece) {
+        virtual bool Read(uint64_t address,
+            const void* key, size_t key_size,
+            void* data, size_t* data_size,
+            dedupv1::base::ErrorContext* ece) {
             return true;
         }
 };

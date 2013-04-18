@@ -136,7 +136,9 @@ bool ChunkStore::WriteBlock(StorageSession* storage_session, ChunkMapping* chunk
         uint64_t new_address = Storage::ILLEGAL_STORAGE_ADDRESS;
         CHECK(storage_session->WriteNew(chunk_mapping->fingerprint(),
                 chunk_mapping->fingerprint_size(), chunk_mapping->chunk()->data(),
-                chunk_mapping->chunk()->size(), &new_address, ec),
+                chunk_mapping->chunk()->size(),
+                chunk_mapping->is_indexed(),
+                &new_address, ec),
             "Storing of new chunk failed: chunk " << chunk_mapping->DebugString());
         CHECK(new_address != Storage::ILLEGAL_STORAGE_ADDRESS, "Write failed: " <<
             "Illegal storage address: " << new_address << ", chunk " << chunk_mapping->DebugString());

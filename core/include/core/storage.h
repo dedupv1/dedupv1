@@ -56,7 +56,10 @@ class StorageSession {
      * @return true iff ok, otherwise an error has occurred
          */
         virtual bool WriteNew(const void* key, size_t key_size, const void* data,
-                size_t data_size, uint64_t* address, dedupv1::base::ErrorContext* ec) = 0;
+                size_t data_size,
+                bool is_indexed,
+                uint64_t* address,
+                dedupv1::base::ErrorContext* ec) = 0;
 
         /**
      * @return true iff ok, otherwise an error has occurred

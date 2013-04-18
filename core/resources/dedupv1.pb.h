@@ -942,6 +942,13 @@ class ContainerItemData : public ::google::protobuf::Message {
   inline bool deleted() const;
   inline void set_deleted(bool value);
 
+  // optional bool indexed = 7;
+  inline bool has_indexed() const;
+  inline void clear_indexed();
+  static const int kIndexedFieldNumber = 7;
+  inline bool indexed() const;
+  inline void set_indexed(bool value);
+
   // optional uint64 original_id = 6;
   inline bool has_original_id() const;
   inline void clear_original_id();
@@ -961,6 +968,8 @@ class ContainerItemData : public ::google::protobuf::Message {
   inline void clear_has_raw_size();
   inline void set_has_deleted();
   inline void clear_has_deleted();
+  inline void set_has_indexed();
+  inline void clear_has_indexed();
   inline void set_has_original_id();
   inline void clear_has_original_id();
 
@@ -971,10 +980,11 @@ class ContainerItemData : public ::google::protobuf::Message {
   ::google::protobuf::uint32 item_size_;
   ::google::protobuf::uint32 raw_size_;
   bool deleted_;
+  bool indexed_;
   ::google::protobuf::uint64 original_id_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(7 + 31) / 32];
 
   friend void  protobuf_AddDesc_dedupv1_2eproto();
   friend void protobuf_AssignDesc_dedupv1_2eproto();
@@ -5954,15 +5964,37 @@ inline void ContainerItemData::set_deleted(bool value) {
   deleted_ = value;
 }
 
-// optional uint64 original_id = 6;
-inline bool ContainerItemData::has_original_id() const {
+// optional bool indexed = 7;
+inline bool ContainerItemData::has_indexed() const {
   return (_has_bits_[0] & 0x00000020u) != 0;
 }
-inline void ContainerItemData::set_has_original_id() {
+inline void ContainerItemData::set_has_indexed() {
   _has_bits_[0] |= 0x00000020u;
 }
-inline void ContainerItemData::clear_has_original_id() {
+inline void ContainerItemData::clear_has_indexed() {
   _has_bits_[0] &= ~0x00000020u;
+}
+inline void ContainerItemData::clear_indexed() {
+  indexed_ = false;
+  clear_has_indexed();
+}
+inline bool ContainerItemData::indexed() const {
+  return indexed_;
+}
+inline void ContainerItemData::set_indexed(bool value) {
+  set_has_indexed();
+  indexed_ = value;
+}
+
+// optional uint64 original_id = 6;
+inline bool ContainerItemData::has_original_id() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void ContainerItemData::set_has_original_id() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void ContainerItemData::clear_has_original_id() {
+  _has_bits_[0] &= ~0x00000040u;
 }
 inline void ContainerItemData::clear_original_id() {
   original_id_ = GOOGLE_ULONGLONG(0);

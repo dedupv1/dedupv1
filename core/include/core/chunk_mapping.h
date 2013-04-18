@@ -92,13 +92,15 @@ class ChunkMapping {
          * the last block that used the chunk.
          *
          * This value is used by the BLC caching system.
-         */ 
+         */
         uint64_t block_hint_;
 
         /**
          * true iff the block hint is set.
          */
         bool has_block_hint_;
+
+        bool is_indexed_;
 
     public:
         /**
@@ -284,7 +286,7 @@ class ChunkMapping {
 
         /**
          * sets the block hint
-         */ 
+         */
         inline void set_block_hint(uint64_t block_hint);
 
         /**
@@ -298,8 +300,20 @@ class ChunkMapping {
          * Assumes that has_block_hint is true.
          */
         inline uint64_t block_hint() const;
+
+        inline void set_indexed(bool b);
+
+        inline bool is_indexed() const;
 };
- 
+
+void ChunkMapping::set_indexed(bool b) {
+  is_indexed_ = b;
+}
+
+bool ChunkMapping::is_indexed() const {
+  return is_indexed_;
+}
+
 bool ChunkMapping::has_block_hint() const {
     return has_block_hint_;
 }

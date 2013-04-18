@@ -34,6 +34,7 @@
 #include <core/block_index.h>
 #include <core/block_mapping.h>
 #include <core/chunk_index.h>
+#include <core/garbage_collector.h>
 #include <core/container.h>
 #include <core/container_storage.h>
 #include <core/dedup_system.h>
@@ -66,6 +67,7 @@ using dedupv1::chunkstore::ContainerStorage;
 using dedupv1::chunkstore::Container;
 using dedupv1::chunkstore::ContainerItem;
 using dedupv1::chunkindex::ChunkMapping;
+using dedupv1::gc::GarbageCollector;
 using dedupv1::base::lookup_result;
 using dedupv1::base::LOOKUP_FOUND;
 using dedupv1::base::LOOKUP_NOT_FOUND;
@@ -473,20 +475,25 @@ bool Dedupv1Checker::ReadChunkIndex() {
             }
 
             // check if it is a gc candidate
-            if (chunk_mapping.usage_count() == 0) {
-                Option<bool> o = dedup_system_->garbage_collector()->IsGCCandidate(chunk_data.data_address(), fp,
+            GarbageCollector* gc = dedup_system_->garbage_collector();
+            if (gc->gc_concept() == GarbageCollector::USAGE_COUNT &&
+                chunk_mapping.usage_count() == 0) {
+                Option<bool> o = gc->IsGCCandidate(chunk_data.data_address(),
+                    fp,
                     fp_size);
-                CHECK(o.valid(), "Failed to check gc candidate state" << ": " << chunk_mapping.DebugString());
+                CHECK(o.valid(), "Failed to check gc candidate state: " <<
+                    chunk_mapping.DebugString());
 
                 if (o.value() == false) {
-                    WARNING("Unused chunk is no gc candidate: " << chunk_mapping.DebugString());
+                    WARNING("Unused chunk is no gc candidate: " <<
+                        chunk_mapping.DebugString());
                     reported_errors_++;
 
                     if (repair_) {
                         // We can repair this by adding the chunk as gc candidate
                         std::multimap<uint64_t, dedupv1::chunkindex::ChunkMapping> gc_chunks;
                         gc_chunks.insert(make_pair(chunk_data.data_address(), chunk_mapping));
-                        CHECK(dedup_system_->garbage_collector()->Put(gc_chunks, true),
+                        CHECK(gc->PutGCCandidates(gc_chunks, true),
                             "Failed to repair gc candidate state: " << chunk_mapping.DebugString());
                         fixed_errors_++;
                         DEBUG("Unused chunk is now a gc candidate: " << chunk_mapping.DebugString());
@@ -734,16 +741,21 @@ bool Dedupv1Checker::RepairChunkCount() {
                 DEBUG("Will mark element as gc candidate: " << chunk_mapping.DebugString())
             }
         }
-        CHECK(dedup_system_->garbage_collector()->Put(gc_chunks, true),
+        CHECK(dedup_system_->garbage_collector()->PutGCCandidates(gc_chunks, true),
             "Failed to repair gc candidate states");
         // We could make a DCHECK of the next three...
-        CHECK(overrun_prefix_map_.size() == 0, " Overrun prefix map has still " << overrun_prefix_map_.size() << " Entries");
-        CHECK(underrun_prefix_map_.size() == 0, " Underrun prefix map has still " << underrun_prefix_map_.size() << " Entries");
-        CHECK(error_prefix_map_.size() == 0, " Error prefix map has still " << error_prefix_map_.size() << " Entries");
+        CHECK(overrun_prefix_map_.size() == 0,
+            "Overrun prefix map has still " << overrun_prefix_map_.size() << " Entries");
+        CHECK(underrun_prefix_map_.size() == 0,
+            "Underrun prefix map has still " << underrun_prefix_map_.size() << " Entries");
+        CHECK(error_prefix_map_.size() == 0,
+            "Error prefix map has still " << error_prefix_map_.size() << " Entries");
     }
 
-    INFO("After repair usage count in pass " << (actual_run_pass_ + 1) << " of " << run_passes_ << " we have "
-                                             << reported_errors_ << " reported and " << fixed_errors_ << " fixed errors");
+    INFO("After repair usage count in pass " << (actual_run_pass_ + 1) <<
+        " of " << run_passes_ << ": " <<
+        "reported error count " << reported_errors_ <<
+        ", fixed error count " << fixed_errors_);
     return true;
 }
 

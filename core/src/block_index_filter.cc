@@ -110,8 +110,7 @@ bool BlockIndexFilter::SetOption(const string& option_name, const string& option
                 option), "Configuration failed");
         return true;
     }
-    ERROR("Illegal option" << option_name);
-    return false;
+    return Filter::SetOption(option_name, option);
 }
 
 Filter::filter_result BlockIndexFilter::Check(Session* session,

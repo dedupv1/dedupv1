@@ -90,8 +90,23 @@ class ContainerItem {
          */
         uint64_t original_id_;
 
+        /**
+         * Indicates if the container item should have a corresponding
+         * entry in the chunk index.
+         */
+        bool is_indexed_;
+
     public:
-        ContainerItem(const byte* key, size_t key_size, size_t offset, size_t raw_size, size_t item_size, uint64_t original_id);
+        /**
+         * Constructor
+         */
+        ContainerItem(const byte* key,
+            size_t key_size,
+            size_t offset,
+            size_t raw_size,
+            size_t item_size,
+            uint64_t original_id,
+            bool is_indexed);
 
         /**
          * returns the key of the container item.
@@ -134,6 +149,11 @@ class ContainerItem {
          * @return
          */
         inline uint64_t original_id() const;
+
+        /**
+         * true iff the item should have a corresponding entry in the chunk index.
+         */
+        inline bool is_indexed() const;
 
         /**
          * Tests for equality.
@@ -316,7 +336,9 @@ class Container {
      * @return true iff ok, otherwise an error has occurred
          */
         bool AddItem(const byte* key, size_t key_size,
-                const byte* data, size_t data_size, dedupv1::base::Compression* comp = NULL);
+                const byte* data, size_t data_size,
+                bool is_indexed,
+                dedupv1::base::Compression* comp);
 
         /**
      * @return true iff ok, otherwise an error has occurred
@@ -476,6 +498,10 @@ bool Container::IsFull(size_t fp_size, size_t data_size) {
         return true;
     }
     return false;
+}
+
+bool ContainerItem::is_indexed() const {
+  return is_indexed_;
 }
 
 const byte* ContainerItem::key() const {

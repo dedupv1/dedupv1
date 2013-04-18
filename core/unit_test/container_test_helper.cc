@@ -122,7 +122,7 @@ bool ContainerTestHelper::WriteDefaultData(StorageSession* s, ChunkIndex* chunk_
     for (int i = offset; i < (offset + count); i++) {
         byte* d = this->data(i);
         CHECK(d, "Date not set");
-        CHECK(s->WriteNew(&this->fp_[i], sizeof(this->fp_[i]), d, this->test_data_size_, &this->addresses_[i], NO_EC),
+        CHECK(s->WriteNew(&this->fp_[i], sizeof(this->fp_[i]), d, this->test_data_size_, true, &this->addresses_[i], NO_EC),
             "Write " << i << " failed");
 
         if (chunk_index != NULL) {

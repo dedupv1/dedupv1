@@ -194,7 +194,8 @@ bool ChunkIndex::SetOption(const string& option_name, const string& option) {
             "Index has no write-cache support");
 
         // Set default options
-        CHECK(this->chunk_index_->SetOption("max-key-size", ToString(Fingerprinter::kMaxFingerprintSize)),
+        CHECK(this->chunk_index_->SetOption("max-key-size",
+              ToString(Fingerprinter::kMaxFingerprintSize)),
             "Failed to set auto option");
 
         // currently the ChunkMappingData type contains three 64-bit values.
@@ -227,8 +228,10 @@ bool ChunkIndex::DumpMetaInfo() {
     DEBUG("Store container tracker: " << container_tracker_.DebugString());
 
     ChunkIndexLogfileData logfile_data;
-    CHECK(this->container_tracker_.SerializeTo(logfile_data.mutable_container_tracker()), "Cannot serialize container tracker");
-    CHECK(info_store_->PersistInfo("chunk-index", logfile_data), "Failed to store info: " << logfile_data.ShortDebugString());
+    CHECK(this->container_tracker_.SerializeTo(logfile_data.mutable_container_tracker()),
+        "Cannot serialize container tracker");
+    CHECK(info_store_->PersistInfo("chunk-index", logfile_data),
+        "Failed to store info: " << logfile_data.ShortDebugString());
     return true;
 }
 
@@ -243,7 +246,8 @@ lookup_result ChunkIndex::ReadMetaInfo() {
     }
     if (logfile_data.has_container_tracker()) {
         CHECK_RETURN(this->container_tracker_.ParseFrom(logfile_data.container_tracker()),
-            LOOKUP_ERROR, "Cannot parse container tracker data: " << logfile_data.ShortDebugString());
+            LOOKUP_ERROR, "Cannot parse container tracker data: " <<
+            logfile_data.ShortDebugString());
 
         DEBUG("Restored container tracker: " << container_tracker_.DebugString());
     }
@@ -275,7 +279,8 @@ bool ChunkIndex::Start(const StartContext& start_context, DedupSystem* system) {
 #ifdef DEDUPV1_CORE_TEST
         // I need this for some tests
         if (content_storage == NULL) {
-            CHECK(this->chunk_index_->SetOption("max-key-size", "20"), "Failed to set max key size");
+            CHECK(this->chunk_index_->SetOption("max-key-size", "20"),
+                "Failed to set max key size");
         } else {
 #endif
         CHECK(content_storage, "Content storage not set");
@@ -284,7 +289,8 @@ bool ChunkIndex::Start(const StartContext& start_context, DedupSystem* system) {
         size_t fp_size = fp->GetFingerprintSize();
         CHECK(fp->Close(), "Failed to close fingerprinter");
         fp = NULL;
-        CHECK(this->chunk_index_->SetOption("max-key-size", ToString(fp_size)), "Failed to set max key size");
+        CHECK(this->chunk_index_->SetOption("max-key-size", ToString(fp_size)),
+            "Failed to set max key size");
 #ifdef DEDUPV1_CORE_TEST
     }
 #endif
@@ -296,7 +302,8 @@ bool ChunkIndex::Start(const StartContext& start_context, DedupSystem* system) {
 
     if (dirty_chunk_count_threshold_ == 0) {
         // unset
-        DCHECK(chunk_index_->GetEstimatedMaxCacheItemCount() > 0, "Illegal max cache item count");
+        DCHECK(chunk_index_->GetEstimatedMaxCacheItemCount() > 0,
+            "Illegal max cache item count");
         dirty_chunk_count_threshold_ = chunk_index_->GetEstimatedMaxCacheItemCount() * 0.7;
     }
 
@@ -305,7 +312,8 @@ bool ChunkIndex::Start(const StartContext& start_context, DedupSystem* system) {
 
     lookup_result info_lookup = ReadMetaInfo();
     CHECK(info_lookup != LOOKUP_ERROR, "Failed to read meta info");
-    CHECK(!(info_lookup == LOOKUP_NOT_FOUND && !start_context.create()), "Failed to lookup meta info in non-create startup mode");
+    CHECK(!(info_lookup == LOOKUP_NOT_FOUND && !start_context.create()),
+        "Failed to lookup meta info in non-create startup mode");
     if (info_lookup == LOOKUP_NOT_FOUND && start_context.create()) {
         CHECK(DumpMetaInfo(), "Failed to dump info");
     }
@@ -472,7 +480,9 @@ lookup_result ChunkIndex::LookupIndex(Index* index, ChunkMapping* mapping, dedup
     return result;
 }
 
-lookup_result ChunkIndex::Lookup(ChunkMapping* mapping, bool add_as_in_combat, ErrorContext* ec) {
+lookup_result ChunkIndex::Lookup(ChunkMapping* mapping,
+    bool add_as_in_combat,
+    ErrorContext* ec) {
     CHECK_RETURN(this->state_ == STARTED, LOOKUP_ERROR, "Illegal state: state " << this->state_);
     DCHECK_RETURN(mapping, LOOKUP_ERROR, "Mapping not set");
 
@@ -502,7 +512,9 @@ lookup_result ChunkIndex::Lookup(ChunkMapping* mapping, bool add_as_in_combat, E
     return result;
 }
 
-bool ChunkIndex::PutIndex(Index* index, const ChunkMapping& mapping, dedupv1::base::ErrorContext* ec) {
+bool ChunkIndex::PutIndex(Index* index,
+    const ChunkMapping& mapping,
+    dedupv1::base::ErrorContext* ec) {
     ChunkMappingData data;
     CHECK(mapping.SerializeTo(&data),
         "Failed to serialize chunk mapping: " << mapping.DebugString());
@@ -513,7 +525,10 @@ bool ChunkIndex::PutIndex(Index* index, const ChunkMapping& mapping, dedupv1::ba
     return true;
 }
 
-bool ChunkIndex::PutPersistentIndex(const ChunkMapping& mapping, bool ensure_persistence, bool pin, dedupv1::base::ErrorContext* ec) {
+bool ChunkIndex::PutPersistentIndex(const ChunkMapping& mapping,
+    bool ensure_persistence,
+    bool pin,
+    dedupv1::base::ErrorContext* ec) {
     ChunkMappingData data;
     CHECK(mapping.SerializeTo(&data),
         "Failed to serialize chunk mapping: " << mapping.DebugString());
@@ -525,9 +540,13 @@ bool ChunkIndex::PutPersistentIndex(const ChunkMapping& mapping, bool ensure_per
 
     put_result result;
     if (ensure_persistence) {
-        result = chunk_index_->Put(mapping.fingerprint(), mapping.fingerprint_size(), data);
+        result = chunk_index_->Put(mapping.fingerprint(),
+            mapping.fingerprint_size(), data);
     } else {
-        result = chunk_index_->PutDirty(mapping.fingerprint(), mapping.fingerprint_size(), data, pin);
+        result = chunk_index_->PutDirty(mapping.fingerprint(),
+            mapping.fingerprint_size(),
+            data,
+            pin);
     }
     CHECK(result != PUT_ERROR,
         "Cannot put chunk mapping data: " << mapping.DebugString());
@@ -535,7 +554,8 @@ bool ChunkIndex::PutPersistentIndex(const ChunkMapping& mapping, bool ensure_per
 }
 
 bool ChunkIndex::Delete(const ChunkMapping& mapping) {
-    CHECK_RETURN(this->state_ == STARTED, DELETE_ERROR, "Illegal state: state " << this->state_);
+    CHECK_RETURN(this->state_ == STARTED, DELETE_ERROR,
+        "Illegal state: state " << this->state_);
 
     ProfileTimer timer(this->stats_.profiling_);
 
@@ -576,7 +596,8 @@ bool ChunkIndex::Put(const ChunkMapping& mapping, ErrorContext* ec) {
 }
 
 bool ChunkIndex::PutOverwrite(ChunkMapping& mapping, ErrorContext* ec) {
-    DCHECK_RETURN(this->state_ == STARTED, PUT_ERROR, "Illegal state: state " << this->state_);
+    DCHECK_RETURN(this->state_ == STARTED, PUT_ERROR,
+        "Illegal state: state " << this->state_);
 
     ProfileTimer total_timer(this->stats_.profiling_);
     ProfileTimer update_timer(this->stats_.update_time_);
@@ -588,7 +609,8 @@ bool ChunkIndex::PutOverwrite(ChunkMapping& mapping, ErrorContext* ec) {
     return true;
 }
 
-bool ChunkIndex::PersistStatistics(std::string prefix, dedupv1::PersistStatistics* ps) {
+bool ChunkIndex::PersistStatistics(std::string prefix,
+    dedupv1::PersistStatistics* ps) {
     ChunkIndexStatsData data;
     data.set_imported_container_count(this->stats_.imported_container_count_);
     data.set_index_full_failure_count(stats_.index_full_failure_count_);
@@ -596,7 +618,8 @@ bool ChunkIndex::PersistStatistics(std::string prefix, dedupv1::PersistStatistic
     return true;
 }
 
-bool ChunkIndex::RestoreStatistics(std::string prefix, dedupv1::PersistStatistics* ps) {
+bool ChunkIndex::RestoreStatistics(std::string prefix,
+    dedupv1::PersistStatistics* ps) {
     ChunkIndexStatsData data;
     CHECK(ps->Restore(prefix, &data), "Failed to restore chunk index stats");
     if (data.has_imported_container_count()) {
@@ -639,7 +662,8 @@ string ChunkIndex::PrintStatistics() {
     sstr.precision(3);
 
     sstr << "{";
-    sstr << "\"imported container count\": " << this->stats_.imported_container_count_ << "," << std::endl;
+    sstr << "\"imported container count\": " <<
+      this->stats_.imported_container_count_ << "," << std::endl;
 
     if (chunk_index_ && this->chunk_index_->GetEstimatedMaxItemCount() > 0) {
         uint64_t total_item_count = chunk_index_->GetItemCount();
@@ -731,6 +755,7 @@ public:
 
 bool ChunkIndex::ImportContainerItem(const ContainerItem& item, ErrorContext* ec) {
     DCHECK(this->chunk_index_, "Persistent chunk index not set");
+    DCHECK(item.is_indexed(), "Item should not be indexed");
 
     ChunkMapping mapping(item.key(), item.key_size());
     mapping.set_data_address(item.original_id());
@@ -774,6 +799,10 @@ bool ChunkIndex::ImportContainerParallel(uint64_t container_id, const Container&
             }
             if (item->is_deleted()) {
                 TRACE("Container item is deleted: " << item->DebugString());
+                continue;
+            }
+            if (item->is_indexed()) {
+                TRACE("Container item should not be indexed: " << item->DebugString());
                 continue;
             }
             ImportTask* task = new ImportTask(this, *item, ec); // tp takes care of deleting it
@@ -822,7 +851,8 @@ bool ChunkIndex::ImportContainerParallel(uint64_t container_id, const Container&
     return !failed;
 }
 
-bool ChunkIndex::LoadContainerIntoCache(uint64_t container_id, dedupv1::base::ErrorContext* ec) {
+bool ChunkIndex::LoadContainerIntoCache(uint64_t container_id,
+    dedupv1::base::ErrorContext* ec) {
     ContainerStorage* container_storage = dynamic_cast<ContainerStorage*>(this->storage_);
     DCHECK(container_storage, "Storage is no container storage");
 
@@ -837,10 +867,12 @@ bool ChunkIndex::LoadContainerIntoCache(uint64_t container_id, dedupv1::base::Er
             "container id " << container_id);
         return true;  // leave method
     } else if (commit_state == STORAGE_ADDRESS_NOT_COMMITED) {
-        WARNING("Missing container for import: " << "container id " << container_id << ", commit state: not committed"
-                                                 << ", dirty import container tracker " << dirty_import_container_tracker_.DebugString()
-                                                 << ", last given container id " << (container_storage != NULL ? ToString(
-                                                    container_storage->GetLastGivenContainerId()) : ""));
+        WARNING("Missing container for import: " <<
+            "container id " << container_id <<
+            ", commit state: not committed" <<
+            ", dirty import container tracker " << dirty_import_container_tracker_.DebugString() <<
+            ", last given container id " << (container_storage != NULL ? ToString(
+              container_storage->GetLastGivenContainerId()) : ""));
         return true; // leave method
     }
     // is committed
@@ -855,8 +887,8 @@ bool ChunkIndex::LoadContainerIntoCache(uint64_t container_id, dedupv1::base::Er
         "container id " << container_id <<
         ", container " << container.DebugString());
     if (read_result == LOOKUP_NOT_FOUND) {
-        WARNING("Could find container for import: " << "container " << container.DebugString()
-                                                    << ", last given container id " << (container_storage != NULL ? ToString(
+        WARNING("Could find container for import: " << "container " << container.DebugString() <<
+            ", last given container id " << (container_storage != NULL ? ToString(
                                                     container_storage->GetLastGivenContainerId()) : ""));
         return true;
     }
@@ -876,6 +908,10 @@ bool ChunkIndex::LoadContainerIntoCache(uint64_t container_id, dedupv1::base::Er
         if (item->original_id() != container_id) {
             TRACE("Skip item: " << item->DebugString() << ", import container id " << container_id);
             continue;
+        }
+        if (!item->is_indexed()) {
+          TRACE("Skip item: " << item->DebugString() << ", not indexed");
+          continue;
         }
         TRACE("Load container item: " << item->DebugString());
 
@@ -1092,7 +1128,8 @@ bool ChunkIndex::FinishDirtyLogReplay() {
     if (dirty_import_container_exists_) {
         INFO("Load non-imported container in cache");
 
-        // The container tracker has to contain all possible container ids that are not imported into the persistent index.
+        // The container tracker has to contain all possible container ids that
+        // are not imported into the persistent index.
         // All these containers should know (at least we should try it) imported into the cache
         dirty_import_container_tracker_.CopyFrom(container_tracker_);
         DEBUG("Load non-imported container in cache: " << dirty_import_container_tracker_.DebugString());

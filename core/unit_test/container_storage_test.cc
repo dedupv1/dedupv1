@@ -1403,7 +1403,7 @@ TEST_P(ContainerStorageTest, IsCommittedOnFlush) {
     ASSERT_TRUE(session);
 
     ASSERT_TRUE(session->WriteNew(container_helper->fingerprint(0).data(),
-            container_helper->fingerprint(0).size(), container_helper->data(0), TEST_DATA_SIZE, container_helper->mutable_data_address(0), NO_EC))
+            container_helper->fingerprint(0).size(), container_helper->data(0), TEST_DATA_SIZE, true, container_helper->mutable_data_address(0), NO_EC))
     << "Write " << 0 << " failed";
     ASSERT_EQ(STORAGE_ADDRESS_NOT_COMMITED, storage->IsCommitted(1)) << "Container shouldn't be committed before flush";
 
@@ -1420,7 +1420,7 @@ TEST_P(ContainerStorageTest, IsCommittedWaitOnFlush) {
     ASSERT_TRUE(session);
 
     ASSERT_TRUE(session->WriteNew(container_helper->fingerprint(0).data(),
-            container_helper->fingerprint(0).size(), container_helper->data(0), TEST_DATA_SIZE, container_helper->mutable_data_address(0), NO_EC))
+            container_helper->fingerprint(0).size(), container_helper->data(0), TEST_DATA_SIZE, true, container_helper->mutable_data_address(0), NO_EC))
     << "Write " << 0 << " failed";
     ASSERT_EQ(STORAGE_ADDRESS_COMMITED, storage->IsCommittedWait(1)) << "Container should be comitted after IsCommittedWait";
 
@@ -1632,10 +1632,10 @@ TEST_P(ContainerStorageTest, MergeWithSameContainerLock) {
     uint64_t key2 = 2;
     Container container1;
     ASSERT_TRUE(container1.Init(container_id1, storage->GetContainerSize()));
-    ASSERT_TRUE(container1.AddItem(reinterpret_cast<const byte*>(&key1), sizeof(key1), buffer, 1024, NULL));
+    ASSERT_TRUE(container1.AddItem(reinterpret_cast<const byte*>(&key1), sizeof(key1), buffer, 1024, true, NULL));
     Container container2;
     ASSERT_TRUE(container2.Init(container_id2, storage->GetContainerSize()));
-    ASSERT_TRUE(container2.AddItem(reinterpret_cast<const byte*>(&key2), sizeof(key2), buffer, 1024, NULL));
+    ASSERT_TRUE(container2.AddItem(reinterpret_cast<const byte*>(&key2), sizeof(key2), buffer, 1024, true, NULL));
 
     ContainerStorageAddressData address1;
     ContainerStorageAddressData address2;

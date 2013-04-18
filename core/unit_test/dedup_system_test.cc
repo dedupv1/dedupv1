@@ -213,6 +213,7 @@ TEST_P(DedupSystemTest, PersistentStatistics) {
 
     fclose(file);
 
+    sleep(10);
     ASSERT_TRUE(system->storage()->Flush(NO_EC));
     ASSERT_TRUE(system->Stop(StopContext::FastStopContext()));
 
@@ -467,7 +468,7 @@ TEST_P(DedupSystemTest, StrictOverwriteRequests) {
     Thread<bool>** threads = new Thread<bool>*[thread_count];
     for (int i = 0; i < thread_count; i++) {
         threads[i] = new Thread<bool>(
-            NewRunnable(&MakeOverwriteRequest, make_tuple(system, i, 
+            NewRunnable(&MakeOverwriteRequest, make_tuple(system, i,
                 requests, true, false)),"write");
     }
     tbb::tick_count start = tbb::tick_count::now();
@@ -506,7 +507,7 @@ TEST_P(DedupSystemTest, StrictOverwriteZeroDataRequests) {
     Thread<bool>** threads = new Thread<bool>*[thread_count];
     for (int i = 0; i < thread_count; i++) {
         threads[i] = new Thread<bool>(
-            NewRunnable(&MakeOverwriteRequest, make_tuple(system, i, 
+            NewRunnable(&MakeOverwriteRequest, make_tuple(system, i,
                 requests, true, true)),"write");
     }
     tbb::tick_count start = tbb::tick_count::now();
@@ -545,7 +546,7 @@ TEST_P(DedupSystemTest, StrictNoOverwriteRequests) {
     Thread<bool>** threads = new Thread<bool>*[thread_count];
     for (int i = 0; i < thread_count; i++) {
         threads[i] = new Thread<bool>(
-            NewRunnable(&MakeOverwriteRequest, make_tuple(system, i, 
+            NewRunnable(&MakeOverwriteRequest, make_tuple(system, i,
                 requests, false, false)),"write");
     }
     tbb::tick_count start = tbb::tick_count::now();
