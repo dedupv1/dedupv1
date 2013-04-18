@@ -852,19 +852,19 @@ class Dedupv1DynamicConfigSystemTest(Dedupv1BaseSystemTest):
         """
         self.start_default_system()
 
-        self.dedupv1.targets("add tid=3 name=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.targets("add tid=3 name=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
-        self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=500G target=iqn.2005-03.info.christmann:backup:special:0 filter=chunk-index-filter")
+        self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=500G target=iqn.2005-03.de.jgu.dedupv1:backup:special:0 filter=chunk-index-filter")
         self.assertExitcode(0)
 
-        self.dedupv1.volumes("attach id=3 device-name=Backup1 logical-size=500G target=iqn.2005-03.info.christmann:backup:special:1 filter=block-index-filter filter=chunk-index-filter")
+        self.dedupv1.volumes("attach id=3 device-name=Backup1 logical-size=500G target=iqn.2005-03.de.jgu.dedupv1:backup:special:1 filter=block-index-filter filter=chunk-index-filter")
         self.assertExitcode(0)
 
-        self.dedupv1.volumes("target remove id=3 target=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.volumes("target remove id=3 target=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
-        self.dedupv1.volumes("target remove id=4 target=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.volumes("target remove id=4 target=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
         self.dedupv1.volumes("detach id=3")
@@ -880,12 +880,12 @@ class Dedupv1DynamicConfigSystemTest(Dedupv1BaseSystemTest):
         """
         self.start_default_system()
 
-        self.dedupv1.targets("add tid=3 name=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.targets("add tid=3 name=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
         self.dedupv1.monitor("volume")
 
-        self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=500G target=iqn.2005-03.info.christmann:backup:special:0 filter=chunk-index-filter")
+        self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=500G target=iqn.2005-03.de.jgu.dedupv1:backup:special:0 filter=chunk-index-filter")
         self.assertExitcode(0)
 
         self.dedupv1.monitor("volume")
@@ -903,7 +903,7 @@ class Dedupv1DynamicConfigSystemTest(Dedupv1BaseSystemTest):
 
         self.dedupv1.monitor("volume")
 
-        self.dedupv1.volumes("target remove id=4 target=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.volumes("target remove id=4 target=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
         self.dedupv1.volumes("detach id=4")
@@ -917,12 +917,12 @@ class Dedupv1DynamicConfigSystemTest(Dedupv1BaseSystemTest):
         """
         self.start_default_system()
 
-        self.dedupv1.targets("add tid=3 name=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.targets("add tid=3 name=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
         self.dedupv1.monitor("volume")
 
-        self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=500G target=iqn.2005-03.info.christmann:backup:special:0")
+        self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=500G target=iqn.2005-03.de.jgu.dedupv1:backup:special:0")
         self.assertExitcode(0)
 
         self.dedupv1.monitor("volume")
@@ -940,7 +940,7 @@ class Dedupv1DynamicConfigSystemTest(Dedupv1BaseSystemTest):
 
         self.dedupv1.monitor("volume")
 
-        self.dedupv1.volumes("target remove id=4 target=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.volumes("target remove id=4 target=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
         self.dedupv1.volumes("detach id=4")
@@ -954,19 +954,19 @@ class Dedupv1DynamicConfigSystemTest(Dedupv1BaseSystemTest):
         """
         self.start_default_system()
 
-        self.dedupv1.targets("add tid=3 name=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.targets("add tid=3 name=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
         self.dedupv1.monitor("target")
         self.dedupv1.monitor("volume")
 
-        self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=500G target=iqn.2005-03.info.christmann:backup:special:0 chunking=static")
+        self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=500G target=iqn.2005-03.de.jgu.dedupv1:backup:special:0 chunking=static")
         self.assertExitcode(0)
 
         self.dedupv1.monitor("target")
         self.dedupv1.monitor("volume")
 
-        self.dedupv1.volumes("attach id=3 device-name=Backup1 logical-size=500G target=iqn.2005-03.info.christmann:backup:special:1 chunking=rabin chunking.avg-chunk-size=8K")
+        self.dedupv1.volumes("attach id=3 device-name=Backup1 logical-size=500G target=iqn.2005-03.de.jgu.dedupv1:backup:special:1 chunking=rabin chunking.avg-chunk-size=8K")
         self.assertExitcode(0)
 
         self.dedupv1.volumes("change-state id=3 state=maintenance")
@@ -981,13 +981,13 @@ class Dedupv1DynamicConfigSystemTest(Dedupv1BaseSystemTest):
         self.dedupv1.monitor("target")
         self.dedupv1.monitor("volume")
 
-        self.dedupv1.volumes("target remove id=3 target=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.volumes("target remove id=3 target=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
         self.dedupv1.monitor("target")
         self.dedupv1.monitor("volume")
 
-        self.dedupv1.volumes("target remove id=4 target=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.volumes("target remove id=4 target=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
         self.dedupv1.monitor("target")
@@ -1093,23 +1093,23 @@ class Dedupv1DynamicConfigSystemTest(Dedupv1BaseSystemTest):
         """
         self.start_default_system()
 
-        output = self.dedupv1.targets("add tid=3 name=iqn.2005-03.info.christmann:backup:special --raw")
+        output = self.dedupv1.targets("add tid=3 name=iqn.2005-03.de.jgu.dedupv1:backup:special --raw")
         self.assertExitcode(0)
         self.assertIsJson(output)
 
-        output = self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=500G target=iqn.2005-03.info.christmann:backup:special:0 --raw")
+        output = self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=500G target=iqn.2005-03.de.jgu.dedupv1:backup:special:0 --raw")
         self.assertExitcode(0)
         self.assertIsJson(output)
 
-        output = self.dedupv1.volumes("attach id=3 device-name=Backup1 logical-size=500G target=iqn.2005-03.info.christmann:backup:special:1 --raw")
+        output = self.dedupv1.volumes("attach id=3 device-name=Backup1 logical-size=500G target=iqn.2005-03.de.jgu.dedupv1:backup:special:1 --raw")
         self.assertExitcode(0)
         self.assertIsJson(output)
 
-        output = self.dedupv1.volumes("target remove id=3 target=iqn.2005-03.info.christmann:backup:special --raw")
+        output = self.dedupv1.volumes("target remove id=3 target=iqn.2005-03.de.jgu.dedupv1:backup:special --raw")
         self.assertExitcode(0)
         self.assertIsJson(output)
 
-        output = self.dedupv1.volumes("target remove id=4 target=iqn.2005-03.info.christmann:backup:special --raw")
+        output = self.dedupv1.volumes("target remove id=4 target=iqn.2005-03.de.jgu.dedupv1:backup:special --raw")
         self.assertExitcode(0)
         self.assertIsJson(output)
 
@@ -1129,25 +1129,25 @@ class Dedupv1DynamicConfigSystemTest(Dedupv1BaseSystemTest):
         """
         self.start_default_system()
 
-        self.dedupv1.targets("add tid=3 name=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.targets("add tid=3 name=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
         self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=500G")
         self.assertExitcode(0)
 
-        self.dedupv1.volumes("target add id=4 target=iqn.2005-03.info.christmann:backup:special:0")
+        self.dedupv1.volumes("target add id=4 target=iqn.2005-03.de.jgu.dedupv1:backup:special:0")
         self.assertExitcode(0)
 
         self.dedupv1.volumes("attach id=3 device-name=Backup1 logical-size=500G")
         self.assertExitcode(0)
 
-        self.dedupv1.volumes("target add id=3 target=iqn.2005-03.info.christmann:backup:special:1")
+        self.dedupv1.volumes("target add id=3 target=iqn.2005-03.de.jgu.dedupv1:backup:special:1")
         self.assertExitcode(0)
 
-        self.dedupv1.volumes("target remove id=3 target=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.volumes("target remove id=3 target=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
-        self.dedupv1.volumes("target remove id=4 target=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.volumes("target remove id=4 target=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
         self.dedupv1.volumes("detach id=3")
@@ -1163,22 +1163,22 @@ class Dedupv1DynamicConfigSystemTest(Dedupv1BaseSystemTest):
         """
         self.start_default_system()
 
-        self.dedupv1.targets("add tid=3 name=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.targets("add tid=3 name=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
-        self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=500GB target=iqn.2005-03.info.christmann:backup:special:0")
+        self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=500GB target=iqn.2005-03.de.jgu.dedupv1:backup:special:0")
         self.assertExitcode(0)
 
-        self.dedupv1.volumes("attach id=5 device-name=Backup3 logical-size=1tb target=iqn.2005-03.info.christmann:backup:special:1")
+        self.dedupv1.volumes("attach id=5 device-name=Backup3 logical-size=1tb target=iqn.2005-03.de.jgu.dedupv1:backup:special:1")
         self.assertExitcode(0)
 
         volumes = self.dedupv1.monitor("volume")
         self.assertEqual(volumes["4"]["logical size"], 500 * 1024 * 1024 * 1024)
         self.assertEqual(volumes["5"]["logical size"], 1024 * 1024 * 1024 * 1024)
 
-        self.dedupv1.volumes("target remove id=4 target=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.volumes("target remove id=4 target=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
-        self.dedupv1.volumes("target remove id=5 target=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.volumes("target remove id=5 target=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
         self.dedupv1.volumes("detach id=4")
@@ -1193,10 +1193,10 @@ class Dedupv1DynamicConfigSystemTest(Dedupv1BaseSystemTest):
         """
         self.start_default_system()
 
-        self.dedupv1.targets("add tid=3 name=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.targets("add tid=3 name=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
-        self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=-500G target=iqn.2005-03.info.christmann:backup:special:0")
+        self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=-500G target=iqn.2005-03.de.jgu.dedupv1:backup:special:0")
         self.assertExitcode(1)
 
     def test_illegal_target_name(self):
@@ -1227,7 +1227,7 @@ class Dedupv1DynamicConfigSystemTest(Dedupv1BaseSystemTest):
 
         legal_names = ["a",
                         "this.ismy-2nd:target",
-                        "iqn.2005-03.info.christmann:backup:special",
+                        "iqn.2005-03.de.jgu.dedupv1:backup:special",
                         "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123" # 223
                        ]
 
@@ -1243,31 +1243,31 @@ class Dedupv1DynamicConfigSystemTest(Dedupv1BaseSystemTest):
         """
         self.start_default_system()
 
-        self.dedupv1.targets("add tid=3 name=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.targets("add tid=3 name=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
         self.dedupv1.monitor("target")
         self.dedupv1.monitor("volume")
 
-        self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=500G target=iqn.2005-03.info.christmann:backup:special:0")
+        self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=500G target=iqn.2005-03.de.jgu.dedupv1:backup:special:0")
         self.assertExitcode(0)
 
         self.dedupv1.monitor("target")
         self.dedupv1.monitor("volume")
 
-        self.dedupv1.volumes("attach id=3 device-name=Backup1 logical-size=500G target=iqn.2005-03.info.christmann:backup:special:1")
+        self.dedupv1.volumes("attach id=3 device-name=Backup1 logical-size=500G target=iqn.2005-03.de.jgu.dedupv1:backup:special:1")
         self.assertExitcode(0)
 
         self.dedupv1.monitor("target")
         self.dedupv1.monitor("volume")
 
-        self.dedupv1.volumes("target remove id=3 target=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.volumes("target remove id=3 target=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
         self.dedupv1.monitor("target")
         self.dedupv1.monitor("volume")
 
-        self.dedupv1.volumes("target remove id=4 target=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.volumes("target remove id=4 target=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
         self.dedupv1.monitor("target")
@@ -1427,15 +1427,15 @@ class Dedupv1DynamicConfigSystemTest(Dedupv1BaseSystemTest):
         """
         self.start_default_system()
 
-        self.dedupv1.targets("add tid=3 name=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.targets("add tid=3 name=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
-        self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=500G target=iqn.2005-03.info.christmann:backup:special:0 group=Default:1")
+        self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=500G target=iqn.2005-03.de.jgu.dedupv1:backup:special:0 group=Default:1")
         self.assertExitcode(0)
 
-        self.assertTrue("Backup2" in self.scst.get_devices_in_group("Default_iqn.2005-03.info.christmann:backup:special"))
+        self.assertTrue("Backup2" in self.scst.get_devices_in_group("Default_iqn.2005-03.de.jgu.dedupv1:backup:special"))
         self.assertEqual("Backup2:0", self.dedupv1.monitor("target")["3"]["volumes"][0])
-        self.assertEqual("iqn.2005-03.info.christmann:backup:special", self.dedupv1.monitor("volume")["4"]["targets"][0]["name"])
+        self.assertEqual("iqn.2005-03.de.jgu.dedupv1:backup:special", self.dedupv1.monitor("volume")["4"]["targets"][0]["name"])
 
         self.sys.rm_scst_local()
         self.sys.add_scst_local()
@@ -1477,7 +1477,7 @@ class Dedupv1DynamicConfigSystemTest(Dedupv1BaseSystemTest):
         self.assertFalse("scsi-0:0:0:1" in self.sys.get_devices())
         self.sys.rm_scst_local()
 
-        self.dedupv1.volumes("target remove id=4 target=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.volumes("target remove id=4 target=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
         self.dedupv1.volumes("group remove id=4 group=Default")
@@ -1665,7 +1665,9 @@ class Dedupv1DynamicConfigSystemTest(Dedupv1BaseSystemTest):
     def test_change_volume_size_with_fs(self):
         """ test_change_volume_size_with_fs
 
-            Tests changing the logical size of a volume with a filesystem on it. In this test, the partition and the fileystem are also resized to the new logical size of the volume.
+            Tests changing the logical size of a volume with a filesystem on it.
+            In this test, the partition and the fileystem are also resized to
+            the new logical size of the volume.
         """
         self.start_default_system()
 
@@ -1745,11 +1747,11 @@ class Dedupv1DynamicConfigSystemTest(Dedupv1BaseSystemTest):
         """
         self.start_default_system()
 
-        self.dedupv1.targets("add tid=3 name=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.targets("add tid=3 name=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
         # Oh here is a typo, it should be 3 not 4
-        self.dedupv1.targets("change tid=4 name=iqn.2005-03.info.christmann:backup:normal")
+        self.dedupv1.targets("change tid=4 name=iqn.2005-03.de.jgu.dedupv1:backup:normal")
         self.assertExitcode(1)
 
     def test_user_short_secret(self):
@@ -1915,13 +1917,13 @@ class Dedupv1DynamicConfigSystemTest(Dedupv1BaseSystemTest):
         """
         self.start_default_system()
 
-        self.dedupv1.targets("add tid=3 name=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.targets("add tid=3 name=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
-        self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=500G target=iqn.2005-03.info.christmann:backup:special:0")
+        self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=500G target=iqn.2005-03.de.jgu.dedupv1:backup:special:0")
         self.assertExitcode(0)
 
-        self.dedupv1.volumes("attach id=3 device-name=Backup1 logical-size=500G target=iqn.2005-03.info.christmann:backup:special:1")
+        self.dedupv1.volumes("attach id=3 device-name=Backup1 logical-size=500G target=iqn.2005-03.de.jgu.dedupv1:backup:special:1")
         self.assertExitcode(0)
 
         self.dedupv1.groups("add name=backup:special")
@@ -2133,19 +2135,19 @@ class Dedupv1ISCSISystemTest(Dedupv1BaseSystemTest):
         """
         self.start_default_system()
 
-        self.dedupv1.targets("add tid=3 name=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.targets("add tid=3 name=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
-        self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=500G target=iqn.2005-03.info.christmann:backup:special:0")
+        self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=500G target=iqn.2005-03.de.jgu.dedupv1:backup:special:0")
         self.assertExitcode(0)
 
         self.open_iscsi.discover(server="127.0.0.1")
         self.assertExitcode(0)
 
-        self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special")
+        self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
-        self.open_iscsi.disconnect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special")
+        self.open_iscsi.disconnect(server="127.0.0.1", name="iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
     def test_iscsi_start_stop_with_user(self):
@@ -2156,7 +2158,7 @@ class Dedupv1ISCSISystemTest(Dedupv1BaseSystemTest):
         try:
             self.start_default_system()
 
-            self.dedupv1.targets("add tid=3 name=iqn.2005-03.info.christmann:backup:special")
+            self.dedupv1.targets("add tid=3 name=iqn.2005-03.de.jgu.dedupv1:backup:special")
             self.assertExitcode(0)
 
             secret = self.dedupv1.passwd("testtesttest1")
@@ -2165,34 +2167,34 @@ class Dedupv1ISCSISystemTest(Dedupv1BaseSystemTest):
             self.dedupv1.users("add name=test secret-hash=%s" % secret)
             self.assertExitcode(0)
 
-            self.dedupv1.users("target add name=test target=iqn.2005-03.info.christmann:backup:special")
+            self.dedupv1.users("target add name=test target=iqn.2005-03.de.jgu.dedupv1:backup:special")
             self.assertExitcode(0)
 
-            self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=500G target=iqn.2005-03.info.christmann:backup:special:0")
+            self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=500G target=iqn.2005-03.de.jgu.dedupv1:backup:special:0")
             self.assertExitcode(0)
 
             self.open_iscsi.discover(server="127.0.0.1")
             self.assertExitcode(0)
 
             self.open_iscsi.client_auth(server="127.0.0.1",
-                                 name="iqn.2005-03.info.christmann:backup:special",
+                                 name="iqn.2005-03.de.jgu.dedupv1:backup:special",
                                  username="bla",
                                  password="bla")
             self.assertExitcode(0)
 
-            self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special")
+            self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.de.jgu.dedupv1:backup:special")
             self.assertFalse(self.run.code == 0) # Loging failed
 
             self.open_iscsi.client_auth(server="127.0.0.1",
-                                 name="iqn.2005-03.info.christmann:backup:special",
+                                 name="iqn.2005-03.de.jgu.dedupv1:backup:special",
                                  username="test",
                                  password="testtesttest1")
             self.assertExitcode(0)
 
-            self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special")
+            self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.de.jgu.dedupv1:backup:special")
             self.assertExitcode(0)
         finally:
-            self.open_iscsi.disconnect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special")
+            self.open_iscsi.disconnect(server="127.0.0.1", name="iqn.2005-03.de.jgu.dedupv1:backup:special")
 
             self.dedupv1.stop("-f")
 
@@ -2205,7 +2207,7 @@ class Dedupv1ISCSISystemTest(Dedupv1BaseSystemTest):
             self.start_default_system()
 
             pwd = self.dedupv1.passwd("1234567890123")
-            self.dedupv1.targets("add tid=3 name=iqn.2005-03.info.christmann:backup:special auth.name=test auth.secret=%s" % pwd)
+            self.dedupv1.targets("add tid=3 name=iqn.2005-03.de.jgu.dedupv1:backup:special auth.name=test auth.secret=%s" % pwd)
             self.assertExitcode(0)
 
             secret = self.dedupv1.passwd("testtesttest1")
@@ -2214,20 +2216,20 @@ class Dedupv1ISCSISystemTest(Dedupv1BaseSystemTest):
             self.dedupv1.users("add name=test secret-hash=%s" % secret)
             self.assertExitcode(0)
 
-            self.dedupv1.users("target add name=test target=iqn.2005-03.info.christmann:backup:special")
+            self.dedupv1.users("target add name=test target=iqn.2005-03.de.jgu.dedupv1:backup:special")
             self.assertExitcode(0)
 
             self.dedupv1.monitor("target")
 
-            self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=500G target=iqn.2005-03.info.christmann:backup:special:0")
+            self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=500G target=iqn.2005-03.de.jgu.dedupv1:backup:special:0")
             self.assertExitcode(0)
 
             self.open_iscsi.client_auth(server="127.0.0.1",
-                                 name="iqn.2005-03.info.christmann:backup:special",
+                                 name="iqn.2005-03.de.jgu.dedupv1:backup:special",
                                  username="test",
                                  password="testtesttest1")
             self.open_iscsi.server_auth(server="127.0.0.1",
-                                 name="iqn.2005-03.info.christmann:backup:special",
+                                 name="iqn.2005-03.de.jgu.dedupv1:backup:special",
                                  username="test2",
                                  password="test2")
             self.assertExitcode(0)
@@ -2235,24 +2237,24 @@ class Dedupv1ISCSISystemTest(Dedupv1BaseSystemTest):
             self.open_iscsi.discover(server="127.0.0.1")
             self.assertExitcode(0)
 
-            self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special")
+            self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.de.jgu.dedupv1:backup:special")
             self.assertFalse(self.run.code == 0) # Login failed
 
             self.open_iscsi.client_auth(server="127.0.0.1",
-                                 name="iqn.2005-03.info.christmann:backup:special",
+                                 name="iqn.2005-03.de.jgu.dedupv1:backup:special",
                                  username="test",
                                  password="testtesttest1")
             self.open_iscsi.server_auth(server="127.0.0.1",
-                                 name="iqn.2005-03.info.christmann:backup:special",
+                                 name="iqn.2005-03.de.jgu.dedupv1:backup:special",
                                  username="test",
                                  password="1234567890123")
             self.assertExitcode(0)
 
-            self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special")
+            self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.de.jgu.dedupv1:backup:special")
             self.assertExitcode(0) # correct password
 
         finally:
-            self.open_iscsi.disconnect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special")
+            self.open_iscsi.disconnect(server="127.0.0.1", name="iqn.2005-03.de.jgu.dedupv1:backup:special")
 
             self.dedupv1.stop("-f")
 
@@ -2261,12 +2263,12 @@ class Dedupv1ISCSISystemTest(Dedupv1BaseSystemTest):
 
         Tests adding and removing multiple volumes from a target and verifies the availability of the current set of volumes over an iSCSI connection. This is a regression test for #298.
         """
-    	def check_available_lun(luns):
-    	    self.open_iscsi.discover(server="127.0.0.1")
-    	    self.assertExitcode(0)
-    	    self.open_iscsi.connect(server="127.0.0.1", name="iqn.2007-08.neu.jgu:dedupv1-jgu.jgu.neu.disk")
-    	    self.assertExitcode(0)
-    	    try:
+        def check_available_lun(luns):
+            self.open_iscsi.discover(server="127.0.0.1")
+            self.assertExitcode(0)
+            self.open_iscsi.connect(server="127.0.0.1", name="iqn.2007-08.neu.jgu:dedupv1-jgu.jgu.neu.disk")
+            self.assertExitcode(0)
+            try:
                 sleep(5)
                 devices = os.listdir("/dev/disk/by-path")
 
@@ -2336,7 +2338,7 @@ class Dedupv1ISCSISystemTest(Dedupv1BaseSystemTest):
         try:
             self.start_default_system()
 
-            self.dedupv1.targets("add tid=3 name=iqn.2005-03.info.christmann:backup:special")
+            self.dedupv1.targets("add tid=3 name=iqn.2005-03.de.jgu.dedupv1:backup:special")
             self.assertExitcode(0)
 
             pwd = self.dedupv1.passwd("1234567890123")
@@ -2348,20 +2350,20 @@ class Dedupv1ISCSISystemTest(Dedupv1BaseSystemTest):
             self.dedupv1.users("add name=test secret-hash=%s" % secret)
             self.assertExitcode(0)
 
-            self.dedupv1.users("target add name=test target=iqn.2005-03.info.christmann:backup:special")
+            self.dedupv1.users("target add name=test target=iqn.2005-03.de.jgu.dedupv1:backup:special")
             self.assertExitcode(0)
 
             self.dedupv1.monitor("target")
 
-            self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=500G target=iqn.2005-03.info.christmann:backup:special:0")
+            self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=500G target=iqn.2005-03.de.jgu.dedupv1:backup:special:0")
             self.assertExitcode(0)
 
             self.open_iscsi.client_auth(server="127.0.0.1",
-                                 name="iqn.2005-03.info.christmann:backup:special",
+                                 name="iqn.2005-03.de.jgu.dedupv1:backup:special",
                                  username="test",
                                  password="testtesttest1")
             self.open_iscsi.server_auth(server="127.0.0.1",
-                                 name="iqn.2005-03.info.christmann:backup:special",
+                                 name="iqn.2005-03.de.jgu.dedupv1:backup:special",
                                  username="test2",
                                  password="test2")
             self.assertExitcode(0)
@@ -2369,24 +2371,24 @@ class Dedupv1ISCSISystemTest(Dedupv1BaseSystemTest):
             self.open_iscsi.discover(server="127.0.0.1")
             self.assertExitcode(0)
 
-            self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special")
+            self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.de.jgu.dedupv1:backup:special")
             self.assertFalse(self.run.code == 0) # Login failed
 
             self.open_iscsi.client_auth(server="127.0.0.1",
-                                 name="iqn.2005-03.info.christmann:backup:special",
+                                 name="iqn.2005-03.de.jgu.dedupv1:backup:special",
                                  username="test",
                                  password="testtesttest1")
             self.open_iscsi.server_auth(server="127.0.0.1",
-                                 name="iqn.2005-03.info.christmann:backup:special",
+                                 name="iqn.2005-03.de.jgu.dedupv1:backup:special",
                                  username="test",
                                  password="1234567890123")
             self.assertExitcode(0)
 
-            self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special")
+            self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.de.jgu.dedupv1:backup:special")
             self.assertExitcode(0) # correct password
 
         finally:
-            self.open_iscsi.disconnect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special")
+            self.open_iscsi.disconnect(server="127.0.0.1", name="iqn.2005-03.de.jgu.dedupv1:backup:special")
 
             self.dedupv1.stop("-f")
 
@@ -2397,7 +2399,7 @@ class Dedupv1ISCSISystemTest(Dedupv1BaseSystemTest):
         """
         self.start_default_system()
 
-        self.dedupv1.targets("add tid=3 name=iqn.2005-03.info.christmann:backup:special param.QueuedCommands=16")
+        self.dedupv1.targets("add tid=3 name=iqn.2005-03.de.jgu.dedupv1:backup:special param.QueuedCommands=16")
         self.assertExitcode(0)
 
         target_config = self.run("iscsi-scst-adm --op show --tid=3")
@@ -2421,28 +2423,28 @@ class Dedupv1ISCSISystemTest(Dedupv1BaseSystemTest):
         """
         self.start_default_system()
 
-        self.dedupv1.targets("add tid=3 name=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.targets("add tid=3 name=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
-        self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=500G target=iqn.2005-03.info.christmann:backup:special:0 group=Default:1")
+        self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=500G target=iqn.2005-03.de.jgu.dedupv1:backup:special:0 group=Default:1")
         self.assertExitcode(0)
 
         # try to change name with an open connection
         self.open_iscsi.discover(server="127.0.0.1")
         self.assertExitcode(0)
-        self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special")
+        self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
         sleep(10)
-        self.dedupv1.volumes("target remove id=4 target=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.volumes("target remove id=4 target=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertNotEqual(self.run.code, 0) # this should fail
 
         sleep(5)
-        self.open_iscsi.disconnect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special")
+        self.open_iscsi.disconnect(server="127.0.0.1", name="iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
         sleep(10)
-        self.dedupv1.volumes("target remove id=4 target=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.volumes("target remove id=4 target=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
     def test_iscsi_connect_maintainance_volume_to_running(self):
@@ -2453,10 +2455,10 @@ class Dedupv1ISCSISystemTest(Dedupv1BaseSystemTest):
         self.start_default_system()
         self.sys.rm_scst_local()
 
-        self.dedupv1.targets("add tid=3 name=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.targets("add tid=3 name=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
-        self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=500G target=iqn.2005-03.info.christmann:backup:special:0 group=Default:1")
+        self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=500G target=iqn.2005-03.de.jgu.dedupv1:backup:special:0 group=Default:1")
         self.assertExitcode(0)
 
         self.dedupv1.volumes("change-state id=4 state=maintenance")
@@ -2464,27 +2466,27 @@ class Dedupv1ISCSISystemTest(Dedupv1BaseSystemTest):
 
         self.open_iscsi.discover(server="127.0.0.1")
         self.assertExitcode(0)
-        self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special")
+        self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
         try:
             sleep(5)
             devices = os.listdir("/dev/disk/by-path")
-            self.assertFalse("ip-127.0.0.1:3260-iscsi-iqn.2005-03.info.christmann:backup:special-lun-0" in devices)
+            self.assertFalse("ip-127.0.0.1:3260-iscsi-iqn.2005-03.de.jgu.dedupv1:backup:special-lun-0" in devices)
 
             self.dedupv1.volumes("change-state id=4 state=running")
             self.assertExitcode(0)
         finally:
-            self.open_iscsi.disconnect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special")
+            self.open_iscsi.disconnect(server="127.0.0.1", name="iqn.2005-03.de.jgu.dedupv1:backup:special")
             self.assertExitcode(0)
 
-        self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special")
+        self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
         try:
             sleep(5)
             devices = os.listdir("/dev/disk/by-path")
-            self.assertTrue("ip-127.0.0.1:3260-iscsi-iqn.2005-03.info.christmann:backup:special-lun-0" in devices)
+            self.assertTrue("ip-127.0.0.1:3260-iscsi-iqn.2005-03.de.jgu.dedupv1:backup:special-lun-0" in devices)
         finally:
-            self.open_iscsi.disconnect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special")
+            self.open_iscsi.disconnect(server="127.0.0.1", name="iqn.2005-03.de.jgu.dedupv1:backup:special")
             self.assertExitcode(0)
 
     def test_iscsi_connect_maintainance_volume(self):
@@ -2495,76 +2497,78 @@ class Dedupv1ISCSISystemTest(Dedupv1BaseSystemTest):
         self.start_default_system()
         self.sys.rm_scst_local()
 
-        self.dedupv1.targets("add tid=3 name=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.targets("add tid=3 name=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
-        self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=500G target=iqn.2005-03.info.christmann:backup:special:0 group=Default:1")
+        self.dedupv1.volumes("attach id=4 device-name=Backup2 logical-size=500G target=iqn.2005-03.de.jgu.dedupv1:backup:special:0 group=Default:1")
         self.assertExitcode(0)
 
         self.open_iscsi.discover(server="127.0.0.1")
         self.assertExitcode(0)
-        self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special")
+        self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
         try:
             sleep(5)
             devices = os.listdir("/dev/disk/by-path")
-            self.assertTrue("ip-127.0.0.1:3260-iscsi-iqn.2005-03.info.christmann:backup:special-lun-0" in devices)
+            self.assertTrue("ip-127.0.0.1:3260-iscsi-iqn.2005-03.de.jgu.dedupv1:backup:special-lun-0" in devices)
 
             self.dedupv1.volumes("change-state id=4 state=maintenance")
             self.assertNotEqual(self.run.code, 0) # this should fail
         finally:
-            self.open_iscsi.disconnect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special")
+            self.open_iscsi.disconnect(server="127.0.0.1", name="iqn.2005-03.de.jgu.dedupv1:backup:special")
             self.assertExitcode(0)
 
         self.dedupv1.volumes("change-state id=4 state=maintenance")
         self.assertExitcode(0)
 
-        self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special")
+        self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
         try:
             sleep(5)
             devices = os.listdir("/dev/disk/by-path")
-            self.assertFalse("ip-127.0.0.1:3260-iscsi-iqn.2005-03.info.christmann:backup:special-lun-0" in devices)
+            self.assertFalse("ip-127.0.0.1:3260-iscsi-iqn.2005-03.de.jgu.dedupv1:backup:special-lun-0" in devices)
         finally:
-            self.open_iscsi.disconnect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special")
+            self.open_iscsi.disconnect(server="127.0.0.1", name="iqn.2005-03.de.jgu.dedupv1:backup:special")
             self.assertExitcode(0)
 
     def test_iscsi_change_target_name(self):
         """ test_iscsi_change_target_name
 
-            Tests that it is possible to change the name of an target. The test also verifies that it is not possible to change the target name while there is an iSCSI connection.
+            Tests that it is possible to change the name of an target.
+            The test also verifies that it is not possible to change the
+            target name while there is an iSCSI connection.
         """
         self.start_default_system()
 
-        self.dedupv1.targets("add tid=3 name=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.targets("add tid=3 name=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
         # try to change name with an open connection
         self.open_iscsi.discover(server="127.0.0.1")
         self.assertExitcode(0)
-        self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special")
+        self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
         sleep(10)
-        self.dedupv1.targets("change tid=3 name=iqn.2005-03.info.christmann:backup:special2")
+        self.dedupv1.targets("change tid=3 name=iqn.2005-03.de.jgu.dedupv1:backup:special2")
         self.assertNotEqual(self.run.code, 0) # this should fail
 
         sleep(5)
-        self.open_iscsi.disconnect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special")
+        self.open_iscsi.disconnect(server="127.0.0.1", name="iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
         sleep(10)
-        self.dedupv1.targets("change tid=3 name=iqn.2005-03.info.christmann:backup:special2")
+        self.dedupv1.targets("change tid=3 name=iqn.2005-03.de.jgu.dedupv1:backup:special2")
         self.assertExitcode(0)
 
         self.open_iscsi.discover(server="127.0.0.1")
         self.assertExitcode(0)
 
-        self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special2")
+        self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.de.jgu.dedupv1:backup:special2")
         self.assertExitcode(0)
 
         sleep(5)
-        self.open_iscsi.disconnect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special2")
+        self.open_iscsi.disconnect(server="127.0.0.1", name="iqn.2005-03.de.jgu.dedupv1:backup:special2")
         self.assertExitcode(0)
 
     def test_iscsi_change_target_name_with_volume_and_user(self):
@@ -2577,10 +2581,10 @@ class Dedupv1ISCSISystemTest(Dedupv1BaseSystemTest):
         self.dedupv1.volumes("attach id=1 device-name=backup1 logical-size=500G")
         self.assertExitcode(0)
 
-        self.dedupv1.targets("add tid=3 name=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.targets("add tid=3 name=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
-        self.dedupv1.volumes("target add id=1 target=iqn.2005-03.info.christmann:backup:special:0")
+        self.dedupv1.volumes("target add id=1 target=iqn.2005-03.de.jgu.dedupv1:backup:special:0")
         self.assertExitcode(0)
 
         secret = self.dedupv1.passwd("testtesttest1")
@@ -2589,41 +2593,41 @@ class Dedupv1ISCSISystemTest(Dedupv1BaseSystemTest):
         self.dedupv1.users("add name=test secret-hash=%s" % secret)
         self.assertExitcode(0)
 
-        self.dedupv1.users("target add name=test target=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.users("target add name=test target=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
-        self.dedupv1.targets("change tid=3 name=iqn.2005-03.info.christmann:backup:special2")
+        self.dedupv1.targets("change tid=3 name=iqn.2005-03.de.jgu.dedupv1:backup:special2")
         self.assertExitcode(0)
 
-        self.assertTrue("backup1" in self.scst.get_devices_in_group("Default_iqn.2005-03.info.christmann:backup:special2"))
+        self.assertTrue("backup1" in self.scst.get_devices_in_group("Default_iqn.2005-03.de.jgu.dedupv1:backup:special2"))
 
         self.open_iscsi.discover(server="127.0.0.1")
         self.assertExitcode(0)
 
         self.open_iscsi.client_auth(server="127.0.0.1",
-                     name="iqn.2005-03.info.christmann:backup:special2",
+                     name="iqn.2005-03.de.jgu.dedupv1:backup:special2",
                      username="test",
                      password="testtesttest1")
         self.assertExitcode(0)
 
-        self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special2")
+        self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.de.jgu.dedupv1:backup:special2")
         self.assertExitcode(0)
         try:
             sleep(5)
             devices = os.listdir("/dev/disk/by-path")
-            self.assertTrue("ip-127.0.0.1:3260-iscsi-iqn.2005-03.info.christmann:backup:special2-lun-0" in devices)
-            volume_size = self.run("blockdev --getsize64 /dev/disk/by-path/ip-127.0.0.1:3260-iscsi-iqn.2005-03.info.christmann:backup:special2-lun-0")
+            self.assertTrue("ip-127.0.0.1:3260-iscsi-iqn.2005-03.de.jgu.dedupv1:backup:special2-lun-0" in devices)
+            volume_size = self.run("blockdev --getsize64 /dev/disk/by-path/ip-127.0.0.1:3260-iscsi-iqn.2005-03.de.jgu.dedupv1:backup:special2-lun-0")
             self.assertEqual("536870912000", volume_size.strip())
 
         finally:
-           self.open_iscsi.disconnect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special2")
+           self.open_iscsi.disconnect(server="127.0.0.1", name="iqn.2005-03.de.jgu.dedupv1:backup:special2")
            self.assertExitcode(0)
 
         volume1 = self.dedupv1.monitor("volume")["1"]
         print volume1
-        self.assertEquals(volume1["targets"][0]["name"], "iqn.2005-03.info.christmann:backup:special2")
+        self.assertEquals(volume1["targets"][0]["name"], "iqn.2005-03.de.jgu.dedupv1:backup:special2")
 
-        self.dedupv1.volumes("target remove id=1 target=iqn.2005-03.info.christmann:backup:special2")
+        self.dedupv1.volumes("target remove id=1 target=iqn.2005-03.de.jgu.dedupv1:backup:special2")
         self.assertExitcode(0)
 
 
@@ -2637,57 +2641,57 @@ class Dedupv1ISCSISystemTest(Dedupv1BaseSystemTest):
         self.dedupv1.volumes("attach id=1 device-name=backup1 logical-size=500G")
         self.assertExitcode(0)
 
-        self.dedupv1.targets("add tid=3 name=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.targets("add tid=3 name=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
-        self.dedupv1.volumes("target add id=1 target=iqn.2005-03.info.christmann:backup:special:0")
+        self.dedupv1.volumes("target add id=1 target=iqn.2005-03.de.jgu.dedupv1:backup:special:0")
         self.assertExitcode(0)
 
         # try to change name with an open connection
         self.open_iscsi.discover(server="127.0.0.1")
         self.assertExitcode(0)
-        self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special")
+        self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
         sleep(10)
         devices = os.listdir("/dev/disk/by-path")
-        self.assertTrue("ip-127.0.0.1:3260-iscsi-iqn.2005-03.info.christmann:backup:special-lun-0" in devices)
-        volume_size = self.run("blockdev --getsize64 /dev/disk/by-path/ip-127.0.0.1:3260-iscsi-iqn.2005-03.info.christmann:backup:special-lun-0")
+        self.assertTrue("ip-127.0.0.1:3260-iscsi-iqn.2005-03.de.jgu.dedupv1:backup:special-lun-0" in devices)
+        volume_size = self.run("blockdev --getsize64 /dev/disk/by-path/ip-127.0.0.1:3260-iscsi-iqn.2005-03.de.jgu.dedupv1:backup:special-lun-0")
         self.assertEqual("536870912000", volume_size.strip())
 
-        self.dedupv1.targets("change tid=3 name=iqn.2005-03.info.christmann:backup:special2")
+        self.dedupv1.targets("change tid=3 name=iqn.2005-03.de.jgu.dedupv1:backup:special2")
         self.assertNotEqual(self.run.code, 0) # this should fail
 
         sleep(5)
-        self.open_iscsi.disconnect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special")
+        self.open_iscsi.disconnect(server="127.0.0.1", name="iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
         sleep(10)
-        self.dedupv1.targets("change tid=3 name=iqn.2005-03.info.christmann:backup:special2")
+        self.dedupv1.targets("change tid=3 name=iqn.2005-03.de.jgu.dedupv1:backup:special2")
         self.assertExitcode(0)
 
-        self.assertTrue("backup1" in self.scst.get_devices_in_group("Default_iqn.2005-03.info.christmann:backup:special2"))
+        self.assertTrue("backup1" in self.scst.get_devices_in_group("Default_iqn.2005-03.de.jgu.dedupv1:backup:special2"))
 
         self.open_iscsi.discover(server="127.0.0.1")
         self.assertExitcode(0)
 
-        self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special2")
+        self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.de.jgu.dedupv1:backup:special2")
         self.assertExitcode(0)
 
         sleep(5)
         devices = os.listdir("/dev/disk/by-path")
-        self.assertTrue("ip-127.0.0.1:3260-iscsi-iqn.2005-03.info.christmann:backup:special2-lun-0" in devices)
-        volume_size = self.run("blockdev --getsize64 /dev/disk/by-path/ip-127.0.0.1:3260-iscsi-iqn.2005-03.info.christmann:backup:special2-lun-0")
+        self.assertTrue("ip-127.0.0.1:3260-iscsi-iqn.2005-03.de.jgu.dedupv1:backup:special2-lun-0" in devices)
+        volume_size = self.run("blockdev --getsize64 /dev/disk/by-path/ip-127.0.0.1:3260-iscsi-iqn.2005-03.de.jgu.dedupv1:backup:special2-lun-0")
         self.assertEqual("536870912000", volume_size.strip())
 
-        self.open_iscsi.disconnect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special2")
+        self.open_iscsi.disconnect(server="127.0.0.1", name="iqn.2005-03.de.jgu.dedupv1:backup:special2")
         self.assertExitcode(0)
 
         volume1 = self.dedupv1.monitor("volume")["1"]
         print volume1
-        self.assertEquals(volume1["targets"][0]["name"], "iqn.2005-03.info.christmann:backup:special2")
+        self.assertEquals(volume1["targets"][0]["name"], "iqn.2005-03.de.jgu.dedupv1:backup:special2")
 
-        self.dedupv1.volumes("target remove id=1 target=iqn.2005-03.info.christmann:backup:special2")
+        self.dedupv1.volumes("target remove id=1 target=iqn.2005-03.de.jgu.dedupv1:backup:special2")
         self.assertExitcode(0)
 
     def test_iscsi_two_volumes_per_target(self):
@@ -2726,66 +2730,6 @@ class Dedupv1ISCSISystemTest(Dedupv1BaseSystemTest):
         self.open_iscsi.disconnect(server="127.0.0.1", name="iqn.2010.04:example")
         self.assertExitcode(0)
 
-    def test_iscsi_copy_images_with_cp(self, idle_time=600):
-        """ test_iscsi_copy_images_with_cp
-        """
-        self.adapt_config_file("log.max-log-size=.*",
-                             "log.max-log-size=64M")
-        self.start_default_system()
-
-        copied_image_count = 0
-        number_of_images = self.configuration.get("acronis image count", 12)
-        test_data_dir = self.configuration.get("test data dir", None)
-        image_path = os.path.join(test_data_dir, "acronis-images", "pc1")
-        self.assertTrue(os.path.exists(image_path), "Image path doesn't exists")
-
-        self.dedupv1.targets("add tid=3 name=iqn.2005-03.info.christmann:backup:special")
-        self.assertExitcode(0)
-
-        self.open_iscsi.discover(server="127.0.0.1")
-        self.assertExitcode(0)
-        self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special")
-        self.assertExitcode(0)
-
-        try:
-            self.data.device_name = "/dev/disk/by-path/ip-127.0.0.1:3260-iscsi-iqn.2005-03.info.christmann:backup:special-lun-0"
-            self.sys.device_name = "/dev/disk/by-path/ip-127.0.0.1:3260-iscsi-iqn.2005-03.info.christmann:backup:special-lun-0"
-            self.prepare_part()
-
-            start_time = time()
-            total_data_size = 0
-
-            os.mkdir(os.path.join(self.mnt_point, "images"))
-            for root, dirs, files in os.walk(image_path):
-                for file in files:
-                    pathname = os.path.join(root, file)
-
-                    dest_file = os.path.join(self.mnt_point, "images", file)
-                    print "Copy", file
-
-                    cp_cmd = "cp %s %s" % (pathname, dest_file)
-                    self.run(cp_cmd)
-                    total_data_size += os.path.getsize(pathname)
-                    copied_image_count += 1
-
-                    if number_of_images and copied_image_count >= number_of_images:
-                        break
-
-            end_time = time()
-            print "Copy time %s" % (end_time - start_time)
-            print "Total data size %s MB" % (total_data_size / (1024 * 1024.0))
-
-            self.sys.umount()
-            sleep(10)
-
-            self.sys.fsck_ext3()
-            self.assertExitcode(0)
-
-            self.assertNoLoggedErrors()
-        finally:
-            self.open_iscsi.disconnect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special")
-            self.assertExitcode(0)
-
 class Dedupv1OverflowSystemTest(Dedupv1BaseSystemTest):
     def test_memory_lower_parachute(self):
         """ test_memory_lower_parachute
@@ -2795,7 +2739,7 @@ class Dedupv1OverflowSystemTest(Dedupv1BaseSystemTest):
             The test only tests if the start fails. It would be nice to be able to scan the log
             file for the following message:
 
-                Malloc for memory parachute failed.
+            Malloc for memory parachute failed.
         """
         self.adapt_config_file("daemon.max-memory=.*",
                              "daemon.max-memory=512M")
@@ -2875,16 +2819,16 @@ class Dedupv1OverflowSystemTest(Dedupv1BaseSystemTest):
                              "log.max-log-size=64M")
         self.start_default_system()
 
-        self.dedupv1.targets("add tid=3 name=iqn.2005-03.info.christmann:backup:special")
+        self.dedupv1.targets("add tid=3 name=iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
         self.open_iscsi.discover(server="127.0.0.1")
         self.assertExitcode(0)
-        self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special")
+        self.open_iscsi.connect(server="127.0.0.1", name="iqn.2005-03.de.jgu.dedupv1:backup:special")
         self.assertExitcode(0)
 
         try:
-            self.data.device_name = "/dev/disk/by-path/ip-127.0.0.1:3260-iscsi-iqn.2005-03.info.christmann:backup:special-lun-0"
+            self.data.device_name = "/dev/disk/by-path/ip-127.0.0.1:3260-iscsi-iqn.2005-03.de.jgu.dedupv1:backup:special-lun-0"
 
             size = 4 * 1024
             filename = self.get_urandom_file(size)
@@ -2912,7 +2856,7 @@ class Dedupv1OverflowSystemTest(Dedupv1BaseSystemTest):
 
             self.assertNoLoggedErrors()
         finally:
-            self.open_iscsi.disconnect(server="127.0.0.1", name="iqn.2005-03.info.christmann:backup:special")
+            self.open_iscsi.disconnect(server="127.0.0.1", name="iqn.2005-03.de.jgu.dedupv1:backup:special")
             self.assertExitcode(0)
 
     def test_log_overflow_crash(self, idle_time=600):
@@ -3081,76 +3025,6 @@ class Dedupv1OverflowSystemTest(Dedupv1BaseSystemTest):
         self.data.copy_raw(filename, size)
 
 class Dedupv1DataSystemTest(Dedupv1BaseSystemTest):
-
-    def extract_kernel(self, extract=True):
-        def extract_kernel_source(major, minor):
-            name = "linux-2.6.%s.%s.tar" % (major, minor)
-            self.run("tar -xf %s" % (os.path.join(kernel_path, name)), cwd=self.mnt_point)
-            self.assertExitcode(0)
-
-        def copy_kernel_tarball(major, minor):
-            name = "linux-2.6.%s.%s.tar" % (major, minor)
-            shutil.copy(os.path.join(kernel_path, name), self.mnt_point)
-
-        test_data_dir = self.configuration.get("test data dir", None)
-        kernel_path = os.path.join(test_data_dir, "kernel")
-        kernel_versions = [(31, 1), (31, 2), (31, 3), (31, 4), (31, 5), (31, 6), (31, 7), (31, 8), (31, 9), (31, 10), (31, 11), (31, 12),
-                   (32, 1), (32, 2), (32, 3), (32, 4), (32, 5), (32, 6), (32, 7), (32, 8)
-                   ]
-
-        self.sys.prepare_part()
-
-        for (major, minor) in kernel_versions:
-            if extract:
-                extract_kernel_source(major, minor)
-            else:
-                copy_kernel_tarball(major, minor)
-
-            self.sys.umount()
-            self.assertExitcode(0)
-
-            self.sys.fsck_ext3()
-            self.assertExitcode(0)
-
-            self.sys.mount()
-            self.assertExitcode(0)
-
-        self.assertNoLoggedWarning()
-        self.assertNoLoggedErrors()
-
-    def test_extract_kernel(self):
-        """ test_extract_kernel
-
-            Extracts a series of kernel sources. The result is validated using a series of fsck runs.
-        """
-        self.start_default_system()
-        self.extract_kernel()
-
-    def test_extract_kernel_4k(self):
-        """ test_extract_kernel_4k
-
-            Extracts a series of kernel sources. The dedup system is configured with 4k chunks. The result is validated using a series of fsck runs.
-        """
-        self.adapt_config_file("chunking=rabin", "chunking=rabin\nchunking.min-chunk-size=1K\nchunking.avg-chunk-size=4K\nchunking.max-chunk-size=16K")
-
-        self.start_default_system()
-        self.extract_kernel()
-
-    def test_copy_kernel(self):
-        """ test_copy_kernel
-
-            Copies a series of kernel sources archives to a filesystem. The result is validated using a series of fsck runs.
-        """
-        self.start_default_system()
-        self.extract_kernel(extract=False)
-
-    def test_copy_kernel_4k(self):
-        """ test_copy_kernel_4k
-        """
-        self.adapt_config_file("chunking=rabin", "chunking=rabin\nchunking.min-chunk-size=1K\nchunking.avg-chunk-size=4K\nchunking.max-chunk-size=16K")
-
-        self.start_default_system()
-        self.extract_kernel(extract=False)
 
     def test_urandom_kill_after_replay(self):
         """ test_urandom_kill_after_replay
@@ -3734,483 +3608,11 @@ class Dedupv1DataSystemTest(Dedupv1BaseSystemTest):
 
         self.sys.fsck_ext3()
 
-    def test_copy_images_full_replay(self, idle_time=120):
-        """ test_copy_images_full_replay
-
-            Copies a series of backup images, followed by a restart, a complete replay and some time of garbage collection.
-        """
-        self.start_default_system()
-
-        self.sys.prepare_part()
-
-        number_of_images = self.configuration.get("acronis image count", 12)
-        test_data_dir = self.configuration.get("test data dir", None)
-        image_path = os.path.join(test_data_dir, "acronis-images", "pc1")
-
-        copied_image_count = 0
-        os.mkdir(os.path.join(self.mnt_point, "images"))
-        for root, dirs, files in os.walk(image_path):
-            for file in files:
-                pathname = os.path.join(root, file)
-
-                dest_file = os.path.join(self.mnt_point, "images", file)
-                print "Copy", file
-
-                shutil.copyfile(pathname, dest_file)
-                copied_image_count += 1
-
-                if number_of_images and copied_image_count >= number_of_images:
-                    break
-
-        for root, dirs, files in os.walk(os.path.join(self.mnt_point, "images")):
-            for file in files:
-                    pathname = os.path.join(root, file)
-                    src_file = os.path.join(image_path, file)
-
-                    src_md5 = self.data.read_md5_file(src_file)
-                    dest_md5 = self.data.read_md5_file(pathname)
-                    print "Src md5", src_md5, ", dest md5", dest_md5
-                    self.assertEquals(src_md5, dest_md5)
-
-        self.sys.umount()
-
-        self.sys.fsck_ext3()
-        self.assertExitcode(0)
-
-        self.sys.rm_scst_local()
-        sleep(4)
-
-        self.assertNoLoggedWarning()
-        self.assertNoLoggedErrors()
-
-        self.dedupv1.stop("-f")
-        self.assertExitcode(0)
-
-        start_time = time()
-
-        self.dedupv1.replay()
-        self.assertExitcode(0)
-
-        end_time = time()
-        print "Replay time %s" % (end_time - start_time)
-
-        # First check
-        self.dedupv1.check()
-        self.assertExitcode(0)
-
-        # Let the gc do it work
-        self.dedupv1.start()
-        self.dedupv1.monitor("idle", "force-idle=true")
-        sleep(idle_time)
-
-        # Recheck
-        self.assertNoLoggedWarning()
-        self.assertNoLoggedErrors()
-
-    def test_copy_images_replay(self, idle_time=300):
-        """ test_copy_images_replay
-
-            Copies a series of backup images with a severe replay time between the images
-        """
-        self.start_default_system()
-
-        self.prepare_part()
-
-        copied_image_count = 0
-        number_of_images = self.configuration.get("acronis image count", 12)
-        test_data_dir = self.configuration.get("test data dir", None)
-        image_path = os.path.join(test_data_dir, "acronis-images", "pc1")
-
-        os.mkdir(os.path.join(self.mnt_point, "images"))
-        for root, dirs, files in os.walk(image_path):
-            for file in files:
-                pathname = os.path.join(root, file)
-
-                dest_file = os.path.join(self.mnt_point, "images", file)
-                print "Copy", file
-
-                shutil.copyfile(pathname, dest_file)
-                copied_image_count += 1
-
-                self.dedupv1.monitor("idle", "force-idle=true")
-                sleep(idle_time)
-
-                if number_of_images and copied_image_count >= number_of_images:
-                    break
-        self.sys.umount()
-        sleep(10)
-
-        self.sys.fsck_ext3()
-        self.assertExitcode(0)
-
-        self.assertNoLoggedWarning()
-        self.assertNoLoggedErrors()
-
-        self.dedupv1.stop()
-        self.assertExitcode(0)
-
-        self.dedupv1.start()
-        self.assertExitcode(0)
-
-        self.dedupv1.monitor("idle", "force-idle=true")
-        sleep(idle_time)
-        self.dedupv1.monitor("idle", "force-idle=false")
-
-        self.sys.mount()
-        self.assertExitcode(0)
-        self.assertTrue(os.path.ismount(self.mnt_point))
-
-        for root, dirs, files in os.walk(os.path.join(self.mnt_point, "images")):
-            for file in files:
-                    pathname = os.path.join(root, file)
-                    src_file = os.path.join(image_path, file)
-
-                    src_md5 = self.data.read_md5_file(src_file)
-                    dest_md5 = self.data.read_md5_file(pathname)
-                    print "Src md5", src_md5, ", dest md5", dest_md5
-                    self.assertEquals(src_md5, dest_md5)
-
-        self.sys.umount()
-        sleep(10)
-
-        self.sys.fsck_ext3()
-        self.assertExitcode(0)
-
-        self.assertNoLoggedWarning()
-        self.assertNoLoggedErrors()
-
-    def test_copy_images_bytecompare(self, idle_time=300):
-        """ test_copy_images_bytecompare
-
-            Copies a series of backup images with the bytecompare filter enabled.
-        """
-        self.adapt_config_file("filter=bytecompare-filter\nfilter.enabled=false",
-            "filter=bytecompare-filter")
-        self.start_default_system()
-
-        self.sys.prepare_part()
-
-        copied_image_count = 0
-        number_of_images = 2
-        test_data_dir = self.configuration.get("test data dir", None)
-        image_path = os.path.join(test_data_dir, "acronis-images", "pc1")
-
-        os.mkdir(os.path.join(self.mnt_point, "images"))
-        for root, dirs, files in os.walk(image_path):
-            for file in files:
-                pathname = os.path.join(root, file)
-
-                dest_file = os.path.join(self.mnt_point, "images", file)
-                print "Copy", file
-                shutil.copyfile(pathname, dest_file)
-                copied_image_count += 1
-
-                if number_of_images and copied_image_count >= number_of_images:
-                    break
-        self.sys.umount()
-        sleep(10)
-
-        self.sys.fsck_ext3()
-        self.assertExitcode(0)
-
-        self.assertNoLoggedWarning()
-        self.assertNoLoggedErrors()
-
-        self.dedupv1.stop()
-        self.assertExitcode(0)
-
-    def test_copy_images_double_copy(self, idle_time=300):
-        """ test_copy_images_double_copy
-
-            Copies a series of backup images, replayes the complete log and copies the same set of data again
-        """
-        def copy_images():
-            copied_image_count = 0
-            for root, dirs, files in os.walk(image_path):
-                for file in files:
-                    pathname = os.path.join(root, file)
-
-                    dest_file = os.path.join(self.mnt_point, "images", file)
-                    print "Copy", file
-
-                    shutil.copyfile(pathname, dest_file)
-                    copied_image_count += 1
-
-                    if number_of_images and copied_image_count >= number_of_images:
-                        break
-
-        def validate_images():
-            for root, dirs, files in os.walk(os.path.join(self.mnt_point, "images")):
-                for file in files:
-                        pathname = os.path.join(root, file)
-                        src_file = os.path.join(image_path, file)
-
-                        src_md5 = self.data.read_md5_file(src_file)
-                        dest_md5 = self.data.read_md5_file(pathname)
-                        print "Src md5", src_md5, ", dest md5", dest_md5
-                        self.assertEquals(src_md5, dest_md5)
-        self.start_default_system()
-
-        self.prepare_part()
-
-        number_of_images = self.configuration.get("acronis image count", 12)
-        test_data_dir = self.configuration.get("test data dir", None)
-        image_path = os.path.join(test_data_dir, "acronis-images", "pc1")
-
-        os.mkdir(os.path.join(self.mnt_point, "images"))
-
-        copy_images()
-
-        self.sys.umount()
-        sleep(10)
-
-        self.assertNoLoggedWarning()
-        self.assertNoLoggedErrors()
-
-        self.dedupv1.stop()
-        self.assertExitcode(0)
-
-        self.dedupv1.replay()
-        self.assertExitcode(0)
-
-        self.dedupv1.start()
-        self.assertExitcode(0)
-
-        # Recheck
-        self.assertNoLoggedWarning()
-        self.assertNoLoggedErrors()
-
-        self.dedupv1.monitor("idle", "force-idle=true")
-        sleep(idle_time)
-
-        self.assertNoLoggedErrors()
-
-        os.kill(self.scst.get_pid(), 9)
-        sleep(5)
-
-        self.dedupv1.start()
-        self.assertExitcode(0)
-
-        self.sys.mount()
-        self.assertExitcode(0)
-        self.assertTrue(os.path.ismount(self.mnt_point))
-
-        # second copy
-        copy_images()
-
-        self.dedupv1.monitor("idle", "force-idle=true")
-        sleep(idle_time)
-
-        validate_images()
-
-        self.sys.umount()
-        sleep(10)
-
-        self.sys.fsck_ext3()
-        self.assertExitcode(0)
-
-        self.assertNoLoggedWarning()
-        self.assertNoLoggedErrors()
-
-    def test_copy_images_small_aux_block_index(self, idle_time = 300):
-        """ test_copy_images_small_aux_block_index
-
-            Copy images test but with a pretty early import of the block index.
-        """
-        self.adapt_config_file("block-index.auxiliary-size-hard-limit=.*",
-                             "block-index.auxiliary-size-hard-limit=32K")
-        self.adapt_config_file("block-index.max-auxiliary-size=.*",
-                             "block-index.max-auxiliary-size=24K")
-        self.test_copy_images(idle_time)
-
-    def test_copy_images(self, idle_time=300):
-        """ test_copy_images
-
-            Copies a series of backup images, crashes the system, restarts it and verifies the images.
-        """
-        self.start_default_system()
-
-        self.prepare_part()
-
-        start_time = time()
-        total_data_size = 0
-
-        copied_image_count = 0
-        number_of_images = self.configuration.get("acronis image count", 12)
-        test_data_dir = self.configuration.get("test data dir", None)
-        image_path = os.path.join(test_data_dir, "acronis-images", "pc1")
-
-        os.mkdir(os.path.join(self.mnt_point, "images"))
-        for root, dirs, files in os.walk(image_path):
-            for file in files:
-                pathname = os.path.join(root, file)
-
-                dest_file = os.path.join(self.mnt_point, "images", file)
-                print "Copy", file
-
-                shutil.copyfile(pathname, dest_file)
-                total_data_size += os.path.getsize(pathname)
-                copied_image_count += 1
-
-                if number_of_images and copied_image_count >= number_of_images:
-                    break
-
-        end_time = time()
-        print "Copy time %s" % (end_time - start_time)
-        print "Total data size %s MB" % (total_data_size / (1024 * 1024.0))
-
-        self.sys.umount()
-        sleep(10)
-
-        self.sys.fsck_ext3()
-        self.assertExitcode(0)
-
-        self.dedupv1.monitor("idle", "force-idle=true")
-        sleep(idle_time)
-
-        self.assertNoLoggedErrors()
-
-        os.kill(self.scst.get_pid(), 9)
-        sleep(5)
-
-        self.dedupv1.start()
-        self.assertExitcode(0)
-
-        self.dedupv1.monitor("idle", "force-idle=true")
-        sleep(idle_time)
-        self.dedupv1.monitor("idle", "force-idle=false")
-
-        self.sys.mount()
-        self.assertExitcode(0)
-        self.assertTrue(os.path.ismount(self.mnt_point))
-
-        for root, dirs, files in os.walk(os.path.join(self.mnt_point, "images")):
-            for file in files:
-                    pathname = os.path.join(root, file)
-                    src_file = os.path.join(image_path, file)
-
-                    src_md5 = self.data.read_md5_file(src_file)
-                    dest_md5 = self.data.read_md5_file(pathname)
-                    print "Src md5", src_md5, ", dest md5", dest_md5
-                    self.assertEquals(src_md5, dest_md5)
-
-        self.assertNoLoggedErrors()
-
-    def test_copy_images_log_overflow(self):
-        """ test_copy_images_log_overflow
-        """
-        self.adapt_config_file("log.max-log-size=.*",
-                             "log.max-log-size=128M")
-        self.start_default_system()
-        self.prepare_part()
-
-        copied_image_count = 0
-        number_of_images = self.configuration.get("acronis image count", 5)
-        test_data_dir = self.configuration.get("test data dir", None)
-        image_path = os.path.join(test_data_dir, "acronis-images", "pc1")
-
-        os.mkdir(os.path.join(self.mnt_point, "images"))
-        for root, dirs, files in os.walk(image_path):
-            for file in files:
-                pathname = os.path.join(root, file)
-
-                dest_file = os.path.join(self.mnt_point, "images", file)
-                print "Copy", file
-
-                shutil.copyfile(pathname, dest_file)
-                copied_image_count += 1
-
-                if number_of_images and copied_image_count >= number_of_images:
-                    break
-
-        for root, dirs, files in os.walk(os.path.join(self.mnt_point, "images")):
-            for file in files:
-                    pathname = os.path.join(root, file)
-                    src_file = os.path.join(image_path, file)
-
-                    src_md5 = self.data.read_md5_file(src_file)
-                    dest_md5 = self.data.read_md5_file(pathname)
-                    print "Src md5", src_md5, ", dest md5", dest_md5
-                    self.assertEquals(src_md5, dest_md5)
-
-        self.sys.umount()
-        sleep(10)
-
-        self.sys.fsck_ext3()
-        self.assertExitcode(0)
-
-        self.assertNoLoggedWarning()
-        self.assertNoLoggedErrors()
-
-    def test_copy_images_double_replay(self, idle_time=300):
-        """ test_copy_images_double_replay
-
-            Copies a series of backup images and kill dedupv1d after the processing.
-            During the crash log replay of the starting daemon, the daemon is killed
-            a second time. At the end, we check if every data that has been written is
-            recovered.
-        """
-        self.start_default_system()
-        self.prepare_part()
-
-        copied_image_count = 0
-        number_of_images = self.configuration.get("acronis image count", 12)
-        test_data_dir = self.configuration.get("test data dir", None)
-        image_path = os.path.join(test_data_dir, "acronis-images", "pc1")
-
-        os.mkdir(os.path.join(self.mnt_point, "images"))
-        for root, dirs, files in os.walk(image_path):
-            for file in files:
-                pathname = os.path.join(root, file)
-
-                dest_file = os.path.join(self.mnt_point, "images", file)
-                print "Copy", file
-
-                shutil.copyfile(pathname, dest_file)
-                copied_image_count += 1
-
-                if number_of_images and copied_image_count >= number_of_images:
-                    break
-        self.sys.umount()
-        self.dedupv1.monitor("idle", "force-idle=true")
-        sleep(idle_time)
-
-        self.assertNoLoggedWarning()
-        self.assertNoLoggedErrors()
-
-        os.kill(self.scst.get_pid(), 9)
-        sleep(5)
-
-        # Kill the starting daemon in 60 seconds
-        kill_proc = self.timed_kill_daemon(60, 9)
-        self.dedupv1.start()
-        kill_proc.join()
-
-        self.dedupv1.start()
-        self.assertExitcode(0)
-
-        self.assertNoLoggedWarning()
-        self.assertNoLoggedErrors()
-
-        self.sys.mount()
-
-        for root, dirs, files in os.walk(os.path.join(self.mnt_point, "images")):
-            for file in files:
-                    pathname = os.path.join(root, file)
-                    src_file = os.path.join(image_path, file)
-
-                    src_md5 = self.data.read_md5_file(src_file)
-                    dest_md5 = self.data.read_md5_file(pathname)
-                    print "Src md5", src_md5, ", dest md5", dest_md5
-                    self.assertEquals(src_md5, dest_md5)
-
-        self.assertNoLoggedWarning()
-        self.assertNoLoggedErrors()
-
     def test_copy_urandom(self):
         """ test_copy_urandom:
 
-            Tests if a 8 GB (by default) simple sequential direct block write is valid.The system is cleanly shutdown.
+            Tests if a 8 GB (by default) simple sequential direct block write is
+            valid. The system is cleanly shutdown.
         """
         self.start_default_system()
 
@@ -4377,60 +3779,6 @@ class Dedupv1DataSystemTest(Dedupv1BaseSystemTest):
 
         self.assertNoLoggedWarning()
         self.assertNoLoggedErrors()
-
-    def test_copy_extra_images(self):
-        """ test_copy_extra_images
-
-            Copies a extra series of backup images.
-        """
-        def copy_images(image_path):
-            for root, dirs, files in os.walk(image_path):
-                for file in files:
-                    pathname = os.path.join(root, file)
-
-                    out_filepath = pathname[len(image_path) + 1:]
-
-                    dest_file = os.path.join(self.mnt_point, "images", out_filepath)
-                    print "Prepare %s (size %s MB)" % (out_filepath, os.path.getsize(pathname) / (1024 * 1024))
-
-                    if not os.path.exists(os.path.dirname(dest_file)):
-                        os.makedirs(os.path.dirname(dest_file))
-
-                    # For performance reasons on dedupv1-build (defect SAN) we copy the data to a faster storage before copying the image to dedupv1
-                    temp_filename = os.path.join(test_data_dir, "tmp.img")
-                    shutil.copyfile(pathname, temp_filename)
-                    sleep(10)
-
-                    print "Copy %s" % (out_filepath)
-                    shutil.copyfile(temp_filename, dest_file)
-
-                    self.sys.sync()
-                    os.unlink(temp_filename)
-
-        extra_test_data_dir = self.configuration.get("extra test data dir", None)
-        test_data_dir = self.configuration.get("test data dir", None)
-        if extra_test_data_dir is None:
-            print "Skip this test"
-            return
-        altiris_image_path = os.path.join(extra_test_data_dir, "AltirisImages")
-        norton_image_path = os.path.join(extra_test_data_dir, "NortonGhostBackups")
-
-        self.start_default_system()
-        try:
-            self.prepare_part(size=500) # 500 GB volumes
-            os.mkdir(os.path.join(self.mnt_point, "images"))
-
-            copy_images(altiris_image_path)
-            copy_images(norton_image_path)
-        finally:
-            self.sys.umount()
-            sleep(10)
-
-        self.assertNoLoggedWarning()
-        self.assertNoLoggedErrors()
-
-        self.dedupv1.stop()
-        self.assertExitcode(0)
 
 class Dedupv1ContribSystemTest(Dedupv1BaseSystemTest):
 
