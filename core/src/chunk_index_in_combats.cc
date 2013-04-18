@@ -68,7 +68,8 @@ ChunkIndexInCombats::~ChunkIndexInCombats() {
     }
 }
 
-bool ChunkIndexInCombats::SetOption(const std::string& option_name, const std::string& option) {
+bool ChunkIndexInCombats::SetOption(const std::string& option_name,
+    const std::string& option) {
     if (option_name == "size") {
         CHECK(ToStorageUnit(option).valid(), "Illegal option " << option);
         this->size_ = ToStorageUnit(option).value();
@@ -98,17 +99,21 @@ bool ChunkIndexInCombats::SetOption(const std::string& option_name, const std::s
     return false;
 }
 
-bool ChunkIndexInCombats::Start(const StartContext& start_context, dedupv1::log::Log* log) {
+bool ChunkIndexInCombats::Start(const StartContext& start_context,
+    dedupv1::log::Log* log) {
     CHECK(log, "Log not set");
     this->log_ = log;
 
     if (error_rate_ > 0.0) {
         // auto configuration
-        this->in_combat_chunks_ = BloomSet::NewOptimizedBloomSet(capacity_, error_rate_);
+        this->in_combat_chunks_ =
+          BloomSet::NewOptimizedBloomSet(capacity_, error_rate_);
         CHECK(this->in_combat_chunks_, "Failed to alloc bloom set");
         k_ = in_combat_chunks_->hash_count();
         size_ = in_combat_chunks_->size();
-        INFO("Auto configure in-combat store: k " << static_cast<uint32_t>(k_) << ", size " << size_);
+        INFO("Auto configure in-combat store: " <<
+            "k " << static_cast<uint32_t>(k_) <<
+            ", size " << size_);
     } else {
         this->in_combat_chunks_ = new BloomSet(this->size_, this->k_);
         CHECK(this->in_combat_chunks_, "Failed to alloc bloom set");
@@ -142,7 +147,8 @@ Option<bool> ChunkIndexInCombats::Contains(const void* fp, size_t fp_size) {
         result = make_option(false);
     }
 
-    TRACE("Check in-combat state: " << ToHexString(fp, fp_size) << ", result " << result.valid() << "/" << result.value());
+    TRACE("Check in-combat state: " << ToHexString(fp, fp_size) <<
+        ", result " << result.valid() << "/" << result.value());
     return result;
 }
 

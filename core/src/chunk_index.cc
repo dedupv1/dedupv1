@@ -801,7 +801,7 @@ bool ChunkIndex::ImportContainerParallel(uint64_t container_id, const Container&
                 TRACE("Container item is deleted: " << item->DebugString());
                 continue;
             }
-            if (item->is_indexed()) {
+            if (!item->is_indexed()) {
                 TRACE("Container item should not be indexed: " << item->DebugString());
                 continue;
             }

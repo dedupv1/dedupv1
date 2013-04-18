@@ -964,7 +964,9 @@ class Log: public dedupv1::StatisticProvider {
          * Denotes that a seried of log replayes ended.
          * @param success false if the replay stopped because of a replay error
          */
-        virtual bool ReplayStop(enum replay_mode replay_mode, bool success, bool commit_replay_event = true);
+        virtual bool ReplayStop(enum replay_mode replay_mode,
+            bool success,
+            bool commit_replay_event = true);
 
         /**
          * Throttled down the calling thread if the log is filling up or if the direct replay queue gets too large.
@@ -1087,7 +1089,7 @@ class Log: public dedupv1::StatisticProvider {
         bool IsFull(bool hard_limit = false);
 
         bool WaitUntilDirectReplayQueueEmpty(uint32_t timeout);
-        
+
         /**
          *
          * @param id

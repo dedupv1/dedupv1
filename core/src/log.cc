@@ -127,7 +127,7 @@ public:
                    const dedupv1::log::LogReplayContext& context);
 };
 
-Log::Log() : replay_thread_(NewRunnable(this, &Log::ReplayLoop), "log direct"), 
+Log::Log() : replay_thread_(NewRunnable(this, &Log::ReplayLoop), "log direct"),
   replay_thread_start_barrier_(2) {
     this->state_ = LOG_STATE_CREATED;
     this->log_data_ = NULL;
@@ -1020,8 +1020,8 @@ bool Log::CommitEvent(enum event_type event_type, const google::protobuf::Messag
     int64_t current_log_id = 0;
     uint32_t current_log_id_count = 0;
 
-    TRACE("Prepare commit: " << Log::GetEventTypeName(event_type) << 
-        ", event value " << (message ? FriendlySubstr(message->ShortDebugString(), 0, 256, " ...") : "null") 
+    TRACE("Prepare commit: " << Log::GetEventTypeName(event_type) <<
+        ", event value " << (message ? FriendlySubstr(message->ShortDebugString(), 0, 256, " ...") : "null")
         << ", event size " << (message ? message->ByteSize() : 0));
 
     const EventTypeInfo& event_type_info(EventTypeInfo::GetInfo(event_type));
@@ -1049,8 +1049,8 @@ bool Log::CommitEvent(enum event_type event_type, const google::protobuf::Messag
         DEBUG("Committed event: "
             << "event log id " << current_log_id <<
             ", entry count " << current_log_id_count <<
-            ", type " << Log::GetEventTypeName(event_type) << 
-            ", event value " << (message ? FriendlySubstr(message->ShortDebugString(), 0, 256, " ...") : "null") << 
+            ", type " << Log::GetEventTypeName(event_type) <<
+            ", event value " << (message ? FriendlySubstr(message->ShortDebugString(), 0, 256, " ...") : "null") <<
             ", event size " << (message ? message->ByteSize() : 0));
         if (commit_log_id) {
             *commit_log_id = current_log_id;
@@ -1276,15 +1276,16 @@ log_replay_result Log::Replay(enum replay_mode replay_mode,
     event_type old_type = EVENT_TYPE_NONE;
     event_type new_type = EVENT_TYPE_NONE;
 
-    bool log_empty = ((next_replay_id == current_log_id) || ((next_replay_id == current_last_empty_log_id)
-                                                             && (next_replay_id + 1 == current_log_id)) || (next_replay_id > current_last_fully_written_log_id));
+    bool log_empty = (next_replay_id > current_last_fully_written_log_id);
     if (log_empty) {
         TRACE("No elements to replay");
         return LOG_REPLAY_NO_MORE_EVENTS;
     }
     // if we are running (aka if we have direct replay) only replay items that are already replayed in the
     // direct replay queue. It is very hard to deal with this
-    if (likely(this->state_ == LOG_STATE_RUNNING) && unlikely(next_replay_id >= last_directly_replayed_log_id_)) {
+    if (likely(this->state_ == LOG_STATE_RUNNING) && unlikely(next_replay_id > last_directly_replayed_log_id_)) {
+        TRACE("Stop replay: next replay id " << next_replay_id <<
+            ", last directly replayed id " << last_directly_replayed_log_id_);
         return LOG_REPLAY_NO_MORE_EVENTS;
     }
 
@@ -1302,7 +1303,7 @@ log_replay_result Log::Replay(enum replay_mode replay_mode,
 
     while (!log_empty && (read_result == LOG_READ_OK) && (result = LOG_REPLAY_OK) && (old_type == new_type)
            && (processed_entries < number_to_replay)) {
-        TRACE("Will try to publish " << last_processed_id);
+        TRACE("Will try to publish log id " << last_processed_id);
         LogReplayContext replay_context(replay_mode, next_replay_id);
         is_last_read_event_data_valid_ = false;
         ProfileTimer timer_publish(this->stats_.replay_publish_time_);
@@ -1321,12 +1322,13 @@ log_replay_result Log::Replay(enum replay_mode replay_mode,
             next_replay_id += last_read_partial_count_;
             processed_entries++;
 
-            DEBUG("Check empty state: next replay id " << next_replay_id <<
+            log_empty = (next_replay_id > current_last_fully_written_log_id);
+            DEBUG("Check empty state: " << log_empty <<
+                ", next replay id " << next_replay_id <<
                 ", current log id " << current_log_id <<
                 ", current last empty log id " << current_last_empty_log_id <<
                 ", current last fully written log id " << current_last_fully_written_log_id);
-            log_empty = ((next_replay_id == current_log_id) || ((next_replay_id == current_last_empty_log_id)
-                                                                && (next_replay_id + 1 == current_log_id)) || (next_replay_id > current_last_fully_written_log_id));
+
             if (!log_empty) {
                 ProfileTimer timer_read(this->stats_.replay_read_time_);
                 read_result = this->ReadEvent(next_replay_id, &last_read_partial_count_, &last_read_event_data_);
@@ -1352,12 +1354,12 @@ log_replay_result Log::Replay(enum replay_mode replay_mode,
         ", last processed id is " << last_processed_id);
     // Delete events
     if ((replay_mode == EVENT_REPLAY_MODE_REPLAY_BG) && (next_replay_id != current_replay_id)) {
-        // We persist the replay ID only when replaying in Background mode, not 
+        // We persist the replay ID only when replaying in Background mode, not
         // during Dirty Restart.
         if (log_empty) {
-            // I think it is a good idea to update the current log_id_ and the 
+            // I think it is a good idea to update the current log_id_ and the
             // last_fully_written_log_id_ here,
-            // because the Publishing could have taken some time and therefore 
+            // because the Publishing could have taken some time and therefore
             // it might be possible that the
             // log is no more empty.
             spin_mutex::scoped_lock l2(this->lock_);
@@ -1365,8 +1367,12 @@ log_replay_result Log::Replay(enum replay_mode replay_mode,
             current_last_empty_log_id = this->last_empty_log_id_;
             l2.release();
             current_last_fully_written_log_id = this->last_fully_written_log_id_;
-            log_empty = ((next_replay_id == current_log_id) || ((next_replay_id == current_last_empty_log_id)
-                                                                && (next_replay_id + 1 == current_log_id)) || (next_replay_id > current_last_fully_written_log_id));
+            log_empty = (next_replay_id >= current_last_fully_written_log_id);
+            DEBUG("Re-check empty state: " << log_empty <<
+                ", next replay id " << next_replay_id <<
+                ", current log id " << current_log_id <<
+                ", current last empty log id " << current_last_empty_log_id <<
+                ", current last fully written log id " << current_last_fully_written_log_id);
         }
         if (log_empty) {
             is_last_read_event_data_valid_ = false;
@@ -1449,7 +1455,9 @@ Log::log_read Log::ReadEvent(int64_t replay_log_id, uint32_t* partial_count, Log
     return read_result;
 }
 
-bool Log::ReplayStop(enum replay_mode replay_mode, bool success, bool commit_replay_event) {
+bool Log::ReplayStop(enum replay_mode replay_mode,
+    bool success,
+    bool commit_replay_event) {
 
     spin_mutex::scoped_lock scoped_replaying_lock(this->is_replaying_lock_);
     CHECK(is_replaying_, "Log is not replaying");
