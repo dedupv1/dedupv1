@@ -136,8 +136,10 @@ TEST_F(DiskHashCachePageTest, DropAllPinned) {
     value.set_i(17);
     ASSERT_EQ(page.Update(&key, sizeof(key), value, false, true, true), PUT_OK);
 
-    ASSERT_TRUE(page.DropAllPinned());
+    uint64_t dropped_item_count = 0;
+    ASSERT_TRUE(page.DropAllPinned(&dropped_item_count));
     ASSERT_EQ(page.item_count(), 1);
+    ASSERT_EQ(2, dropped_item_count);
     page.Store();
     memcpy(shared_buffer, page.raw_buffer(), page.raw_buffer_size());
 
@@ -286,7 +288,9 @@ TEST_F(DiskHashCachePageTest, FullPageDropPinned) {
         ASSERT_EQ(page.Update(&key, sizeof(key), value, false, true, true), PUT_OK); // pinned
         page.Store();
     }
-    ASSERT_TRUE(page.DropAllPinned());
+
+    uint64_t dropped_item_count = 0;
+    ASSERT_TRUE(page.DropAllPinned(&dropped_item_count));
     ASSERT_EQ(0, page.item_count());
 }
 

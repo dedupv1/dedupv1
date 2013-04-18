@@ -423,7 +423,7 @@ class DiskHashCachePage {
         /**
          * Drop all pinned entries on the page
          */
-        bool DropAllPinned();
+        bool DropAllPinned(uint64_t* dropped_item_count);
 
         /**
          * size used by the page in RAM

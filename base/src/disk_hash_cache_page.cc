@@ -121,13 +121,18 @@ lookup_result DiskHashCachePage::Search(const void* key, size_t key_size, Messag
     return LOOKUP_NOT_FOUND;
 }
 
-bool DiskHashCachePage::DropAllPinned() {
+bool DiskHashCachePage::DropAllPinned(uint64_t* dropped_item_count) {
     TRACE("Drop all pinned from cache page: bucket " << bucket_id_);
+
+    if (dropped_item_count) {
+      *dropped_item_count = 0;
+    }
 
     DiskHashCacheEntry entry(buffer_, buffer_size_, max_key_size_, max_value_size_);
     lookup_result cache_lr = IterateInit(&entry);
     while (cache_lr == LOOKUP_FOUND) {
         if (entry.is_pinned()) {
+            TRACE("Drop pinned entry: " << entry.DebugString());
             byte* next_buffer = buffer_ + entry.current_offset() + entry.entry_data_size();
             byte* current_buffer = buffer_ + entry.current_offset();
             size_t s = buffer_size_ - (next_buffer - buffer_);
@@ -143,6 +148,10 @@ bool DiskHashCachePage::DropAllPinned() {
             memcpy(current_buffer, next_buffer, s);
             memset(buffer_ + buffer_size_ - entry.entry_data_size(), 0, entry.entry_data_size());
             item_count_--;
+
+            if (dropped_item_count) {
+              (*dropped_item_count)++;
+            }
 
             CHECK(entry.ParseFrom(entry.current_offset()), "Error parsing entry at offset " << entry.current_offset());
         } else {
