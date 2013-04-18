@@ -7,143 +7,142 @@
 
  // compile with /opt/dedupv1/bin/protoc --cpp_out=. dedupv1.proto with working directory common/resources
  
- message BlockMappingData { 	
- 	optional uint64 block_id = 1;
- 	repeated BlockMappingItemData items = 2;
- 	optional uint32 version_counter = 3;
- 	// 4 is obsolete
- 	// 5 is obsolete
- 	optional uint64 event_log_id = 6;
- 	optional bytes checksum = 7;
- }
- 
- message BlockMappingPairData {
-        optional uint64 block_id  = 1;
-        
-        // version number of the modified mapping (as it is more important)
-        optional uint32 version_counter = 2;
-
-        repeated BlockMappingPairItemData items = 3;
- }
-
- message BlockMappingPairItemData {
-        required bytes fp = 1;
-        optional uint64 data_address = 2;
-
-        // only set when not 0
-        optional uint32 chunk_offset = 3;
-        optional uint32 size = 4;
-
-        optional int32 usage_count_modifier = 5;
- }
-
- message BlockMappingItemData {
-	required bytes fp = 1;
-	optional uint64 data_address = 2;
-
-        // only set when not 0
-	optional uint32 chunk_offset = 3;
-	optional uint32 size = 4;
- }
- 
- message ChunkMappingData {
- 	optional uint64 data_address = 1;
- 	optional int64 usage_count = 2;
- 	optional uint64 usage_count_change_log_id = 3;
- 	
- 	optional uint64 usage_count_failed_write_change_log_id = 4;
- 	
- 	optional uint64 last_block_hint = 5;
- }
- 
- message ContainerData {
- 	optional uint64 primary_id = 1;
- 	optional uint32 container_size = 2;
- 	repeated ContainerItemData items = 3;
-	// 4 is obsolete
- 	optional uint32 commit_time = 5;
- 	
- 	// an adler-32 checksum
- 	optional uint32 checksum = 7;
- }
- 
- message ContainerItemData {
- 	optional bytes fp = 1;
- 	optional uint32 position_offset = 2;
- 	optional uint32 item_size = 3;
- 	optional uint32 raw_size = 4;
- 	optional bool deleted = 5;
- 	
- 	optional uint64 original_id = 6;
+message BlockMappingData {
+    optional uint64 block_id = 1;
+    repeated BlockMappingItemData items = 2;
+    optional uint32 version_counter = 3;
+    // 4 is obsolete
+    // 5 is obsolete
+    optional uint64 event_log_id = 6;
+    optional bytes checksum = 7;
 }
- 
- enum CompressionMode {
-   COMPRESSION_NO = 0;
-   COMPRESSION_DEFLATE = 1;
-   COMPRESSION_GZIP = 2;
-   COMPRESSION_BZ2 = 3;
-   COMPRESSION_SNAPPY = 4;
-   COMPRESSION_LZ4 = 5;
+
+message BlockMappingPairData {
+    optional uint64 block_id  = 1;
+
+    // version number of the modified mapping (as it is more important)
+    optional uint32 version_counter = 2;
+
+    repeated BlockMappingPairItemData items = 3;
+}
+
+message BlockMappingPairItemData {
+    required bytes fp = 1;
+    optional uint64 data_address = 2;
+
+    // only set when not 0
+    optional uint32 chunk_offset = 3;
+    optional uint32 size = 4;
+
+    optional int32 usage_count_modifier = 5;
+}
+
+message BlockMappingItemData {
+    required bytes fp = 1;
+    optional uint64 data_address = 2;
+
+    // only set when not 0
+    optional uint32 chunk_offset = 3;
+    optional uint32 size = 4;
+ }
+
+message ChunkMappingData {
+    optional uint64 data_address = 1;
+    optional int64 usage_count = 2;
+    optional uint64 usage_count_change_log_id = 3;
+
+    optional uint64 usage_count_failed_write_change_log_id = 4;
+
+    optional uint64 last_block_hint = 5;
+ }
+
+message ContainerData {
+    optional uint64 primary_id = 1;
+    optional uint32 container_size = 2;
+    repeated ContainerItemData items = 3;
+    // 4 is obsolete
+    optional uint32 commit_time = 5;
+
+    // an adler-32 checksum
+    optional uint32 checksum = 7;
+}
+
+message ContainerItemData {
+    optional bytes fp = 1;
+    optional uint32 position_offset = 2;
+    optional uint32 item_size = 3;
+    optional uint32 raw_size = 4;
+    optional bool deleted = 5;
+
+    optional uint64 original_id = 6;
+}
+
+enum CompressionMode {
+    COMPRESSION_NO = 0;
+    COMPRESSION_DEFLATE = 1;
+    COMPRESSION_GZIP = 2;
+    COMPRESSION_BZ2 = 3;
+    COMPRESSION_SNAPPY = 4;
+    COMPRESSION_LZ4 = 5;
 }
 
 message ContainerItemValueData {
- 	optional uint32 on_disk_size = 3;
- 	optional CompressionMode compression = 4 [default = COMPRESSION_NO];
+    optional uint32 on_disk_size = 3;
+    optional CompressionMode compression = 4 [default = COMPRESSION_NO];
 }
- 
+
 message Limit {
     required fixed32 size = 1;
 }
 
 message ContainerFileData {
-	// the filename is more a hint or so, as the renaming should be possible
-	optional string filename = 1;
-	// if not preallocated, the maximal file size
-	// in all cases, the file size for which container are allocated in it.
-	optional uint64 file_size = 2;
-	
-	optional string uuid = 3;
+    // the filename is more a hint or so, as the renaming should be possible
+    optional string filename = 1;
+    // if not preallocated, the maximal file size
+    // in all cases, the file size for which container are allocated in it.
+    optional uint64 file_size = 2;
+
+    optional string uuid = 3;
 }
 
 message ContainerSuperblockData {
-	optional string uuid = 1;
+    optional string uuid = 1;
 }
 
 message ContainerLogfileData {
- 	optional uint64 last_given_container_id = 1;
- 	optional uint32 container_size = 2;
- 	
- 	optional uint32 size = 3;
- 	repeated ContainerFileData file = 4;
- 	
- 	optional bool contains_superblock = 5;
+    optional uint64 last_given_container_id = 1;
+    optional uint32 container_size = 2;
+
+    optional uint32 size = 3;
+    repeated ContainerFileData file = 4;
+    optional bool contains_superblock = 5;
 }
 
 message SystemStartEventData {
-	optional bool create = 1;
-	optional bool dirty = 2;
-	optional bool forced = 3;
-	optional bool crashed = 4;
+    optional bool create = 1;
+    optional bool dirty = 2;
+    optional bool forced = 3;
+    optional bool crashed = 4;
 }
 
 message ReplayStartEventData {
-	optional int32 replay_type = 1;
-	
-	optional uint64 replay_id = 3;
-	optional uint64 log_id = 4;
-	
-	// true iff replay of the complete log is started. The log replay
-	// usually is not stopping before the complete log is replayed. Additonally
-	// no requests are done concurrently.
-	optional bool full_log_replay = 5;
+    optional int32 replay_type = 1;
+
+    optional uint64 replay_id = 3;
+    optional uint64 log_id = 4;
+
+    // true iff replay of the complete log is started. The log replay
+    // usually is not stopping before the complete log is replayed. Additonally
+    // no requests are done concurrently.
+    optional bool full_log_replay = 5;
 }
 
 message ReplayStopEventData {
-	optional int32 replay_type = 1;
-	optional bool success = 2;
-	
-	optional uint64 replay_id = 3;
-	optional uint64 log_id = 4;
+    optional int32 replay_type = 1;
+    optional bool success = 2;
+
+    optional uint64 replay_id = 3;
+    optional uint64 log_id = 4;
 }
 
 /**
@@ -151,7 +150,7 @@ message ReplayStopEventData {
  * A event should contain one and only one sub message. The matching
  * from the event type to the message to fill is obvious by the name.
  */
-message LogEventData {    
+message LogEventData {
     optional int32 event_type = 97;
 
     optional ContainerOpenedEventData container_opened_event = 1;
@@ -160,23 +159,23 @@ message LogEventData {
     optional ContainerDeletedEventData container_deleted_event = 4;
     optional ContainerMoveEventData container_moved_event = 5;
     optional ContainerCommitFailedEventData container_commit_failed_event = 6;
-    
+
     optional VolumeAttachedEventData volume_attached_event = 7;
     optional VolumeDetachedEventData volume_detached_event = 8;
-    
+
     optional BlockMappingWrittenEventData block_mapping_written_event = 9;
-    
+
     optional BlockMappingWriteFailedEventData block_mapping_write_failed_event = 10;
-    
+
     optional BlockMappingDeletedEventData block_mapping_deleted_event = 11;
-    
+
     optional OphranChunksEventData ophran_chunks_event = 12;
-    
+
     optional ReplayStartEventData replay_start_event = 13;
     optional ReplayStopEventData replay_stop_event = 14;
-    
+
     optional SystemStartEventData system_start_event = 15;
-    
+
     /**
      * Mainly used for testing
      */
@@ -184,74 +183,74 @@ message LogEventData {
 }
 
 message LogEntryData {
-	// 1 is deleted
-	optional int64 log_id = 7;
+    // 1 is deleted
+    optional int64 log_id = 7;
     // 2 is deleted
-	optional bytes value = 3;
-	// 4 is deleted
-	optional uint32 partial_index = 5;
-	optional uint32 partial_count = 6;
-	optional int64 last_fully_written_log_id = 8;
+    optional bytes value = 3;
+    // 4 is deleted
+    optional uint32 partial_index = 5;
+    optional uint32 partial_count = 6;
+    optional int64 last_fully_written_log_id = 8;
 }
 
 message ContainerOpenedEventData {
-	required uint64 container_id = 1;
-	optional ContainerStorageAddressData address = 2;
+    required uint64 container_id = 1;
+    optional ContainerStorageAddressData address = 2;
 }
 
 message ContainerCommittedEventData {
-	required uint64 container_id = 1;
-	// 2 - 3 are obsolete
-	optional ContainerStorageAddressData address = 4;
-	
-	optional uint32 item_count = 5;
-	optional uint32 active_data_size = 6;
+    required uint64 container_id = 1;
+    // 2 - 3 are obsolete
+    optional ContainerStorageAddressData address = 4;
+
+    optional uint32 item_count = 5;
+    optional uint32 active_data_size = 6;
 }
 
 message ContainerMergedEventData {
-	required uint64 first_id = 1;
-	required uint64 second_id = 2;
-	repeated uint64 first_secondary_id = 3 [packed=true];
-	repeated uint64 second_secondary_id = 4 [packed=true];
-	
-	// 5 - 10 are obsolete
-	
-	optional ContainerStorageAddressData first_address = 13;
-	optional ContainerStorageAddressData second_address = 14;
-	
-	optional ContainerStorageAddressData new_address = 15;
-	
-	optional uint64 new_primary_id = 18;
-	repeated uint64 new_secondary_id = 11 [packed=true];
-	
-	repeated uint64 unused_ids = 12 [packed=true];
-	
-	optional uint32 new_item_count = 16;
-	optional uint32 new_active_data_size = 17;
+    required uint64 first_id = 1;
+    required uint64 second_id = 2;
+    repeated uint64 first_secondary_id = 3 [packed=true];
+    repeated uint64 second_secondary_id = 4 [packed=true];
+
+    // 5 - 10 are obsolete
+
+    optional ContainerStorageAddressData first_address = 13;
+    optional ContainerStorageAddressData second_address = 14;
+
+    optional ContainerStorageAddressData new_address = 15;
+
+    optional uint64 new_primary_id = 18;
+    repeated uint64 new_secondary_id = 11 [packed=true];
+
+    repeated uint64 unused_ids = 12 [packed=true];
+
+    optional uint32 new_item_count = 16;
+    optional uint32 new_active_data_size = 17;
 }
 
 message ContainerDeletedEventData {
-	required uint64 container_id = 1;
-	repeated uint64 secondary_container_id = 2 [packed=true];
-	
-	// 3 - 4 are obsolete
-	
-	optional ContainerStorageAddressData address = 5;
-	optional uint64 file_offset = 4;
+    required uint64 container_id = 1;
+    repeated uint64 secondary_container_id = 2 [packed=true];
+
+    // 3 - 4 are obsolete
+
+    optional ContainerStorageAddressData address = 5;
+    optional uint64 file_offset = 4;
 }
 
 message ContainerMoveEventData {
-	required uint64 container_id = 1;
-	
-	// 2 - 5 are obsolete 
-	optional ContainerStorageAddressData old_address = 6;
-	optional ContainerStorageAddressData new_address = 7;
+    required uint64 container_id = 1;
 
-	optional uint64 active_data_size = 8;
-	optional uint64 old_active_data_size = 9;
-	
-	optional uint32 item_count = 10;
-	optional uint32 old_item_count = 11;
+    // 2 - 5 are obsolete
+    optional ContainerStorageAddressData old_address = 6;
+    optional ContainerStorageAddressData new_address = 7;
+
+    optional uint64 active_data_size = 8;
+    optional uint64 old_active_data_size = 9;
+
+    optional uint32 item_count = 10;
+    optional uint32 old_item_count = 11;
 }
 
 message ContainerCommitFailedEventData {
@@ -260,11 +259,11 @@ message ContainerCommitFailedEventData {
 }
 
 message VolumeAttachedEventData {
-	required uint32 volume_id = 1;
+    required uint32 volume_id = 1;
 }
 
 message VolumeDetachedEventData {
-	required uint32 volume_id = 1;
+    required uint32 volume_id = 1;
 }
 
 message BlockMappingWrittenEventData {
@@ -274,45 +273,45 @@ message BlockMappingWrittenEventData {
 }
 
 message BlockMappingWriteFailedEventData {
-        // 1 and 2 are deprecated
+    // 1 and 2 are deprecated
 
-        optional BlockMappingPairData mapping_pair = 4;
-	
-	// iff true a block mapping written event has been
-	// committed before. If false, the gc must not be corrected. However
-	// it should be checked if there might be chunks whose only reference never
-	// as been committed. These chunks should than be handled as gc candidate chunks
-	//
-	// If true and if there are no newer block versions, the gc should be corrected.
-	// There is an example:
-	// With newer version. V4 failed:
-	// ---------------------------------
-	// - V2-V3   - V3-V4  - V4-V5        
-	// ---------------------------------
-	//      -    V3   -   XX  -  V5
-	// The gc should process all block write operations as they form a consistent series
-	//
-	// Without newer version. V4 failed:
-	// --------------------------      ---------------
-	// - V2-V3   - V3-V4  -             V3-V4
-	// ------------------------- CRASH ---------------
-	//      -    V3   -   XX                    - V4
-	// The gc should revert the first V3-V4 as might lead to an incorrect usage counting
-	//
-	optional int64 write_event_log_id = 3;
+    optional BlockMappingPairData mapping_pair = 4;
+
+    // iff true a block mapping written event has been
+    // committed before. If false, the gc must not be corrected. However
+    // it should be checked if there might be chunks whose only reference never
+    // as been committed. These chunks should than be handled as gc candidate chunks
+    //
+    // If true and if there are no newer block versions, the gc should be corrected.
+    // There is an example:
+    // With newer version. V4 failed:
+    // ---------------------------------
+    // - V2-V3   - V3-V4  - V4-V5
+    // ---------------------------------
+    //      -    V3   -   XX  -  V5
+    // The gc should process all block write operations as they form a consistent series
+    //
+    // Without newer version. V4 failed:
+    // --------------------------      ---------------
+    // - V2-V3   - V3-V4  -             V3-V4
+    // ------------------------- CRASH ---------------
+    //      -    V3   -   XX                    - V4
+    // The gc should revert the first V3-V4 as might lead to an incorrect usage counting
+    //
+    optional int64 write_event_log_id = 3;
 }
 
 message BlockMappingDeletedEventData {
-	optional BlockMappingData original_block_mapping = 1;
+    optional BlockMappingData original_block_mapping = 1;
 }
 
 message OphranChunksEventData {
-	repeated bytes chunk_fp = 1;
+    repeated bytes chunk_fp = 1;
 }
 
 message BlockIndexLogfileData {
     // 3 is deleted
-	optional ContainerTrackerData container_tracker = 2;
+    optional ContainerTrackerData container_tracker = 2;
 }
 
 message ChunkIndexLogfileData {
@@ -321,84 +320,84 @@ message ChunkIndexLogfileData {
 }
 
 message BloomFilterLogfileData {
-	optional uint64 filter_size = 1;
-	optional uint32 k = 2;
+    optional uint64 filter_size = 1;
+    optional uint32 k = 2;
     // 3 is deleted
-	optional ContainerTrackerData container_tracker = 4;
+    optional ContainerTrackerData container_tracker = 4;
 }
 
 message GarbageCollectionCandidateData {
-	optional uint64 address = 1;
-	repeated GarbageCollectionCandidateItemData item = 2;
-	
-	// true iff the item is currently been processed.
-	// this information is e.g. used for correct crash handling
-	optional bool processing = 3;
-	
-	// the number of consequent processing where nothing changed. This usually means
-	// that all chunk that are candidates are still "in-combat"
-	optional uint32 unchanged_processing_count = 4;
+    optional uint64 address = 1;
+    repeated GarbageCollectionCandidateItemData item = 2;
+
+    // true iff the item is currently been processed.
+    // this information is e.g. used for correct crash handling
+    optional bool processing = 3;
+
+    // the number of consequent processing where nothing changed. This usually means
+    // that all chunk that are candidates are still "in-combat"
+    optional uint32 unchanged_processing_count = 4;
 }
 
 message GarbageCollectionCandidateItemData {
-	optional bytes fp = 1;
-	enum Type {
-		STANDARD = 0; // this is the default
-		FAILED = 1; // an fp is of the type failed it was added to the gc because a block mapping had failed
-	}
-	optional Type type = 2;
+    optional bytes fp = 1;
+    enum Type {
+        STANDARD = 0; // this is the default
+        FAILED = 1; // an fp is of the type failed it was added to the gc because a block mapping had failed
+    }
+    optional Type type = 2;
 }
 
 message GarbageCollectionInfoData {
-	repeated int64 replayed_block_failed_event_log_id = 1;
+    repeated int64 replayed_block_failed_event_log_id = 1;
 }
 
 message ContainerGreedyGCCandidateItemData {
-	optional uint64 address = 1;
-	optional uint32 active_data_size = 2;
-	optional uint32 active_item_count = 3;
+    optional uint64 address = 1;
+    optional uint32 active_data_size = 2;
+    optional uint32 active_item_count = 3;
 }
 
 message ContainerGreedyGCCandidateData {
-	repeated ContainerGreedyGCCandidateItemData item = 1;
+    repeated ContainerGreedyGCCandidateItemData item = 1;
 }
 
 message ContainerStorageAddressData {
-	optional uint64 primary_id = 3;
-	optional uint32 file_index = 1;
-	optional uint64 file_offset = 2;
-	
-	// log id of the last change
-	optional uint64 log_id = 4;
+    optional uint64 primary_id = 3;
+    optional uint32 file_index = 1;
+    optional uint64 file_offset = 2;
+
+    // log id of the last change
+    optional uint64 log_id = 4;
 }
 
 message BitmapAllocatorItemData {
-	optional uint32 free_count = 1;
-	optional bytes bitmap = 2;
+    optional uint32 free_count = 1;
+    optional bytes bitmap = 2;
 }
 
 message ContainerTrackerData {
-	// sorted
+    // sorted
     repeated uint64 container_id = 1 [packed=true];
     optional uint64 highest_seen_container_id = 2;
 }
 
 message LogReplayIDData {
-	optional int64 replay_id = 1;
+    optional int64 replay_id = 1;
 }
 
 message LogLogIDData {
-	optional int64 log_id = 1;
+    optional int64 log_id = 1;
 }
 
 message LogStateData {
-	optional int64 limit_id = 1;
-	optional int64 log_entry_width = 2;
+    optional int64 limit_id = 1;
+    optional int64 log_entry_width = 2;
 }
 
 // used only for testing
 message MessageData {
-	optional string message = 1;
+    optional string message = 1;
 }
 
 message BlockWriteFailedData {

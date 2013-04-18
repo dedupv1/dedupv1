@@ -184,12 +184,14 @@ public:
     /**
      * This method checks if the given chunk is known or a new chunk.
      *
-     * The filter can use all information accessible through the dedup system (see Start method),
-     * all filter local data, the current session, the current block mapping, and the current chunk.
+     * The filter can use all information accessible through the dedup system
+     * (see Start method), all filter local data, the current session, the current
+     * block mapping, and the current chunk.
      *
      * The filter check returns only of the 5 defined filter results. If a filter
-     * returns a STRONG_MAYBE result or higher, it should set the data_address member of the
-     * chunk mapping. For the semantics of the filter results, the the enum filter_result documentation.
+     * returns a STRONG_MAYBE result or higher, it should set the data_address
+     * member of the chunk mapping. For the semantics of the filter results,
+     * the the enum filter_result documentation.
      *
      * @param session
      * @param block_mapping current block mapping, can be NULL

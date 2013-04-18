@@ -58,7 +58,6 @@ namespace filter {
 
 ChunkIndexFilter::Statistics::Statistics() : average_latency_(256) {
     hits = 0;
-    empty_fp_hits = 0;
     miss = 0;
     reads = 0;
     writes = 0;
@@ -103,9 +102,9 @@ bool ChunkIndexFilter::AcquireChunkLock(const dedupv1::chunkindex::ChunkMapping&
     return this->chunk_index_->chunk_locks().Lock(mapping.fingerprint(), mapping.fingerprint_size());
 }
 
-Filter::filter_result ChunkIndexFilter::Check(Session* session, 
+Filter::filter_result ChunkIndexFilter::Check(Session* session,
       const BlockMapping* block_mapping,
-      ChunkMapping* mapping, 
+      ChunkMapping* mapping,
       ErrorContext* ec) {
     DCHECK_RETURN(mapping, FILTER_ERROR, "Chunk mapping not set");
     enum filter_result result = FILTER_ERROR;
@@ -114,15 +113,7 @@ Filter::filter_result ChunkIndexFilter::Check(Session* session,
 
     TRACE("Check " << mapping->DebugString());
 
-    if (Fingerprinter::IsEmptyDataFingerprint(mapping->fingerprint(), mapping->fingerprint_size())) {
-        TRACE("Found zero-chunk fingerprint");
-        mapping->set_data_address(Storage::EMPTY_DATA_STORAGE_ADDRESS);
-        this->stats_.reads++;
-        this->stats_.empty_fp_hits++;
-        return FILTER_EXISTING;
-    }
-
-    CHECK_RETURN(AcquireChunkLock(*mapping), FILTER_ERROR, 
+    CHECK_RETURN(AcquireChunkLock(*mapping), FILTER_ERROR,
         "Failed to acquire chunk lock: " << mapping->DebugString());
 
     this->stats_.reads++;
@@ -157,9 +148,9 @@ Filter::filter_result ChunkIndexFilter::Check(Session* session,
     return result;
 }
 
-bool ChunkIndexFilter::Update(Session* session, 
+bool ChunkIndexFilter::Update(Session* session,
     const BlockMapping* block_mapping,
-    ChunkMapping* mapping, 
+    ChunkMapping* mapping,
     ErrorContext* ec) {
     ProfileTimer timer(this->stats_.time_);
 
@@ -175,9 +166,9 @@ bool ChunkIndexFilter::Update(Session* session,
     return r;
 }
 
-bool ChunkIndexFilter::Abort(Session* session, 
+bool ChunkIndexFilter::Abort(Session* session,
     const BlockMapping* block_mapping,
-    ChunkMapping* chunk_mapping, 
+    ChunkMapping* chunk_mapping,
     ErrorContext* ec) {
     DCHECK(chunk_mapping, "Chunk mapping not set");
 
@@ -200,7 +191,6 @@ bool ChunkIndexFilter::PersistStatistics(std::string prefix, dedupv1::PersistSta
     data.set_miss_count(this->stats_.miss);
     data.set_read_count(this->stats_.reads);
     data.set_write_count(this->stats_.writes);
-    data.set_empty_fp_hit_count(this->stats_.empty_fp_hits);
     data.set_failure_count(stats_.failures);
     CHECK(ps->Persist(prefix, data), "Failed to persist chunk index filter stats");
     return true;
@@ -214,9 +204,6 @@ bool ChunkIndexFilter::RestoreStatistics(std::string prefix, dedupv1::PersistSta
     this->stats_.miss = data.miss_count();
     this->stats_.writes = data.write_count();
 
-    if (data.has_empty_fp_hit_count()) {
-        this->stats_.empty_fp_hits = data.empty_fp_hit_count();
-    }
     if (data.has_failure_count()) {
         stats_.failures = data.failure_count();
     }
@@ -228,7 +215,6 @@ string ChunkIndexFilter::PrintStatistics() {
     sstr << "{";
     sstr << "\"reads\": " << this->stats_.reads << "," << std::endl;
     sstr << "\"writes\": " << this->stats_.writes << "," << std::endl;
-    sstr << "\"existing\": " << this->stats_.empty_fp_hits << "," << std::endl;
     sstr << "\"strong\": " << this->stats_.hits << "," << std::endl;
     sstr << "\"failures\": " << this->stats_.failures << "," << std::endl;
     sstr << "\"miss\": " << this->stats_.miss << std::endl;

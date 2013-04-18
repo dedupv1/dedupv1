@@ -176,8 +176,8 @@ public:
     /**
      *
      * Wenn a Read filter call fails in the middle of the processing, the
-     * Abort filter call is executed for all chunk mappings and all filters (except the failed one)
-     * that have received a Read call.
+     * Abort filter call is executed for all chunk mappings and all filters
+     * (except the failed one) that have received a Read call.
      *
      * @param session
      * @param block_mapping current block mapping, can be NULL
@@ -210,9 +210,11 @@ public:
         dedupv1::chunkindex::ChunkMapping* chunk_mapping,
         dedupv1::base::ErrorContext* ec);
 
-    virtual bool PersistStatistics(std::string prefix, dedupv1::PersistStatistics* ps);
+    virtual bool PersistStatistics(std::string prefix,
+                                   dedupv1::PersistStatistics* ps);
 
-    virtual bool RestoreStatistics(std::string prefix, dedupv1::PersistStatistics* ps);
+    virtual bool RestoreStatistics(std::string prefix,
+                                   dedupv1::PersistStatistics* ps);
 
     virtual std::string PrintLockStatistics();
     virtual std::string PrintProfile();

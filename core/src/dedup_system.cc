@@ -47,6 +47,7 @@
 #include <core/dedup_volume.h>
 #include <core/filter.h>
 #include <core/chunk_index_filter.h>
+#include <core/sparse_chunk_index_filter.h>
 #include <core/block_index_filter.h>
 #include <core/bytecompare_filter.h>
 #include <core/bloom_filter.h>
@@ -123,8 +124,10 @@ const uint32_t DedupSystem::kDefaultLogFullPauseTime = 100 * 1000;
 const uint32_t DedupSystem::kDefaultBlockSize = 256 * 1024;
 const uint32_t DedupSystem::kDefaultSessionCount = 128;
 
-const ScsiResult DedupSystem::kFullError(dedupv1::scsi::SCSI_CHECK_CONDITION, dedupv1::scsi::SCSI_KEY_HARDWARE_ERROR, 0x03, 0x00);
-const ScsiResult DedupSystem::kReadChecksumError(dedupv1::scsi::SCSI_CHECK_CONDITION, dedupv1::scsi::SCSI_KEY_MEDIUM_ERROR, 0x11, 0x04);
+const ScsiResult DedupSystem::kFullError(dedupv1::scsi::SCSI_CHECK_CONDITION,
+    dedupv1::scsi::SCSI_KEY_HARDWARE_ERROR, 0x03, 0x00);
+const ScsiResult DedupSystem::kReadChecksumError(dedupv1::scsi::SCSI_CHECK_CONDITION,
+    dedupv1::scsi::SCSI_KEY_MEDIUM_ERROR, 0x11, 0x04);
 
 DedupSystem::Statistics::Statistics() : average_waiting_time_(256) {
     active_session_count_ = 0;
@@ -196,7 +199,8 @@ bool DedupSystem::LoadOptions(const string& filename) {
     CHECK(this->state_ == CREATED, "Dedup system already started");
 
     ConfigLoader config_load(NewCallback(this, &DedupSystem::SetOption));
-    CHECK(config_load.ProcessFile(filename), "Cannot process configuration file: " << filename);
+    CHECK(config_load.ProcessFile(filename), 
+        "Cannot process configuration file: " << filename);
     return true;
 }
 
@@ -277,23 +281,27 @@ bool DedupSystem::SetOption(const string& option_name, const string& option) {
 
     if (StartsWith(option_name, "chunking")) {
         // delete default chunking information
-        CHECK(this->content_storage_->SetOption(option_name, option), "Default chunking configuration failed");
+        CHECK(this->content_storage_->SetOption(option_name, option),
+            "Default chunking configuration failed");
         return true;
     }
     // Content Storage
     if (option_name == "fingerprinting") {
         // "fingerprinting." is trimmed by content_storage.
-        CHECK(this->content_storage_->SetOption(option_name, option), "Fingerprinting configuration failed");
+        CHECK(this->content_storage_->SetOption(option_name, option),
+            "Fingerprinting configuration failed");
         return true;
     }
     if (StartsWith(option_name, "content-storage.")) {
         // "content-storage." is trimmed by content_storage.
-        CHECK(this->content_storage_->SetOption(option_name, option), "Chunking configuration failed");
+        CHECK(this->content_storage_->SetOption(option_name, option),
+            "Chunking configuration failed");
         return true;
     }
     // log
     if (StartsWith(option_name, "log.")) {
-        CHECK(this->log_->SetOption(option_name.substr(strlen("log.")), option), "Log configuration failed");
+        CHECK(this->log_->SetOption(option_name.substr(strlen("log.")), option),
+            "Log configuration failed");
         return true;
     }
 
@@ -309,10 +317,15 @@ bool DedupSystem::SetOption(const string& option_name, const string& option) {
 
     // idle detector
     if (StartsWith(option_name, "idle-detection.")) {
-        return this->idle_detector_.SetOption(option_name.substr(strlen("idle-detection.")), option);
+        return this->idle_detector_.SetOption(
+            option_name.substr(strlen("idle-detection.")),
+            option);
     }
     if (StartsWith(option_name, "block-locks.")) {
-        CHECK(this->block_locks_.SetOption(option_name.substr(strlen("block-locks.")), option), "Block locks configuration failed");
+        CHECK(this->block_locks_.SetOption(
+              option_name.substr(strlen("block-locks.")),
+              option),
+            "Block locks configuration failed");
         return true;
     }
     if (option_name == "report-long-running-requests") {
@@ -322,7 +335,10 @@ bool DedupSystem::SetOption(const string& option_name, const string& option) {
     }
 #ifdef DEDUPV1_CORE_TEST
     if (StartsWith(option_name, "raw-volume.")) {
-        CHECK(this->volume_info_->SetOption(option_name.substr(strlen("raw-volume.")), option), "Raw volume configuration failed");
+        CHECK(this->volume_info_->SetOption(
+              option_name.substr(strlen("raw-volume.")),
+              option),
+            "Raw volume configuration failed");
         return true;
     }
 #endif
@@ -330,7 +346,9 @@ bool DedupSystem::SetOption(const string& option_name, const string& option) {
     return false;
 }
 
-bool DedupSystem::Start(const StartContext& start_context, dedupv1::InfoStore* info_store, dedupv1::base::Threadpool* tp) {
+bool DedupSystem::Start(const StartContext& start_context,
+    dedupv1::InfoStore* info_store,
+    dedupv1::base::Threadpool* tp) {
     CHECK(this->state_ == CREATED, "Dedup system already started");
     CHECK(this->block_size_ > 0, "Dedup system not ready: Block size not set");
     CHECK(this->chunk_index_, "Dedup system not ready: Chunk index not ready");
@@ -372,8 +390,14 @@ bool DedupSystem::Start(const StartContext& start_context, dedupv1::InfoStore* i
     CHECK(this->content_storage_, "Content Storage not configured");
     CHECK(this->content_storage_->Start(
             this->tp_,
-            this->block_index_, this->chunk_index_, this->chunk_store_, this->filter_chain_,
-            this->chunk_management_, this->log_, &this->block_locks_, this->block_size_),
+            this->block_index_,
+            this->chunk_index_,
+            this->chunk_store_,
+            this->filter_chain_,
+            this->chunk_management_,
+            this->log_,
+            &this->block_locks_,
+            this->block_size_),
         "Content Storage start failed");
 
     CHECK(this->gc_->Start(start_context, this), "Cannot start gc");
@@ -386,7 +410,8 @@ bool DedupSystem::Start(const StartContext& start_context, dedupv1::InfoStore* i
         event_data.set_crashed(start_context.has_crashed());
         event_data.set_forced(start_context.force());
         event_data.set_dirty(start_context.dirty());
-        CHECK(this->log_->CommitEvent(EVENT_TYPE_SYSTEM_START, &event_data, NULL, NULL, NO_EC),
+        CHECK(this->log_->CommitEvent(EVENT_TYPE_SYSTEM_START,
+              &event_data, NULL, NULL, NO_EC),
             "Cannot log system start event");
     }
     DEBUG("Started dedup system (startup time: " << startup_timer.GetTime() << "ms)");
@@ -430,16 +455,18 @@ bool DedupSystem::Stop(const dedupv1::StopContext& stop_context) {
         }
     }
 
-    // flush the last data to disk so that chunk index and block index can rely on this
+    // flush the last data to disk so that chunk index and block index can rely
+    // on this
     if (this->chunk_store_) {
         if (!this->chunk_store_->Flush(NULL)) {
             ERROR("Failed to flush chunk store");
             failed = true;
         }
     }
-    // we also want to make sure that there is no container open in the background committing system.
-    // By the way: I don't think that the timeout thread is a problem because either the timeout thread
-    // commits a due container before the flush or the flush does it.
+    // we also want to make sure that there is no container open in the background
+    // committing system.
+    // By the way: I don't think that the timeout thread is a problem because 
+    // either the timeout thread commits a due container before the flush or the flush does it.
     dedupv1::chunkstore::ContainerStorage* cs = dynamic_cast<dedupv1::chunkstore::ContainerStorage*>(this->storage());
     if (cs) {
         if (!cs->background_committer()->Stop(stop_context)) {
@@ -460,11 +487,15 @@ bool DedupSystem::Stop(const dedupv1::StopContext& stop_context) {
     Thread<bool>* block_index_stop_thread = NULL;
 
     if (this->chunk_index_) {
-        dedupv1::base::Runnable<bool>* r = NewRunnable(this->chunk_index(), &ChunkIndex::Stop, stop_context);
+        dedupv1::base::Runnable<bool>* r = NewRunnable(this->chunk_index(),
+            &ChunkIndex::Stop,
+            stop_context);
         chunk_index_stop_thread = new Thread<bool>(r, "chunk index stop");
     }
     if (this->block_index_) {
-        block_index_stop_thread = new Thread<bool>(NewRunnable(this->block_index(), &BlockIndex::Stop, stop_context), "block index stop");
+        block_index_stop_thread = new Thread<bool>(NewRunnable(this->block_index(),
+              &BlockIndex::Stop, stop_context),
+            "block index stop");
     }
 
     bool start1 = false;
@@ -629,7 +660,8 @@ ScsiResult DedupSystem::SyncCache() {
 
     dedupv1::base::ErrorContext ec;
     if (chunk_store_) {
-        // TODO (dmeister): in an error we report a write error as I don't know what to really return
+        // TODO (dmeister): in an error we report a write error as I don't know
+        // what to really return
         CHECK_RETURN(chunk_store_->Flush(&ec),
             ScsiResult(SCSI_CHECK_CONDITION, SCSI_KEY_MEDIUM_ERROR, 0x0C, 0x00),
             "Failed to flush storage");
@@ -662,13 +694,17 @@ bool DedupSystem::FastBlockCopy(
     list<uint64_t> locked_block_list;
     list<uint64_t> unlocked_block_list;
 
-    // In this loop we try to get all necessary locks. If this fails, we back off and try again later
-    // We cannot make any guarantees about the lock ordering here, therefore we have to break deadlocks by backing off
-    //
+    // In this loop we try to get all necessary locks. If this fails, we back
+    // off and try again later
+    // We cannot make any guarantees about the lock ordering here, therefore
+    // we have to break deadlocks by backing off
     while (true) {
         locked_block_list.clear();
         unlocked_block_list.clear();
-        CHECK(block_locks_.TryWriteLocks(blocks, &locked_block_list, &unlocked_block_list, LOCK_LOCATION_INFO),
+        CHECK(block_locks_.TryWriteLocks(blocks,
+              &locked_block_list,
+              &unlocked_block_list,
+              LOCK_LOCATION_INFO),
             "Failed to acquire locks for block list");
 
         if (locked_block_list.size() == blocks.size()) {
@@ -1255,6 +1291,7 @@ void DedupSystem::RegisterDefaults() {
     dedupv1::chunkstore::ContainerStorage::RegisterStorage();
 
     dedupv1::filter::ChunkIndexFilter::RegisterFilter();
+    dedupv1::filter::SparseChunkIndexFilter::RegisterFilter();
     dedupv1::filter::BlockIndexFilter::RegisterFilter();
     dedupv1::filter::ByteCompareFilter::RegisterFilter();
     dedupv1::filter::BloomFilter::RegisterFilter();

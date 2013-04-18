@@ -62,7 +62,6 @@ class ChunkIndexFilter: public Filter {
                 tbb::atomic<uint64_t> reads;
                 tbb::atomic<uint64_t> writes;
                 tbb::atomic<uint64_t> hits;
-                tbb::atomic<uint64_t> empty_fp_hits;
                 tbb::atomic<uint64_t> miss;
                 tbb::atomic<uint64_t> failures;
 
@@ -138,7 +137,7 @@ class ChunkIndexFilter: public Filter {
          * @return
          */
         virtual enum filter_result Check(dedupv1::Session* session,
-                const dedupv1::blockindex::BlockMapping* block_mapping, 
+                const dedupv1::blockindex::BlockMapping* block_mapping,
                 dedupv1::chunkindex::ChunkMapping* chunk_mapping,
                 dedupv1::base::ErrorContext* ec);
 

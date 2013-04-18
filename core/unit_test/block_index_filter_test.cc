@@ -68,6 +68,10 @@ INSTANTIATE_TEST_CASE_P(BlockIndexFilter,
     ::testing::Values("block-index-filter",
       "block-index-filter;block-chunk-cache=true"));
 
+INSTANTIATE_TEST_CASE_P(BlockIndexFilter,
+    DedupSystemTest,
+    ::testing::Values("data/dedupv1_blc_test.conf"));
+
 class BlockIndexFilterTest : public testing::Test  {
 protected:
     USE_LOGGING_EXPECTATION();

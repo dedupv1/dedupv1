@@ -50,9 +50,9 @@ message ContainerStorageReadCacheStatsData {
 }
 
 message BlockIndexFilterStatsData {
-	optional uint64 hit_count = 1;
-	optional uint64 miss_count = 2;
-	optional uint64 read_count = 3;
+    optional uint64 hit_count = 1;
+    optional uint64 miss_count = 2;
+    optional uint64 read_count = 3;
 }
 
 message BloomFilterStatsData {
@@ -63,24 +63,35 @@ message BloomFilterStatsData {
 }
 
 message ByteCompareFilterStatsData {
-	optional uint64 hit_count = 1;
-	optional uint64 miss_count = 2;
-	optional uint64 read_count = 3;
+    optional uint64 hit_count = 1;
+    optional uint64 miss_count = 2;
+    optional uint64 read_count = 3;
 }
 
 message ChunkIndexFilterStatsData {
-	optional uint64 hit_count = 1;
-	optional uint64 miss_count = 2;
-	optional uint64 read_count = 3;
-	optional uint64 write_count = 4;
-	optional uint64 failure_count = 6;
-	
-	optional uint64 empty_fp_hit_count = 5;
+    optional uint64 hit_count = 1;
+    optional uint64 miss_count = 2;
+    optional uint64 read_count = 3;
+    optional uint64 write_count = 4;
+    optional uint64 failure_count = 6;
+
+    optional uint64 empty_fp_hit_count = 5;
+}
+
+message SparseChunkIndexFilterStatsData {
+    optional uint64 hit_count = 1;
+    optional uint64 miss_count = 2;
+    optional uint64 read_count = 3;
+    optional uint64 write_count = 4;
+    optional uint64 failure_count = 6;
+    optional uint64 anchor_count = 7;
+
+    optional uint64 empty_fp_hit_count = 5;
 }
 
 message GarbageCollectorStatsData {
-	optional uint64 processed_block_count = 1;
-	optional uint64 processed_gc_candidate_count = 2;
+    optional uint64 processed_block_count = 1;
+    optional uint64 processed_gc_candidate_count = 2;
     optional uint64 skipped_chunk_count = 3;
     optional uint64 already_processed_chunk_count = 4;
     optional uint64 processed_chunk_count = 5;
@@ -104,7 +115,7 @@ message LogStatsData {
         optional int32 type = 1;
         optional uint64 count = 2;
     }
-	optional uint64 event_count = 1;
-	optional uint64 replayed_event_count = 2;
-	repeated LogTypeCounter logtype_count = 3;
+    optional uint64 event_count = 1;
+    optional uint64 replayed_event_count = 2;
+    repeated LogTypeCounter logtype_count = 3;
 }
