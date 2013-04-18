@@ -55,6 +55,12 @@ message BlockIndexFilterStatsData {
     optional uint64 read_count = 3;
 }
 
+message BlockChunkCacheStatsData {
+    optional uint64 fetch_count = 1;
+    optional uint64 hit_count = 2;
+    optional uint64 miss_count = 3;
+}
+
 message BloomFilterStatsData {
     optional uint64 hit_count = 1;
     optional uint64 miss_count = 2;

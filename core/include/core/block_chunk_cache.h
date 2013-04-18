@@ -43,103 +43,111 @@ namespace dedupv1 {
 namespace filter {
 
 class BlockChunkCache {
-    private:
-        dedupv1::blockindex::BlockIndex* block_index_;
-        uint32_t diff_cache_size_;
-        uint32_t block_cache_size_;
-        uint32_t prefetchWindow_;
+private:
+    dedupv1::blockindex::BlockIndex* block_index_;
+    uint32_t diff_cache_size_;
+    uint32_t block_cache_size_;
+    uint32_t prefetchWindow_;
 
-        uint32_t min_diff_value_;
-        bool decrease_diff_value_on_miss_;
-        bool decrease_diff_value_on_lookup_not_found_;
-        bool remove_diff_value_on_lookup_not_found_;
-        bool eager_diff_insert_;
+    uint32_t min_diff_value_;
+    bool decrease_diff_value_on_miss_;
+    bool decrease_diff_value_on_lookup_not_found_;
+    bool remove_diff_value_on_lookup_not_found_;
+    bool eager_diff_insert_;
 
-        tbb::atomic<uint64_t> touch_diff_count_;
-        std::tr1::unordered_map<int64_t, int> diff_map_;
-        dedupv1::base::LRUCacheStrategy<int64_t> diff_map_cache_strategy_;
-        tbb::spin_mutex diff_mutex_;
+    tbb::atomic<uint64_t> touch_diff_count_;
+    std::tr1::unordered_map<int64_t, int> diff_map_;
+    dedupv1::base::LRUCacheStrategy<int64_t> diff_map_cache_strategy_;
+    tbb::spin_mutex diff_mutex_;
 
-        struct ChunkMapData {
-                std::set<uint64_t> block_set;
-                uint64_t data_adress;
-        };
+    struct ChunkMapData {
+        std::set<uint64_t> block_set;
+        uint64_t data_adress;
+    };
 
-        tbb::concurrent_hash_map<bytestring, ChunkMapData, dedupv1::base::bytestring_fp_murmur_hash> block_chunk_map_;
-      tbb::concurrent_hash_map<uint64_t, std::set<bytestring> > block_map_[4];
+    tbb::concurrent_hash_map<bytestring, ChunkMapData, dedupv1::base::bytestring_fp_murmur_hash> block_chunk_map_;
+    tbb::concurrent_hash_map<uint64_t, std::set<bytestring> > block_map_[4];
 
-      dedupv1::base::LRUCacheStrategy<uint64_t> block_map_cache_strategy_[4];
-      tbb::spin_mutex block_map_cache_mutex_[4];
+    dedupv1::base::LRUCacheStrategy<uint64_t> block_map_cache_strategy_[4];
+    tbb::spin_mutex block_map_cache_mutex_[4];
 
-      dedupv1::base::MutexLock fetch_lock_[4];
+    dedupv1::base::MutexLock fetch_lock_[4];
 
-      /**
-       * Statistics about the block index filter
+    /**
+     * Statistics about the block index filter
      */
     class Statistics {
-            public:
-                /**
-                 * Constructor for the statistics
-                 * @return
-                 */
-                Statistics();
+public:
+        /**
+         * Constructor for the statistics
+         * @return
+         */
+        Statistics();
 
-                /**
-                 * Profiling information (filter time in ms)
-                 */
-                dedupv1::base::Profile time_;
-                dedupv1::base::Profile fetch_time_;
-                dedupv1::base::Profile lock_time_;
+        /**
+         * Profiling information (filter time in ms)
+         */
+        dedupv1::base::Profile time_;
+        dedupv1::base::Profile fetch_time_;
+        dedupv1::base::Profile lock_time_;
 
-                dedupv1::base::Profile block_handling_time_;
-                dedupv1::base::Profile diff_handling_time_;
-                dedupv1::base::Profile diff_iteration_time_;
+        dedupv1::base::Profile block_handling_time_;
+        dedupv1::base::Profile diff_handling_time_;
+        dedupv1::base::Profile diff_iteration_time_;
 
-                /**
-                 * Number of filter reads
-                 */
-                tbb::atomic<uint64_t> fetch_;
+        /**
+         * Number of filter reads
+         */
+        tbb::atomic<uint64_t> fetch_;
 
-                /**
-                 * Number of times the filter check hits
-                 */
-                tbb::atomic<uint64_t> hits_;
+        /**
+         * Number of times the filter check hits
+         */
+        tbb::atomic<uint64_t> hits_;
 
-                /**
-                 * Number of times the filter check misses
-                 */
-                tbb::atomic<uint64_t> miss_;
+        /**
+         * Number of times the filter check misses
+         */
+        tbb::atomic<uint64_t> miss_;
 
-                tbb::atomic<uint64_t> block_lookup_missing_;
+        tbb::atomic<uint64_t> block_lookup_missing_;
 
-                tbb::atomic<uint64_t> block_evict_count_;
-								
-                tbb::atomic<uint64_t> diff_evict_count_;
+        tbb::atomic<uint64_t> block_evict_count_;
 
-		tbb::atomic<uint64_t> no_hint_count_;
-        };
+        tbb::atomic<uint64_t> diff_evict_count_;
 
-        Statistics stats_;
+        tbb::atomic<uint64_t> no_hint_count_;
+    };
 
-        bool EvictBlock(uint64_t event_block_id);
-        dedupv1::base::lookup_result FetchBlockIntoCache(uint64_t fetch_block_id);
+    Statistics stats_;
 
-        bool TouchBlock(uint64_t block_id);
-        bool TouchDiff(int64_t diff, bool allow_insert);
-    public:
-        BlockChunkCache();
+    bool EvictBlock(uint64_t event_block_id);
+    dedupv1::base::lookup_result FetchBlockIntoCache(uint64_t fetch_block_id);
 
-        bool Start(dedupv1::blockindex::BlockIndex* block_index);
+    bool TouchBlock(uint64_t block_id);
+    bool TouchDiff(int64_t diff, bool allow_insert);
+public:
+    BlockChunkCache();
 
-        bool SetOption(const std::string& option_name, const std::string& option);
+    bool Start(dedupv1::blockindex::BlockIndex* block_index);
 
-        bool Close();
+    bool SetOption(const std::string& option_name, const std::string& option);
 
-        bool Contains(const dedupv1::chunkindex::ChunkMapping* mapping, uint64_t current_block_id, uint64_t* data_address);
+    bool Close();
 
-        bool UpdateKnownChunk(const dedupv1::chunkindex::ChunkMapping* mapping, uint64_t current_block_id);
+    bool Contains(const dedupv1::chunkindex::ChunkMapping* mapping, uint64_t current_block_id, uint64_t* data_address);
 
-        std::string PrintStatistics();
+    bool UpdateKnownChunk(const dedupv1::chunkindex::ChunkMapping* mapping, uint64_t current_block_id);
+
+    std::string PrintStatistics();
+
+    std::string PrintProfile();
+
+    std::string PrintTrace();
+
+    bool PersistStatistics(std::string prefix, dedupv1::PersistStatistics* ps);
+
+    bool RestoreStatistics(std::string prefix, dedupv1::PersistStatistics* ps);
 };
 
 } // namespace

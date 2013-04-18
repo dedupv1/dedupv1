@@ -20,6 +20,8 @@
 #include <core/block_chunk_cache.h>
 #include <base/strutil.h>
 #include <base/hashing_util.h>
+#include <base/logging.h>
+#include "dedupv1_stats.pb.h"
 
 using dedupv1::blockindex::BlockIndex;
 using dedupv1::chunkindex::ChunkMapping;
@@ -181,7 +183,8 @@ lookup_result BlockChunkCache::FetchBlockIntoCache(uint64_t fetch_block_id) {
         }
 
         const bytestring& fp(i->fingerprint_string());
-        TRACE("Add fingerprint to cache: block id " << fetch_block_id << ", fp " << ToHexString(fp.data(), fp.size()));
+        TRACE("Add fingerprint to cache: block id " << fetch_block_id <<
+            ", fp " << ToHexString(fp.data(), fp.size()));
 
         block_acc_insert->second.insert(fp);
 
@@ -193,7 +196,9 @@ lookup_result BlockChunkCache::FetchBlockIntoCache(uint64_t fetch_block_id) {
     return LOOKUP_FOUND;
 }
 
-bool BlockChunkCache::Contains(const ChunkMapping* mapping, uint64_t current_block_id, uint64_t* data_address) {
+bool BlockChunkCache::Contains(const ChunkMapping* mapping,
+                               uint64_t current_block_id,
+                               uint64_t* data_address) {
     ProfileTimer timer(this->stats_.time_);
 
     DCHECK(mapping, "Mapping not set");
@@ -350,25 +355,44 @@ BlockChunkCache::Statistics::Statistics() {
     no_hint_count_ = 0;
 }
 
-string BlockChunkCache::PrintStatistics() {
+bool BlockChunkCache::PersistStatistics(std::string prefix, dedupv1::PersistStatistics* ps) {
+    BlockChunkCacheStatsData data;
+    data.set_fetch_count(stats_.fetch_);
+    data.set_hit_count(stats_.hits_);
+    data.set_miss_count(stats_.miss_);
+    CHECK(ps->Persist(prefix, data), "Failed to persist block chunk stats");
+    return true;
+}
+
+bool BlockChunkCache::RestoreStatistics(std::string prefix, dedupv1::PersistStatistics* ps) {
+    BlockChunkCacheStatsData data;
+    CHECK(ps->Restore(prefix, &data), "Failed to restore block chunk stats");
+    stats_.fetch_ = data.fetch_count();
+    stats_.hits_ = data.hit_count();
+    stats_.miss_ = data.miss_count();
+    return true;
+}
+
+string BlockChunkCache::PrintTrace() {
     stringstream sstr;
     sstr << "{";
     sstr << "\"no block hint count\": " << this->stats_.no_hint_count_ << "," << std::endl;
-    sstr << "\"fetch count\": " << this->stats_.fetch_ << "," << std::endl;
     sstr << "\"block lookup missing count\": " << this->stats_.block_lookup_missing_ << "," << std::endl;
     sstr << "\"block evict count\": " << this->stats_.block_evict_count_ << "," << std::endl;
-    sstr << "\"diff evict count\": " << this->stats_.diff_evict_count_ << "," << std::endl;
+    sstr << "\"diff evict count\": " << this->stats_.diff_evict_count_ << std::endl;
+    sstr << "}";
+    return sstr.str();
+}
+
+string BlockChunkCache::PrintStatistics() {
+    stringstream sstr;
+    sstr << "{";
+    sstr << "\"fetch count\": " << this->stats_.fetch_ << "," << std::endl;
     if (stats_.fetch_ == 0) {
         sstr << "\"hit to fetch ratio\": null," << std::endl;
     } else {
         sstr << "\"hit to fetch ratio\": " << (1.0 * stats_.hits_ / stats_.fetch_) << "," << std::endl;
     }
-    sstr << "\"time\": " << this->stats_.time_.GetSum() << "," << std::endl;
-    sstr << "\"lock time\": " << this->stats_.lock_time_.GetSum() << "," << std::endl;
-    sstr << "\"fetch time\": " << this->stats_.fetch_time_.GetSum() << "," << std::endl;
-    sstr << "\"diff touch time\": " << this->stats_.diff_handling_time_.GetSum() << "," << std::endl;
-    sstr << "\"diff iteration time\": " << this->stats_.diff_iteration_time_.GetSum() << "," << std::endl;
-    sstr << "\"block touch time\": " << this->stats_.block_handling_time_.GetSum() << "," << std::endl;
     sstr << "\"hits\": " << this->stats_.hits_ << "," << std::endl;
     sstr << "\"miss\": " << this->stats_.miss_ << "," << std::endl;
 
@@ -378,6 +402,20 @@ string BlockChunkCache::PrintStatistics() {
     } else {
         sstr << "\"hit ratio\": " << (1.0 * stats_.hits_ / r) << std::endl;
     }
+
+    sstr << "}";
+    return sstr.str();
+}
+
+string BlockChunkCache::PrintProfile() {
+    stringstream sstr;
+    sstr << "{";
+    sstr << "\"time\": " << this->stats_.time_.GetSum() << "," << std::endl;
+    sstr << "\"lock time\": " << this->stats_.lock_time_.GetSum() << "," << std::endl;
+    sstr << "\"fetch time\": " << this->stats_.fetch_time_.GetSum() << "," << std::endl;
+    sstr << "\"diff touch time\": " << this->stats_.diff_handling_time_.GetSum() << "," << std::endl;
+    sstr << "\"diff iteration time\": " << this->stats_.diff_iteration_time_.GetSum() << "," << std::endl;
+    sstr << "\"block touch time\": " << this->stats_.block_handling_time_.GetSum() << std::endl;
 
     sstr << "}";
     return sstr.str();

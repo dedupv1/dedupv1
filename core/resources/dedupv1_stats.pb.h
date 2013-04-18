@@ -38,6 +38,7 @@ class ContainerStorageWriteCacheStatsData;
 class ContainerStorageStatsData;
 class ContainerStorageReadCacheStatsData;
 class BlockIndexFilterStatsData;
+class BlockChunkCacheStatsData;
 class BloomFilterStatsData;
 class ByteCompareFilterStatsData;
 class ChunkIndexFilterStatsData;
@@ -842,6 +843,108 @@ class BlockIndexFilterStatsData : public ::google::protobuf::Message {
 
   void InitAsDefaultInstance();
   static BlockIndexFilterStatsData* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class BlockChunkCacheStatsData : public ::google::protobuf::Message {
+ public:
+  BlockChunkCacheStatsData();
+  virtual ~BlockChunkCacheStatsData();
+
+  BlockChunkCacheStatsData(const BlockChunkCacheStatsData& from);
+
+  inline BlockChunkCacheStatsData& operator=(const BlockChunkCacheStatsData& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const BlockChunkCacheStatsData& default_instance();
+
+  void Swap(BlockChunkCacheStatsData* other);
+
+  // implements Message ----------------------------------------------
+
+  BlockChunkCacheStatsData* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const BlockChunkCacheStatsData& from);
+  void MergeFrom(const BlockChunkCacheStatsData& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional uint64 fetch_count = 1;
+  inline bool has_fetch_count() const;
+  inline void clear_fetch_count();
+  static const int kFetchCountFieldNumber = 1;
+  inline ::google::protobuf::uint64 fetch_count() const;
+  inline void set_fetch_count(::google::protobuf::uint64 value);
+
+  // optional uint64 hit_count = 2;
+  inline bool has_hit_count() const;
+  inline void clear_hit_count();
+  static const int kHitCountFieldNumber = 2;
+  inline ::google::protobuf::uint64 hit_count() const;
+  inline void set_hit_count(::google::protobuf::uint64 value);
+
+  // optional uint64 miss_count = 3;
+  inline bool has_miss_count() const;
+  inline void clear_miss_count();
+  static const int kMissCountFieldNumber = 3;
+  inline ::google::protobuf::uint64 miss_count() const;
+  inline void set_miss_count(::google::protobuf::uint64 value);
+
+  // @@protoc_insertion_point(class_scope:BlockChunkCacheStatsData)
+ private:
+  inline void set_has_fetch_count();
+  inline void clear_has_fetch_count();
+  inline void set_has_hit_count();
+  inline void clear_has_hit_count();
+  inline void set_has_miss_count();
+  inline void clear_has_miss_count();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::uint64 fetch_count_;
+  ::google::protobuf::uint64 hit_count_;
+  ::google::protobuf::uint64 miss_count_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+
+  friend void  protobuf_AddDesc_dedupv1_5fstats_2eproto();
+  friend void protobuf_AssignDesc_dedupv1_5fstats_2eproto();
+  friend void protobuf_ShutdownFile_dedupv1_5fstats_2eproto();
+
+  void InitAsDefaultInstance();
+  static BlockChunkCacheStatsData* default_instance_;
 };
 // -------------------------------------------------------------------
 
@@ -2625,6 +2728,76 @@ inline ::google::protobuf::uint64 BlockIndexFilterStatsData::read_count() const 
 inline void BlockIndexFilterStatsData::set_read_count(::google::protobuf::uint64 value) {
   set_has_read_count();
   read_count_ = value;
+}
+
+// -------------------------------------------------------------------
+
+// BlockChunkCacheStatsData
+
+// optional uint64 fetch_count = 1;
+inline bool BlockChunkCacheStatsData::has_fetch_count() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void BlockChunkCacheStatsData::set_has_fetch_count() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void BlockChunkCacheStatsData::clear_has_fetch_count() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void BlockChunkCacheStatsData::clear_fetch_count() {
+  fetch_count_ = GOOGLE_ULONGLONG(0);
+  clear_has_fetch_count();
+}
+inline ::google::protobuf::uint64 BlockChunkCacheStatsData::fetch_count() const {
+  return fetch_count_;
+}
+inline void BlockChunkCacheStatsData::set_fetch_count(::google::protobuf::uint64 value) {
+  set_has_fetch_count();
+  fetch_count_ = value;
+}
+
+// optional uint64 hit_count = 2;
+inline bool BlockChunkCacheStatsData::has_hit_count() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void BlockChunkCacheStatsData::set_has_hit_count() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void BlockChunkCacheStatsData::clear_has_hit_count() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void BlockChunkCacheStatsData::clear_hit_count() {
+  hit_count_ = GOOGLE_ULONGLONG(0);
+  clear_has_hit_count();
+}
+inline ::google::protobuf::uint64 BlockChunkCacheStatsData::hit_count() const {
+  return hit_count_;
+}
+inline void BlockChunkCacheStatsData::set_hit_count(::google::protobuf::uint64 value) {
+  set_has_hit_count();
+  hit_count_ = value;
+}
+
+// optional uint64 miss_count = 3;
+inline bool BlockChunkCacheStatsData::has_miss_count() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void BlockChunkCacheStatsData::set_has_miss_count() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void BlockChunkCacheStatsData::clear_has_miss_count() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void BlockChunkCacheStatsData::clear_miss_count() {
+  miss_count_ = GOOGLE_ULONGLONG(0);
+  clear_has_miss_count();
+}
+inline ::google::protobuf::uint64 BlockChunkCacheStatsData::miss_count() const {
+  return miss_count_;
+}
+inline void BlockChunkCacheStatsData::set_miss_count(::google::protobuf::uint64 value) {
+  set_has_miss_count();
+  miss_count_ = value;
 }
 
 // -------------------------------------------------------------------

@@ -53,130 +53,134 @@ namespace filter {
  *
  * \ingroup filterchain
  */
-class BlockIndexFilter: public Filter {
-    private:
+class BlockIndexFilter : public Filter {
+private:
 
+    /**
+     * Statistics about the block index filter
+     */
+    class Statistics {
+public:
         /**
-         * Statistics about the block index filter
-         */
-        class Statistics {
-            public:
-                /**
-                 * Constructor for the statistics
-                 * @return
-                 */
-                Statistics();
-
-                /**
-                 * Number of filter reads
-                 */
-                tbb::atomic<uint64_t> reads_;
-
-                /**
-                 * Number of times the filter check hits
-                 */
-                tbb::atomic<uint64_t> hits_;
-
-                /**
-                 * Number of times the filter check misses
-                 */
-                tbb::atomic<uint64_t> miss_;
-
-                /**
-                 * Profiling information (filter time in ms)
-                 */
-                dedupv1::base::Profile time_;
-
-                /**
-                 * Profiling information (filter latency in ms)
-                 */
-                dedupv1::base::SimpleSlidingAverage average_latency_;
-        };
-
-        /**
-         * Statistics about the block index filter
-         */
-        Statistics stats_;
-
-        blockindex::BlockIndex* block_index_;
-
-        BlockChunkCache* block_chunk_cache_;
-
-        bool use_block_chunk_cache_;
-
-    public:
-        /**
-         * Constructor.
-         */
-        BlockIndexFilter();
-
-        /**
-         * Destructor
-         */
-        virtual ~BlockIndexFilter();
-
-        bool Start(DedupSystem* system);
-
-        bool Close();
-
-        bool SetOption(const std::string& option_name, const std::string& option);
-
-        /**
-         * Performs a check by searching the chunk mapping to check in the current block mapping (items).
-         * This way of optimizing the duplication detection is limited to certain situations, but takes nearly no time and no I/O.
-         *
-         * @param session current user session (Unused in this method)
-         * @param block_mapping Unchanged (aka old) block mapping for the current block (CanBeNull)
-         * @param mapping chunk data to check for duplication (NotNull, Unchecked)
-         * @param ec Error context that can be filled if case of special errors
-         */
-        virtual enum filter_result Check(dedupv1::Session* session,
-                const dedupv1::blockindex::BlockMapping* block_mapping,
-                dedupv1::chunkindex::ChunkMapping* mapping,
-                dedupv1::base::ErrorContext* ec);
-
-        virtual bool UpdateKnownChunk(dedupv1::Session* session,
-                const dedupv1::blockindex::BlockMapping* block_mapping,
-                dedupv1::chunkindex::ChunkMapping* mapping,
-                dedupv1::base::ErrorContext* ec);
-
-        /**
-         * @return true iff ok, otherwise an error has occurred
-         */
-        virtual bool PersistStatistics(std::string prefix, dedupv1::PersistStatistics* ps);
-
-        /**
-         * @return true iff ok, otherwise an error has occurred
-         */
-        virtual bool RestoreStatistics(std::string prefix, dedupv1::PersistStatistics* ps);
-
-        /**
-         * Print statistics.
+         * Constructor for the statistics
          * @return
          */
-        virtual std::string PrintStatistics();
+        Statistics();
 
         /**
-         * Print profile informations about the usage of the block index filter.
-         *
-         * @return
+         * Number of filter reads
          */
-        virtual std::string PrintProfile();
+        tbb::atomic<uint64_t> reads_;
 
         /**
-         * @internal
-         * Creates a new block index filter. The static method
-         * is used for the filter factory.
-         * @return
+         * Number of times the filter check hits
          */
-        static Filter* CreateFilter();
+        tbb::atomic<uint64_t> hits_;
 
         /**
-         * Registers this filter at the filter factory.
+         * Number of times the filter check misses
          */
-        static void RegisterFilter();
+        tbb::atomic<uint64_t> miss_;
 
-        DISALLOW_COPY_AND_ASSIGN(BlockIndexFilter);
+        /**
+         * Profiling information (filter time in ms)
+         */
+        dedupv1::base::Profile time_;
+
+        /**
+         * Profiling information (filter latency in ms)
+         */
+        dedupv1::base::SimpleSlidingAverage average_latency_;
+    };
+
+    /**
+     * Statistics about the block index filter
+     */
+    Statistics stats_;
+
+    blockindex::BlockIndex* block_index_;
+
+    BlockChunkCache* block_chunk_cache_;
+
+    bool use_block_chunk_cache_;
+public:
+    /**
+     * Constructor.
+     */
+    BlockIndexFilter();
+
+    /**
+     * Destructor
+     */
+    virtual ~BlockIndexFilter();
+
+    bool Start(DedupSystem* system);
+
+    bool Close();
+
+    bool SetOption(const std::string& option_name, const std::string& option);
+
+    /**
+     * Performs a check by searching the chunk mapping to check in the current block mapping (items).
+     * This way of optimizing the duplication detection is limited to certain situations, but takes nearly no time and no I/O.
+     *
+     * @param session current user session (Unused in this method)
+     * @param block_mapping Unchanged (aka old) block mapping for the current block (CanBeNull)
+     * @param mapping chunk data to check for duplication (NotNull, Unchecked)
+     * @param ec Error context that can be filled if case of special errors
+     */
+    virtual enum filter_result Check(dedupv1::Session* session,
+                                     const dedupv1::blockindex::BlockMapping* block_mapping,
+                                     dedupv1::chunkindex::ChunkMapping* mapping,
+                                     dedupv1::base::ErrorContext* ec);
+
+    virtual bool UpdateKnownChunk(dedupv1::Session* session,
+                                  const dedupv1::blockindex::BlockMapping* block_mapping,
+                                  dedupv1::chunkindex::ChunkMapping* mapping,
+                                  dedupv1::base::ErrorContext* ec);
+
+    /**
+     * @return true iff ok, otherwise an error has occurred
+     */
+    virtual bool PersistStatistics(std::string prefix, dedupv1::PersistStatistics* ps);
+
+    /**
+     * @return true iff ok, otherwise an error has occurred
+     */
+    virtual bool RestoreStatistics(std::string prefix, dedupv1::PersistStatistics* ps);
+
+    /**
+     * Print statistics.
+     * @return
+     */
+    virtual std::string PrintStatistics();
+
+    /**
+     * Print profile informations about the usage of the block index filter.
+     *
+     * @return
+     */
+    virtual std::string PrintProfile();
+
+    /**
+     * Print trace information about the block index filter.
+     */
+    virtual std::string PrintTrace();
+
+    /**
+     * @internal
+     * Creates a new block index filter. The static method
+     * is used for the filter factory.
+     * @return
+     */
+    static Filter* CreateFilter();
+
+    /**
+     * Registers this filter at the filter factory.
+     */
+    static void RegisterFilter();
+
+    DISALLOW_COPY_AND_ASSIGN(BlockIndexFilter);
 };
 
 } // namespace

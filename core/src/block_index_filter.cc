@@ -133,8 +133,8 @@ Filter::filter_result BlockIndexFilter::Check(Session* session,
         for (i = block_mapping->items().begin(); i != block_mapping->items().end(); i++) {
 
             /*
-             * Check for each block mapping item if the chunk mappings (new) 
-             * fingerprint is known. If this is the case it is a strong indication 
+             * Check for each block mapping item if the chunk mappings (new)
+             * fingerprint is known. If this is the case it is a strong indication
              * that the fingerprint chunk is known.
              */
             if (raw_compare(i->fingerprint(), i->fingerprint_size(),
@@ -208,6 +208,11 @@ bool BlockIndexFilter::PersistStatistics(std::string prefix, dedupv1::PersistSta
     data.set_miss_count(this->stats_.miss_);
     data.set_read_count(this->stats_.reads_);
     CHECK(ps->Persist(prefix, data), "Failed to persist block index filter stats");
+    if (block_chunk_cache_) {
+        CHECK(block_chunk_cache_->PersistStatistics(
+                prefix + ".block-chunk-cache", ps),
+            "Failed to persist block chunk cache stats");
+    }
     return true;
 }
 
@@ -217,6 +222,11 @@ bool BlockIndexFilter::RestoreStatistics(std::string prefix, dedupv1::PersistSta
     this->stats_.reads_ = data.read_count();
     this->stats_.hits_ = data.hit_count();
     this->stats_.miss_ = data.miss_count();
+
+    if (block_chunk_cache_) {
+        CHECK(block_chunk_cache_->RestoreStatistics(prefix + ".block-chunk-cache",
+                ps), "Failed to restore block chunk cache stats");
+    }
     return true;
 }
 
@@ -224,8 +234,8 @@ string BlockIndexFilter::PrintStatistics() {
     stringstream sstr;
     sstr << "{";
     if (block_chunk_cache_) {
-        sstr << "\"block chunk cache\": " << 
-          block_chunk_cache_->PrintStatistics() << "," << std::endl;
+        sstr << "\"block chunk cache\": " <<
+        block_chunk_cache_->PrintStatistics() << "," << std::endl;
     } else {
         sstr << "\"block chunk cache\": null," << std::endl;
     }
@@ -236,12 +246,32 @@ string BlockIndexFilter::PrintStatistics() {
     return sstr.str();
 }
 
+string BlockIndexFilter::PrintTrace() {
+    stringstream sstr;
+    sstr << "{";
+    if (block_chunk_cache_) {
+        sstr << "\"block chunk cache\": " <<
+        block_chunk_cache_->PrintTrace() << std::endl;
+    } else {
+        sstr << "\"block chunk cache\": null" << std::endl;
+    }
+    sstr << "}";
+    return sstr.str();
+
+}
+
 string BlockIndexFilter::PrintProfile() {
     stringstream sstr;
     sstr << "{";
+    if (block_chunk_cache_) {
+        sstr << "\"block chunk cache\": " <<
+        block_chunk_cache_->PrintProfile() << "," << std::endl;
+    } else {
+        sstr << "\"block chunk cache\": null," << std::endl;
+    }
     sstr << "\"used time\": " << this->stats_.time_.GetSum() << "," << std::endl;
-    sstr << "\"average latency\": " << this->stats_.average_latency_.GetAverage() << 
-      std::endl;
+    sstr << "\"average latency\": " << this->stats_.average_latency_.GetAverage() <<
+    std::endl;
     sstr << "}";
     return sstr.str();
 }
