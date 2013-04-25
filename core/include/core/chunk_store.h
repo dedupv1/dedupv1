@@ -139,26 +139,24 @@ class ChunkStore : public dedupv1::StatisticProvider {
      * After a successful call, the data address for all chunks that have an SENTINAL
      * value before are set.
      *
-     * @param session
      * @param chunk_mappings
      * @param ec Error context that can be filled if case of special errors
      * @return true iff ok, otherwise an error has occurred
      */
-    virtual bool WriteBlock(StorageSession* session,
+    virtual bool WriteBlock(
             dedupv1::chunkindex::ChunkMapping* chunk_mappings,
             dedupv1::base::ErrorContext* ec);
 
     /**
      * On Success, it sets the data address member of the block mapping item.
      *
-     * @param session
      * @param item
      * @param buffer
      * @param buffer_size
      * @param ec Error context that can be filled if case of special errors
      * @return true iff ok, otherwise an error has occurred
      */
-    virtual bool ReadBlock(StorageSession* session,
+    virtual bool ReadBlock(
             dedupv1::blockindex::BlockMappingItem* item,
             byte* buffer,
             size_t* buffer_size,
@@ -175,22 +173,6 @@ class ChunkStore : public dedupv1::StatisticProvider {
      * @return
      */
     inline Storage* storage();
-
-    /**
-     * Closes the given storage session.
-     *
-     * @param storage_session
-     * @param ec
-     * @return true iff ok, otherwise an error has occurred
-     */
-    bool CloseSession(void* storage_session, dedupv1::base::ErrorContext* ec);
-
-    /**
-     * Creates a new storage session.
-     *
-     * @return NULL indicates an error.
-     */
-    StorageSession* CreateSession();
 
     /**
      * Persists the statistics of the chunk store and its subcomponents

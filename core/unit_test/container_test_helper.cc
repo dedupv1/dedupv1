@@ -38,7 +38,6 @@ using dedupv1::blockindex::BlockMappingItem;
 using dedupv1::chunkindex::ChunkMapping;
 using dedupv1::chunkindex::ChunkIndex;
 using dedupv1::chunkstore::Storage;
-using dedupv1::chunkstore::StorageSession;
 using dedupv1::DedupSystem;
 
 LOGGER("ContainerTestHelper");
@@ -110,15 +109,12 @@ bool ContainerTestHelper::WriteDefaultData(DedupSystem* system, int offset, int 
     CHECK(system, "System not set");
     Storage* storage = system->storage();
     CHECK(storage, "Storage not set");
-    StorageSession* s = storage->CreateSession();
-    CHECK(s, "Storage session not set");
 
-    bool r = WriteDefaultData(s, system->chunk_index(), offset, count);
-    CHECK(s->Close(), "Cannot close storage session");
+    bool r = WriteDefaultData(storage, system->chunk_index(), offset, count);
     return r;
 }
 
-bool ContainerTestHelper::WriteDefaultData(StorageSession* s, ChunkIndex* chunk_index, int offset, int count) {
+bool ContainerTestHelper::WriteDefaultData(Storage* s, ChunkIndex* chunk_index, int offset, int count) {
     for (int i = offset; i < (offset + count); i++) {
         byte* d = this->data(i);
         CHECK(d, "Date not set");

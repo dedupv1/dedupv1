@@ -33,6 +33,7 @@
 #include <core/storage.h>
 #include <core/chunker.h>
 #include <core/chunk_store.h>
+#include <core/dedup_system.h>
 #include <base/locks.h>
 #include <core/session.h>
 #include <base/timer.h>
@@ -53,6 +54,8 @@ using dedupv1::chunkindex::ChunkMapping;
 using dedupv1::chunkstore::Storage;
 using dedupv1::base::ScopedArray;
 using dedupv1::Fingerprinter;
+using dedupv1::DedupSystem;
+
 LOGGER("ByteCompareFilter");
 
 namespace dedupv1 {
@@ -80,11 +83,20 @@ Filter* ByteCompareFilter::CreateFilter() {
     return new ByteCompareFilter();
 }
 
+bool ByteCompareFilter::Start(DedupSystem* dedup_system) {
+    DCHECK(dedup_system, "Dedup system not set");
+    DCHECK(dedup_system->storage(), "Storage not set");
+
+    storage_ = dedup_system->storage();
+    return true;
+}
+
 Filter::filter_result ByteCompareFilter::Check(Session* session, const BlockMapping* block_mapping,
                                                ChunkMapping* mapping, dedupv1::base::ErrorContext* ec) {
     // session not always set
     // block mapping not always set
     CHECK_RETURN(mapping, FILTER_ERROR, "Chunk mapping not set");
+    DCHECK_RETURN(storage_, FILTER_ERROR, "Storage not set")
 
     // if the chunk is not set, we have not comparison
     if (mapping->chunk() == NULL) {
@@ -108,18 +120,20 @@ Filter::filter_result ByteCompareFilter::Check(Session* session, const BlockMapp
 
     stats_.reads_.fetch_and_increment();
 
-    CHECK_RETURN(session->storage_session()->Read(
+    CHECK_RETURN(storage_->Read(
             mapping->data_address(),
             mapping->fingerprint(),
             mapping->fingerprint_size(), buffer, &data_size, ec), FILTER_ERROR,
         "Storage error reading address: " << mapping->DebugString());
 
     if (data_size == 0) {
-        WARNING("Byte compare mismatch for fp " << Fingerprinter::DebugString(mapping->fingerprint(), mapping->fingerprint_size()));
+        WARNING("Byte compare mismatch for fp " <<
+            Fingerprinter::DebugString(mapping->fingerprint(), mapping->fingerprint_size()));
         stats_.miss_.fetch_and_increment();
         return FILTER_ERROR;
     } else if (data_size != mapping->chunk()->size()) {
-        WARNING("Byte compare mismatch for fp " << Fingerprinter::DebugString(mapping->fingerprint(), mapping->fingerprint_size()) << ":" <<
+        WARNING("Byte compare mismatch for fp " <<
+            Fingerprinter::DebugString(mapping->fingerprint(), mapping->fingerprint_size()) << ":" <<
             "chunk size " << mapping->chunk()->size() <<
             ", stored chunk size " << data_size);
         stats_.miss_.fetch_and_increment();
@@ -128,7 +142,8 @@ Filter::filter_result ByteCompareFilter::Check(Session* session, const BlockMapp
         stats_.hits_.fetch_and_increment();
         return FILTER_EXISTING;
     } else {
-        WARNING("Byte compare mismatch for fp " << Fingerprinter::DebugString(mapping->fingerprint(), mapping->fingerprint_size()));
+        WARNING("Byte compare mismatch for fp " <<
+            Fingerprinter::DebugString(mapping->fingerprint(), mapping->fingerprint_size()));
         stats_.miss_.fetch_and_increment();
         return FILTER_ERROR;
     }

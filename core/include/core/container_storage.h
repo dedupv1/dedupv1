@@ -62,7 +62,6 @@ namespace chunkstore {
 // declare classes (inside the namespace)
 class ContainerItem;
 class ContainerStorage;
-class ContainerStorageSession;
 class ContainerGCStrategy;
 class ContainerStorageBackgroundCommitter;
 class ContainerStorageAllocator;
@@ -578,6 +577,41 @@ public dedupv1::log::LogAckConsumer {
 
     bool FinishDirtyLogReplay();
 
+
+        /**
+         * Reads the given fp in the given container.
+         *
+         * We use this utility method as the storage session has to do a bit more than
+         * the normal FindItem/CopyRawData pair, e.g. notifying the gc and other components.
+         *
+         * @param container
+         * @param key
+         * @param key_size
+         * @param data
+         * @param data_size
+         * @return
+         */
+        dedupv1::base::lookup_result ReadInContainer(const Container& container, const void* key,
+                size_t key_size, void* data, size_t* data_size);
+
+        /**
+         * Performs the deletion of items from the given container
+         * The method assumes that
+         * - the container is in the in_move_set_
+         * - the cache entry lock may be held for writing.
+         *
+         * The method gets a lock on the container and will release it before returning.
+         * The method will release the lock on the cache entry in all cases.
+         *
+         * It is used by the Delete method of the session mainly to make the handling
+         * of the in-move set easier.
+         */
+        bool DoDelete(uint64_t container_id,
+                uint64_t primary_id,
+                const ContainerStorageAddressData& address,
+                const std::list<bytestring>& key_list,
+                CacheEntry* cache_entry,
+                dedupv1::base::ErrorContext* ec);
     public:
     /**
      * Constructor
@@ -651,11 +685,50 @@ public dedupv1::log::LogAckConsumer {
      */
     virtual bool Close();
 
-    /**
-     * Creates a new storage session.
-     * @return
-     */
-    virtual StorageSession* CreateSession();
+        /**
+         *
+         * @param key
+         * @param key_size
+         * @param data
+         * @param data_size
+         * @param address
+         * @param ec error context (can be NULL)
+         * @return
+         */
+        virtual bool WriteNew(const void* key, size_t key_size,
+            const void* data, size_t data_size,
+            bool is_indexed,
+            uint64_t* address,
+            dedupv1::base::ErrorContext* ec);
+
+        /**
+         *
+         * Note: In contrast to ReadInContainer and other methods, the Read method should report an error, if the
+         * key has not been found in the container.
+         *
+         * @param address
+         * @param key
+         * @param key_size
+         * @param data
+         * @param data_size
+         * @param ec error context (can be NULL)
+         * @return
+         */
+        virtual bool Read(uint64_t address,
+                const void* key, size_t key_size,
+                void* data, size_t* data_size,
+                dedupv1::base::ErrorContext* ec);
+
+        /**
+         *
+         * @param address
+         * @param key_list
+         * @param ec error context (can be NULL)
+         * @return
+         */
+        virtual bool DeleteChunks(uint64_t address,
+                const std::list<bytestring>& key_list,
+                dedupv1::base::ErrorContext* ec);
 
     /**
      * Waits if the container is currently in the write cache or in the bg committer
@@ -963,113 +1036,12 @@ public dedupv1::log::LogAckConsumer {
 
     virtual uint64_t GetActiveStorageDataSize();
 
-    friend class ContainerStorageSession;
     friend class ContainerStorageBackgroundCommitter;
 
 #ifdef DEDUPV1_CORE_TEST
     void ClearData();
 #endif
     FRIEND_TEST(ContainerStorageTest, MergeWithSameContainerLock);
-};
-
-/**
- * A container storage session contains the session (thread) specific parts of the
- * storage subsystem.
- */
-class ContainerStorageSession : public StorageSession {
-        ContainerStorage* storage_;
-
-        /**
-         * Reads the given fp in the given container.
-         *
-         * We use this utility method as the storage session has to do a bit more than
-         * the normal FindItem/CopyRawData pair, e.g. notifying the gc and other components.
-         *
-         * @param container
-         * @param key
-         * @param key_size
-         * @param data
-         * @param data_size
-         * @return
-         */
-        dedupv1::base::lookup_result ReadInContainer(const Container& container, const void* key,
-                size_t key_size, void* data, size_t* data_size);
-
-        /**
-         * Performs the deletion of items from the given container
-         * The method assumes that
-         * - the container is in the in_move_set_
-         * - the cache entry lock may be held for writing.
-         *
-         * The method gets a lock on the container and will release it before returning.
-         * The method will release the lock on the cache entry in all cases.
-         *
-         * It is used by the Delete method of the session mainly to make the handling
-         * of the in-move set easier.
-         */
-        bool DoDelete(uint64_t container_id,
-                uint64_t primary_id,
-                const ContainerStorageAddressData& address,
-                const std::list<bytestring>& key_list,
-                CacheEntry* cache_entry,
-                dedupv1::base::ErrorContext* ec);
-    public:
-
-        virtual ~ContainerStorageSession() {
-        }
-
-        /**
-         * Constructor.
-         * @param storage
-         * @return
-         */
-        explicit ContainerStorageSession(ContainerStorage* storage);
-
-        /**
-         *
-         * @param key
-         * @param key_size
-         * @param data
-         * @param data_size
-         * @param address
-         * @param ec error context (can be NULL)
-         * @return
-         */
-        virtual bool WriteNew(const void* key, size_t key_size, const void* data,
-                size_t data_size,
-                bool is_indexed,
-                uint64_t* address,
-                dedupv1::base::ErrorContext* ec);
-
-        /**
-         *
-         * Note: In contrast to ReadInContainer and other methods, the Read method should report an error, if the
-         * key has not been found in the container.
-         *
-         * @param address
-         * @param key
-         * @param key_size
-         * @param data
-         * @param data_size
-         * @param ec error context (can be NULL)
-         * @return
-         */
-        virtual bool Read(uint64_t address,
-                const void* key, size_t key_size,
-                void* data, size_t* data_size,
-                dedupv1::base::ErrorContext* ec);
-
-        /**
-         *
-         * @param address
-         * @param key_list
-         * @param ec error context (can be NULL)
-         * @return
-         */
-        virtual bool Delete(uint64_t address,
-                const std::list<bytestring>& key_list,
-                dedupv1::base::ErrorContext* ec);
-
 };
 
 const ContainerStorage::ContainerFile& ContainerStorage::file(int i) const {

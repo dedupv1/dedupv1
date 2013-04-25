@@ -37,13 +37,12 @@ class MockContainerStorage : public dedupv1::chunkstore::ContainerStorage {
     MOCK_METHOD0(Stop, bool());
     MOCK_METHOD0(Close, bool());
 
-    MOCK_METHOD0(CreateSession, dedupv1::chunkstore::StorageSession*());
-
     MOCK_METHOD1(IsCommitted, dedupv1::chunkstore::storage_commit_state(uint64_t address));
     MOCK_METHOD3(LookupContainerAddress, lookup_type(uint64_t, dedupv1::base::ReadWriteLock**, bool));
 
     MOCK_METHOD1(Flush, bool(dedupv1::base::ErrorContext* ec));
-
+    MOCK_METHOD4(DeleteChunk, bool(uint64_t address, const void* key, size_t key_size, dedupv1::base::ErrorContext* ec));
+    MOCK_METHOD3(DeleteChunks, bool(uint64_t address, const std::list<bytestring>& list, dedupv1::base::ErrorContext* ec));
     MOCK_METHOD3(TryMergeContainer, bool(uint64_t address_1, uint64_t address_2, bool*));
     MOCK_METHOD2(TryDeleteContainer, bool(uint64_t address, bool*));
 

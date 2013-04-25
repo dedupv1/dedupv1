@@ -78,16 +78,12 @@ protected:
 
     GreedyContainerGCStrategy* gc;
     MockContainerStorage storage;
-    MockStorageSession storage_session;
 
     byte test_data[16][TEST_DATA_SIZE];
     uint64_t test_adress[164];
     uint64_t test_fp[16];
 
     virtual void SetUp() {
-        EXPECT_CALL(storage, CreateSession()).WillRepeatedly(Return(&storage_session));
-        EXPECT_CALL(storage_session, Close()).WillRepeatedly(Return(true));
-
         storage.SetOption("container-size", ToString(CONTAINER_SIZE));
 
         gc = new GreedyContainerGCStrategy();

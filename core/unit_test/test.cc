@@ -29,7 +29,6 @@
 #include <core/dedup_system.h>
 #include <test_util/test_listener.h>
 #include "null_chunker.h"
-#include "null_storage.h"
 #include "log4cxx/logger.h"
 #include "log4cxx/basicconfigurator.h"
 #include "log4cxx/propertyconfigurator.h"
@@ -80,7 +79,6 @@ int main(int argc, char** argv) {
 #endif
 
     dedupv1::DedupSystem::RegisterDefaults();
-    dedupv1::chunkstore::NullStorage::RegisterStorage();
     dedupv1::NullChunker::RegisterChunker();
 
     InitGoogleTest(&argc, argv);

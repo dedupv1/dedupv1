@@ -83,13 +83,6 @@ bool ChunkStore::SetOption(const string& option_name, const string& option) {
     return this->chunk_storage_->SetOption(option_name, option);
 }
 
-StorageSession* ChunkStore::CreateSession() {
-    CHECK_RETURN(this->chunk_storage_, NULL, "Chunk storage not set");
-    StorageSession* storage_session = this->chunk_storage_->CreateSession();
-    CHECK_RETURN(storage_session, NULL, "Cannot create storage session");
-    return storage_session;
-}
-
 bool ChunkStore::Start(const StartContext& start_context, DedupSystem* system) {
     CHECK(this->chunk_storage_, "Storage not configured");
     return this->chunk_storage_->Start(start_context, system);
@@ -121,11 +114,10 @@ bool ChunkStore::Close() {
     return true;
 }
 
-bool ChunkStore::WriteBlock(StorageSession* storage_session, ChunkMapping* chunk_mapping,
+bool ChunkStore::WriteBlock(ChunkMapping* chunk_mapping,
                             ErrorContext* ec) {
     ProfileTimer timer(this->stats_.time_);
 
-    CHECK(storage_session, "Session not set");
     CHECK(chunk_mapping, "Chunk mapping not set");
     CHECK(chunk_mapping->chunk() != NULL,
         "Chunk not set: " << chunk_mapping->DebugString());
@@ -134,8 +126,9 @@ bool ChunkStore::WriteBlock(StorageSession* storage_session, ChunkMapping* chunk
         chunk_mapping->data_address() == Storage::ILLEGAL_STORAGE_ADDRESS) {
         // write to storage if necessary
         uint64_t new_address = Storage::ILLEGAL_STORAGE_ADDRESS;
-        CHECK(storage_session->WriteNew(chunk_mapping->fingerprint(),
-                chunk_mapping->fingerprint_size(), chunk_mapping->chunk()->data(),
+        CHECK(chunk_storage_->WriteNew(chunk_mapping->fingerprint(),
+                chunk_mapping->fingerprint_size(),
+                chunk_mapping->chunk()->data(),
                 chunk_mapping->chunk()->size(),
                 chunk_mapping->is_indexed(),
                 &new_address, ec),
@@ -159,24 +152,27 @@ bool ChunkStore::CheckIfFull() {
     return chunk_storage_->CheckIfFull();
 }
 
-bool ChunkStore::ReadBlock(StorageSession* storage_session,
-                           BlockMappingItem* item, byte* buffer, size_t* buffer_size,
-                           ErrorContext* ec) {
+bool ChunkStore::ReadBlock(BlockMappingItem* item,
+    byte* buffer,
+    size_t* buffer_size,
+    ErrorContext* ec) {
     ProfileTimer timer(this->stats_.time_);
 
-    CHECK(storage_session, "Session not set");
     CHECK(item, "Item not set");
     CHECK(buffer, "Buffer not set");
     CHECK(buffer_size, "Buffer size not set");
     CHECK(*buffer_size > 0, "Buffer size value not set");
 
-    uint64_t data_address = item->data_address();
-    CHECK(storage_session->Read(data_address, item->fingerprint(),
-            item->fingerprint_size(), buffer, buffer_size, ec), "Reading of chunk failed: " << item->DebugString());
-
-    item->set_data_address(data_address);
-    this->stats_.storage_reads_.fetch_and_increment();
-    this->stats_.storage_reads_bytes_.fetch_and_add(*buffer_size);
+    if (item->data_address() == Storage::EMPTY_DATA_STORAGE_ADDRESS) { // Null Chunk
+        memset(buffer, 0, *buffer_size);
+    } else {
+      CHECK(chunk_storage_->Read(item->data_address(),
+            item->fingerprint(),
+            item->fingerprint_size(), buffer, buffer_size, ec),
+          "Reading of chunk failed: " << item->DebugString());
+    }
+    this->stats_.storage_reads_++;
+    this->stats_.storage_reads_bytes_ += (*buffer_size);
     return true;
 }
 

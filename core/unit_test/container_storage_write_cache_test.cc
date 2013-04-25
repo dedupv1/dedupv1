@@ -174,13 +174,10 @@ TEST_F(ContainerStorageWriteCacheTest, RoundRobin) {
     ASSERT_TRUE(storage);
     ASSERT_TRUE(write_cache);
 
-    StorageSession* session = storage->CreateSession();
-    ASSERT_TRUE(session);
-
     for (int i = 0; i < 8; i++) {
         byte* d = container_helper->data(i);
         ASSERT_TRUE(d);
-        ASSERT_TRUE(session->WriteNew(container_helper->fingerprint(i).data(),
+        ASSERT_TRUE(storage->WriteNew(container_helper->fingerprint(i).data(),
                 container_helper->fingerprint(i).size(),
                 d,
                 TEST_DATA_SIZE,
@@ -191,10 +188,6 @@ TEST_F(ContainerStorageWriteCacheTest, RoundRobin) {
         ASSERT_EQ((i % storage->GetWriteCache()->GetSize()) + 1, container_helper->data_address(i));
         DEBUG("Wrote index " << i << ", container id " << container_helper->data_address(i));
     }
-
-    if (session) {
-        ASSERT_TRUE(session->Close());
-    }
 }
 
 TEST_F(ContainerStorageWriteCacheTest, EarliestFreeWithoutLocking) {
@@ -202,13 +195,10 @@ TEST_F(ContainerStorageWriteCacheTest, EarliestFreeWithoutLocking) {
     ASSERT_TRUE(storage);
     ASSERT_TRUE(write_cache);
 
-    StorageSession* session = storage->CreateSession();
-    ASSERT_TRUE(session);
-
     for (int i = 0; i < 8; i++) {
         byte* d = container_helper->data(i);
         ASSERT_TRUE(d);
-        ASSERT_TRUE(session->WriteNew(container_helper->fingerprint(i).data(),
+        ASSERT_TRUE(storage->WriteNew(container_helper->fingerprint(i).data(),
                 container_helper->fingerprint(i).size(),
                 d,
                 TEST_DATA_SIZE,
@@ -219,10 +209,6 @@ TEST_F(ContainerStorageWriteCacheTest, EarliestFreeWithoutLocking) {
         ASSERT_EQ(1, container_helper->data_address(i));
         DEBUG("Wrote index " << i << ", container id " << container_helper->data_address(i));
     }
-
-    if (session) {
-        ASSERT_TRUE(session->Close());
-    }
 }
 
 TEST_F(ContainerStorageWriteCacheTest, EarliestFreeWithLocking) {
@@ -230,13 +216,10 @@ TEST_F(ContainerStorageWriteCacheTest, EarliestFreeWithLocking) {
     ASSERT_TRUE(storage);
     ASSERT_TRUE(write_cache);
 
-    StorageSession* session = storage->CreateSession();
-    ASSERT_TRUE(session);
-
     for (int i = 0; i < 8; i++) {
         byte* d = container_helper->data(i);
         ASSERT_TRUE(d);
-        ASSERT_TRUE(session->WriteNew(container_helper->fingerprint(i).data(),
+        ASSERT_TRUE(storage->WriteNew(container_helper->fingerprint(i).data(),
                 container_helper->fingerprint(i).size(),
                 d,
                 TEST_DATA_SIZE,
@@ -247,10 +230,6 @@ TEST_F(ContainerStorageWriteCacheTest, EarliestFreeWithLocking) {
         DEBUG("Wrote index " << i << ", container id " << container_helper->data_address(i));
 
         ASSERT_TRUE(write_cache->GetCacheLock().Get(i)->AcquireWriteLock());
-    }
-
-    if (session) {
-        ASSERT_TRUE(session->Close());
     }
 
     for (int i = 0; i < 8; i++) {

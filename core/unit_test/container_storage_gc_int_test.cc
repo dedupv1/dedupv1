@@ -81,8 +81,6 @@ using dedupv1::StartContext;
 using dedupv1::StopContext;
 using dedupv1::DedupSystem;
 using dedupv1::chunkstore::ContainerStorage;
-using dedupv1::chunkstore::StorageSession;
-using dedupv1::chunkstore::ContainerStorageSession;
 
 class GreedyContainerGCStrategyIntegrationTest : public testing::TestWithParam<const char*> {
 protected:
@@ -189,17 +187,13 @@ bool ContainerRead(ContainerStorage* storage, uint64_t container_id) {
 bool DeleteItem(ContainerStorage* storage, ContainerTestHelper* container_test_helper) {
     DEBUG("Start delete thread");
 
-    StorageSession* session = storage->CreateSession();
-
     for (int i = 0; i < 16; i++) {
-        CHECK(session->Delete(container_test_helper->data_address(i),
+        CHECK(storage->DeleteChunk(container_test_helper->data_address(i),
                 container_test_helper->fingerprint(i).data(),
                 container_test_helper->fingerprint(i).size(), NO_EC),
             "Failed to delete from container");
         sleep(1);
     }
-
-    session->Close();
 
     DEBUG("Stop delete thread");
     return true;

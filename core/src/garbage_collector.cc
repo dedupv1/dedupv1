@@ -78,7 +78,6 @@ using dedupv1::base::IndexIterator;
 using dedupv1::blockindex::BlockMappingItem;
 using dedupv1::blockindex::BlockMapping;
 using dedupv1::blockindex::BlockMappingPair;
-using dedupv1::chunkstore::StorageSession;
 using dedupv1::Fingerprinter;
 using dedupv1::chunkindex::ChunkMapping;
 using dedupv1::base::put_result;

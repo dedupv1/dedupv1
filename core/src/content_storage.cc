@@ -738,7 +738,7 @@ bool ContentStorage::ProcessChunkFilterChain(std::tr1::tuple<Session*, const Blo
     if (likely(!failed)) {
         SlidingAverageProfileTimer method_timer2(
             this->stats_.average_process_chunk_filter_chain_write_block_latency_);
-        if (!this->chunk_store_->WriteBlock(session->storage_session(), chunk_mapping, ec)) {
+        if (!this->chunk_store_->WriteBlock(chunk_mapping, ec)) {
             ERROR("Storing of chunk data failed: " <<
                 "block mapping " << (block_mapping ? block_mapping->DebugString() : "<no block mapping>") <<
                 ", chunk mapping " << chunk_mapping->DebugString());
@@ -840,15 +840,15 @@ bool ContentStorage::ProcessFilterChain(Session* session,
 }
 
 bool ContentStorage::MergeChunksIntoCurrentRequest(uint64_t block_id,
-                                                   RequestStatistics* request_stats,
-                                                   unsigned int block_offset,
-                                                   unsigned long open_chunk_pos,
-                                                   bool already_failed,
-                                                   Session* session,
-                                                   const BlockMapping* original_block_mapping,
-                                                   const BlockMapping* updated_block_mapping,
-                                                   vector<ChunkMapping>* chunk_mappings,
-                                                   ErrorContext* ec) {
+    RequestStatistics* request_stats,
+    unsigned int block_offset,
+    unsigned long open_chunk_pos,
+    bool already_failed,
+    Session* session,
+    const BlockMapping* original_block_mapping,
+    const BlockMapping* updated_block_mapping,
+    vector<ChunkMapping>* chunk_mappings,
+    ErrorContext* ec) {
     DCHECK(session->open_chunk_position() <= chunk_mappings->at(0).chunk()->size(),
         "Illegal open chunk position");
 
@@ -1202,7 +1202,7 @@ bool ContentStorage::ReadDataForItem(BlockMappingItem* item, Session* session, b
         size_t local_buffer_size = session->buffer_size();
         memset(session->buffer(), 0, session->buffer_size());
 
-        CHECK(this->chunk_store_->ReadBlock(session->storage_session(), item, session->buffer(), &local_buffer_size, ec),
+        CHECK(this->chunk_store_->ReadBlock(item, session->buffer(), &local_buffer_size, ec),
             "Chunk reading failed " << item->DebugString() << ", offset = " << offset);
 
         CHECK(local_buffer_size >= item->chunk_offset() + item->size(),

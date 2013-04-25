@@ -70,11 +70,6 @@ class Session {
         std::set<const dedupv1::filter::Filter*> enabled_filters_;
 
         /**
-         * Reference to the storage session used in this session.
-         */
-        dedupv1::chunkstore::StorageSession* storage_session_;
-
-        /**
          * Number of bytes currently in the chunker.
          * This value is used to transfer this value from block request to block request.
          */
@@ -253,11 +248,6 @@ class Session {
         inline dedupv1::ChunkerSession* chunker_session();
 
 		/**
-         * returns the storage session
-         */
-        inline dedupv1::chunkstore::StorageSession* storage_session();
-
-		/**
 		 * returns the number of open requests
          */
         inline uint32_t open_request_count();
@@ -306,10 +296,6 @@ void Session::set_open_chunk_position(uint32_t new_pos) {
 
 dedupv1::ChunkerSession* Session::chunker_session() {
     return chunker_session_;
-}
-
-dedupv1::chunkstore::StorageSession* Session::storage_session() {
-    return storage_session_;
 }
 
 uint32_t Session::open_request_count() {

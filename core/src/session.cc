@@ -57,7 +57,6 @@ namespace dedupv1 {
 Session::Session() {
     chunker_session_ = NULL;
     fingerprinter_ = NULL;
-    storage_session_ = NULL;
     open_chunk_pos_ = 0;
     open_request_count_ = 0;
     open_request_start_ = 0;
@@ -79,8 +78,6 @@ bool Session::Init(uint32_t block_size, ChunkStore* chunk_store, Chunker* chunke
     this->enabled_filters_ = enabled_filters;
     this->chunker_session_ = chunker->CreateSession();
     CHECK(this->chunker_session_, "Failed to create chunker session");
-
-    this->storage_session_ = chunk_store->CreateSession();
 
     this->fingerprinter_ = fingerprinter; // session takes over the ownership and closes it
     this->open_chunk_pos_ = 0;
@@ -139,11 +136,6 @@ bool Session::Close() {
     }
     this->open_requests_.clear();
 
-    if (this->storage_session_) {
-        if (!this->storage_session_->Close()) {
-            WARNING("Storage session close failed\n");
-        }
-    }
     if (this->buffer_) {
         delete[] this->buffer_;
         this->buffer_ = NULL;

@@ -152,23 +152,23 @@ protected:
         }
     }
 
-    void WriteTestData(StorageSession* session) {
-        ASSERT_TRUE(session);
-        ASSERT_TRUE(container_helper->WriteDefaultData(session, NULL, 0, TEST_DATA_COUNT));
+    void WriteTestData(Storage* storage) {
+        ASSERT_TRUE(storage);
+        ASSERT_TRUE(container_helper->WriteDefaultData(storage, NULL, 0, TEST_DATA_COUNT));
     }
 
-    void DeleteTestData(StorageSession* session) {
-        ASSERT_TRUE(session);
+    void DeleteTestData(Storage* storage) {
+        ASSERT_TRUE(storage);
         for (size_t i = 0; i < TEST_DATA_COUNT; i++) {
-            ASSERT_TRUE(session->Delete(container_helper->data_address(i),
+            ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(i),
                     container_helper->fingerprint(i).data()
                     , container_helper->fingerprint(i).size(), NO_EC))
             << "Delete " << i << " failed";
         }
     }
 
-    void ReadDeletedTestData(StorageSession* session) {
-        ASSERT_TRUE(session);
+    void ReadDeletedTestData(Storage* storage) {
+        ASSERT_TRUE(storage);
         size_t i = 0;
 
         byte* result = new byte[TEST_DATA_SIZE];
@@ -176,7 +176,7 @@ protected:
 
         for (i = 0; i < TEST_DATA_COUNT; i++) {
             size_t result_size = TEST_DATA_SIZE;
-            ASSERT_FALSE(session->Read(container_helper->data_address(i), container_helper->fingerprint(i).data()
+            ASSERT_FALSE(storage->Read(container_helper->data_address(i), container_helper->fingerprint(i).data()
                     , container_helper->fingerprint(i).size(), result, &result_size, NO_EC))
             << "Found data that should be deleted: key " << Fingerprinter::DebugString(container_helper->fingerprint(i));
         }
@@ -212,8 +212,8 @@ protected:
         ASSERT_TRUE(log->PerformDirtyReplay());
     }
 
-    void ReadTestData(StorageSession* session) {
-        ASSERT_TRUE(session);
+    void ReadTestData(Storage* storage) {
+        ASSERT_TRUE(storage);
         size_t i = 0;
 
         byte result[TEST_DATA_SIZE];
@@ -226,7 +226,7 @@ protected:
             memset(result, 0, TEST_DATA_SIZE);
             result_size = TEST_DATA_SIZE;
 
-            ASSERT_TRUE(session->Read(container_helper->data_address(i), container_helper->fingerprint(i).data()
+            ASSERT_TRUE(storage->Read(container_helper->data_address(i), container_helper->fingerprint(i).data()
                     , container_helper->fingerprint(i).size(), result, &result_size, NO_EC)) << "Read " << i << " failed";
             ASSERT_TRUE(result_size == TEST_DATA_SIZE) << "Read " << i << " error";
             ASSERT_TRUE(memcmp(container_helper->data(i), result, result_size) == 0) << "Compare " << i << " error";
@@ -293,13 +293,8 @@ TEST_P(ContainerStorageTest, SimpleReadWrite) {
     ASSERT_TRUE(storage->Start(StartContext(), &system));
     ASSERT_TRUE(storage->Run());
 
-    StorageSession* session = storage->CreateSession();
-
-    WriteTestData(session);
-    ReadTestData(session);
-
-    session->Close();
-    session = NULL;
+    WriteTestData(storage);
+    ReadTestData(storage);
 }
 
 /**
@@ -311,27 +306,23 @@ TEST_P(ContainerStorageTest, SimpleReread) {
     ASSERT_TRUE(storage->Start(StartContext(), &system));
     ASSERT_TRUE(storage->Run());
 
-    StorageSession* session = storage->CreateSession();
-
-    WriteTestData(session);
+    WriteTestData(storage);
 
     ContainerStorageReadCache* read_cache = storage->GetReadCache();
     ASSERT_TRUE(read_cache->ClearCache());
 
     uint32_t cache_hits_before = read_cache->stats().cache_hits_;
 
-    ReadTestData(session);
+    ReadTestData(storage);
 
     uint32_t cache_hits_after1 = read_cache->stats().cache_hits_;
-    ReadTestData(session);
+    ReadTestData(storage);
 
     uint32_t cache_hits_after2 = read_cache->stats().cache_hits_;
     EXPECT_GT(cache_hits_after1, cache_hits_before) << "We should observe cache hits during the read: " << read_cache->PrintStatistics();
     EXPECT_GT(cache_hits_after2, cache_hits_after1) << "We should observe cache hits during the re-read: " << read_cache->PrintStatistics();
     EXPECT_GT(cache_hits_after2 - cache_hits_after1, cache_hits_after1 - cache_hits_before) << "We should see more cache hits in the re-read" <<
     " then in the first: " << read_cache->PrintStatistics();
-    session->Close();
-    session = NULL;
 }
 
 TEST_P(ContainerStorageTest, SimpleCrash) {
@@ -340,20 +331,14 @@ TEST_P(ContainerStorageTest, SimpleCrash) {
 
     DEBUG("Writing data");
 
-    StorageSession* session = storage->CreateSession();
-    WriteTestData(session);
-    session->Close();
-    session = NULL;
+    WriteTestData(storage);
     storage->Flush(NO_EC);
 
     DEBUG("Crashing");
     CrashAndRestart();
 
     DEBUG("Reading data");
-    session = storage->CreateSession();
-    ReadTestData(session);
-    session->Close();
-    session = NULL;
+    ReadTestData(storage);
 
     DEBUG("Closing data");
 }
@@ -364,9 +349,7 @@ TEST_P(ContainerStorageTest, CrashedDuringBGLogReplay) {
 
     DEBUG("Writing data");
 
-    StorageSession* session = storage->CreateSession();
-    WriteTestData(session);
-    session->Close();
+    WriteTestData(storage);
     storage->Flush(NO_EC);
 
     ASSERT_TRUE(log->ReplayStart(EVENT_REPLAY_MODE_REPLAY_BG, true));
@@ -390,9 +373,7 @@ TEST_P(ContainerStorageTest, CrashedDuringBGLogReplay) {
     ASSERT_TRUE(storage->Run());
 
     DEBUG("Reading data");
-    session = storage->CreateSession();
-    ReadTestData(session);
-    session->Close();
+    ReadTestData(storage);
 
     DEBUG("Closing data");
 }
@@ -403,10 +384,7 @@ TEST_P(ContainerStorageTest, CrashedDuringCrashLogReplay) {
 
     DEBUG("Writing data");
 
-    StorageSession* session = storage->CreateSession();
-    WriteTestData(session);
-    session->Close();
-    storage->Flush(NO_EC);
+    WriteTestData(storage);
 
     DEBUG("Crashing");
     storage->ClearData();
@@ -436,9 +414,7 @@ TEST_P(ContainerStorageTest, CrashedDuringCrashLogReplay) {
     ASSERT_TRUE(storage->Run());
 
     DEBUG("Reading data");
-    session = storage->CreateSession();
-    ReadTestData(session);
-    session->Close();
+    ReadTestData(storage);
 
     DEBUG("Closing data");
 }
@@ -449,17 +425,15 @@ TEST_P(ContainerStorageTest, Delete) {
     ASSERT_TRUE(storage->Start(StartContext(), &system));
     ASSERT_TRUE(storage->Run());
 
-    StorageSession* session = storage->CreateSession();
-
-    WriteTestData(session); // data is in write cache
+    WriteTestData(storage); // data is in write cache
 
     // here we check the COW system
     pair<lookup_result, ContainerStorageAddressData> address_result =
         storage->LookupContainerAddress(container_helper->data_address(0), NULL, false);
     ASSERT_EQ(address_result.first, LOOKUP_FOUND);
 
-    DeleteTestData(session);
-    ReadDeletedTestData(session);
+    DeleteTestData(storage);
+    ReadDeletedTestData(storage);
 
     pair<lookup_result, ContainerStorageAddressData> address_result2 =
         storage->LookupContainerAddress(container_helper->data_address(0), NULL, false);
@@ -468,8 +442,6 @@ TEST_P(ContainerStorageTest, Delete) {
     ASSERT_FALSE(address_result.second.file_index() == address_result2.second.file_index() &&
         address_result.second.file_offset() && address_result.second.file_offset())
     << "Container hasn't changed position after deletion";
-
-    session->Close();
 }
 
 TEST_P(ContainerStorageTest, DeleteBeforeRun) {
@@ -478,27 +450,19 @@ TEST_P(ContainerStorageTest, DeleteBeforeRun) {
     ASSERT_TRUE(storage->Start(StartContext(), &system));
     ASSERT_TRUE(storage->Run());
 
-    StorageSession* session = storage->CreateSession();
-
-    WriteTestData(session); // data is in write cache
+    WriteTestData(storage); // data is in write cache
 
     // here we check the COW system
     pair<lookup_result, ContainerStorageAddressData> address_result =
         storage->LookupContainerAddress(container_helper->data_address(0), NULL, false);
     ASSERT_EQ(address_result.first, LOOKUP_FOUND);
 
-    session->Close();
-    session = NULL;
     Restart();
 
-    session = storage->CreateSession();
-    DeleteTestData(session);
-    session->Close();
-    session = NULL;
+    DeleteTestData(storage);
 
     ASSERT_TRUE(storage->Run());
-    session = storage->CreateSession();
-    ReadDeletedTestData(session);
+    ReadDeletedTestData(storage);
 
     pair<lookup_result, ContainerStorageAddressData> address_result2 =
         storage->LookupContainerAddress(container_helper->data_address(0), NULL, false);
@@ -507,9 +471,6 @@ TEST_P(ContainerStorageTest, DeleteBeforeRun) {
     ASSERT_FALSE(address_result.second.file_index() == address_result2.second.file_index() &&
         address_result.second.file_offset() && address_result.second.file_offset())
     << "Container hasn't changed position after deletion";
-
-    session->Close();
-    session = NULL;
 }
 
 TEST_P(ContainerStorageTest, DeleteAfterClose) {
@@ -518,11 +479,7 @@ TEST_P(ContainerStorageTest, DeleteAfterClose) {
     ASSERT_TRUE(storage->Start(StartContext(), &system));
     ASSERT_TRUE(storage->Run());
 
-    StorageSession* session = storage->CreateSession();
-
-    WriteTestData(session);
-
-    ASSERT_TRUE(session->Close());
+    WriteTestData(storage);
     storage->Close();
     storage = NULL;
 
@@ -533,12 +490,8 @@ TEST_P(ContainerStorageTest, DeleteAfterClose) {
     SetDefaultStorageOptions(storage);
     ASSERT_TRUE(storage->Start(start_context, &system));
     ASSERT_TRUE(storage->Run());
-    session = storage->CreateSession();
-    DeleteTestData(session); // data should not in read or write cache
-    ReadDeletedTestData(session);
-
-    session->Close();
-    session = NULL;
+    DeleteTestData(storage); // data should not in read or write cache
+    ReadDeletedTestData(storage);
 }
 
 TEST_P(ContainerStorageTest, DeleteAfterFlush) {
@@ -547,19 +500,12 @@ TEST_P(ContainerStorageTest, DeleteAfterFlush) {
     ASSERT_TRUE(storage->Start(StartContext(), &system));
     ASSERT_TRUE(storage->Run());
 
-    StorageSession* session = storage->CreateSession();
+    WriteTestData(storage);
 
-    WriteTestData(session);
-
-    ASSERT_TRUE(session->Close());
     ASSERT_TRUE(storage->Flush(NO_EC)); // data is in read cache
 
-    session = storage->CreateSession();
-    DeleteTestData(session);
-    ReadDeletedTestData(session);
-
-    session->Close();
-    session = NULL;
+    DeleteTestData(storage);
+    ReadDeletedTestData(storage);
 }
 
 TEST_P(ContainerStorageTest, WriteFull) {
@@ -575,46 +521,42 @@ TEST_P(ContainerStorageTest, WriteFull) {
     ASSERT_TRUE(storage->Start(StartContext(), &system));
     ASSERT_TRUE(storage->Run());
 
-    StorageSession* session = storage->CreateSession();
-    ASSERT_TRUE(container_helper->WriteDefaultData(session, NULL, 0, TEST_DATA_COUNT));
-    ASSERT_TRUE(container_helper->WriteDefaultData(session, NULL, 0, TEST_DATA_COUNT));
-    ASSERT_FALSE(container_helper->WriteDefaultData(session, NULL, 0, TEST_DATA_COUNT));
+    ASSERT_TRUE(container_helper->WriteDefaultData(storage, NULL, 0, TEST_DATA_COUNT));
+    ASSERT_TRUE(container_helper->WriteDefaultData(storage, NULL, 0, TEST_DATA_COUNT));
+    ASSERT_FALSE(container_helper->WriteDefaultData(storage, NULL, 0, TEST_DATA_COUNT));
     // System should be full now
 
     // Delete a bit out of it
     // Actually, this are move operations. It tests if move operations are also possible
     // if the system is full
-    ASSERT_TRUE(session->Delete(container_helper->data_address(4),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(4),
             container_helper->fingerprint(4).data(),
             container_helper->fingerprint(4).size(), NO_EC));
-    ASSERT_TRUE(session->Delete(container_helper->data_address(3),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(3),
             container_helper->fingerprint(3).data(),
             container_helper->fingerprint(3).size(), NO_EC));
 
-    ASSERT_TRUE(session->Delete(container_helper->data_address(1),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(1),
             container_helper->fingerprint(1).data(),
             container_helper->fingerprint(1).size(), NO_EC));
-    ASSERT_TRUE(session->Delete(container_helper->data_address(0),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(0),
             container_helper->fingerprint(0).data(),
             container_helper->fingerprint(0).size(), NO_EC));
 
-    ASSERT_TRUE(session->Delete(container_helper->data_address(8),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(8),
             container_helper->fingerprint(8).data(),
             container_helper->fingerprint(8).size(), NO_EC));
-    ASSERT_TRUE(session->Delete(container_helper->data_address(9),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(9),
             container_helper->fingerprint(9).data(),
             container_helper->fingerprint(9).size(), NO_EC));
-    ASSERT_TRUE(session->Delete(container_helper->data_address(12),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(12),
             container_helper->fingerprint(12).data(),
             container_helper->fingerprint(12).size(), NO_EC));
-    ASSERT_TRUE(session->Delete(container_helper->data_address(13),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(13),
             container_helper->fingerprint(13).data(),
             container_helper->fingerprint(13).size(), NO_EC));
 
     sleep(5);
-    ASSERT_TRUE(session->Close());
-    session = NULL;
-
     ASSERT_TRUE(storage->Flush(NO_EC));
 
     bool aborted = false;
@@ -631,16 +573,11 @@ bool ReadAndCheckContainer(ContainerStorage* storage, tbb::atomic<bool>* stop_fl
     bool failed = false;
 
     while (!(*stop_flag) && !failed) {
-        StorageSession* session = storage->CreateSession();
-
         data_size = 512 * 1024;
-        bool r = session->Read(container_helper->data_address(14), container_helper->fingerprint(14).data(), container_helper->fingerprint(14).size(), data_buffer, &data_size, NO_EC);
+        bool r = storage->Read(container_helper->data_address(14), container_helper->fingerprint(14).data(), container_helper->fingerprint(14).size(), data_buffer, &data_size, NO_EC);
         if (!r) {
             failed = true;
         }
-
-        session->Close();
-        session = NULL;
     }
     delete[] data_buffer;
     return !failed;
@@ -660,10 +597,7 @@ TEST_P(ContainerStorageTest, Extend) {
     ASSERT_TRUE(storage->Start(StartContext(), &system));
     ASSERT_TRUE(storage->Run());
 
-    StorageSession* s = storage->CreateSession();
-    container_helper->WriteDefaultData(s, NULL, 0, TEST_DATA_COUNT / 2);
-    s->Close();
-    s = NULL;
+    container_helper->WriteDefaultData(storage, NULL, 0, TEST_DATA_COUNT / 2);
 
     ASSERT_TRUE(storage->Flush(NO_EC));
 
@@ -689,10 +623,7 @@ TEST_P(ContainerStorageTest, Extend) {
 
     DEBUG(storage->PrintStatistics());
 
-    s = storage->CreateSession();
-    container_helper->WriteDefaultData(s, NULL, TEST_DATA_COUNT / 2, TEST_DATA_COUNT / 2);
-    s->Close();
-    s = NULL;
+    container_helper->WriteDefaultData(storage, NULL, TEST_DATA_COUNT / 2, TEST_DATA_COUNT / 2);
 
     ASSERT_TRUE(storage->Flush(NO_EC));
 
@@ -705,10 +636,7 @@ TEST_P(ContainerStorageTest, RestartMissingFile) {
     ASSERT_TRUE(storage->Start(StartContext(), &system));
     ASSERT_TRUE(storage->Run());
 
-    StorageSession* s = storage->CreateSession();
-    container_helper->WriteDefaultData(s, NULL, 0, TEST_DATA_COUNT / 2);
-    s->Close();
-    s = NULL;
+    container_helper->WriteDefaultData(storage, NULL, 0, TEST_DATA_COUNT / 2);
 
     DEBUG(storage->PrintStatistics());
 
@@ -734,10 +662,7 @@ TEST_P(ContainerStorageTest, RestartWrongFileOrder) {
     ASSERT_TRUE(storage->Start(StartContext(), &system));
     ASSERT_TRUE(storage->Run());
 
-    StorageSession* s = storage->CreateSession();
-    container_helper->WriteDefaultData(s, NULL, 0, TEST_DATA_COUNT / 2);
-    s->Close();
-    s = NULL;
+    container_helper->WriteDefaultData(storage, NULL, 0, TEST_DATA_COUNT / 2);
 
     DEBUG(storage->PrintStatistics());
 
@@ -763,12 +688,7 @@ TEST_P(ContainerStorageTest, RestartChangeContainerSize) {
     ASSERT_TRUE(storage->Start(StartContext(), &system));
     ASSERT_TRUE(storage->Run());
 
-    StorageSession* s = storage->CreateSession();
-    container_helper->WriteDefaultData(s, NULL, 0, TEST_DATA_COUNT / 2);
-    s->Close();
-    s = NULL;
-
-    DEBUG(storage->PrintStatistics());
+    container_helper->WriteDefaultData(storage, NULL, 0, TEST_DATA_COUNT / 2);
 
     ASSERT_TRUE(storage->Close());
     storage = NULL;
@@ -790,10 +710,7 @@ TEST_P(ContainerStorageTest, ExtendWithoutForce) {
     ASSERT_TRUE(storage->Start(StartContext(), &system));
     ASSERT_TRUE(storage->Run());
 
-    StorageSession* s = storage->CreateSession();
-    container_helper->WriteDefaultData(s, NULL, 0, TEST_DATA_COUNT / 2);
-    s->Close();
-    s = NULL;
+    container_helper->WriteDefaultData(storage, NULL, 0, TEST_DATA_COUNT / 2);
 
     DEBUG(storage->PrintStatistics());
 
@@ -818,10 +735,7 @@ TEST_P(ContainerStorageTest, DoubleExtend) {
     ASSERT_TRUE(storage->Start(StartContext(), &system));
     ASSERT_TRUE(storage->Run());
 
-    StorageSession* s = storage->CreateSession();
-    container_helper->WriteDefaultData(s, NULL, 0, TEST_DATA_COUNT / 2);
-    s->Close();
-    s = NULL;
+    container_helper->WriteDefaultData(storage, NULL, 0, TEST_DATA_COUNT / 2);
 
     ASSERT_TRUE(storage->Flush(NO_EC));
 
@@ -866,10 +780,7 @@ TEST_P(ContainerStorageTest, DoubleExtend) {
 
     DEBUG(storage->PrintStatistics());
 
-    s = storage->CreateSession();
-    container_helper->WriteDefaultData(s, NULL, TEST_DATA_COUNT / 2, TEST_DATA_COUNT / 2);
-    s->Close();
-    s = NULL;
+    container_helper->WriteDefaultData(storage, NULL, TEST_DATA_COUNT / 2, TEST_DATA_COUNT / 2);
 
     ASSERT_TRUE(storage->Flush(NO_EC));
 
@@ -880,10 +791,7 @@ TEST_P(ContainerStorageTest, ExtendWithExplicitSize) {
     ASSERT_TRUE(storage->Start(StartContext(), &system));
     ASSERT_TRUE(storage->Run());
 
-    StorageSession* s = storage->CreateSession();
-    container_helper->WriteDefaultData(s, NULL, 0, TEST_DATA_COUNT / 2);
-    s->Close();
-    s = NULL;
+    container_helper->WriteDefaultData(storage, NULL, 0, TEST_DATA_COUNT / 2);
 
     DEBUG(storage->PrintStatistics());
 
@@ -908,10 +816,7 @@ TEST_P(ContainerStorageTest, ExtendWithExplicitSize) {
 
     DEBUG(storage->PrintStatistics());
 
-    s = storage->CreateSession();
-    container_helper->WriteDefaultData(s, NULL, TEST_DATA_COUNT / 2, TEST_DATA_COUNT / 2);
-    s->Close();
-    s = NULL;
+    container_helper->WriteDefaultData(storage, NULL, TEST_DATA_COUNT / 2, TEST_DATA_COUNT / 2);
 
     ASSERT_TRUE(storage->Flush(NO_EC));
 
@@ -924,10 +829,7 @@ TEST_P(ContainerStorageTest, ExtendWithIllegalExplicitSize) {
     ASSERT_TRUE(storage->Start(StartContext(), &system));
     ASSERT_TRUE(storage->Run());
 
-    StorageSession* s = storage->CreateSession();
-    container_helper->WriteDefaultData(s, NULL, 0, TEST_DATA_COUNT / 2);
-    s->Close();
-    s = NULL;
+    container_helper->WriteDefaultData(storage, NULL, 0, TEST_DATA_COUNT / 2);
 
     ASSERT_TRUE(storage->Close());
     storage = NULL;
@@ -954,10 +856,7 @@ TEST_P(ContainerStorageTest, ExtendWithoutChangingSize) {
     ASSERT_TRUE(storage->Start(StartContext(), &system));
     ASSERT_TRUE(storage->Run());
 
-    StorageSession* s = storage->CreateSession();
-    container_helper->WriteDefaultData(s, NULL, 0, TEST_DATA_COUNT / 2);
-    s->Close();
-    s = NULL;
+    container_helper->WriteDefaultData(storage, NULL, 0, TEST_DATA_COUNT / 2);
 
     ASSERT_TRUE(storage->Close());
     storage = NULL;
@@ -1002,10 +901,7 @@ TEST_P(ContainerStorageTest, ChangeExplcitSizeOfExistingFile) {
     ASSERT_TRUE(storage->Start(StartContext(), &system));
     ASSERT_TRUE(storage->Run());
 
-    StorageSession* s = storage->CreateSession();
-    container_helper->WriteDefaultData(s, NULL, 0, TEST_DATA_COUNT / 2);
-    s->Close();
-    s = NULL;
+    container_helper->WriteDefaultData(storage, NULL, 0, TEST_DATA_COUNT / 2);
     ASSERT_TRUE(storage->Close());
     storage = NULL;
 
@@ -1028,10 +924,7 @@ TEST_P(ContainerStorageTest, ChangeExplcitSizeOfExistingFileWithForce) {
     ASSERT_TRUE(storage->Start(StartContext(), &system));
     ASSERT_TRUE(storage->Run());
 
-    StorageSession* s = storage->CreateSession();
-    container_helper->WriteDefaultData(s, NULL, 0, TEST_DATA_COUNT / 2);
-    s->Close();
-    s = NULL;
+    container_helper->WriteDefaultData(storage, NULL, 0, TEST_DATA_COUNT / 2);
     ASSERT_TRUE(storage->Close());
     storage = NULL;
 
@@ -1056,31 +949,30 @@ TEST_P(ContainerStorageTest, ChangeExplcitSizeOfExistingFileWithForce) {
 TEST_P(ContainerStorageTest, ReadDuringMerge) {
     ASSERT_TRUE(storage->Start(StartContext(), &system));
     ASSERT_TRUE(storage->Run());
-    struct StorageSession* session = storage->CreateSession();
 
-    WriteTestData(session);
+    WriteTestData(storage);
 
-    ASSERT_TRUE(session->Delete(container_helper->data_address(4),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(4),
             container_helper->fingerprint(4).data(),
             container_helper->fingerprint(4).size(), NO_EC));
 
-    ASSERT_TRUE(session->Delete(container_helper->data_address(1),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(1),
             container_helper->fingerprint(1).data(),
             container_helper->fingerprint(1).size(), NO_EC));
-    ASSERT_TRUE(session->Delete(container_helper->data_address(0),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(0),
             container_helper->fingerprint(0).data(),
             container_helper->fingerprint(0).size(), NO_EC));
 
-    ASSERT_TRUE(session->Delete(container_helper->data_address(8),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(8),
             container_helper->fingerprint(8).data(),
             container_helper->fingerprint(8).size(), NO_EC));
-    ASSERT_TRUE(session->Delete(container_helper->data_address(9),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(9),
             container_helper->fingerprint(9).data(),
             container_helper->fingerprint(9).size(), NO_EC));
-    ASSERT_TRUE(session->Delete(container_helper->data_address(12),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(12),
             container_helper->fingerprint(12).data(),
             container_helper->fingerprint(12).size(), NO_EC));
-    ASSERT_TRUE(session->Delete(container_helper->data_address(13),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(13),
             container_helper->fingerprint(13).data(),
             container_helper->fingerprint(13).size(), NO_EC));
 
@@ -1094,17 +986,15 @@ TEST_P(ContainerStorageTest, ReadDuringMerge) {
     ASSERT_TRUE(storage->TryMergeContainer(container_helper->data_address(10), container_helper->data_address(14), &aborted));
     ASSERT_FALSE(aborted);
 
-    ASSERT_TRUE(session->Delete(container_helper->data_address(2),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(2),
             container_helper->fingerprint(2).data(),
             container_helper->fingerprint(2).size(), NO_EC));
-    ASSERT_TRUE(session->Delete(container_helper->data_address(10),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(10),
             container_helper->fingerprint(10).data(),
             container_helper->fingerprint(10).size(), NO_EC));
-    ASSERT_TRUE(session->Delete(container_helper->data_address(11),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(11),
             container_helper->fingerprint(11).data(),
             container_helper->fingerprint(11).size(), NO_EC));
-    EXPECT_TRUE(session->Close());
-    session = NULL;
 
     tbb::atomic<bool> stop_flag;
     stop_flag = false;
@@ -1140,31 +1030,30 @@ TEST_P(ContainerStorageTest, ReadDuringMerge) {
 TEST_P(ContainerStorageTest, LookupDuringMerge) {
     ASSERT_TRUE(storage->Start(StartContext(), &system));
     ASSERT_TRUE(storage->Run());
-    struct StorageSession* session = storage->CreateSession();
 
-    WriteTestData(session);
+    WriteTestData(storage);
 
-    ASSERT_TRUE(session->Delete(container_helper->data_address(4),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(4),
             container_helper->fingerprint(4).data(),
             container_helper->fingerprint(4).size(), NO_EC));
 
-    ASSERT_TRUE(session->Delete(container_helper->data_address(1),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(1),
             container_helper->fingerprint(1).data(),
             container_helper->fingerprint(1).size(), NO_EC));
-    ASSERT_TRUE(session->Delete(container_helper->data_address(0),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(0),
             container_helper->fingerprint(0).data(),
             container_helper->fingerprint(0).size(), NO_EC));
 
-    ASSERT_TRUE(session->Delete(container_helper->data_address(8),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(8),
             container_helper->fingerprint(8).data(),
             container_helper->fingerprint(8).size(), NO_EC));
-    ASSERT_TRUE(session->Delete(container_helper->data_address(9),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(9),
             container_helper->fingerprint(9).data(),
             container_helper->fingerprint(9).size(), NO_EC));
-    ASSERT_TRUE(session->Delete(container_helper->data_address(12),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(12),
             container_helper->fingerprint(12).data(),
             container_helper->fingerprint(12).size(), NO_EC));
-    ASSERT_TRUE(session->Delete(container_helper->data_address(13),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(13),
             container_helper->fingerprint(13).data(),
             container_helper->fingerprint(13).size(), NO_EC));
 
@@ -1178,17 +1067,15 @@ TEST_P(ContainerStorageTest, LookupDuringMerge) {
     ASSERT_TRUE(storage->TryMergeContainer(container_helper->data_address(10), container_helper->data_address(14), &aborted));
     ASSERT_FALSE(aborted);
 
-    ASSERT_TRUE(session->Delete(container_helper->data_address(2),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(2),
             container_helper->fingerprint(2).data(),
             container_helper->fingerprint(2).size(), NO_EC));
-    ASSERT_TRUE(session->Delete(container_helper->data_address(10),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(10),
             container_helper->fingerprint(10).data(),
             container_helper->fingerprint(10).size(), NO_EC));
-    ASSERT_TRUE(session->Delete(container_helper->data_address(11),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(11),
             container_helper->fingerprint(11).data(),
             container_helper->fingerprint(11).size(), NO_EC));
-    EXPECT_TRUE(session->Close());
-    session = NULL;
 
     tbb::atomic<bool> stop_flag;
     stop_flag = false;
@@ -1209,18 +1096,17 @@ TEST_P(ContainerStorageTest, LookupDuringMerge) {
 TEST_P(ContainerStorageTest, DeleteAfterMerge) {
     ASSERT_TRUE(storage->Start(StartContext(), &system));
     ASSERT_TRUE(storage->Run());
-    struct StorageSession* session = storage->CreateSession();
 
-    WriteTestData(session);
+    WriteTestData(storage);
 
-    ASSERT_TRUE(session->Delete(container_helper->data_address(4),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(4),
             container_helper->fingerprint(4).data(),
             container_helper->fingerprint(4).size(), NO_EC));
 
-    ASSERT_TRUE(session->Delete(container_helper->data_address(1),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(1),
             container_helper->fingerprint(1).data(),
             container_helper->fingerprint(1).size(), NO_EC));
-    ASSERT_TRUE(session->Delete(container_helper->data_address(0),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(0),
             container_helper->fingerprint(0).data(),
             container_helper->fingerprint(0).size(), NO_EC));
 
@@ -1237,11 +1123,9 @@ TEST_P(ContainerStorageTest, DeleteAfterMerge) {
         storage->LookupContainerAddress(container_helper->data_address(3), NULL, false);
     ASSERT_EQ(old_address3.first, LOOKUP_FOUND);
 
-    ASSERT_TRUE(session->Delete(container_helper->data_address(3),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(3),
             container_helper->fingerprint(3).data(),
             container_helper->fingerprint(3).size(), NO_EC));
-    EXPECT_TRUE(session->Close());
-    session = NULL;
 
     // here we test the COW property
     pair<lookup_result, ContainerStorageAddressData> new_address0 =
@@ -1265,16 +1149,12 @@ TEST_P(ContainerStorageTest, DeleteAfterMerge) {
 TEST_P(ContainerStorageTest, NextContainerIDAfterClose) {
     ASSERT_TRUE(storage->Start(StartContext(), &system));
     ASSERT_TRUE(storage->Run());
-    StorageSession* session = storage->CreateSession();
 
-    WriteTestData(session);
-    ReadTestData(session);
+    WriteTestData(storage);
+    ReadTestData(storage);
 
     uint64_t container_id = storage->GetLastGivenContainerId();
     ASSERT_GT(container_id, static_cast<uint64_t>(2));
-
-    ASSERT_TRUE(session->Close());
-    session = NULL;
 
     ASSERT_TRUE(storage->Close());
     storage = NULL;
@@ -1292,15 +1172,12 @@ TEST_P(ContainerStorageTest, NextContainerIDAfterClose) {
 TEST_P(ContainerStorageTest, NextContainerIDAfterCrash) {
     ASSERT_TRUE(storage->Start(StartContext(), &system));
     ASSERT_TRUE(storage->Run());
-    StorageSession* session = storage->CreateSession();
 
-    WriteTestData(session);
-    ReadTestData(session);
+    WriteTestData(storage);
+    ReadTestData(storage);
 
     uint64_t container_id = storage->GetLastGivenContainerId();
 
-    session->Close();
-    session = NULL;
     storage->Close();
     storage = NULL;
 
@@ -1320,49 +1197,22 @@ TEST_P(ContainerStorageTest, NextContainerIDAfterCrash) {
     ASSERT_TRUE(container_id > 0);
 }
 
-TEST_P(ContainerStorageTest, SessionClose) {
-    ASSERT_TRUE(storage->Start(StartContext(), &system));
-    ASSERT_TRUE(storage->Run());
-    StorageSession* session = storage->CreateSession();
-
-    WriteTestData(session);
-    ReadTestData(session);
-
-    session->Close();
-    session = NULL;
-
-    StorageSession* session2 = storage->CreateSession();
-    ReadTestData(session2);
-    session2->Close();
-    session2 = NULL;
-}
-
 TEST_P(ContainerStorageTest, CommitOnFlush) {
     ASSERT_TRUE(storage->Start(StartContext(), &system));
     ASSERT_TRUE(storage->Run());
-    StorageSession* session = storage->CreateSession();
-    WriteTestData(session);
-    ReadTestData(session);
-
-    ASSERT_TRUE(session->Close());
-
+    WriteTestData(storage);
+    ReadTestData(storage);
     ASSERT_TRUE(storage->Flush(NO_EC));
-
-    StorageSession* session2 = storage->CreateSession();
-
-    ReadTestData(session2);
-    ASSERT_TRUE(session2->Close());
+    ReadTestData(storage);
 }
 
 TEST_P(ContainerStorageTest, CommitOnStorageClose) {
     ASSERT_TRUE(storage->Start(StartContext(), &system));
     ASSERT_TRUE(storage->Run());
-    StorageSession* session = storage->CreateSession();
 
-    WriteTestData(session);
-    ReadTestData(session);
+    WriteTestData(storage);
+    ReadTestData(storage);
 
-    ASSERT_TRUE(session->Close());
     ASSERT_TRUE(storage->Close());
 
     storage = dynamic_cast<ContainerStorage*>(Storage::Factory().Create(
@@ -1373,75 +1223,59 @@ TEST_P(ContainerStorageTest, CommitOnStorageClose) {
     ASSERT_TRUE(storage->Start(start_context, &system));
     ASSERT_TRUE(storage->Run());
 
-    session = storage->CreateSession();
-    ASSERT_TRUE(session);
-
-    ReadTestData(session);
-
-    ASSERT_TRUE(session->Close());
+    ASSERT_TRUE(storage);
+    ReadTestData(storage);
 }
 
 TEST_P(ContainerStorageTest, IsCommited) {
     ASSERT_TRUE(storage->Start(StartContext(), &system));
     ASSERT_TRUE(storage->Run());
-    StorageSession* session = storage->CreateSession();
-    ASSERT_TRUE(session);
 
-    WriteTestData(session);
+    WriteTestData(storage);
 
     ASSERT_EQ(STORAGE_ADDRESS_COMMITED, storage->IsCommitted(1));
-
     ASSERT_EQ(STORAGE_ADDRESS_NOT_COMMITED, storage->IsCommitted(500));
-
-    ASSERT_TRUE(session->Close());
 }
 
 TEST_P(ContainerStorageTest, IsCommittedOnFlush) {
     ASSERT_TRUE(storage->Start(StartContext(), &system));
     ASSERT_TRUE(storage->Run());
-    struct StorageSession* session = storage->CreateSession();
-    ASSERT_TRUE(session);
 
-    ASSERT_TRUE(session->WriteNew(container_helper->fingerprint(0).data(),
-            container_helper->fingerprint(0).size(), container_helper->data(0), TEST_DATA_SIZE, true, container_helper->mutable_data_address(0), NO_EC))
+    ASSERT_TRUE(storage->WriteNew(container_helper->fingerprint(0).data(),
+            container_helper->fingerprint(0).size(), container_helper->data(0), TEST_DATA_SIZE, true,
+            container_helper->mutable_data_address(0), NO_EC))
     << "Write " << 0 << " failed";
     ASSERT_EQ(STORAGE_ADDRESS_NOT_COMMITED, storage->IsCommitted(1)) << "Container shouldn't be committed before flush";
 
     ASSERT_TRUE(storage->Flush(NO_EC));
     ASSERT_EQ(STORAGE_ADDRESS_COMMITED, storage->IsCommitted(1)) << "Container should be comitted after flush";
-
-    ASSERT_TRUE(session->Close());
 }
 
 TEST_P(ContainerStorageTest, IsCommittedWaitOnFlush) {
     ASSERT_TRUE(storage->Start(StartContext(), &system));
     ASSERT_TRUE(storage->Run());
-    struct StorageSession* session = storage->CreateSession();
-    ASSERT_TRUE(session);
 
-    ASSERT_TRUE(session->WriteNew(container_helper->fingerprint(0).data(),
-            container_helper->fingerprint(0).size(), container_helper->data(0), TEST_DATA_SIZE, true, container_helper->mutable_data_address(0), NO_EC))
+    ASSERT_TRUE(storage->WriteNew(container_helper->fingerprint(0).data(),
+            container_helper->fingerprint(0).size(), container_helper->data(0), TEST_DATA_SIZE, true,
+            container_helper->mutable_data_address(0), NO_EC))
     << "Write " << 0 << " failed";
     ASSERT_EQ(STORAGE_ADDRESS_COMMITED, storage->IsCommittedWait(1)) << "Container should be comitted after IsCommittedWait";
-
-    ASSERT_TRUE(session->Close());
 }
 
 TEST_P(ContainerStorageTest, Merge) {
     ASSERT_TRUE(storage->Start(StartContext(), &system));
     ASSERT_TRUE(storage->Run());
-    struct StorageSession* session = storage->CreateSession();
 
-    WriteTestData(session);
+    WriteTestData(storage);
 
-    ASSERT_TRUE(session->Delete(container_helper->data_address(4),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(4),
             container_helper->fingerprint(4).data(),
             container_helper->fingerprint(4).size(), NO_EC));
 
-    ASSERT_TRUE(session->Delete(container_helper->data_address(1),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(1),
             container_helper->fingerprint(1).data(),
             container_helper->fingerprint(1).size(), NO_EC));
-    ASSERT_TRUE(session->Delete(container_helper->data_address(0),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(0),
             container_helper->fingerprint(0).data(),
             container_helper->fingerprint(0).size(), NO_EC));
 
@@ -1485,7 +1319,7 @@ TEST_P(ContainerStorageTest, Merge) {
     result_size[1] = TEST_DATA_SIZE;
 
     for (i = 0; i < 2; i++) {
-        ASSERT_TRUE(session->Read(container_helper->data_address(i + 2),
+        ASSERT_TRUE(storage->Read(container_helper->data_address(i + 2),
                 container_helper->fingerprint(i + 2).data(),
                 container_helper->fingerprint(i + 2).size(), result[i], &result_size[i], NO_EC)) << "Read " << (i + 2) << " failed";
         DEBUG("Read CRC " << (i + 2) << " - " << crc(result[i], result_size[i]));
@@ -1495,9 +1329,6 @@ TEST_P(ContainerStorageTest, Merge) {
         ASSERT_TRUE(result_size[i] == TEST_DATA_SIZE) << "Read " << i << " error";
         ASSERT_TRUE(memcmp(container_helper->data(i + 2), result[i], result_size[i]) == 0) << "Compare " << (i + 2) << " error";
     }
-
-    EXPECT_TRUE(session->Close());
-    session = NULL;
 }
 
 /**
@@ -1506,18 +1337,17 @@ TEST_P(ContainerStorageTest, Merge) {
 TEST_P(ContainerStorageTest, MergeWithCrash) {
     ASSERT_TRUE(storage->Start(StartContext(), &system));
     ASSERT_TRUE(storage->Run());
-    struct StorageSession* session = storage->CreateSession();
 
-    WriteTestData(session);
+    WriteTestData(storage);
 
-    ASSERT_TRUE(session->Delete(container_helper->data_address(4),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(4),
             container_helper->fingerprint(4).data(),
             container_helper->fingerprint(4).size(), NO_EC));
 
-    ASSERT_TRUE(session->Delete(container_helper->data_address(1),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(1),
             container_helper->fingerprint(1).data(),
             container_helper->fingerprint(1).size(), NO_EC));
-    ASSERT_TRUE(session->Delete(container_helper->data_address(0),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(0),
             container_helper->fingerprint(0).data(),
             container_helper->fingerprint(0).size(), NO_EC));
 
@@ -1551,9 +1381,6 @@ TEST_P(ContainerStorageTest, MergeWithCrash) {
     ASSERT_TRUE(new_address0.second.file_index() == new_address3.second.file_index() &&
         new_address0.second.file_offset() == new_address3.second.file_offset()) <<
     "address of item 0 and item 3 should be the same after the merge";
-
-    EXPECT_TRUE(session->Close());
-    session = NULL;
 
     // introduce a invalid state. This simulates the state when the system crashes
     // during the LogAck update routine.
@@ -1572,9 +1399,8 @@ TEST_P(ContainerStorageTest, MergeWithCrash) {
     result_size[0] = TEST_DATA_SIZE;
     result_size[1] = TEST_DATA_SIZE;
 
-    session = storage->CreateSession();
     for (i = 0; i < 2; i++) {
-        EXPECT_TRUE(session->Read(container_helper->data_address(i + 2),
+        EXPECT_TRUE(storage->Read(container_helper->data_address(i + 2),
                 container_helper->fingerprint(i + 2).data(),
                 container_helper->fingerprint(i + 2).size(), result[i], &result_size[i], NO_EC)) << "Read " << (i + 2) << " failed";
         DEBUG("Read CRC " << (i + 2) << " - " << crc(result[i], result_size[i]));
@@ -1584,8 +1410,6 @@ TEST_P(ContainerStorageTest, MergeWithCrash) {
         EXPECT_TRUE(result_size[i] == TEST_DATA_SIZE) << "Read " << i << " error";
         EXPECT_TRUE(memcmp(container_helper->data(i + 2), result[i], result_size[i]) == 0) << "Compare " << (i + 2) << " error";
     }
-    EXPECT_TRUE(session->Close());
-    session = NULL;
 }
 
 TEST_P(ContainerStorageTest, MergeWithSameContainerId) {
@@ -1593,15 +1417,12 @@ TEST_P(ContainerStorageTest, MergeWithSameContainerId) {
 
     ASSERT_TRUE(storage->Start(StartContext(), &system));
     ASSERT_TRUE(storage->Run());
-    struct StorageSession* session = storage->CreateSession();
 
-    WriteTestData(session);
+    WriteTestData(storage);
 
-    ASSERT_TRUE(session->Delete(container_helper->data_address(0),
+    ASSERT_TRUE(storage->DeleteChunk(container_helper->data_address(0),
             container_helper->fingerprint(0).data(),
             container_helper->fingerprint(0).size(), NO_EC));
-    EXPECT_TRUE(session->Close());
-    session = NULL;
 
     ASSERT_TRUE(storage->Flush(NO_EC));
 
@@ -1661,13 +1482,9 @@ TEST_P(ContainerStorageTest, MergeWithSameContainerLock) {
 TEST_P(ContainerStorageTest, WriteReadRead) {
     ASSERT_TRUE(storage->Start(StartContext(), &system));
     ASSERT_TRUE(storage->Run());
-    StorageSession* session = storage->CreateSession();
 
-    WriteTestData(session);
-    ReadTestData(session);
-
-    session->Close();
-    session = NULL;
+    WriteTestData(storage);
+    ReadTestData(storage);
 
     storage->Close();
     storage = NULL;
@@ -1680,11 +1497,7 @@ TEST_P(ContainerStorageTest, WriteReadRead) {
     ASSERT_TRUE(storage->Start(start_context, &system));
     ASSERT_TRUE(storage->Run());
 
-    session = storage->CreateSession();
-
-    ReadTestData(session);
-
-    ASSERT_TRUE(session->Close());
+    ReadTestData(storage);
 }
 
 TEST_P(ContainerStorageTest, Timeout) {
@@ -1693,10 +1506,7 @@ TEST_P(ContainerStorageTest, Timeout) {
     if (storage->HasCommitTimeout() == false) {
         return;
     }
-    StorageSession* session = storage->CreateSession();
-    WriteTestData(session);
-    session->Close();
-    session = NULL;
+    WriteTestData(storage);
 
     sleep(2 * storage->GetTimeoutSeconds());
 
@@ -1708,11 +1518,7 @@ TEST_P(ContainerStorageTest, Timeout) {
 TEST_P(ContainerStorageTest, ReadContainer) {
     ASSERT_TRUE(storage->Start(StartContext(), &system));
     ASSERT_TRUE(storage->Run());
-    StorageSession* session = storage->CreateSession();
-    WriteTestData(session);
-
-    ASSERT_TRUE(session->Close());
-    session = NULL;
+    WriteTestData(storage);
 
     ASSERT_TRUE(storage->Flush(NO_EC)); // data is no committed
 
@@ -1731,9 +1537,7 @@ TEST_P(ContainerStorageTest, ReadContainer) {
 TEST_P(ContainerStorageTest, ReadContainerWithCache) {
     ASSERT_TRUE(storage->Start(StartContext(), &system));
     ASSERT_TRUE(storage->Run());
-    StorageSession* session = storage->CreateSession();
-    WriteTestData(session);
-    ASSERT_TRUE(session->Close());
+    WriteTestData(storage);
     ASSERT_TRUE(storage->Flush(NO_EC)); // data is now committed
 
     for (int i = 0; i < TEST_DATA_COUNT; i++) {

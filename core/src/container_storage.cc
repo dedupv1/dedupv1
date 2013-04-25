@@ -1186,7 +1186,7 @@ bool ContainerStorage::Format(const ContainerFile& file, File* format_file) {
         uint64_t container_per_file = file.file_size() / container_size_;
 
         // Fallocate does never overwrite existing data, so we can start at 0
-        CHECK(format_file->Fallocate(0, container_per_file * container_size_ + kSuperBlockSize), 
+        CHECK(format_file->Fallocate(0, container_per_file * container_size_ + kSuperBlockSize),
           "Could not preallocate file " << file.filename());
     }
     return true;
@@ -1239,10 +1239,6 @@ bool ContainerStorage::Start(const StartContext& start_context, DedupSystem* sys
     // another aspect that must be considered is the explicit setting of file sizes
 
     int64_t size_to_assign = size_;
-    bool use_extend_feature = false; // extending storage later and explicit file sizes are
-    // new features that are not compatible with the comp mode.
-    // Workaround: start the system once with a unchanged config to upgrade the state to the
-    // new mode. After that, the extend feature can be used.
 
     // open all existing files
     for (i = 0; i < this->file_.size(); i++) {
@@ -1263,11 +1259,10 @@ bool ContainerStorage::Start(const StartContext& start_context, DedupSystem* sys
                         ", configured file size " <<  file_[i].file_size() <<
                         ", expected file size " << log_data.file(i).file_size());
                 }
-                use_extend_feature = true;
             }
             size_to_assign -= file_[i].file_size();
-            TRACE("Assign " << file_[i].file_size() << " to new file " << 
-                file_[i].filename() << 
+            TRACE("Assign " << file_[i].file_size() << " to new file " <<
+                file_[i].filename() <<
                 ", size to assign " << size_to_assign);
 
             // Check super block contents
@@ -1325,9 +1320,6 @@ bool ContainerStorage::Start(const StartContext& start_context, DedupSystem* sys
             CHECK(log_data.file_size() <= i, "Error opening storage file: filename " << this->file_[i].filename() <<
                 ", reason: File existed once, but cannot be opened");
 
-            if (!start_context.create() && start_context.force()) {
-                use_extend_feature = true;
-            }
             CHECK(start_context.create() || start_context.force(),
                 "Error opening storage file: filename " << this->file_[i].filename());
             INFO("Creating new container data file " << this->file_[i].filename());
@@ -1707,10 +1699,6 @@ lookup_result ContainerStorage::ReadMetaInfo(ContainerLogfileData* log_data) {
     return LOOKUP_FOUND;
 }
 
-StorageSession* ContainerStorage::CreateSession() {
-    return new ContainerStorageSession(this);
-}
-
 bool ContainerStorage::Flush(dedupv1::base::ErrorContext* ec) {
     if (!(state_ == RUNNING || state_ == STARTED)) {
         return true;
@@ -1871,27 +1859,24 @@ bool ContainerStorage::FailWriteCacheContainer(uint64_t address) {
     return true;
 }
 
-ContainerStorageSession::ContainerStorageSession(ContainerStorage* storage) {
-    this->storage_ = storage;
-}
 
-bool ContainerStorageSession::WriteNew(const void* key, size_t key_size,
+bool ContainerStorage::WriteNew(const void* key, size_t key_size,
                                        const void* data, size_t data_size,
                                        bool is_indexed,
                                        uint64_t* address,
                                        ErrorContext* ec) {
-    ContainerStorage* c = this->storage_;
-    ProfileTimer timer(storage_->stats_.total_write_time_);
+    ProfileTimer timer(stats_.total_write_time_);
 
-    CHECK(c->state_ == ContainerStorage::RUNNING, "Illegal state to write new data: " << c->state_);
-    CHECK(!this->storage_->start_context_.readonly(), "Container storage is in readonly mode");
+    CHECK(state_ == ContainerStorage::RUNNING, "Illegal state to write new data: " << state_);
+    CHECK(!start_context_.readonly(), "Container storage is in readonly mode");
 
     // Select write container
     Container* write_container = NULL;
     ReadWriteLock* write_container_lock = NULL;
-    // TODO(fermat): We could send the size of the chunk here to get an open container, which can store the chunk, if there is one left.
+    // TODO(fermat): We could send the size of the chunk here to get an open container,
+    // which can store the chunk, if there is one left.
     // This way we get a defragmentation.
-    CHECK(this->storage_->write_cache_.GetNextWriteCacheContainer(&write_container, &write_container_lock),
+    CHECK(write_cache_.GetNextWriteCacheContainer(&write_container, &write_container_lock),
         "Failed to get write container: key " << Fingerprinter::DebugString((const byte *) key, key_size));
     CHECK(write_container, "Write container not set");
     CHECK(write_container_lock, "Write container lock not set");
@@ -1899,7 +1884,7 @@ bool ContainerStorageSession::WriteNew(const void* key, size_t key_size,
     scoped_write_container_lock.SetLocked(write_container_lock);
 
     if (!Storage::IsValidAddress(write_container->primary_id())) { // Write into new container
-        alloc_result ar = c->GetNewContainerId(write_container);
+        alloc_result ar = GetNewContainerId(write_container);
         CHECK(ar != ALLOC_ERROR, "Init container id failed");
         if (ar == ALLOC_FULL) {
             WARNING("Container storage full");
@@ -1919,12 +1904,12 @@ bool ContainerStorageSession::WriteNew(const void* key, size_t key_size,
         TRACE("Container full: " << write_container->DebugString());
 
         // we do not need to reset the container cache timeout, because it has been reseted a few moments ago (GetNextWriteCacheContainer)
-        CHECK(c->PrepareCommit(write_container),
+        CHECK(PrepareCommit(write_container),
             "Failed to prepare commit: " << write_container->DebugString());
 
         // PrepareCommit has build a new container in cache, which is now an empty container
         if (!Storage::IsValidAddress(write_container->primary_id())) { // Write into new container
-            alloc_result ar = c->GetNewContainerId(write_container);
+            alloc_result ar = GetNewContainerId(write_container);
             CHECK(ar != ALLOC_ERROR, "Init container id failed");
             if (ar == ALLOC_FULL) {
                 WARNING("Container storage full");
@@ -1951,10 +1936,10 @@ bool ContainerStorageSession::WriteNew(const void* key, size_t key_size,
 
     // Scope for add timer
     {
-        ProfileTimer add_timer(this->storage_->stats_.add_time_);
+        ProfileTimer add_timer(this->stats_.add_time_);
         CHECK(write_container->AddItem((byte *) key, key_size, (byte *) data, data_size,
                 is_indexed,
-                c->compression_),
+                compression_),
             "Cannot add item: fp " << Fingerprinter::DebugString((const byte *) key, key_size) << ", data size " << data_size << ", write container " << write_container->DebugString());
     }
     DCHECK(write_container->primary_id() == container_id, "Container id changed illegally");
@@ -2116,15 +2101,13 @@ string ContainerStorage::PrintProfile() {
     return sstr.str();
 }
 
-bool ContainerStorageSession::DoDelete(
+bool ContainerStorage::DoDelete(
     uint64_t container_id,
     uint64_t primary_id,
     const ContainerStorageAddressData& address,
     const list<bytestring>& key_list,
     CacheEntry* cache_entry,
     ErrorContext* ec) {
-    ContainerStorage* c = this->storage_;
-    DCHECK(c, "Container storage not set");
     DCHECK(cache_entry, "Cache entry not set");
 
     // we can now re-acquire the container lock.
@@ -2132,7 +2115,7 @@ bool ContainerStorageSession::DoDelete(
 
     ReadWriteLock* container_lock = NULL;
     std::pair<dedupv1::base::lookup_result, ContainerStorageAddressData> address2;
-    address2 = this->storage_->LookupContainerAddressWait(container_id,
+    address2 = LookupContainerAddressWait(container_id,
         &container_lock,
         true);
     if (address2.first == LOOKUP_ERROR) {
@@ -2165,7 +2148,7 @@ bool ContainerStorageSession::DoDelete(
     }
 
     Container container;
-    if (!container.Init(container_id, this->storage_->GetContainerSize())) {
+    if (!container.Init(container_id, GetContainerSize())) {
         ERROR("Failed to init container: container id " << container_id);
 
         if (cache_entry->is_set()) {
@@ -2181,13 +2164,13 @@ bool ContainerStorageSession::DoDelete(
     // read cache. This would lead to race conditions
 
     if (cache_entry->is_set()) {
-        CHECK(c->cache_.RemoveFromReadCache(primary_id, cache_entry),
+        CHECK(cache_.RemoveFromReadCache(primary_id, cache_entry),
             "Failed to remove container from read cache: container " << primary_id);
     }
     // if we held the cache entry lock before, we released it now
 
     // we have the container lock already
-    lookup_result read_result = this->storage_->ReadContainerLocked(&container, address);
+    lookup_result read_result = ReadContainerLocked(&container, address);
     CHECK(read_result != LOOKUP_ERROR, "Read of container failed: id " << container_id << ", primary id " << primary_id << ", reason: index lookup error");
     CHECK(read_result != LOOKUP_NOT_FOUND, "Read of container failed: id " << container_id << ", primary id " << primary_id << ", reason: container not found");
 
@@ -2208,20 +2191,20 @@ bool ContainerStorageSession::DoDelete(
     ContainerStorageAddressData old_container_address = address;
 
     // TODO(fermat): Why not isCommittedWait?
-    if (this->storage_->IsCommitted(container.primary_id()) != STORAGE_ADDRESS_COMMITED) {
+    if (IsCommitted(container.primary_id()) != STORAGE_ADDRESS_COMMITED) {
         TRACE("Container " << container.primary_id() << " is not-open, but uncommitted. Check for bg committer");
         // not open and not committed, means either an serious error or a bg committer
-        Option<bool> b = this->storage_->background_committer_.IsCurrentlyProcessedContainerId(container.primary_id());
+        Option<bool> b = background_committer_.IsCurrentlyProcessedContainerId(container.primary_id());
         DCHECK(b.valid(), "Failed to check is container id is currently processed");
 
         if (b.value()) {
             // we have luck
-            enum storage_commit_state scs = this->storage_->IsCommitted(container.primary_id());
+            enum storage_commit_state scs = IsCommitted(container.primary_id());
             size_t i = 0;
             while (scs == STORAGE_ADDRESS_NOT_COMMITED && i < (ContainerStorageBackgroundCommitter::kMaxThreads + 1)) {
-                CHECK(this->storage_->background_committer_.CommitFinishedConditionWaitTimeout(10) == TIMED_TRUE,
+                CHECK(background_committer_.CommitFinishedConditionWaitTimeout(10) == TIMED_TRUE,
                     "Failed to wait for container commit");
-                scs = this->storage_->IsCommitted(container.primary_id());
+                scs = IsCommitted(container.primary_id());
                 i++;
             }
             CHECK(scs == STORAGE_ADDRESS_COMMITED, "Container " << container.primary_id() << " still uncommitted");
@@ -2232,8 +2215,8 @@ bool ContainerStorageSession::DoDelete(
         }
     }
 
-    CHECK(this->storage_->allocator_->OnNewContainer(container, false, &new_container_address), "Failed to get new container address");
-    CHECK(this->storage_->WriteContainer(&container, new_container_address),
+    CHECK(allocator_->OnNewContainer(container, false, &new_container_address), "Failed to get new container address");
+    CHECK(WriteContainer(&container, new_container_address),
         "Failed to write container " << container.DebugString());
 
     ContainerMoveEventData event_data;
@@ -2253,29 +2236,27 @@ bool ContainerStorageSession::DoDelete(
 
     // Commit data only when on critical lock are hold, due to DIRECT processing
     int64_t event_log_id = 0;
-    CHECK(c->log_->CommitEvent(EVENT_TYPE_CONTAINER_MOVED, &event_data, &event_log_id, c, NO_EC),
+    CHECK(log_->CommitEvent(EVENT_TYPE_CONTAINER_MOVED, &event_data, &event_log_id, this, NO_EC),
         "Failed to commit container move");
 
-    c->stats_.moved_container_++;
+    stats_.moved_container_++;
     return true;
 }
 
-bool ContainerStorageSession::Delete(uint64_t container_id,
+bool ContainerStorage::DeleteChunks(uint64_t container_id,
                                      const list<bytestring>& key_list,
                                      ErrorContext* ec) {
-    ProfileTimer timer(this->storage_->stats_.total_delete_time_);
-    ContainerStorage* c = this->storage_;
-    CHECK(c, "Container storage not set");
+    ProfileTimer timer(stats_.total_delete_time_);
 
     Container* write_container = NULL;
     ReadWriteLock* write_container_lock = NULL;
 
-    CHECK(c->state_ == ContainerStorage::RUNNING || c->state_ == ContainerStorage::STARTED,
-        "Illegal state to delete data: " << c->state_);
+    CHECK(state_ == ContainerStorage::RUNNING || state_ == ContainerStorage::STARTED,
+        "Illegal state to delete data: " << state_);
 
     TRACE("Delete storage entry: address " << container_id);
 
-    enum lookup_result r = c->write_cache_.GetWriteCacheContainer(container_id, &write_container, &write_container_lock, true);
+    enum lookup_result r = write_cache_.GetWriteCacheContainer(container_id, &write_container, &write_container_lock, true);
     CHECK(r != LOOKUP_ERROR, "Failed to access write cache");
     if (r == LOOKUP_FOUND) {
         ScopedReadWriteLock scoped_write_cache_lock(NULL);
@@ -2303,7 +2284,7 @@ bool ContainerStorageSession::Delete(uint64_t container_id,
     bool has_access = false;
     while (!has_access) {
 
-        address = this->storage_->LookupContainerAddressWait(container_id,
+        address = LookupContainerAddressWait(container_id,
             &container_lock,
             true);
         CHECK(address.first != LOOKUP_ERROR, "Failed to get address of container " << container_id);
@@ -2314,14 +2295,14 @@ bool ContainerStorageSession::Delete(uint64_t container_id,
             primary_id = address.second.primary_id();
         }
 
-        tbb::spin_mutex::scoped_lock scoped_in_move_set_lock(this->storage_->in_move_set_lock_);
-        if (storage_->in_move_set_.find(primary_id) == storage_->in_move_set_.end()) {
+        tbb::spin_mutex::scoped_lock scoped_in_move_set_lock(in_move_set_lock_);
+        if (in_move_set_.find(primary_id) == in_move_set_.end()) {
             // not in set
             TRACE("Adds container to in move set: container id " << primary_id);
             container_lock->ReleaseLock();
             container_lock = NULL;
 
-            storage_->in_move_set_.insert(primary_id);
+            in_move_set_.insert(primary_id);
             scoped_in_move_set_lock.release();
             has_access = true;
         } else {
@@ -2339,7 +2320,7 @@ bool ContainerStorageSession::Delete(uint64_t container_id,
 
     const Container* cached_container = NULL;
     CacheEntry cache_entry;
-    lookup_result cache_lookup_result = storage_->GetReadCache()->CheckCache(primary_id, &cached_container, true,
+    lookup_result cache_lookup_result = GetReadCache()->CheckCache(primary_id, &cached_container, true,
         true, &cache_entry);
 
     bool delete_result = true;
@@ -2353,16 +2334,16 @@ bool ContainerStorageSession::Delete(uint64_t container_id,
     }
 
     // remove container id from in move set
-    tbb::spin_mutex::scoped_lock scoped_in_move_set_lock(this->storage_->in_move_set_lock_);
-    storage_->in_move_set_.erase(primary_id);
+    tbb::spin_mutex::scoped_lock scoped_in_move_set_lock(in_move_set_lock_);
+    in_move_set_.erase(primary_id);
     scoped_in_move_set_lock.release();
 
     return delete_result;
 }
 
-enum lookup_result ContainerStorageSession::ReadInContainer(const Container& container, const void* key,
+enum lookup_result ContainerStorage::ReadInContainer(const Container& container, const void* key,
                                                             size_t key_size, void* data, size_t* data_size) {
-    this->storage_->stats_.reads_.fetch_and_increment();
+    stats_.reads_++;
 
     const ContainerItem* item = container.FindItem(key, key_size);
     if (item == NULL) {
@@ -2399,39 +2380,33 @@ enum lookup_result ContainerStorageSession::ReadInContainer(const Container& con
     }
     *data_size = item->raw_size();
 
-    if (this->storage_->gc_) {
-        if (!this->storage_->gc_->OnRead(container, key, key_size)) {
+    if (gc_) {
+        if (!gc_->OnRead(container, key, key_size)) {
             WARNING("Error while updating storage gc");
         }
     }
-    if (this->storage_->allocator_) {
-        if (!this->storage_->allocator_->OnRead(container, key, key_size)) {
+    if (allocator_) {
+        if (!allocator_->OnRead(container, key, key_size)) {
             WARNING("Error while updating storage allocator");
         }
     }
     return LOOKUP_FOUND;
 }
 
-bool ContainerStorageSession::Read(uint64_t address, const void* key,
+bool ContainerStorage::Read(uint64_t address, const void* key,
                                    size_t key_size, void* data, size_t* data_size,
                                    ErrorContext* ec) {
-    ProfileTimer timer(this->storage_->stats_.total_read_time_);
+    ProfileTimer timer(stats_.total_read_time_);
 
-    CHECK(this->storage_->state_ == ContainerStorage::RUNNING ||
-        this->storage_->state_ == ContainerStorage::STARTED, "Illegal state to read data: " << this->storage_->state_);
-
-    // Handle default first
-    if (StorageSession::Read(address, key, key_size, data, data_size, ec)) {
-        return true;
-    }
+    CHECK(state_ == ContainerStorage::RUNNING ||
+        state_ == ContainerStorage::STARTED, "Illegal state to read data: " << state_);
 
     CHECK(key, "Key NULL");
     CHECK(data_size, "Data Size Pointer NULL");
-    CHECK(this->storage_, "Container storage not set");
 
     Container* write_container = NULL;
     ReadWriteLock* write_cache_lock = NULL;
-    lookup_result r = this->storage_->write_cache_.GetWriteCacheContainer(address, &write_container, &write_cache_lock, false);
+    lookup_result r = write_cache_.GetWriteCacheContainer(address, &write_container, &write_cache_lock, false);
     CHECK(r != LOOKUP_ERROR, "Failed to access write cache");
     if (r == LOOKUP_FOUND) {
         CHECK(write_container, "Write container not set");
@@ -2439,7 +2414,7 @@ bool ContainerStorageSession::Read(uint64_t address, const void* key,
         ScopedReadWriteLock scoped_write_cache_lock(NULL);
         scoped_write_cache_lock.SetLocked(write_cache_lock);
 
-        this->storage_->stats_.write_cache_hit_++;
+        stats_.write_cache_hit_++;
         TRACE("Read item " << Fingerprinter::DebugString((byte *) key, key_size) << " from container " << address << " (write cache)");
 
         enum lookup_result r = this->ReadInContainer(*write_container, key, key_size, data, data_size);
@@ -2453,7 +2428,7 @@ bool ContainerStorageSession::Read(uint64_t address, const void* key,
 
     const Container* cache_container = NULL;
     CacheEntry cache_entry;
-    read_result = this->storage_->cache_.CheckCache(address, &cache_container, false /* we want update the cache*/,
+    read_result = cache_.CheckCache(address, &cache_container, false /* we want update the cache*/,
         true, &cache_entry);
     CHECK(read_result != LOOKUP_ERROR, "Read of container " << address << " failed: Cache check failed");
     if (read_result == LOOKUP_FOUND) {
@@ -2480,20 +2455,20 @@ bool ContainerStorageSession::Read(uint64_t address, const void* key,
     TRACE("Read item " << Fingerprinter::DebugString((byte *) key, key_size) << " from container " << address << " (disk)");
 
     Container read_container;
-    if (!read_container.Init(address, this->storage_->container_size_)) {
+    if (!read_container.Init(address, container_size_)) {
         ERROR("Failed to init container: container id " << address);
-        if (!storage_->cache_.ReleaseCacheline(address, &cache_entry)) {
+        if (!cache_.ReleaseCacheline(address, &cache_entry)) {
             WARNING("Failed to release cache line: container id " << address << ", cache line " << cache_entry.DebugString());
         }
         return false;
     }
 
     // I have no container lock here, we will acquire and release it during ReadContainer
-    read_result = this->storage_->ReadContainer(&read_container); // without cache
+    read_result = ReadContainer(&read_container); // without cache
     if (read_result == LOOKUP_ERROR) {
         ERROR("Read of container " << address << " failed: Lookup error");
         if (cache_entry.is_set()) {
-            if (!storage_->cache_.ReleaseCacheline(address, &cache_entry)) {
+            if (!cache_.ReleaseCacheline(address, &cache_entry)) {
                 WARNING("Failed to release cache line: container id " << address << ", cache line " << cache_entry.DebugString());
             }
         }
@@ -2502,7 +2477,7 @@ bool ContainerStorageSession::Read(uint64_t address, const void* key,
     if (read_result == LOOKUP_NOT_FOUND) {
         ERROR("Read of container " << address << " failed: Container not found");
         if (cache_entry.is_set()) {
-            if (!storage_->cache_.ReleaseCacheline(address, &cache_entry)) {
+            if (!cache_.ReleaseCacheline(address, &cache_entry)) {
                 WARNING("Failed to release cache line: container id " << address << ", cache line " << cache_entry.DebugString());
             }
         }
@@ -2510,7 +2485,7 @@ bool ContainerStorageSession::Read(uint64_t address, const void* key,
     }
 
     if (cache_entry.is_set()) {
-        if (!this->storage_->cache_.CopyToReadCache(read_container, &cache_entry)) {
+        if (!cache_.CopyToReadCache(read_container, &cache_entry)) {
             ERROR("Failed to add container to read cache: " << read_container.DebugString());
 
             // lock is freed

@@ -94,7 +94,6 @@ protected:
     MockBlockIndex block_index;
     UsageCountGarbageCollector* gc;
     MockContainerStorage storage;
-    MockStorageSession storage_session;
     MemoryInfoStore info_store;
     IdleDetector idle_detector;
     Threadpool tp;
@@ -115,9 +114,7 @@ protected:
         EXPECT_CALL(system, block_size()).WillRepeatedly(Return(64 * 1024));
 
         EXPECT_CALL(system, content_storage()).WillRepeatedly(Return(content_storage));
-        EXPECT_CALL(storage, CreateSession()).WillRepeatedly(Return(&storage_session));
         EXPECT_CALL(storage, IsCommitted(_)).WillRepeatedly(Return(dedupv1::chunkstore::STORAGE_ADDRESS_COMMITED));
-        EXPECT_CALL(storage_session, Close()).WillRepeatedly(Return(true));
         EXPECT_CALL(log, RegisterConsumer("gc",_)).WillRepeatedly(Return(true));
         EXPECT_CALL(log, UnregisterConsumer("gc")).WillRepeatedly(Return(true));
         EXPECT_CALL(log, RegisterConsumer("chunk-index",_)).WillRepeatedly(Return(true));
@@ -561,7 +558,7 @@ TEST_P(UsageCountGarbageCollectorTest, ProcessBlockMappingWrittenWithUpdatedMapp
 
 TEST_P(UsageCountGarbageCollectorTest, TriggerByIdleStart) {
     uint64_t container_id = 10;
-    EXPECT_CALL(storage_session, Delete(container_id, _, _, _)).WillRepeatedly(Return(true));
+    EXPECT_CALL(storage, DeleteChunks(container_id, _, _)).WillRepeatedly(Return(true));
 
     SetDefaultOptions(gc);
     ASSERT_TRUE(gc->Start(StartContext(), &system));
@@ -612,7 +609,7 @@ TEST_P(UsageCountGarbageCollectorTest, TriggerByIdleStart) {
 
 TEST_P(UsageCountGarbageCollectorTest, TriggerByIdleStartLogReplayed) {
     uint64_t container_id = 10;
-    EXPECT_CALL(storage_session, Delete(container_id, _, _, _)).WillRepeatedly(Return(true));
+    EXPECT_CALL(storage, DeleteChunks(container_id, _, _)).WillRepeatedly(Return(true));
     EXPECT_CALL(log, IsReplaying()).WillRepeatedly(Return(false));
 
     ASSERT_TRUE(system.idle_detector()->Start());
@@ -668,7 +665,7 @@ TEST_P(UsageCountGarbageCollectorTest, TriggerByIdleStartLogReplayed) {
 
 TEST_P(UsageCountGarbageCollectorTest, TriggerByStartProcessing) {
     uint64_t container_id = 10;
-    EXPECT_CALL(storage_session, Delete(container_id, _, _, _)).WillRepeatedly(Return(true));
+    EXPECT_CALL(storage, DeleteChunks(container_id, _, _)).WillRepeatedly(Return(true));
 
     SetDefaultOptions(gc);
     ASSERT_TRUE(gc->Start(StartContext(), &system));

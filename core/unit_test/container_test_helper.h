@@ -49,7 +49,7 @@ class ContainerTestHelper {
 
         bool SetUp();
 
-        bool WriteDefaultData(dedupv1::chunkstore::StorageSession* session, dedupv1::chunkindex::ChunkIndex* chunk_index, int offset, int count);
+        bool WriteDefaultData(dedupv1::chunkstore::Storage* storage, dedupv1::chunkindex::ChunkIndex* chunk_index, int offset, int count);
         bool WriteDefaultData(dedupv1::DedupSystem* system, int offset, int count);
 
         /**

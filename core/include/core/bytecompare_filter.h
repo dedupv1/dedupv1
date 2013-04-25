@@ -27,6 +27,7 @@
 #include <core/filter.h>
 #include <base/profile.h>
 #include <base/sliding_average.h>
+#include <core/storage.h>
 
 #include <string>
 
@@ -74,6 +75,8 @@ class ByteCompareFilter: public Filter {
          */
         Statistics stats_;
 
+        dedupv1::chunkstore::Storage* storage_;
+
     public:
 
         /**
@@ -89,6 +92,8 @@ class ByteCompareFilter: public Filter {
          */
         virtual ~ByteCompareFilter();
 
+        virtual bool Start(dedupv1::DedupSystem* dedup_system);
+
         /**
          * Checks if the chunk (mapping) is really a duplicate.
          * It reads the chunk date from the storage, and performs
@@ -103,7 +108,7 @@ class ByteCompareFilter: public Filter {
          * @return
          */
         virtual enum filter_result Check(dedupv1::Session* session,
-                const dedupv1::blockindex::BlockMapping* block_mapping, 
+                const dedupv1::blockindex::BlockMapping* block_mapping,
                 dedupv1::chunkindex::ChunkMapping* mapping,
                 dedupv1::base::ErrorContext* ec);
 

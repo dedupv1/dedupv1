@@ -43,54 +43,7 @@ class DedupSystem;
  */
 namespace chunkstore {
 
-/**
- * A session can be accessed concurrently, but only by a single request
- */
-class StorageSession {
-    public:
-
-        virtual ~StorageSession() {
-        }
-
-        /**
-     * @return true iff ok, otherwise an error has occurred
-         */
-        virtual bool WriteNew(const void* key, size_t key_size, const void* data,
-                size_t data_size,
-                bool is_indexed,
-                uint64_t* address,
-                dedupv1::base::ErrorContext* ec) = 0;
-
-        /**
-     * @return true iff ok, otherwise an error has occurred
-         */
-        virtual bool Read(uint64_t address, const void* key, size_t key_size,
-                void* data, size_t* data_size, dedupv1::base::ErrorContext* ec);
-
-        /**
-         * Deletes the record from the storage system.
-         *
-         * The default implementation simply returns true.
-         *
-         * @param address
-         * @param key_list
-         * @param ec
-         * @return
-         */
-        virtual bool Delete(uint64_t address, const std::list<bytestring>& key_list, dedupv1::base::ErrorContext* ec);
-
-        /**
-     * @return true iff ok, otherwise an error has occurred
-         */
-        bool Delete(uint64_t address, const byte* key, size_t key_size, dedupv1::base::ErrorContext* ec);
-
-        /**
-     * @return true iff ok, otherwise an error has occurred
-         */
-        virtual bool Close();
-};
-
-/**
+/*
  * Type for the commit state of a address
  */
 enum storage_commit_state {
@@ -184,12 +137,6 @@ class Storage : public dedupv1::StatisticProvider {
     virtual bool Close();
 
     /**
-     * Abstract method that creates a new storage session
-     * @return
-     */
-    virtual StorageSession* CreateSession() = 0;
-
-    /**
      * Waits if the container is currently in the write cache or in the bg committer
      */
     virtual enum storage_commit_state IsCommittedWait(uint64_t address) = 0;
@@ -200,6 +147,37 @@ class Storage : public dedupv1::StatisticProvider {
      * @return
      */
     virtual enum storage_commit_state IsCommitted(uint64_t address) = 0;
+
+        /**
+     * @return true iff ok, otherwise an error has occurred
+         */
+        virtual bool WriteNew(const void* key, size_t key_size, const void* data,
+                size_t data_size,
+                bool is_indexed,
+                uint64_t* address,
+                dedupv1::base::ErrorContext* ec) = 0;
+
+        /**
+     * @return true iff ok, otherwise an error has occurred
+         */
+        virtual bool Read(uint64_t address, const void* key, size_t key_size,
+                void* data, size_t* data_size, dedupv1::base::ErrorContext* ec) = 0;
+
+        /**
+         * Deletes the record from the storage system.
+         *
+         * @param address
+         * @param key_list
+         * @param ec
+         * @return
+         */
+        virtual bool DeleteChunks(uint64_t address, const std::list<bytestring>& key_list,
+            dedupv1::base::ErrorContext* ec) = 0;
+
+        /**
+     * @return true iff ok, otherwise an error has occurred
+         */
+        virtual bool DeleteChunk(uint64_t address, const byte* key, size_t key_size, dedupv1::base::ErrorContext* ec);
 
     /**
      * Flushes all open data to disk.

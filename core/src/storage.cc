@@ -82,40 +82,23 @@ bool Storage::SetOption(const string& option_name, const string& option) {
     return false;
 }
 
-bool StorageSession::Read(uint64_t address, const void* key, size_t key_size,
-                          void* data, size_t* data_size, dedupv1::base::ErrorContext* ec) {
-    if (address == Storage::EMPTY_DATA_STORAGE_ADDRESS) { // Null Chunk
-        memset(data, 0, *data_size);
-        return true;
-    }
+bool Storage::CheckIfFull() {
     return false;
 }
 
-bool StorageSession::Delete(uint64_t address, const byte* key, size_t key_size, dedupv1::base::ErrorContext* ec) {
+bool Storage::DeleteChunk(uint64_t address, const byte* key, size_t key_size, dedupv1::base::ErrorContext* ec) {
     std::list<bytestring> key_list;
     bytestring s;
     s.assign(key, key_size);
     key_list.push_back(s);
-    return Delete(address, key_list, ec);
+    return DeleteChunks(address, key_list, ec);
 }
 
-bool StorageSession::Delete(uint64_t address, const std::list<bytestring>& key_list, dedupv1::base::ErrorContext* ec) {
-    return true;
-}
-
-bool Storage::CheckIfFull() {
-    return false;
-}
 
 bool Storage::IsValidAddress(uint64_t address, bool allow_empty) {
     return (address != 0) &&
            (address != Storage::ILLEGAL_STORAGE_ADDRESS) &&
            (allow_empty || address != Storage::EMPTY_DATA_STORAGE_ADDRESS);
-}
-
-bool StorageSession::Close() {
-    delete this;
-    return true;
 }
 
 }

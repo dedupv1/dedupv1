@@ -79,7 +79,6 @@ using dedupv1::base::IndexIterator;
 using dedupv1::blockindex::BlockMappingItem;
 using dedupv1::blockindex::BlockMapping;
 using dedupv1::blockindex::BlockMappingPair;
-using dedupv1::chunkstore::StorageSession;
 using dedupv1::Fingerprinter;
 using dedupv1::chunkindex::ChunkMapping;
 using dedupv1::base::put_result;
@@ -715,9 +714,6 @@ bool UsageCountGarbageCollector::DoProcessGCCandidate(GarbageCollectionCandidate
     DCHECK(candidate_data, "Candidate data not set");
     DCHECK(this->chunk_index_, "Chunk index not set");
 
-    StorageSession* session = this->storage_->CreateSession();
-    CHECK(session, "Cannot create storage session");
-
     DEBUG("Process gc candidates: " <<
         "container id " << candidate_data->address() <<
         ", item count " << candidate_data->item_size());
@@ -772,7 +768,7 @@ bool UsageCountGarbageCollector::DoProcessGCCandidate(GarbageCollectionCandidate
 
     if (key_list.size() > 0) {
         TRACE("Delete from storage: container id " << candidate_data->address() << ", count " << key_list.size());
-        bool delete_result = session->Delete(candidate_data->address(), key_list, NO_EC);
+        bool delete_result = storage_->DeleteChunks(candidate_data->address(), key_list, NO_EC);
         if (!delete_result) {
             // something went wrong
             if (candidate_data->processing()) {
@@ -784,10 +780,6 @@ bool UsageCountGarbageCollector::DoProcessGCCandidate(GarbageCollectionCandidate
                 failed = true;
             }
         }
-    }
-
-    if (!session->Close()) {
-        WARNING("Failed to close session");
     }
 
     FAULT_POINT("gc.process.post");

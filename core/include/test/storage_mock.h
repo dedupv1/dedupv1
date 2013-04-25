@@ -25,20 +25,6 @@
 #include <core/storage.h>
 
 /**
- * Mock for a storage session.
- */
-class MockStorageSession : public dedupv1::chunkstore::StorageSession {
-    public:
-        MOCK_METHOD1(Sync, bool(dedupv1::base::ErrorContext* ec));
-        MOCK_METHOD7(WriteNew, bool(const void* key, size_t key_size, const void* data,
-                size_t data_size, bool is_indexed, uint64_t* address, dedupv1::base::ErrorContext* ec));
-        MOCK_METHOD6(Read, bool(uint64_t address, const void* key, size_t key_size,
-                void* data, size_t* data_size, dedupv1::base::ErrorContext* ec));
-        MOCK_METHOD4(Delete, bool(uint64_t address, const void* key, size_t key_size, dedupv1::base::ErrorContext* ec));
-        MOCK_METHOD0(Close, bool());
-};
-
-/**
  * Mock for a storage instance.
  */
 class MockStorage : public dedupv1::chunkstore::Storage {
@@ -50,11 +36,26 @@ class MockStorage : public dedupv1::chunkstore::Storage {
         MOCK_METHOD0(Stop, bool());
         MOCK_METHOD0(Close, bool());
 
-        MOCK_METHOD0(CreateSession, dedupv1::chunkstore::StorageSession*());
-
         MOCK_METHOD1(IsCommittedWait, dedupv1::chunkstore::storage_commit_state(uint64_t address));
         MOCK_METHOD1(IsCommitted, dedupv1::chunkstore::storage_commit_state(uint64_t address));
 
+        MOCK_METHOD7(WriteNew, bool(const void* key, size_t key_size, const void* data,
+                size_t data_size,
+                bool is_indexed,
+                uint64_t* address,
+                dedupv1::base::ErrorContext* ec));
+
+        MOCK_METHOD6(Read, bool(uint64_t address,
+              const void* key, size_t key_size,
+                void* data, size_t* data_size,
+                dedupv1::base::ErrorContext* ec));
+
+        MOCK_METHOD4(DeleteChunk, bool(uint64_t address,
+              const void* key, size_t key_size,
+              dedupv1::base::ErrorContext* ec));
+        MOCK_METHOD3(DeleteChunks, bool(uint64_t address,
+              const std::list<bytestring>& list,
+              dedupv1::base::ErrorContext* ec));
         MOCK_METHOD1(Flush, bool(dedupv1::base::ErrorContext* ec));
 
         MOCK_METHOD0(GetActiveStorageDataSize, uint64_t());
