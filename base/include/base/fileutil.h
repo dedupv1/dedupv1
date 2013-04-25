@@ -180,13 +180,6 @@ class File {
         bool GetLine(int* offset, std::string* line, unsigned int max);
 
         /**
-         * Closes the file and frees all its resources.
-         * The pointer will be invalid after this call.
-         * @return true iff ok, otherwise an error has occurred
-         */
-        bool Close();
-
-        /**
          * Reads data at the given offset.
          *
          * The call is interrupted safe in the sense that it is retried, when EINTR is returned.

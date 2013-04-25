@@ -380,11 +380,6 @@ class TCBTreeIndex : public PersistentIndex {
         virtual uint64_t GetPersistentSize();
 
         /**
-         * @return true iff ok, otherwise an error has occurred
-         */
-        virtual bool Close();
-
-        /**
          * returns true iff the index supports cursors. The tc-btree only
          * supports cursor for b-tress with a single file
          */

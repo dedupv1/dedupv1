@@ -189,7 +189,7 @@ class BlockMappingPairItem {
 /**
  * A block mapping pair stores how the data of a block has been splitted up into
  * chunks and how the data can be reconstructed using chunk data.
- * 
+ *
  * Note: Copy constructor and assignment is ok here
  */
 class BlockMappingPair {
@@ -231,7 +231,7 @@ class BlockMappingPair {
         explicit BlockMappingPair(size_t block_size);
 
         /**
-         * Closes the block mapping pair.
+         * Destructor
          */
         ~BlockMappingPair();
 

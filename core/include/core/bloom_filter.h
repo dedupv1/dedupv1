@@ -131,12 +131,6 @@ class BloomFilter: public Filter {
     virtual ~BloomFilter();
 
     /**
-     * Closes the bloom filter and frees all its resources
-     * @return
-     */
-    virtual bool Close();
-
-    /**
     * Configures the bloom filter.
     *
     * Possible configuration values are:

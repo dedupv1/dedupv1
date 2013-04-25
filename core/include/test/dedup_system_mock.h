@@ -31,7 +31,6 @@ class MockDedupSystem : public dedupv1::DedupSystem {
 
         MOCK_METHOD2(Start, bool(const dedupv1::StartContext& start_context, dedupv1::InfoStore* info_store));
         MOCK_METHOD0(Stop, bool());
-        MOCK_METHOD0(Close, bool());
 
         MOCK_METHOD7(MakeRequest, dedupv1::scsi::ScsiResult(
                 dedupv1::Session* session,

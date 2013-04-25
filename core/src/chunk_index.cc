@@ -147,9 +147,6 @@ ChunkIndex::ChunkIndex() {
     sampling_strategy_ = NULL;
 }
 
-ChunkIndex::~ChunkIndex() {
-}
-
 bool ChunkIndex::CheckIndeces() {
     CHECK(this->chunk_index_, "Persistent Chunk Index not set");
     return true;
@@ -379,10 +376,12 @@ bool ChunkIndex::Stop(dedupv1::StopContext stop_context) {
     return true;
 }
 
-bool ChunkIndex::Close() {
+ChunkIndex::~ChunkIndex() {
     DEBUG("Closing chunk index");
 
-    CHECK(this->Stop(dedupv1::StopContext::FastStopContext()), "Failed to stop chunk index");
+    if(!this->Stop(dedupv1::StopContext::FastStopContext())) {
+        WARNING("Failed to stop chunk index");
+    }
 
     if (info_store_) {
         // if the chunk index is not started, there is nothing to dump
@@ -397,9 +396,7 @@ bool ChunkIndex::Close() {
     }
 
     if (this->chunk_index_) {
-        if (!this->chunk_index_->Close()) {
-            WARNING("Cannot close main chunk index");
-        }
+        delete chunk_index_;
         this->chunk_index_ = NULL;
     }
 
@@ -417,8 +414,6 @@ bool ChunkIndex::Close() {
         }
         this->log_ = NULL;
     }
-    delete this;
-    return true;
 }
 
 #ifdef DEDUPV1_CORE_TEST
@@ -431,7 +426,7 @@ void ChunkIndex::ClearData() {
         log_ = NULL;
     }
     if (this->chunk_index_) {
-        this->chunk_index_->Close();
+        delete chunk_index_;
         chunk_index_ = NULL;
     }
 }
@@ -772,10 +767,6 @@ public:
         delete this;
         return b;
     }
-
-    void Close() {
-        delete this;
-    }
 };
 
 bool ChunkIndex::ImportContainerItem(const ContainerItem& item, ErrorContext* ec) {
@@ -839,7 +830,7 @@ bool ChunkIndex::ImportContainerParallel(uint64_t container_id, const Container&
             Future<bool>* future = tp_->Submit(task, Threadpool::BACKGROUND_PRIORITY, Threadpool::CALLER_RUNS);
             if (!future) {
                 ERROR("Failed to submit import task: item " << item->DebugString());
-                task->Close();
+                delete task;
                 task = NULL;
                 failed = true;
                 continue;
@@ -866,9 +857,7 @@ bool ChunkIndex::ImportContainerParallel(uint64_t container_id, const Container&
                 failed = true;
             }
         }
-        if (!future->Close()) {
-            WARNING("Failed to close import task future");
-        }
+        delete future;
     }
     futures.clear();
     // waited for all

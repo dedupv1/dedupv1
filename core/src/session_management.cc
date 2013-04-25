@@ -54,7 +54,7 @@ Session* SessionResourceType::Create() {
     Session* sess = new Session();
     if (!sess->Init(volume_)) {
       ERROR("Failed to init session");
-      sess->Close();
+      delete sess;
       return NULL;
     }
     return sess;
@@ -68,7 +68,7 @@ void SessionResourceType::Reinit(Session* sess) {
 
 void SessionResourceType::Close(Session* sess) {
     if (sess) {
-        sess->Close();
+        delete sess;
         sess = NULL;
     }
 }

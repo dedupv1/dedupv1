@@ -140,11 +140,6 @@ class TCFixedIndex : public IDBasedIndex {
 
         virtual uint64_t GetPersistentSize();
 
-        /**
-         * @return true iff ok, otherwise an error has occurred
-         */
-        virtual bool Close();
-
         int64_t GetLimitId();
 
         int64_t GetMaxId();

@@ -45,6 +45,8 @@ class Dedupv1Replayer {
     public:
         Dedupv1Replayer();
 
+        ~Dedupv1Replayer();
+
         /**
          * Pause the gc while replaying.
          * This is usually necessary for testing purposes
@@ -63,10 +65,7 @@ class Dedupv1Replayer {
 
         bool Replay();
 
-        /**
-         * Closes the system.
-         */
-        bool Close();
+        bool Stop();
 
     private:
         dedupv1d::Dedupv1d* system_;

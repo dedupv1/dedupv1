@@ -55,13 +55,11 @@ protected:
 
     virtual void TearDown() {
         if (socket) {
-            ASSERT_TRUE(socket->Close());
             delete socket;
             socket = NULL;
         }
 
         if (client_socket) {
-            ASSERT_TRUE(client_socket->Close());
             delete client_socket;
             client_socket = NULL;
         }
@@ -111,7 +109,6 @@ TEST_F(SocketTest, BindListenAccept) {
 
     ASSERT_TRUE(client_socket2);
     if (client_socket2) {
-        client_socket2->Close();
         delete client_socket2;
         client_socket2 = NULL;
     }

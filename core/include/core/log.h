@@ -403,7 +403,7 @@ class Log: public dedupv1::StatisticProvider {
         tbb::atomic<enum log_state> state_;
 
         /**
-         * Indicates if this Log Object was started before (needed in Close())
+         * Indicates if this Log Object was started before
          */
         bool wasStarted_;
 
@@ -884,12 +884,6 @@ class Log: public dedupv1::StatisticProvider {
          * @return true iff ok, otherwise an error has occurred
          */
         bool Stop(const dedupv1::StopContext& stop_context);
-
-        /**
-         * Closes the log and frees all its resources.
-         * @return true iff ok, otherwise an error has occurred
-         */
-        bool Close();
 
         /**
          * Commits the given event to the operations log.

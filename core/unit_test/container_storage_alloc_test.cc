@@ -128,7 +128,7 @@ protected:
 
     void Restart() {
         if (system) {
-            ASSERT_TRUE(system->Close());
+            delete system;
         }
         system = NULL;
         alloc = NULL;
@@ -146,7 +146,7 @@ protected:
 
     virtual void TearDown() {
         if (system) {
-            ASSERT_TRUE(system->Close());
+            delete system;
         }
         system = NULL;
         alloc = NULL;

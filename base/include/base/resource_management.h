@@ -226,6 +226,8 @@ template<class T> class ResourceManagement {
          */
         ResourceManagement();
 
+        ~ResourceManagement();
+
         /**
          * @param name name of the resource to manage
          * @param maximal_size maximal number of resources that should be created.
@@ -251,13 +253,6 @@ template<class T> class ResourceManagement {
          * @return
          */
         inline bool Release(T* resource);
-
-        /**
-         * Closes the resource management and
-         * frees all the resources.
-         * @return
-         */
-        bool Close();
 
         /**
          * returns the number of acquired resources.
@@ -341,7 +336,7 @@ template<class T> bool ResourceManagement<T>::Release(T* resource) {
         return this->impl->Release(resource);
 }
 
-template<class T> bool ResourceManagement<T>::Close() {
+template<class T> ResourceManagement<T>::~ResourceManagement() {
         if (this->impl) {
             delete this->impl;
             this->impl = NULL;
@@ -350,8 +345,6 @@ template<class T> bool ResourceManagement<T>::Close() {
             delete type;
             this->type = NULL;
         }
-        delete this;
-        return true;
 }
 
 template<class T> apr_status_t ResourceManagement<T>::Ctor(void** resource, void* params, apr_pool_t* pool) {

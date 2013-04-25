@@ -65,7 +65,7 @@ protected:
     }
 
     virtual void TearDown() {
-        ds->Close();
+        delete ds;
         ds = NULL;
         m = NULL;
     }

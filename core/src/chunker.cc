@@ -52,20 +52,10 @@ Chunker::Chunker() {
 Chunker::~Chunker() {
 }
 
-bool Chunker::Close() {
-    delete this;
-    return true;
-}
-
 ChunkerSession::ChunkerSession() {
 }
 
 ChunkerSession::~ChunkerSession() {
-}
-
-bool ChunkerSession::Close() {
-    delete this;
-    return true;
 }
 
 bool ChunkerSession::Clear() {

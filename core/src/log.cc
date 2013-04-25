@@ -166,9 +166,6 @@ Log::Statistics::Statistics() :
     }
 }
 
-Log::~Log() {
-}
-
 IDBasedIndex* Log::CreateDefaultLogData() {
     IDBasedIndex* index = dynamic_cast<IDBasedIndex*>(Index::Factory().Create(Log::kDefaultLogIndexType));
     CHECK_RETURN(index, NULL, "Cannot create log data store");
@@ -225,9 +222,7 @@ bool Log::SetOption(const string& option_name, const string& option) {
         CHECK(index != NULL, "Failed to create index type: " << option);
         this->log_data_ = dynamic_cast<IDBasedIndex*>(index);
         if (this->log_data_ == NULL) {
-            if (!index->Close()) {
-                WARNING("Failed to close index");
-            }
+            delete index;
             ERROR("Index not id-based: type " << option);
             return false;
         }
@@ -925,8 +920,7 @@ Log::log_read Log::ReadEntry(int64_t id, LogEntryData* log_entry, bytestring* lo
     return LOG_READ_OK;
 }
 
-bool Log::Close() {
-    bool failed = false;
+Log::~Log() {
     if (!this->Stop(dedupv1::StopContext::FastStopContext())) {
         WARNING("Failed to stop log");
     }
@@ -947,25 +941,14 @@ bool Log::Close() {
         // if the log is not started, there is nothing to dump
         if (!DumpMetaInfo()) {
             WARNING("Failed to dump meta info");
-            failed = true;
         }
     }
 
     if (this->log_data_) {
-        if (!this->log_data_->Close()) {
-            WARNING("Error closing log data");
-            failed = true;
-        }
+        delete log_data_;
         this->log_data_ = NULL;
     }
     this->replay_event_queue_.clear();
-
-    if (!this->log_info_store_.Close()) {
-        ERROR("Cannot close log info store");
-        failed = true;
-    }
-    delete this;
-    return !failed;
 }
 
 namespace {
@@ -1877,7 +1860,7 @@ void Log::ClearData() {
     this->Stop(StopContext::FastStopContext());
 
     if (log_data_) {
-        log_data_->Close();
+        delete log_data_;
         log_data_ = NULL;
     }
     this->log_info_store_.ClearData();

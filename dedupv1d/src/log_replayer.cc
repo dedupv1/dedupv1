@@ -72,9 +72,6 @@ LogReplayer::LogReplayer() :
     this->max_area_size_replay_system_idle_ = kDefaultMaxAreaSizeReplaySystemIdle_;
 }
 
-LogReplayer::~LogReplayer() {
-}
-
 bool LogReplayer::Loop() {
     if (!DoLoop()) {
         this->thread_state_ = false;
@@ -361,19 +358,21 @@ void LogReplayer::IdleEnd() {
     }
 }
 
-bool LogReplayer::Close() {
+LogReplayer::~LogReplayer() {
     DEBUG("Closing log replayer");
 
     if (this->thread_state_) {
-        CHECK(this->Stop(dedupv1::StopContext::FastStopContext()), "Failed to stop log replayer");
+        if(!this->Stop(dedupv1::StopContext::FastStopContext())) {
+          WARNING("Failed to stop log replayer");
+        }
     } else {
         // if runner was never called
         if (this->idle_detector_ && idle_detector_->IsRegistered("log replayer").value()) {
-            CHECK(idle_detector_->UnregisterIdleConsumer("log replayer"), "Failed to unregister idle tick consumer");
+            if(!idle_detector_->UnregisterIdleConsumer("log replayer")) {
+              WARNING("Failed to unregister idle tick consumer");
+            }
         }
     }
-    delete this;
-    return true;
 }
 
 const char* LogReplayer::state_name() {

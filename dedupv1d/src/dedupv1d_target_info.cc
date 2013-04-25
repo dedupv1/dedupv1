@@ -133,19 +133,13 @@ bool Dedupv1dTargetInfo::Start(const StartContext& start_context,
     return true;
 }
 
-bool Dedupv1dTargetInfo::Close() {
-    DEBUG("Closing dedupv1d target info");
-
+Dedupv1dTargetInfo::~Dedupv1dTargetInfo() {
     this->target_list_.clear();
     this->target_map_.clear();
     if (info_) {
-        if (!info_->Close()) {
-            WARNING("Failed to close target info");
-        }
+        delete info_;
         info_ = NULL;
     }
-    delete this;
-    return true;
 }
 
 bool Dedupv1dTargetInfo::SetOption(const string& option_name, const string& option) {
@@ -433,7 +427,7 @@ Option<list<Dedupv1dTarget> > Dedupv1dTargetInfo::GetTargets() {
 #ifdef DEDUPV1D_TEST
 void Dedupv1dTargetInfo::ClearData() {
     if (this->info_) {
-        this->info_->Close();
+        delete info_;
         this->info_ = NULL;
     }
 }

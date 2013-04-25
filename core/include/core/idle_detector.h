@@ -283,12 +283,6 @@ class IdleDetector : public dedupv1::StatisticProvider {
     bool Stop(const dedupv1::StopContext& stop_context);
 
     /**
-     * Closes the idle detector and frees its resources
-     * @return true iff ok, otherwise an error has occurred
-     */
-    bool Close();
-
-    /**
      * Registers an idle tick consumer
      *
      * @param name

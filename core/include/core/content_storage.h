@@ -400,12 +400,6 @@ class ContentStorage : public dedupv1::StatisticProvider {
     bool CloseRequest(Session* session, dedupv1::base::ErrorContext* ec);
 
     /**
-     * Closes the content storage and frees all its resources.
-     * @return true iff ok, otherwise an error has occurred
-     */
-    bool Close();
-
-    /**
      * Persists the statistics of the content storage.
      *
      * @param prefix

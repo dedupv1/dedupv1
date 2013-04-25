@@ -66,10 +66,6 @@ bool BlockChunkCache::Start(BlockIndex* block_index) {
     return true;
 }
 
-bool BlockChunkCache::Close() {
-    return true;
-}
-
 bool BlockChunkCache::SetOption(const string& option_name, const string& option) {
     if (option_name == "diff-cache-size") {
         Option<uint32_t> b = To<uint32_t>(option);

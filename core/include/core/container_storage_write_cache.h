@@ -105,7 +105,7 @@ class ContainerStorageWriteCache : public dedupv1::StatisticProvider {
     public:
     explicit ContainerStorageWriteCache(ContainerStorage* storage);
 
-    bool Close();
+    virtual ~ContainerStorageWriteCache();
 
     /**
      *
@@ -200,8 +200,6 @@ class ContainerStorageWriteCacheStrategy {
         virtual bool SetOption(const std::string& option_name, const std::string& option);
 
         virtual bool Start(ContainerStorageWriteCache* write_cache);
-
-        virtual bool Close();
 };
 
 class RoundRobinContainerStorageWriteCacheStrategy : public ContainerStorageWriteCacheStrategy {
@@ -248,8 +246,6 @@ class EarliestFreeContainerStorageWriteCacheStrategy : public ContainerStorageWr
         virtual ~EarliestFreeContainerStorageWriteCacheStrategy();
 
         virtual bool Start(ContainerStorageWriteCache* write_cache);
-
-        virtual bool Close();
 
         virtual bool GetNextWriteCacheContainer(Container** write_container,
                 dedupv1::base::ReadWriteLock** write_cache_lock);

@@ -73,9 +73,6 @@ SqliteIndex::SqliteIndex() : PersistentIndex(PERSISTENT_ITEM_COUNT | RETURNS_DEL
     chunk_size_ = 1024 * 1024;
 }
 
-SqliteIndex::~SqliteIndex() {
-}
-
 bool SqliteIndex::SetOption(const string& option_name, const string& option) {
     tbb::spin_rw_mutex::scoped_lock scoped_lock(lock, true);
     CHECK(this->state == CREATED, "Illegal state " << this->state);
@@ -233,7 +230,7 @@ bool SqliteIndex::Start(const dedupv1::StartContext& start_context) {
                 // Touch/Create WAL file
                 File* wal_file = File::Open(wal_filename, O_RDWR | O_CREAT | O_EXCL | O_LARGEFILE, start_context.file_mode().mode());
                 CHECK(wal_file, "Error opening storage file: " << wal_filename << ", message " << strerror(errno));
-                wal_file->Close();
+                delete wal_file;
                 wal_file = NULL;
                 if (start_context.file_mode().gid() != -1) {
                     CHECK(chown(wal_filename.c_str(), -1, start_context.file_mode().gid()) == 0,
@@ -941,7 +938,7 @@ enum delete_result SqliteIndex::Delete(const void* key, size_t key_size) {
     return r;
 }
 
-bool SqliteIndex::Close() {
+SqliteIndex::~SqliteIndex() {
     for (size_t i = 0; i < this->db.size(); i++) {
         if (this->db[i]) {
             if (sqlite3_close(this->db[i]) != SQLITE_OK) {
@@ -951,7 +948,6 @@ bool SqliteIndex::Close() {
         }
     }
     this->db.clear();
-    return Index::Close();
 }
 
 bool SqliteIndex::SupportsCursor() {

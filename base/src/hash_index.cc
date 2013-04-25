@@ -459,7 +459,7 @@ delete_result HashIndex::Delete(const void* key, size_t key_size) {
     return result;
 }
 
-bool HashIndex::Close() {
+HashIndex::~HashIndex() {
     unsigned int i, j;
 
     if (this->buckets) {
@@ -479,8 +479,6 @@ bool HashIndex::Close() {
         delete[] this->buckets;
         this->buckets = NULL;
     }
-    delete this;
-    return true;
 }
 
 uint64_t HashIndex::GetMemorySize() {

@@ -102,7 +102,7 @@ bool Scheduler::Runner() {
                 CHECK(runnable, "Failed to create runnable");
                 Future<bool>* future = this->threadpool_->Submit(runnable);
                 CHECK(future, "Failed to submit runnable");
-                future->Close(); // we are not interested in the result of the execution here
+                delete future; // we are not interested in the result of the execution here
 
                 i->second.set_last_exec_tick(now);
             }
@@ -140,10 +140,11 @@ bool Scheduler::Run() {
     return true;
 }
 
-bool Scheduler::Close() {
+Scheduler::~Scheduler() {
     DEBUG("Closing scheduler");
-    CHECK(Stop(), "Failed to stop scheduler");
-    return true;
+    if(!Stop()) {
+      WARNING("Failed to stop scheduler");
+    }
 }
 
 bool Scheduler::Stop() {

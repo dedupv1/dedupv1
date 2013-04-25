@@ -108,12 +108,11 @@ bool StaticChunkerSession::AcceptChunk(list<Chunk*>* chunks) {
     return true;
 }
 
-bool StaticChunkerSession::Close() {
+StaticChunkerSession::~StaticChunkerSession() {
     if (current_chunk) {
         delete [] current_chunk;
         current_chunk = NULL;
     }
-    return ChunkerSession::Close();
 }
 
 unsigned int StaticChunkerSession::open_chunk_position() {

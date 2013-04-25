@@ -67,9 +67,6 @@ BlockIndexFilter::Statistics::Statistics() : average_latency_(256) {
     this->reads_ = 0;
 }
 
-BlockIndexFilter::~BlockIndexFilter() {
-}
-
 void BlockIndexFilter::RegisterFilter() {
     Filter::Factory().Register("block-index-filter", &BlockIndexFilter::CreateFilter);
 }
@@ -89,12 +86,11 @@ bool BlockIndexFilter::Start(DedupSystem* system) {
     return true;
 }
 
-bool BlockIndexFilter::Close() {
+BlockIndexFilter::~BlockIndexFilter() {
     if (block_chunk_cache_) {
-        block_chunk_cache_->Close();
+        delete block_chunk_cache_;
         block_chunk_cache_ = NULL;
     }
-    return Filter::Close();
 }
 
 bool BlockIndexFilter::SetOption(const string& option_name, const string& option) {
@@ -271,7 +267,7 @@ string BlockIndexFilter::PrintProfile() {
     }
     sstr << "\"used time\": " << this->stats_.time_.GetSum() << "," << std::endl;
     sstr << "\"average latency\": " << this->stats_.average_latency_.GetAverage() <<
-    std::endl;
+      std::endl;
     sstr << "}";
     return sstr.str();
 }

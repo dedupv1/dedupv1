@@ -74,11 +74,6 @@ bool ContainerGCStrategy::Stop(const dedupv1::StopContext& stop_context) {
     return true;
 }
 
-bool ContainerGCStrategy::Close() {
-    delete this;
-    return true;
-}
-
 bool ContainerGCStrategy::OnIdle() {
     return true;
 }
@@ -145,10 +140,6 @@ GreedyContainerGCStrategy::GreedyContainerGCStrategy() : touched_set_(0) {
     merge_candidate_count_ = 0;
 }
 
-GreedyContainerGCStrategy::~GreedyContainerGCStrategy() {
-
-}
-
 bool GreedyContainerGCStrategy::Start(const StartContext& start_context, ContainerStorage* storage) {
     CHECK(this->started_ == false, "GC already started");
     CHECK(this->merge_candidates_, "GC not configured");
@@ -194,20 +185,12 @@ bool GreedyContainerGCStrategy::Start(const StartContext& start_context, Contain
     return true;
 }
 
-bool GreedyContainerGCStrategy::Close() {
+GreedyContainerGCStrategy::~GreedyContainerGCStrategy() {
     DEBUG("Closing greedy container storage gc");
-    bool failed = false;
     if (this->merge_candidates_) {
-        if (!this->merge_candidates_->Close()) {
-            ERROR("Failed to close gc merge candidates index");
-            failed = true;
-        }
+        delete merge_candidates_;
         this->merge_candidates_ = NULL;
     }
-    if (!ContainerGCStrategy::Close()) {
-        failed = true;
-    }
-    return !failed;
 }
 
 bool GreedyContainerGCStrategy::SetOption(const string& option_name, const string& option) {
@@ -772,7 +755,7 @@ string GreedyContainerGCStrategy::PrintProfile() {
 #ifdef DEDUPV1_CORE_TEST
 void GreedyContainerGCStrategy::ClearData() {
     if (this->merge_candidates_) {
-        this->merge_candidates_->Close();
+        delete this->merge_candidates_;
         this->merge_candidates_ = NULL;
     }
 }

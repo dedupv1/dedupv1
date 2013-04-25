@@ -57,7 +57,7 @@ protected:
 
     virtual void TearDown() {
         if (chunker) {
-            ASSERT_TRUE(chunker->Close());
+            delete chunker;
             chunker = NULL;
         }
     }
@@ -67,7 +67,7 @@ TEST_F(RabinChunkerTest, ConfigAvgChunkSize) {
     EXPECT_LOGGING(dedupv1::test::ERROR).Once();
 
     if (chunker) {
-        ASSERT_TRUE(chunker->Close());
+        delete chunker;
         chunker = NULL;
     }
     chunker = dynamic_cast<RabinChunker*>(Chunker::Factory().Create("rabin"));
@@ -83,7 +83,7 @@ TEST_F(RabinChunkerTest, WrongMinimalChunkSize) {
     EXPECT_LOGGING(dedupv1::test::ERROR).Once();
 
     if (chunker) {
-        ASSERT_TRUE(chunker->Close());
+        delete chunker;
         chunker = NULL;
     }
     chunker = dynamic_cast<RabinChunker*>(Chunker::Factory().Create("rabin"));
@@ -98,7 +98,7 @@ TEST_F(RabinChunkerTest, WrongMaximalChunkSize) {
     EXPECT_LOGGING(dedupv1::test::ERROR).Once();
 
     if (chunker) {
-        ASSERT_TRUE(chunker->Close());
+        delete chunker;
         chunker = NULL;
     }
     chunker = dynamic_cast<RabinChunker*>(Chunker::Factory().Create("rabin"));
@@ -111,7 +111,7 @@ TEST_F(RabinChunkerTest, WrongMaximalChunkSize) {
 
 TEST_F(RabinChunkerTest, Create) {
     if (chunker) {
-        ASSERT_TRUE(chunker->Close());
+        delete chunker;
         chunker = NULL;
     }
     chunker = dynamic_cast<RabinChunker*>(Chunker::Factory().Create("rabin"));
@@ -156,7 +156,7 @@ TEST_F(RabinChunkerTest, Simple) {
         sess1->UpdateWindowFingerprint(i);
     }
     uint64_t fp1 = sess1->fingerprint();
-    sess1->Close();
+    delete sess1;
 
     RabinChunkerSession* sess2 =
         dynamic_cast<RabinChunkerSession*>(chunker->CreateSession());
@@ -168,7 +168,7 @@ TEST_F(RabinChunkerTest, Simple) {
     uint64_t fp2 = sess2->fingerprint();
     ASSERT_EQ(fp1, fp2);
 
-    sess2->Close();
+    delete sess2;
 }
 
 TEST_F(RabinChunkerTest, Rolling) {
@@ -201,12 +201,12 @@ TEST_F(RabinChunkerTest, Rolling) {
                 sess2->UpdateFingerprint(buffer[k]);
             }
             ASSERT_EQ(sess1->fingerprint(), sess2->fingerprint()) << "Offset " << i;
-            sess2->Close();
+            delete sess2;
             sess2 = NULL;
         }
 
     }
-    sess1->Close();
+    delete sess1;
     sess1 = NULL;
 }
 
@@ -232,7 +232,7 @@ TEST_F(RabinChunkerTest, Window) {
     uint64_t fp2 = sess1->fingerprint();
     ASSERT_EQ(fp1, fp2);
 
-    sess1->Close();
+    delete sess1;
 }
 
 TEST_F(RabinChunkerTest, SwitchingFingerprint) {
@@ -253,7 +253,7 @@ TEST_F(RabinChunkerTest, SwitchingFingerprint) {
 
     list<Chunk*> chunks;
     ASSERT_TRUE(sess1->ChunkData(buffer, 0, 65536, true, &chunks));
-    ASSERT_TRUE(sess1->Close());
+    delete sess1;
     EXPECT_EQ(2, chunks.size());
 
     byte digest_session[20];
@@ -290,7 +290,7 @@ TEST_F(RabinChunkerTest, Fingerprint) {
     ChunkerSession* sess1 = chunker->CreateSession();
     ASSERT_TRUE(sess1);
     sess1->ChunkData(buffer1, 0, 65536, true, &chunks);
-    sess1->Close();
+    delete sess1;
 
     byte digest_session1[20];
     for (list<Chunk*>::iterator i = chunks.begin(); i != chunks.end(); i++) {
@@ -311,7 +311,7 @@ TEST_F(RabinChunkerTest, Fingerprint) {
     ChunkerSession* sess2 = chunker->CreateSession();
     ASSERT_TRUE(sess2);
     sess2->ChunkData(buffer2, 0, 65536, true, &chunks);
-    sess2->Close();
+    delete sess2;
 
     byte digest_session2[20];
     for (list<Chunk*>::iterator i = chunks.begin(); i != chunks.end(); i++) {
@@ -377,7 +377,7 @@ TEST_F(RabinChunkerTest, Performance) {
             }
             pos += size;
         }
-        ASSERT_TRUE(session->Close());
+        delete session;
         session = NULL;
 
         list<Chunk*>::iterator ci;

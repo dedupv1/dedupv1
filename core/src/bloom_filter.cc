@@ -94,9 +94,6 @@ BloomFilter::Statistics::Statistics() {
     miss_ = 0;
 }
 
-BloomFilter::~BloomFilter() {
-}
-
 bool BloomFilter::SetOption(const string& option_name, const string& option) {
     CHECK(bloom_set_ == NULL, "Bloom filter already started");
     if (option_name == "size") {
@@ -215,7 +212,7 @@ Filter::filter_result BloomFilter::Check( Session* session,
     }
 }
 
-bool BloomFilter::Close() {
+BloomFilter::~BloomFilter() {
     INFO("Closing bloom filter");
     if (this->filter_file_ && bloom_set_) {
         if (!this->DumpData()) {
@@ -225,12 +222,9 @@ bool BloomFilter::Close() {
     delete this->bloom_set_;
     this->bloom_set_ = NULL;
     if (this->filter_file_) {
-        if (!this->filter_file_->Close()) {
-            WARNING("Failed to close bloom filter file");
-        }
+        delete filter_file_;
         this->filter_file_ = NULL;
     }
-    return Filter::Close();
 }
 
 bool BloomFilter::PersistStatistics(std::string prefix, dedupv1::PersistStatistics* ps) {

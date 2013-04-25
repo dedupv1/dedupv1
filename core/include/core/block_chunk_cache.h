@@ -129,8 +129,6 @@ public:
 
     bool SetOption(const std::string& option_name, const std::string& option);
 
-    bool Close();
-
     bool Contains(const dedupv1::chunkindex::ChunkMapping* mapping, uint64_t current_block_id, uint64_t* data_address);
 
     bool UpdateKnownChunk(const dedupv1::chunkindex::ChunkMapping* mapping, uint64_t current_block_id);

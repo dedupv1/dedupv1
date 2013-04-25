@@ -100,7 +100,7 @@ bool ContainerStorageReadCache::Start() {
     return true;
 }
 
-bool ContainerStorageReadCache::Close() {
+ContainerStorageReadCache::~ContainerStorageReadCache() {
     if (this->read_cache_.size() > 0) {
         vector<Container*>::iterator j;
         for (j = this->read_cache_.begin(); j != this->read_cache_.end(); j++) {
@@ -112,7 +112,6 @@ bool ContainerStorageReadCache::Close() {
         this->read_cache_.clear();
     }
     this->read_cache_used_time_.clear();
-    return true;
 }
 
 enum lookup_result ContainerStorageReadCache::CheckCache(uint64_t container_id,

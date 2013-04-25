@@ -77,9 +77,6 @@ Dedupv1dVolumeInfo::Dedupv1dVolumeInfo() {
     default_command_thread_count_ = Dedupv1dVolume::kDefaultCommandThreadCount;
 }
 
-Dedupv1dVolumeInfo::~Dedupv1dVolumeInfo() {
-}
-
 bool Dedupv1dVolumeInfo::Start(const StartContext& start_context,
                                Dedupv1dGroupInfo* group_info,
                                Dedupv1dTargetInfo* target_info,
@@ -133,23 +130,17 @@ bool Dedupv1dVolumeInfo::Start(const StartContext& start_context,
         CHECK(new_volume, "Failed to create new volume: " << DebugStringOptions(concrete_volume_option));
         if (!CheckNewVolume(new_volume)) {
             ERROR("Volume not valid: " << new_volume->DebugString());
-            if (!new_volume->Close()) {
-                WARNING("Failed to close volume");
-            }
+            delete new_volume;
             return false;
         }
         if (!new_volume->Start(system)) {
             ERROR("Cannot start volume: " << new_volume->DebugString());
-            if (!new_volume->Close()) {
-                WARNING("Failed to close volume");
-            }
+            delete new_volume;
             return false;
         }
         if (!this->RegisterVolume(new_volume, false)) {
             ERROR("Failed to register volume: " << new_volume->DebugString());
-            if (!new_volume->Close()) {
-                WARNING("Failed to close volume");
-            }
+            delete new_volume;
             return false;
         }
         // here to do not close the volume directly as it is registered and therefore closed at the end
@@ -246,7 +237,7 @@ bool Dedupv1dVolumeInfo::SetOption(const string& option_name, const string& opti
     return true;
 }
 
-bool Dedupv1dVolumeInfo::Close() {
+Dedupv1dVolumeInfo::~Dedupv1dVolumeInfo() {
     DEBUG("Closing dedupv1d volume info");
 
     // Close and unregister all volumes
@@ -255,33 +246,25 @@ bool Dedupv1dVolumeInfo::Close() {
         Dedupv1dVolume* v = *i;
         string device_name = v->device_name();
         if (base_volume_info_->FindVolume(v->id())) {
-            CHECK(base_volume_info_->UnregisterVolume(v->volume()), "Cannot unregister volume " << device_name);
+            if(!base_volume_info_->UnregisterVolume(v->volume())) {
+              WARNING("Cannot unregister volume " << device_name);
+          }
         }
-        CHECK(v->Close(), "Cannot close volume " << device_name);
+        delete v;
 
     }
     if (info_) {
-        if (!info_->Close()) {
-            WARNING("Failed to close volume info");
-        }
+        delete info_;
         info_ = NULL;
     }
     if (this->detacher_) {
-        if (!this->detacher_->Close()) {
-            WARNING("Failed to close volume detacher");
-        }
         delete this->detacher_;
         this->detacher_ = NULL;
     }
     if (this->fast_copy_) {
-        if (!this->fast_copy_->Close()) {
-            WARNING("Failed to close volume detacher");
-        }
         delete this->fast_copy_;
         this->fast_copy_ = NULL;
     }
-    delete this;
-    return true;
 }
 
 bool Dedupv1dVolumeInfo::RegisterVolume(Dedupv1dVolume* v, bool new_attachment) {
@@ -321,7 +304,7 @@ Dedupv1dVolume* Dedupv1dVolumeInfo::ConfigureNewVolume(bool preconfigured, const
     CHECK_RETURN(new_volume, NULL, "Memalloc of volume failed");
     if (!new_volume->SetOption("threads", ToString(default_command_thread_count_))) {
         ERROR("Cannot set default thread num for volume");
-        new_volume->Close();
+        delete new_volume;
         return NULL;
     }
 
@@ -334,18 +317,18 @@ Dedupv1dVolume* Dedupv1dVolumeInfo::ConfigureNewVolume(bool preconfigured, const
             Option<uint32_t> volume_id = To<uint32_t>(option);
             if (!volume_id.valid()) {
                 ERROR("Illegal volume id: " << volume_id.value());
-                new_volume->Close();
+                delete new_volume;
                 return NULL;
             }
             if (this->FindVolumeLocked(volume_id.value()) != NULL) {
                 ERROR("Volume " << volume_id.value() << " exists already");
-                new_volume->Close();
+                delete new_volume;
                 return NULL;
             }
         }
         if (!new_volume->SetOption(option_name, option)) {
             ERROR("Cannot configure volume: " << option_name << "=" << option);
-            new_volume->Close();
+            delete new_volume;
             return NULL;
         }
     }
@@ -705,24 +688,17 @@ Dedupv1dVolume* Dedupv1dVolumeInfo::AttachVolume(list< pair< string, string> > o
 
     if (!CheckNewVolume(new_volume)) {
         ERROR("New volume is not valid: " << new_volume->DebugString());
-        if (!new_volume->Close()) {
-            WARNING("Failed to close volume");
-        }
-
+        delete new_volume;
         return NULL;
     }
     if (!new_volume->Start(base_dedup_system_)) {
         ERROR("Cannot start volume " << new_volume->DebugString());
-        if (!new_volume->Close()) {
-            WARNING("Failed to close volume");
-        }
+        delete new_volume;
         return NULL;
     }
     if (!this->RegisterVolume(new_volume, true)) {
         ERROR("Failed to register volume: " << new_volume->DebugString());
-        if (!new_volume->Close()) {
-            WARNING("Failed to close volume");
-        }
+        delete new_volume;
         return NULL;
     }
     // do not delete the volume from now on as it is registered
@@ -905,7 +881,7 @@ bool Dedupv1dVolumeInfo::DetachVolume(uint32_t id) {
     volumes_.erase(::std::find(volumes_.begin(), volumes_.end(), volume));
 
     CHECK(this->detacher_->DetachVolume(*volume), "Failed to inform detacher about detached volume: " << volume->DebugString());
-    CHECK(volume->Close(), "Cannot close volume");
+    delete volume;
     volume = NULL;
     return true;
 }
@@ -1105,7 +1081,7 @@ std::string Dedupv1dVolumeInfo::PrintStatisticSummary() {
 #ifdef DEDUPV1D_TEST
 void Dedupv1dVolumeInfo::ClearData() {
     if (this->info_) {
-        this->info_->Close();
+        delete info_;
         this->info_ = NULL;
     }
     if (this->detacher_) {

@@ -41,16 +41,13 @@ class Dedupv1Reader {
     public:
         Dedupv1Reader();
 
+        ~Dedupv1Reader();
+
         bool Initialize(const std::string& filename);
 
         bool Read(uint32_t volume_id, uint64_t offset, uint64_t size);
 
-        /**
-        * Closes the system.
-        */
-        bool Close();
-
-
+        bool Stop();
     private:
         dedupv1d::Dedupv1d* system_;
 

@@ -110,10 +110,5 @@ bool LogMonitorAdapter::ParseParam(const string& key, const string& value) {
     return false;
 }
 
-bool LogMonitorAdapter::Close() {
-    this->log_replayer_ = NULL;
-    return DefaultMonitorAdapter::Close();
-}
-
 }
 }

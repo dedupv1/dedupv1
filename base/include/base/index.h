@@ -349,12 +349,6 @@ class Index {
                 google::protobuf::Message* result_message);
 
         /**
-         * Closes the index and frees it resources
-         * @return true iff ok, otherwise an error has occurred
-         */
-        virtual bool Close();
-
-        /**
          * returns the number of items in the index.
          *
          * As such an value is hard to keep correct in the presence of crashes, the value

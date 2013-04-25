@@ -49,7 +49,7 @@ protected:
 
     virtual void TearDown() {
         if (chunker) {
-            chunker->Close();
+            delete chunker;
             chunker = NULL;
         }
     }
@@ -75,7 +75,7 @@ TEST_F(StaticChunkerTest, Chunk) {
     ChunkerSession* session = chunker->CreateSession();
     ASSERT_TRUE(session);
     ASSERT_TRUE(session->ChunkData(buffer, 0, 65000, true, &chunks));
-    ASSERT_TRUE(session->Close());
+    delete session;
 
     int pos = 0;
     ASSERT_EQ(chunks.size(), 8U);
@@ -114,7 +114,7 @@ TEST_F(StaticChunkerTest, ChunkWithOffset) {
     ChunkerSession* session = chunker->CreateSession();
     ASSERT_TRUE(session);
     ASSERT_TRUE(session->ChunkData(buffer, 1000, 65000, true, &chunks));
-    ASSERT_TRUE(session->Close());
+    delete session;
 
     ASSERT_EQ(chunks.size(), 9U);
     int pos = 0;

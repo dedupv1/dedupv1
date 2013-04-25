@@ -139,10 +139,10 @@ protected:
 
     virtual void TearDown() {
         if (gc) {
-            ASSERT_TRUE(gc->Close());
+            delete gc;
         }
         if (chunk_index) {
-            ASSERT_TRUE(chunk_index->Close());
+            delete chunk_index;
         }
     }
 

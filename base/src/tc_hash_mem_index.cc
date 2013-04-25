@@ -81,9 +81,6 @@ TCMemHashIndex::TCMemHashIndex() : MemoryIndex(HAS_ITERATOR | RETURNS_DELETE_NOT
     checksum_ = true;
 }
 
-TCMemHashIndex::~TCMemHashIndex() {
-}
-
 bool TCMemHashIndex::SetOption(const string& option_name, const string& option) {
     if (option_name == "bucket-count") {
         CHECK(ToStorageUnit(option).valid(), "Illegal option " << option);
@@ -323,12 +320,11 @@ enum delete_result TCMemHashIndex::Delete(const void* key, size_t key_size) {
     return DELETE_OK;
 }
 
-bool TCMemHashIndex::Close() {
+TCMemHashIndex::~TCMemHashIndex() {
     if (this->mdb_) {
         tcmdbdel(this->mdb_);
         this->mdb_ = NULL;
     }
-    return Index::Close();
 }
 
 string TCMemHashIndex::PrintProfile() {

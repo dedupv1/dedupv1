@@ -105,7 +105,6 @@
  * - Start
  * - Run (Only if the object starts own threads)
  * - Stop (Only if the object starts own threads)
- * - Close
  *
  * \section Init
  *
@@ -116,12 +115,12 @@
  * Every configuration using the method SetOption should be done after the Init call and before the
  * start stage.
  *
- * Valid transitions are to "Close", "Start", and "Stop". If the Init method fails, the transitions
+ * Valid transitions are to "Start", and "Stop". If the Init method fails, the transitions
  * to Start and Run are not valid.
  *
  * \section Start
  *
- * Valid transitions are to "Run", "Stop", and "Close". If the Start() method fails, the transition
+ * Valid transitions are to "Run", and"Stop". If the Start() method fails, the transition
  * to Run is not valid.
  *
  * \section Run
@@ -129,7 +128,7 @@
  * The "Run" method marks the transition of the start stage to the running stage. In the Run method
  * usually all threads are started.
  *
- * Valid transitions are to "Stop" and "Close"
+ * Valid transitions are to "Stop"
  *
  * \section Stop
  *
@@ -137,17 +136,8 @@
  * can also be called from stages before running. During the Stop method, usually all threads started
  * by an object and its child objects are stopped (joined).
  *
- * Also, a close look at the transitions reveal that the Stop stage is optional and the Close method
- * should also stop all threads.
+ * The only valid transition is to delete the object.
  *
- * The only valid transition is to "Close".
- *
- * \section Close
- *
- * Note. Currently the system is inconsistent with regards if a object deletes its own memory at the
- * end of Close via <code>delete this</code>. It is generally considered bad style, e.g. because it is
- * not possible to use such objects on the stack or as value members of other cases. However, most of
- * the system still does this.
  */
 
 #endif  // DEDUP_H__

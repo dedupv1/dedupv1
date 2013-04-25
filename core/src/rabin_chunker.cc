@@ -87,23 +87,10 @@ Chunker* RabinChunker::CreateChunker() {
 ChunkerSession* RabinChunker::CreateSession() {
     RabinChunkerSession* s = new RabinChunkerSession(this);
     CHECK_RETURN(s, NULL, "Failed to alloc rabin chunker session");
-
-    if (!s->IsValid()) {
-        if (!s->Close()) {
-            WARNING("Failed to close rabin chunker session");
-        }
-        return NULL;
-    }
     return s;
 }
 
-bool RabinChunkerSession::IsValid() {
-    return this->overflow_chunk_data_ && this->window_buffer_;
-}
-
-bool RabinChunkerSession::Close() {
-    bool result = true;
-
+RabinChunkerSession::~RabinChunkerSession() {
     if (this->overflow_chunk_data_) {
         delete[] overflow_chunk_data_;
         overflow_chunk_data_ = NULL;
@@ -112,11 +99,6 @@ bool RabinChunkerSession::Close() {
         delete[] window_buffer_;
         window_buffer_ = NULL;
     }
-    if (!ChunkerSession::Close()) {
-        ERROR("Failed to close chunker session");
-        result = false;
-    }
-    return result;
 }
 
 RabinChunkerSession::RabinChunkerSession(RabinChunker* chunker) {
@@ -130,12 +112,9 @@ RabinChunkerSession::RabinChunkerSession(RabinChunker* chunker) {
      * Initially set to 0, simulated WINDOW_SIZE "0" values at the beginning
      */
     this->window_buffer_ = new byte[chunker->window_size_]; /* released in rabin_session_close */
-    if (!window_buffer_) {
-        WARNING("Alloc window buffer failed");
-    } else {
-        memset(window_buffer_, 0, chunker->window_size_);
-        window_buffer_pos_ = -1;
-    }
+    memset(window_buffer_, 0, chunker->window_size_);
+    window_buffer_pos_ = -1;
+
     /*
      * current chunk
      * the chunk cannot be larger than max_chunk bytes
@@ -429,9 +408,6 @@ bool RabinChunkerSession::ChunkData(const byte* data,
         CHECK(AcceptChunk(chunks, NULL, 0), "Failed to accept chunk: reason chunking end");
     }
     return true;
-}
-
-RabinChunkerSession::~RabinChunkerSession() {
 }
 
 void RabinChunkerSession::UpdateFingerprint(byte c) {

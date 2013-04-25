@@ -914,14 +914,20 @@ bool Dedupv1Checker::ReadContainerData() {
     return true;
 }
 
-bool Dedupv1Checker::Close() {
+bool Dedupv1Checker::Stop() {
     DEBUG("Closing dedupv1 check");
     if (system_) {
         CHECK(system_->Shutdown(dedupv1::StopContext::FastStopContext()), "Failed to start dedupv1 shutdown");
         CHECK(system_->Stop(), "Failed to stop dedupv1 system");
-        CHECK(system_->Close(), "Failed to close system");
     }
     return true;
+}
+
+Dedupv1Checker::~Dedupv1Checker() {
+  if (system_) {
+    delete system_;
+    system_ = NULL;
+  }
 }
 
 bool Dedupv1Checker::set_passes(const uint32_t passes) {

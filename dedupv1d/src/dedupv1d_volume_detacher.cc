@@ -246,12 +246,9 @@ bool Dedupv1dVolumeDetacher::Stop(const dedupv1::StopContext& stop_context) {
     return true;
 }
 
-bool Dedupv1dVolumeDetacher::Close() {
-    bool failed = false;
-
+Dedupv1dVolumeDetacher::~Dedupv1dVolumeDetacher() {
     if (!this->Stop(dedupv1::StopContext::FastStopContext())) {
         ERROR("Failed to stop volume detacher");
-        failed = true;
     }
     for (map<uint32_t, Thread<bool>* >::iterator i = this->detaching_threads()->begin(); i != this->detaching_threads()->end(); i++) {
         Thread<bool>* thread = i->second;
@@ -262,14 +259,9 @@ bool Dedupv1dVolumeDetacher::Close() {
     this->detaching_threads()->clear();
 
     if (this->detaching_info_) {
-        if (!this->detaching_info_->Close()) {
-            ERROR("Failed to close detaching info index");
-            failed = true;
-        }
+        delete detaching_info_;
         this->detaching_info_ = NULL;
     }
-
-    return !failed;
 }
 
 bool Dedupv1dVolumeDetacher::DetachVolume(const Dedupv1dVolume& volume) {
@@ -353,7 +345,7 @@ bool Dedupv1dVolumeDetacher::DeclareFullyDetached(uint32_t volume_id) {
 #ifdef DEDUPV1D_TEST
 void Dedupv1dVolumeDetacher::ClearData() {
     Stop(dedupv1::StopContext::FastStopContext());
-    this->detaching_info_->Close();
+    delete detaching_info_;
     this->detaching_info_ = NULL;
 }
 #endif

@@ -102,8 +102,7 @@ class HashIndex : public MemoryIndex {
         * Inits the hash index
         */
         HashIndex();
-        virtual ~HashIndex() {
-        }
+        virtual ~HashIndex();
 
         static Index* CreateIndex();
         static void RegisterIndex();
@@ -152,11 +151,6 @@ class HashIndex : public MemoryIndex {
         virtual enum delete_result Delete(const void* key, size_t key_size);
 
         virtual std::string PrintLockStatistics();
-
-        /**
-         * @return true iff ok, otherwise an error has occurred
-         */
-        virtual bool Close();
 
         /**
          * @return true iff ok, otherwise an error has occurred

@@ -52,6 +52,11 @@ class Dedupv1Checker {
         Dedupv1Checker(bool check_log, bool repair);
 
         /**
+         * Destructor
+         */
+        ~Dedupv1Checker();
+
+        /**
          * Initialize the checker
          */
         bool Initialize(const std::string& filename);
@@ -66,13 +71,13 @@ class Dedupv1Checker {
          *
          * If check_log_only_ is set, the call returns immediately with the return code true.
          * If repair_ is set, the check tries to repair easy errors.
-		 */
+         */
         bool Check();
 
         /**
          * Closes the system.
          */
-        bool Close();
+        bool Stop();
 
         /**
          * returns the number of reported errors

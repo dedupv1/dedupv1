@@ -120,12 +120,16 @@ bool Dedupv1Reader::Read(uint32_t volume_id, uint64_t offset, uint64_t size) {
     return true;
 }
 
-bool Dedupv1Reader::Close() {
-    DEBUG("Closing dedupv1 reader");
+Dedupv1Reader::~Dedupv1Reader() {
+  if (system_) {
+    delete system_;
+  }
+}
+
+bool Dedupv1Reader::Stop() {
     if (system_) {
         CHECK(system_->Shutdown(dedupv1::StopContext::FastStopContext()), "Failed to start dedupv1 shutdown");
         CHECK(system_->Stop(), "Failed to stop dedupv1 system");
-        CHECK(system_->Close(), "Failed to close system");
     }
     return true;
 }

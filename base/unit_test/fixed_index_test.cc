@@ -59,7 +59,7 @@ protected:
 
     virtual void TearDown() {
         if (index) {
-            index->Close();
+            delete index;
             index = NULL;
         }
     }
@@ -100,7 +100,7 @@ TEST_P(FixedIndexTest, OpenWithChangedSize) {
     ASSERT_TRUE(index->SetOption("size", "16M"));
     ASSERT_TRUE(index->SetOption("width", "4K"));
     ASSERT_TRUE(index->Start(StartContext()));
-    ASSERT_TRUE(index->Close());
+    delete index;
     index = NULL;
 
     index = dynamic_cast<FixedIndex*>(IndexTest::CreateIndex(GetParam()));
@@ -118,7 +118,7 @@ TEST_P(FixedIndexTest, OpenWithChangedWidth) {
     ASSERT_TRUE(index->SetOption("size", "16M"));
     ASSERT_TRUE(index->SetOption("width", "2K"));
     ASSERT_TRUE(index->Start(StartContext()));
-    ASSERT_TRUE(index->Close());
+    delete index;
     index = NULL;
 
     index = dynamic_cast<FixedIndex*>(IndexTest::CreateIndex(GetParam()));
@@ -182,7 +182,7 @@ TEST_P(FixedIndexTest, OpenWithChangedFileFileCount) {
     ASSERT_TRUE(index->SetOption("size", "24M"));
     ASSERT_TRUE(index->SetOption("width", "2K"));
     ASSERT_TRUE(index->Start(StartContext()));
-    ASSERT_TRUE(index->Close());
+    delete index;
     index = NULL;
 
     index = dynamic_cast<FixedIndex*>(IndexTest::CreateIndex(GetParam()));

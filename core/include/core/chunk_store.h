@@ -120,12 +120,6 @@ class ChunkStore : public dedupv1::StatisticProvider {
     bool Run();
 
     /**
-     * Closes the chunk store and frees all its resources
-     * @return true iff ok, otherwise an error has occurred
-     */
-    bool Close();
-
-    /**
      * Stops background threads of the chunk store.
      *
      * The chunk store should not emit log entries during or after this call as the log is usually

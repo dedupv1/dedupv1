@@ -139,9 +139,7 @@ bool Threadpool::RunTask(const TaskData& task_data, priority prio) {
         if (!task_data.future()->Set(retval)) {
             WARNING("Failed to set future value: " << task_data.future());
         }
-        if (!task_data.future()->Close()) {
-            WARNING("Failed to close future: " << task_data.future());
-        }
+        delete task_data.future();
     }
 
     TRACE("Executed task: task id " << task_data.task_id() <<
@@ -236,12 +234,10 @@ bool Threadpool::Stop() {
                     if (!future->Abort()) {
                         WARNING("Failed to about a task future");
                     }
-                    if (!future->Close()) {
-                        WARNING("Failed to close a task future");
-                    }
+                    delete future;
                 }
                 if (r) {
-                    r->Close();
+                    delete r;
                 }
             }
         }
@@ -372,11 +368,11 @@ bool Threadpool::DoSubmit(Runnable<bool>* r, priority prio, overflow_strategy ov
         ", queue size " << queue_size_[prio] <<
         ", thread count " << thread_count_[prio]);
 
-    TaskData task_data(task_id, r, future);
+    Future<bool>* local_future = NULL;
     if (future) {
-        // if there is a future, it may returned to the user
-        future->AddRef();
+      local_future = future->AddRef();
     }
+    TaskData task_data(task_id, r, local_future);
     stats_.waiting_task_count_[prio]++;
     int queue_index = task_id % thread_count_[prio];
     DCHECK(queue_index < task_queue_[prio].size(),
@@ -389,8 +385,8 @@ bool Threadpool::DoSubmit(Runnable<bool>* r, priority prio, overflow_strategy ov
         if (this->task_queue_[prio][queue_index]->try_push(task_data)) {
         } else {
             stats_.waiting_task_count_[prio]--;
-            if (future) {
-                future->Close();
+            if (local_future) {
+                delete local_future;
             }
             if (overflow_method == CALLER_RUNS) {
                 stats_.caller_runs_count_[prio]++;
@@ -416,12 +412,14 @@ bool Threadpool::SubmitNoFuture(Runnable<bool>* r,
         overflow_method, NULL);
 }
 
-Future<bool>* Threadpool::Submit(Runnable<bool>* r, priority prio, overflow_strategy overflow_method) {
+Future<bool>* Threadpool::Submit(Runnable<bool>* r,
+    priority prio,
+    overflow_strategy overflow_method) {
     Future<bool>* future = new Future<bool>();
 
     bool result = DoSubmit(r, prio, overflow_method, future);
     if (!result) {
-        future->Close();
+        delete future;
         return NULL;
     }
     return future;

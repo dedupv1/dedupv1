@@ -78,11 +78,8 @@ protected:
 
     virtual void TearDown() {
         if (volume_info) {
-            ASSERT_TRUE(volume_info->Close());
+            delete volume_info;
             volume_info = NULL;
-        }
-        for (int i = 0; i < 4; i++) {
-            ASSERT_TRUE(volumes[i].Close());
         }
     }
 };

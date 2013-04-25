@@ -101,7 +101,7 @@ protected:
 
     virtual void TearDown() {
         if (ds) {
-            ASSERT_TRUE(ds->Close());
+            delete ds;
             ds = NULL;
         }
     }
@@ -165,7 +165,7 @@ protected:
         CHECK(ds->Shutdown(dedupv1::StopContext::FastStopContext()), "Failed to shutdown dedupv1");
         CHECK(t_run.Join(NULL), "Failed to join run thread");
 
-        ds->Close();
+        delete ds;
         ds = NULL;
 
         dedupv1::StartContext start_context2(dedupv1::StartContext::NON_CREATE);
@@ -322,7 +322,7 @@ TEST_F(Dedupv1dExecutionTest, Servicetime) {
         t = t2;
     }
 
-    ASSERT_TRUE(ds->Close());
+    delete ds;
     ds = NULL;
 
     sleep(1);
@@ -464,7 +464,7 @@ TEST_P(Dedupv1dExecutionTest, WriteOverwriteWhileIdle) {
 
     ASSERT_TRUE(ds->Shutdown(dedupv1::StopContext::FastStopContext())) << "Failed to shutdown dedupv1";
     ASSERT_TRUE(t.Join(NULL)) <<  "Failed to join run thread";
-    ASSERT_TRUE(ds->Close());
+    delete ds;
     ds = NULL;
 
     dedupv1::StartContext start_context2(dedupv1::StartContext::NON_CREATE);
@@ -509,7 +509,7 @@ TEST_P(Dedupv1dExecutionTest, WriteReadCloseRead) {
 
     ASSERT_TRUE(fp_write1 == fp_read1);
 
-    ASSERT_TRUE(ds->Close());
+    delete ds;
     ds = NULL;
 
     dedupv1::StartContext start_context2(dedupv1::StartContext::NON_CREATE);
@@ -557,7 +557,7 @@ TEST_P(Dedupv1dExecutionTest, WriteReadCloseReadWriteRead) {
 
     ASSERT_TRUE(fp_write1 == fp_read1);
 
-    ds->Close();
+    delete ds;
     ds = NULL;
 
     dedupv1::StartContext start_context2(dedupv1::StartContext::NON_CREATE,

@@ -46,7 +46,7 @@ void StorageTest::SetUp() {
 
 void StorageTest::TearDown() {
     if (storage) {
-        ASSERT_TRUE(storage->Close());
+        delete storage;
     }
 }
 

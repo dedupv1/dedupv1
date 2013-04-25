@@ -655,14 +655,6 @@ class CommandHandlerSession: public ScstCommandHandler {
         virtual ~CommandHandlerSession();
 
         /**
-         * Closes the command handler session and frees all its
-         * resources.
-         *
-         * @return
-         */
-        bool Close();
-
-        /**
          * returns the parent command handler of the session
          * @return
          */

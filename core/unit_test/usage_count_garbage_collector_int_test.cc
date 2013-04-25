@@ -182,7 +182,7 @@ protected:
 
     void Restart() {
         ASSERT_TRUE(system->Stop(StopContext::FastStopContext()));
-        ASSERT_TRUE(system->Close());
+        delete system;
         system = NULL;
         block_index = NULL;
         gc = NULL;
@@ -198,12 +198,12 @@ protected:
     virtual void TearDown() {
         if (system) {
             ASSERT_TRUE(system->Stop(StopContext::FastStopContext()));
-            ASSERT_TRUE(system->Close());
+            delete system;
             gc = NULL;
             block_index = NULL;
         }
         if (crashed_system) {
-            ASSERT_TRUE(crashed_system->Close());
+            delete crashed_system;
             crashed_system = NULL;
         }
         if (container_test_helper) {

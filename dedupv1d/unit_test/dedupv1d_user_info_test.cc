@@ -95,15 +95,15 @@ protected:
 
     virtual void TearDown() {
         if (user_info) {
-            ASSERT_TRUE(user_info->Close());
+            delete user_info;
             user_info = NULL;
         }
         if (target_info) {
-            ASSERT_TRUE(target_info->Close());
+            delete target_info;
             target_info = NULL;
         }
         if (volume_info) {
-            ASSERT_TRUE(volume_info->Close());
+            delete volume_info;
             volume_info = NULL;
         }
 
@@ -116,9 +116,9 @@ protected:
     }
 
     void Restart() {
-        ASSERT_TRUE(volume_info->Close());
-        ASSERT_TRUE(target_info->Close());
-        ASSERT_TRUE(user_info->Close());
+        delete volume_info;
+        delete target_info;
+        delete user_info;
 
         dedupv1::StartContext start_context(dedupv1::StartContext::NON_CREATE);
 

@@ -124,11 +124,6 @@ bool Index::IsPersistent() {
     return this->persistent_;
 }
 
-bool Index::Close() {
-    delete this;
-    return true;
-}
-
 std::string Index::PrintLockStatistics() {
     return "null";
 }

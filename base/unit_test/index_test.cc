@@ -71,7 +71,7 @@ void IndexTest::SetUp() {
 
 void IndexTest::TearDown() {
     if (index) {
-        ASSERT_TRUE(index->Close());
+        delete index;
     }
 }
 
@@ -130,7 +130,7 @@ bool IndexTest::Read(Index* index, int start, int end) {
 
 void IndexTest::Restart() {
     if (index) {
-        ASSERT_TRUE(index->Close());
+        delete index;
     }
     index = CreateIndex(config);
     ASSERT_TRUE(index) << "Failed to create index";
@@ -210,7 +210,7 @@ TEST_P(IndexTest, StartWithoutCreateAsSecondStart) {
 
     // normal start
     ASSERT_TRUE(index->Start(StartContext()));
-    ASSERT_TRUE(index->Close());
+    delete index;
     index = NULL;
 
     index = CreateIndex(config);
@@ -474,7 +474,7 @@ TEST_P(IndexTest, BatchedMultiThreadedWriteRead) {
     if (!index->IsPersistent()) {
         return;
     }
-    ASSERT_TRUE(index->Close());
+    delete index;
     index = NULL;
 
     index = CreateIndex(config);
@@ -532,7 +532,7 @@ TEST_P(IndexTest, MultiThreadedWriteRead) {
     if (!index->IsPersistent()) {
         return;
     }
-    ASSERT_TRUE(index->Close());
+    delete index;
     index = NULL;
 
     index = CreateIndex(config);

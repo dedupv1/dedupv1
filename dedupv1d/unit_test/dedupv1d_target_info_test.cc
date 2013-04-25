@@ -87,15 +87,15 @@ protected:
 
     virtual void TearDown() {
         if (target_info) {
-            ASSERT_TRUE(target_info->Close());
+            delete target_info;
             target_info = NULL;
         }
         if (volume_info) {
-            ASSERT_TRUE(volume_info->Close());
+            delete volume_info;
             volume_info = NULL;
         }
         if (user_info) {
-            ASSERT_TRUE(user_info->Close());
+            delete user_info;
             user_info = NULL;
         }
     }
@@ -113,9 +113,9 @@ protected:
     }
 
     void Restart() {
-        ASSERT_TRUE(target_info->Close());
-        ASSERT_TRUE(volume_info->Close());
-        ASSERT_TRUE(user_info->Close());
+        delete target_info;
+        delete user_info;
+        delete volume_info;
 
         // restart
         volume_info = new Dedupv1dVolumeInfo();

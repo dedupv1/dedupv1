@@ -149,11 +149,6 @@ public:
     bool Start(DedupSystem* system);
 
     /**
-     * @return true iff ok, otherwise an error has occurred
-     */
-    bool Close();
-
-    /**
      * Should only be called with a matching and successful ReadChunkInfo call
      * before.
      *

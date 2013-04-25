@@ -90,9 +90,6 @@ TCFixedIndex::TCFixedIndex() : IDBasedIndex(PERSISTENT_ITEM_COUNT | RETURNS_DELE
     checksum_ = true;
 }
 
-TCFixedIndex::~TCFixedIndex() {
-}
-
 bool TCFixedIndex::SetOption(const string& option_name, const string& option) {
 
     if (option_name == "filename") {
@@ -384,7 +381,7 @@ enum delete_result TCFixedIndex::Delete(const void* key, size_t key_size) {
     return DELETE_OK;
 }
 
-bool TCFixedIndex::Close() {
+TCFixedIndex::~TCFixedIndex() {
     for (size_t i = 0; i < this->fdb_.size(); i++) {
         if (this->fdb_[i]) {
             if (!tcfdbclose(this->fdb_[i])) {
@@ -395,7 +392,6 @@ bool TCFixedIndex::Close() {
         }
     }
     this->fdb_.clear();
-    return Index::Close();
 }
 
 string TCFixedIndex::PrintProfile() {

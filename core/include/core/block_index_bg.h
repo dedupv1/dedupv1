@@ -123,15 +123,6 @@ class BlockIndexBackgroundCommitter {
          */
         bool Stop(const dedupv1::StopContext& stop_context);
 
-        /**
-         * Close the block index background committer and
-         * free all its resources.
-         *
-         * If the system is running, the commiter is stopped during the close operation.
-         * @return true iff ok, otherwise an error has occurred
-         */
-        bool Close();
-
         DISALLOW_COPY_AND_ASSIGN(BlockIndexBackgroundCommitter);
 };
 }

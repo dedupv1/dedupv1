@@ -97,9 +97,6 @@ Dedupv1dVolume::Dedupv1dVolume(bool preconfigured) {
     this->state_ = DEDUPV1D_VOLUME_STATE_CREATED;
 }
 
-Dedupv1dVolume::~Dedupv1dVolume() {
-}
-
 bool Dedupv1dVolume::Start(DedupSystem* system) {
     CHECK(this->state_ == DEDUPV1D_VOLUME_STATE_CREATED, "Illegal state: " << this->state_);
     CHECK(this->id() != DedupVolume::kUnsetVolumeId, "Volume id not set");
@@ -326,7 +323,7 @@ bool Dedupv1dVolume::Runner(int thread_index) {
     }
     CHECK(scoped_lock.ReleaseLock(), "Failed to release volume lock: volume " << this->DebugString());
     if (chs) {
-        CHECK(chs->Close(), "Cannot close command handler session: volume " << this->DebugString());
+        delete chs;
         chs = NULL;
     }
     if (failed) {
@@ -512,19 +509,16 @@ bool Dedupv1dVolume::ChangeMaintenanceMode(bool maintaince_mode) {
     return true;
 }
 
-bool Dedupv1dVolume::Close() {
+Dedupv1dVolume::~Dedupv1dVolume() {
     DEBUG("Closing volume: " << this->DebugString());
 
-    bool failed = false;
     if (this->state() == DEDUPV1D_VOLUME_STATE_RUNNING || this->state() == DEDUPV1D_VOLUME_STATE_FAILED) {
         if (!this->Stop(dedupv1::StopContext::FastStopContext())) {
             ERROR("Cannot stop volume: " << this->DebugString());
-            failed = true;
         }
     }
     if (this->command_handler_threads_.size() > 0) {
         ERROR("Command threads not stopped: " << this->DebugString());
-        failed = true;
     }
 
     if (session_map_.size() > 0) {
@@ -536,12 +530,6 @@ bool Dedupv1dVolume::Close() {
         WARNING("Closing volume with open sessions: [" << Join(session_names.begin(), session_names.end(), ", ") << "]");
         session_map_.clear();
     }
-    if (!volume_.Close()) {
-        ERROR("Failed to close core volume");
-        failed = true;
-    }
-    delete this;
-    return !failed;
 }
 
 bool Dedupv1dVolume::AddSession(const Dedupv1dSession& session) {

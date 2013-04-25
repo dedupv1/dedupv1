@@ -54,9 +54,6 @@ DedupVolumeInfo::DedupVolumeInfo() {
     this->log_ = NULL;
 }
 
-DedupVolumeInfo::~DedupVolumeInfo() {
-}
-
 bool DedupVolumeInfo::Start(DedupSystem* system) {
     CHECK(system, "System not set");
     this->log_ = system->log();
@@ -75,8 +72,7 @@ bool DedupVolumeInfo::Start(DedupSystem* system) {
     return true;
 }
 
-bool DedupVolumeInfo::Close() {
-    bool failed = false;
+DedupVolumeInfo::~DedupVolumeInfo() {
     for (list<DedupVolume*>::iterator i = raw_configured_volume_.begin();
          i != raw_configured_volume_.end();
          ++i) {
@@ -86,10 +82,6 @@ bool DedupVolumeInfo::Close() {
         }
         if (FindVolume(volume->GetId())) {
             UnregisterVolume(volume);
-        }
-        if (!volume->Close()) {
-            ERROR("Failed to close volume");
-            failed = true;
         }
         delete volume;
         *i = NULL;
@@ -107,11 +99,8 @@ bool DedupVolumeInfo::Close() {
             volume_ids += ToString(volume->GetId());
         }
         volume_ids += "]";
-        ERROR("Volumes " << volume_ids << " is still registered");
-        failed = true;
+        WARNING("Volumes " << volume_ids << " is still registered");
     }
-    delete this;
-    return !failed;
 }
 
 bool DedupVolumeInfo::SetOption(const std::string& option_name, const std::string& option) {

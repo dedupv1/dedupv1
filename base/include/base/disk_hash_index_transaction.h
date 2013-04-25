@@ -193,6 +193,8 @@ class DiskHashIndexTransactionSystem {
          */
         explicit DiskHashIndexTransactionSystem(DiskHashIndex* index);
 
+        virtual ~DiskHashIndexTransactionSystem();
+
         /**
          * Configures the transaction system
          *
@@ -216,14 +218,6 @@ class DiskHashIndexTransactionSystem {
          * @return true iff ok, otherwise an error has occurred
          */
         bool Start(const dedupv1::StartContext& start_context, bool allow_restore);
-
-        /**
-         * Closes the transaction system and frees all its resources.
-         *
-         * This method should only be called if all open transactions are completed
-         * @return true iff ok, otherwise an error has occurred
-         */
-        bool Close();
 
         /**
          * Returns the pointer the the base index

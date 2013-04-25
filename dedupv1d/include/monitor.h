@@ -108,12 +108,6 @@ class MonitorAdapterRequest {
         virtual ~MonitorAdapterRequest();
 
         /**
-         * Closes the request and frees all its resources.
-         * @return
-         */
-        virtual bool Close();
-
-        /**
          * Returns the monitor data.
          *
          * A call should not take long as the execution of
@@ -156,7 +150,6 @@ class MonitorAdapter {
         MonitorAdapter();
         virtual ~MonitorAdapter();
 
-        virtual bool Close();
         virtual MonitorAdapterRequest* OpenRequest() = 0;
         virtual std::string GetContentType();
 };
@@ -174,15 +167,14 @@ class MonitorAdapter {
  */
 class MonitorRequest {
         DISALLOW_COPY_AND_ASSIGN(MonitorRequest);
-        
+
         MonitorSystem* monitor_system_;
         MonitorAdapterRequest* request_;
         dedupv1::base::MutexLock lock_;
     public:
         MonitorRequest(MonitorSystem* monitor_system, MonitorAdapterRequest* request);
+        ~MonitorRequest();
         inline MonitorAdapterRequest* request();
-
-        bool Close();
 
         static void RequestCallbackFree(void* cls);
         static ssize_t RequestCallback(void *cls, uint64_t pos, char *buf, size_t max);
@@ -221,8 +213,8 @@ class MonitorSystem {
         static const int kDefaultMonitorPort;
     private:
         DISALLOW_COPY_AND_ASSIGN(MonitorSystem);
-        
-        
+
+
         /**
          * Statistics
          */
@@ -232,12 +224,12 @@ class MonitorSystem {
             tbb::atomic<uint64_t> call_count_;
             dedupv1::base::Profile timing_;
         };
-        
+
         /**
          * Statistics about the monitor system
          */
         Statistics stats_;
-        
+
         /**
          * Vector of all configured monitor adapter instances
          */
@@ -293,7 +285,13 @@ class MonitorSystem {
 
         static void MHDLogHandler(void *cls, const char * fmt, va_list a);
 
-        int DoRequestCallback(struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **con_cls);
+        int DoRequestCallback(struct MHD_Connection *connection,
+            const char *url,
+            const char *method,
+            const char *version,
+            const char *upload_data,
+            size_t *upload_data_size,
+            void **con_cls);
     protected:
         /**
          * Finds a monitor adapter of the given type.
@@ -310,6 +308,8 @@ class MonitorSystem {
          * @return
          */
         MonitorSystem();
+
+        virtual ~MonitorSystem();
 
         /**
          * Registers a new monitor adapter under the given name.
@@ -363,12 +363,6 @@ class MonitorSystem {
         bool Stop(const dedupv1::StopContext& stop_context);
 
         /**
-         * Closes the monitor system and all its resources.
-         * @return
-         */
-        bool Close();
-
-        /**
          * returns the current state of the monitor
          * @return
          */
@@ -399,9 +393,9 @@ class MonitorSystem {
          * @return a vector with the names of all enabled monitors
          */
         std::vector<std::string> GetMonitorNames();
-        
+
     std::string PrintTrace();
-    
+
     std::string PrintProfile();
 
     public:

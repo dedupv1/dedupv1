@@ -161,23 +161,23 @@ bool daemonize(const string& daemon_name, const string& daemon_user, const strin
         CHECK(flock.valid(), "Failed to lock file " << lf->path());
         if (!flock.value()) {
             ERROR("Failed to get exclusive file lock: " << lf->path());
-            lf->Close();
+            delete lf;
             return false;
         }
         if (!lf->Truncate(0)) {
             ERROR("Failed to truncate lock file: " << lf->path());
-            lf->Close();
+            delete lf;
             return false;
         }
         string buffer = ToString(getpid());
         if (lf->Write(0, buffer.c_str(), buffer.size()) != buffer.size()) {
             ERROR("Failed to write pid: " << lf->path());
-            lf->Close();
+            delete lf;
             return false;
         }
         if (!lf->Sync()) {
             ERROR("Failed to fsync lock file: " << lf->path());
-            lf->Close();
+            delete lf;
             return false;
         }
     }

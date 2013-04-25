@@ -56,7 +56,7 @@ protected:
 
     virtual void TearDown() {
         if (index) {
-            index->Close();
+            delete index;
         }
     }
 };
@@ -128,7 +128,7 @@ TEST_F(DiskHashIndexTest, RecoverItemCount) {
     DiskHashIndex* dhi = dynamic_cast<DiskHashIndex*>(index);
     dhi->item_count_ = 0;
     dhi->version_counter_ = 0;
-    ASSERT_TRUE(index->Close());
+    delete index;
     index = NULL;
     dhi = NULL;
     index = IndexTest::CreateIndex(config);

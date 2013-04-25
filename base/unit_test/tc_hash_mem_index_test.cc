@@ -57,7 +57,7 @@ protected:
 
     virtual void TearDown() {
         if (index_) {
-            index_->Close();
+            delete index_;
         }
 
     }

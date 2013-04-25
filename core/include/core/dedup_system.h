@@ -356,13 +356,6 @@ class DedupSystem : public dedupv1::StatisticProvider {
     virtual bool Stop(const dedupv1::StopContext& stop_context);
 
     /**
-     * Closes the deduplication system and frees all its resources.
-     * The method should not fail if Start and/or Stop is not not called.
-     * @return true iff ok, otherwise an error has occurred
-     */
-    virtual bool Close();
-
-    /**
      * The make request method splits up the external (iSCSI) request into
      * several internal requests that have a most a size of a internal block.
      * The internal requests are delegated to the content storage component and processed

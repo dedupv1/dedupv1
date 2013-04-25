@@ -61,17 +61,7 @@ namespace monitor {
 
 const int MonitorSystem::kDefaultMonitorPort = DEDUPV1_DEFAULT_MONITOR_PORT;
 
-bool MonitorAdapterRequest::Close() {
-    delete this;
-    return true;
-}
-
 bool MonitorAdapterRequest::ParseParam(const std::string& key, const std::string& value) {
-    return true;
-}
-
-bool MonitorAdapter::Close() {
-    delete this;
     return true;
 }
 
@@ -166,9 +156,7 @@ bool MonitorSystem::RemoveAll() {
 
     std::map<std::string, MonitorAdapter*>::iterator i;
     for (i = this->instances_.begin(); i != this->instances_.end(); i++) {
-        if (!i->second->Close()) {
-            WARNING("Monitor close for monitor \"" << i->first << "\" failed");
-        }
+        delete i->second;
     }
     this->instances_.clear();
     monitor_count_ = 0;
@@ -200,9 +188,7 @@ bool MonitorSystem::Remove(const string& name) {
     std::map<std::string, MonitorAdapter*>::iterator i = instances_.find(name);
     CHECK(i != instances_.end(), "No monitor adapter " << name);
 
-    if (!i->second->Close()) {
-        WARNING("Monitor close for monitor \"" << name << "\" failed");
-    }
+    delete i->second;
     instances_.erase(i);
     monitor_count_--;
     CHECK(scoped_lock.ReleaseLock(), "Cannot unlock monitor");
@@ -303,12 +289,8 @@ ssize_t MonitorRequest::RequestCallback(void *cls, uint64_t pos, char *buf, size
     return ret;
 }
 
-bool MonitorRequest::Close() {
-    if (!this->request()->Close()) {
-        WARNING("Cannot close adapter request");
-    }
-    delete this;
-    return true;
+MonitorRequest::~MonitorRequest() {
+    delete request_;
 }
 
 void MonitorRequest::RequestCallbackFree(void* cls) {
@@ -317,9 +299,7 @@ void MonitorRequest::RequestCallbackFree(void* cls) {
         WARNING("Monitor request not set");
         return;
     }
-    if (!mr->Close()) {
-        WARNING("Failed to close monitor request");
-    }
+    delete mr;
     mr = NULL;
 }
 
@@ -510,7 +490,7 @@ bool MonitorSystem::Stop(const dedupv1::StopContext& stop_context) {
     return true;
 }
 
-bool MonitorSystem::Close() {
+MonitorSystem::~MonitorSystem() {
     DEBUG("Closing monitor");
     if (!this->Stop(dedupv1::StopContext::FastStopContext())) {
         WARNING("Cannot stop monitor server");
@@ -519,8 +499,6 @@ bool MonitorSystem::Close() {
         WARNING("Cannot remove monitor adapters");
     }
     MHD_set_panic_func(NULL, NULL);
-    delete this;
-    return true;
 }
 
 }

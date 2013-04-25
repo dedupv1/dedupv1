@@ -245,11 +245,6 @@ class TCHashIndex : public PersistentIndex {
 
         virtual uint64_t GetItemCount();
 
-        /**
-         * @return true iff ok, otherwise an error has occurred
-         */
-        virtual bool Close();
-
         virtual std::string PrintProfile();
 
         virtual uint64_t GetPersistentSize();

@@ -195,6 +195,8 @@ class ContainerStorageBackgroundCommitter {
          */
         ContainerStorageBackgroundCommitter();
 
+        virtual ~ContainerStorageBackgroundCommitter();
+
         /**
          * Configures the container storage bg committer.
          *
@@ -236,12 +238,6 @@ class ContainerStorageBackgroundCommitter {
          * @return
          */
         dedupv1::base::timed_bool Handover(Container* c, const ContainerStorageAddressData& address);
-
-        /**
-         * Closes the background committer
-         * @return true iff ok, otherwise an error has occurred
-         */
-        bool Close();
 
         /**
          * Stops the background committer

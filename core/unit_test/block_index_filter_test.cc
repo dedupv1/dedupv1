@@ -90,7 +90,7 @@ protected:
     virtual void TearDown() {
         if (system) {
             ASSERT_TRUE(system->Stop(StopContext::FastStopContext()));
-            ASSERT_TRUE(system->Close());
+            delete system;
         }
     }
 };
@@ -129,7 +129,7 @@ TEST_F(BlockIndexFilterTest, OverwriteAfterReplay) {
     volume = NULL;
     ASSERT_TRUE(system->log()->PerformFullReplayBackgroundMode(true));
     ASSERT_TRUE(system->Stop(StopContext::FastStopContext()));
-    ASSERT_TRUE(system->Close());
+    delete system;
     system = NULL;
 
     system = DedupSystemTest::CreateDefaultSystem("data/dedupv1_test.conf", &info_store, &tp, true, true);

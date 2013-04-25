@@ -58,9 +58,6 @@ LOGGER("FilterChain");
 namespace dedupv1 {
 namespace filter {
 
-FilterChain::~FilterChain() {
-}
-
 bool FilterChain::SetOption(const string& option_name, const string& option) {
 
     CHECK(option_name.size() > 0, "Option name not set");
@@ -287,25 +284,14 @@ dedupv1::filter::Filter* FilterChain::GetFilterByName(const std::string& name) {
     return NULL;
 }
 
-bool FilterChain::Close() {
-    DEBUG("Close filter chain");
+FilterChain::~FilterChain() {
     list<Filter*>::iterator i;
-    bool failed = false;
     for (i = this->chain_.begin(); i != this->chain_.end(); i++) {
         Filter* filter = *i;
-        if (!filter) {
-            failed = true;
-        } else {
-            string filter_name = filter->GetName();
-            if (!filter->Close()) {
-                ERROR("Failed to close filter: name " << filter_name);
-                failed = true;
-            }
-            filter = NULL;
+        if (filter) {
+            delete filter;
         }
     }
-    delete this;
-    return !failed;
 }
 
 bool FilterChain::PersistStatistics(std::string prefix, dedupv1::PersistStatistics* ps) {

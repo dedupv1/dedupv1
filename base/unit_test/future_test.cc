@@ -47,7 +47,7 @@ TEST_F(FutureTest, Nothing) {
     Future<int>* f = new Future<int>();
     ASSERT_TRUE(f);
 
-    ASSERT_TRUE(f->Close());
+    delete f;
 }
 
 /**
@@ -65,7 +65,7 @@ TEST_F(FutureTest, Get) {
     ASSERT_TRUE(f->Get(&i));
     ASSERT_EQ(10, i);
 
-    ASSERT_TRUE(f->Close());
+    delete f;
 }
 
 /**
@@ -79,7 +79,7 @@ TEST_F(FutureTest, Timeout) {
     ASSERT_TRUE(b.valid());
     ASSERT_FALSE(b.value());
 
-    ASSERT_TRUE(f->Close());
+    delete f;
 }
 
 /**
@@ -93,7 +93,7 @@ TEST_F(FutureTest, Abort) {
 
     ASSERT_TRUE(f->is_abort());
 
-    ASSERT_TRUE(f->Close());
+    delete f;
 }
 
 /**
@@ -103,11 +103,10 @@ TEST_F(FutureTest, RefCount) {
     Future<int>* f = new Future<int>();
     ASSERT_TRUE(f);
 
-    ASSERT_TRUE(f->AddRef());
+    Future<int>* f2 = f->AddRef();
+    ASSERT_TRUE(f2);
 
-    ASSERT_TRUE(f->Close());
-
-    ASSERT_FALSE(f->is_abort()); // there we only test that the test is not seg faulting.
-
-    ASSERT_TRUE(f->Close());
+    delete f;
+    ASSERT_FALSE(f2->is_abort()); // there we only test that the test is not seg faulting.
+    delete f2;
 }

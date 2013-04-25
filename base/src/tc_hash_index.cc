@@ -95,9 +95,6 @@ TCHashIndex::TCHashIndex() : PersistentIndex(PERSISTENT_ITEM_COUNT | RETURNS_DEL
     this->checksum_ = true;
 }
 
-TCHashIndex::~TCHashIndex() {
-}
-
 bool TCHashIndex::SetOption(const string& option_name, const string& option) {
     if (option_name == "filename") {
         CHECK(option.size() < 1024, "Illegal filename");
@@ -284,7 +281,7 @@ bool TCHashIndex::Start(const StartContext& start_context) {
                     // the only purpose of creating the wal file is that we want to control the permissions
                     File* wal_file = File::Open(wal_filename, O_RDWR | O_CREAT | O_LARGEFILE, start_context.file_mode().mode());
                     CHECK(wal_file, "Failed to create wal file " << wal_filename);
-                    CHECK(wal_file->Close(), "Failed to close wal file " << wal_filename);
+                    delete wal_file;
                 }
                 CHECK(File::Stat(wal_filename, &stat), "Failed stats of file: " << wal_filename);
                 if ((stat.st_mode & 0777) != start_context.file_mode().mode()) {
@@ -472,7 +469,7 @@ enum delete_result TCHashIndex::Delete(const void* key, size_t key_size) {
     return DELETE_OK;
 }
 
-bool TCHashIndex::Close() {
+TCHashIndex::~TCHashIndex() {
     for (size_t i = 0; i < this->hdb_.size(); i++) {
         if (this->hdb_[i]) {
             if (!tchdbclose(this->hdb_[i])) {
@@ -483,7 +480,6 @@ bool TCHashIndex::Close() {
         }
     }
     this->hdb_.clear();
-    return Index::Close();
 }
 
 string TCHashIndex::PrintProfile() {

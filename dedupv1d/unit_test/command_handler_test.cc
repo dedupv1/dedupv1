@@ -58,11 +58,11 @@ protected:
 
     virtual void TearDown() {
         if (chs) {
-            ASSERT_TRUE(chs->Close());
+            delete chs;
             chs = NULL;
         }
         if (volume) {
-            ASSERT_TRUE(volume->Close());
+            delete volume;
             volume = NULL;
         }
         if (ch) {
@@ -114,7 +114,7 @@ TEST_F(CommandHandlerTest, CreateSession) {
     ASSERT_EQ(chs->GetCommandHandler(), ch);
     ASSERT_EQ(ch->GetSessionCount(), 1);
 
-    chs->Close();
+    delete chs;
     chs = NULL;
     ASSERT_EQ(ch->GetSessionCount(), 0);
 
@@ -274,7 +274,7 @@ TEST_F(CommandHandlerTest, UnitAttentionAfterChangeToMaintainanceMode) {
 
     chs->DetachSession(++cmd_h, 1);
 
-    ASSERT_TRUE(chs->Close());
+    delete chs;
     chs = NULL;
 }
 

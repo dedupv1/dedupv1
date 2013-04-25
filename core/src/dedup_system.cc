@@ -177,9 +177,6 @@ DedupSystem::DedupSystem() {
     state_ = CREATED;
 }
 
-DedupSystem::~DedupSystem() {
-}
-
 bool DedupSystem::LoadOptions(const string& filename) {
     CHECK(this->state_ == CREATED, "Dedup system already started");
 
@@ -542,53 +539,35 @@ bool DedupSystem::Stop(const dedupv1::StopContext& stop_context) {
     return !failed;
 }
 
-bool DedupSystem::Close() {
-    bool result = true;
+DedupSystem::~DedupSystem() {
     DEBUG("Closing dedup subsystem");
 
     if (!this->Stop(StopContext::FastStopContext())) {
         ERROR("Failed to stop dedup system");
-        result = false;
     }
 
     if (this->gc_) {
-        if (!this->gc_->Close()) {
-            ERROR("gc close failed");
-            result = false;
-        }
+        delete gc_;
         this->gc_ = NULL;
     }
 
     if (this->chunk_index_) {
-        if (!this->chunk_index_->Close()) {
-            ERROR("Chunk index close failed");
-            result = false;
-        }
+        delete chunk_index_;
         this->chunk_index_ = NULL;
     }
 
     if (this->block_index_) {
-        if (!this->block_index_->Close()) {
-            ERROR("Block index close failed");
-            result = false;
-        }
         delete this->block_index_;
         this->block_index_ = NULL;
     }
 
     if (this->chunk_store_) {
-        if (!this->chunk_store_->Close()) {
-            WARNING("Chunk store close failed");
-            result = false;
-        }
+        delete chunk_store_;
         this->chunk_store_ = NULL;
     }
 
     if (this->filter_chain_) {
-        if (!this->filter_chain_->Close()) {
-            ERROR("Filter chain close failed");
-            result = false;
-        }
+        delete filter_chain_;
         this->filter_chain_ = NULL;
     }
 
@@ -596,37 +575,19 @@ bool DedupSystem::Close() {
     // as the sessions in the volumes held a
     // reference to the content storage
     if (this->volume_info_) {
-        if (!this->volume_info_->Close()) {
-            ERROR("Volume info close failed");
-            result = false;
-        }
+        delete volume_info_;
         this->volume_info_ = NULL;
     }
 
     if (this->content_storage_) {
-        if (!this->content_storage_->Close()) {
-            ERROR("Content store close failed");
-            result = false;
-        }
+        delete content_storage_;
         this->content_storage_ = NULL;
     }
 
     if (this->log_) {
-        if (!this->log_->Close()) {
-            ERROR("Log close failed");
-            result = false;
-        }
+        delete log_;
         this->log_ = NULL;
     }
-
-    if (!this->idle_detector_.Close()) {
-        ERROR("idle detection close failed");
-        result = false;
-    }
-
-    DEBUG("Closed dedup subsystem");
-    delete this;
-    return result;
 }
 
 ScsiResult DedupSystem::SyncCache() {

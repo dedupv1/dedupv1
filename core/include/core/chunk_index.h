@@ -474,12 +474,6 @@ public:
     virtual bool Run();
 
     /**
-     * Closes the chunk index and frees all its resources.
-     * @return true iff ok, otherwise an error has occurred
-     */
-    virtual bool Close();
-
-    /**
      * Stops the chunk index and especially the chunk index
      * background committer if used.
      *

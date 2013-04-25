@@ -137,9 +137,6 @@ DiskHashIndex::Statistics::Statistics() {
     write_cache_persisted_page_count_ = 0;
 }
 
-DiskHashIndex::~DiskHashIndex() {
-}
-
 bool DiskHashIndex::SetOption(const string& option_name, const string& option) {
     CHECK(this->state_ == INITED, "Index already started");
 
@@ -413,7 +410,7 @@ bool DiskHashIndex::Start(const StartContext& start_context) {
             }
 
             CHECK(tmp_file->Fallocate(0, file_size), "Error allocating index file " << this->filename_[i]);
-            tmp_file->Close();
+            delete tmp_file;
             tmp_file = NULL;
 
             // Now reopen (used to avoid O_SYNC while format)
@@ -2001,7 +1998,7 @@ uint64_t DiskHashIndex::GetTotalItemCount() {
     return this->total_item_count_ + (this->overflow_area_ ? this->overflow_area_->GetItemCount() : 0);
 }
 
-bool DiskHashIndex::Close() {
+DiskHashIndex::~DiskHashIndex() {
     DEBUG("Closing disk-based hash index");
 
     // we do not dump the data during closing as all data that is allowed to change
@@ -2012,30 +2009,22 @@ bool DiskHashIndex::Close() {
             if (!this->file_[i]->Sync()) {
                 WARNING("Failed to sync transaction file: " << this->file_[i]->path());
             }
-            if (!this->file_[i]->Close()) {
-                WARNING("Failed to close file " << this->filename_[i]);
-            }
+            delete file_[i];
             this->file_[i] = NULL;
         }
     }
     this->file_.clear();
 
     if (this->info_file_) {
-        if (!this->info_file_->Close()) {
-            WARNING("Cannot close chunk index log file");
-        }
+        delete info_file_;
         this->info_file_ = NULL;
     }
     if (this->overflow_area_) {
-        if (!this->overflow_area_->Close()) {
-            WARNING("Failed to close overflow area");
-        }
+        delete overflow_area_;
         this->overflow_area_ = NULL;
     }
     if (write_back_cache_) {
-        if (!write_back_cache_->Close()) {
-            WARNING("Failed to close write back cache");
-        }
+        delete write_back_cache_;
         write_back_cache_ = NULL;
     }
     for (int i = 0; i < cache_lines_.size(); i++) {
@@ -2047,15 +2036,9 @@ bool DiskHashIndex::Close() {
     }
     cache_lines_.clear();
     if (this->trans_system_) {
-        if (!this->trans_system_->Close()) {
-            WARNING("Failed to close transaction system");
-
-        }
-        delete this->trans_system_;
+        delete trans_system_;
         this->trans_system_ = NULL;
     }
-    delete this;
-    return true;
 }
 
 IndexIterator* DiskHashIndex::CreateIterator() {

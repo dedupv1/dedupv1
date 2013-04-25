@@ -370,11 +370,6 @@ class RabinChunkerSession : public ChunkerSession {
         virtual bool ChunkData(const byte* data,
                 unsigned int offset, unsigned int size, bool last_chunk_call, std::list<Chunk*>* chunks);
 
-	/**
-         * Closes the rabin chunker session and frees all its resources.
-         */
-        virtual bool Close();
-
         /**
          * return the number of bytes that are processed, but not assigned to a chunk
          */
@@ -398,14 +393,6 @@ class RabinChunkerSession : public ChunkerSession {
          * Clears the session
          */
         virtual bool Clear();
-
-        /**
-         * Checks if the constructor execution was successful
-         *
-         * TODO (dmeister): The alternative is a Init method as used in other classes
-         * @return
-         */
-        bool IsValid();
 };
 
 unsigned long long RabinChunkerSession::fingerprint() {

@@ -68,11 +68,6 @@ class ContainerGCStrategy : public dedupv1::StatisticProvider {
     virtual bool Stop(const dedupv1::StopContext& stop_context);
 
     /**
-     * @return true iff ok, otherwise an error has occurred
-     */
-    virtual bool Close();
-
-    /**
      *
      * Available options:
      * - type: String
@@ -274,11 +269,6 @@ class GreedyContainerGCStrategy : public ContainerGCStrategy {
          * @return true iff ok, otherwise an error has occurred
          */
         virtual bool SetOption(const std::string& option_name, const std::string& option);
-
-        /**
-         * @return true iff ok, otherwise an error has occurred
-         */
-        virtual bool Close();
 
         /**
          * @return true iff ok, otherwise an error has occurred

@@ -148,8 +148,6 @@ class DedupVolume : public dedupv1::StatisticProvider {
         */
         bool Start(DedupSystem* system, bool initial_maintaince_mode);
 
-        bool Close();
-
         bool ChangeMaintenanceMode(bool maintaince_mode);
 
         bool ChangeOptions(const std::list<std::pair<std::string, std::string> >& options);

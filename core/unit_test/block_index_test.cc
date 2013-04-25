@@ -89,7 +89,7 @@ protected:
     virtual void TearDown() {
         if (system) {
             ASSERT_TRUE(system->Stop(StopContext::FastStopContext()));
-            ASSERT_TRUE(system->Close());
+            delete system;
             system = NULL;
         }
         delete container_test_helper;
@@ -144,21 +144,21 @@ TEST_P(BlockIndexTest, IsSoftLimitReachedBeforeStart) {
     BlockIndex* block_index = new BlockIndex();
     ASSERT_TRUE(block_index);
     EXPECT_FALSE(block_index->IsSoftLimitReached());
-    EXPECT_TRUE(block_index->Close());
+    delete block_index;
 }
 
 TEST_P(BlockIndexTest, IsHardLimitReachedBeforeStart) {
     BlockIndex* block_index = new BlockIndex();
     ASSERT_TRUE(block_index);
     EXPECT_FALSE(block_index->IsHardLimitReached());
-    EXPECT_TRUE(block_index->Close());
+    delete block_index;
 }
 
 TEST_P(BlockIndexTest, GetActiveBlockCountBeforeStart) {
     BlockIndex* block_index = new BlockIndex();
     ASSERT_TRUE(block_index);
     EXPECT_EQ(0, block_index->GetActiveBlockCount());
-    EXPECT_TRUE(block_index->Close());
+    delete block_index;
 }
 
 TEST_P(BlockIndexTest, Start) {
@@ -233,7 +233,7 @@ TEST_P(BlockIndexTest, ReadWriteAfterClose) {
     ASSERT_TRUE(block_index->StoreBlock(orig, m1, NO_EC));
 
     ASSERT_TRUE(system->Stop(StopContext::FastStopContext()));
-    ASSERT_TRUE(system->Close());
+    delete system;
     system = DedupSystemTest::CreateDefaultSystem(GetParam(), &info_store, &tp, true, true);
     ASSERT_TRUE(system);
 
@@ -276,7 +276,7 @@ TEST_P(BlockIndexTest, ReadWriteWithFullyCommittedData) {
     ASSERT_TRUE(m1.Equals(m2)) << m1.DebugString() << std::endl << std::endl << m2.DebugString();
 
     ASSERT_TRUE(system->Stop(StopContext::FastStopContext()));
-    ASSERT_TRUE(system->Close());
+    delete system;
     system = DedupSystemTest::CreateDefaultSystem(GetParam(), &info_store, &tp, true, true);
     ASSERT_TRUE(system);
 
@@ -334,7 +334,7 @@ TEST_P(BlockIndexTest, ReadWriteWithCrashAfterCommit) {
     ASSERT_TRUE(container_meta_data_index->Delete(&container_id, sizeof(container_id)));
 
     ASSERT_TRUE(system->Stop(StopContext::FastStopContext()));
-    ASSERT_TRUE(system->Close());
+    delete system;
     system = DedupSystemTest::CreateDefaultSystem(GetParam(), &info_store, &tp, true, true);
     ASSERT_TRUE(system);
 
@@ -361,7 +361,8 @@ TEST_P(BlockIndexTest, ReadWriteWithPrecommittedData) {
 
     DEBUG("Restart");
     ASSERT_TRUE(system->Stop(StopContext::FastStopContext()));
-    ASSERT_TRUE(system->Close());
+    delete system;
+
     system = DedupSystemTest::CreateDefaultSystem(GetParam(), &info_store, &tp, true, true, true);
     ASSERT_TRUE(system);
 
@@ -385,7 +386,8 @@ TEST_P(BlockIndexTest, ReadWriteWithPrecommittedData) {
     ASSERT_TRUE(m1.Equals(m2)) << m1.DebugString() << std::endl << std::endl << m2.DebugString();
 
     ASSERT_TRUE(system->Stop(StopContext::FastStopContext()));
-    ASSERT_TRUE(system->Close());
+    delete system;
+
     system = DedupSystemTest::CreateDefaultSystem(GetParam(), &info_store, &tp, true, true, false, true);
     ASSERT_TRUE(system);
 
@@ -443,7 +445,7 @@ TEST_P(BlockIndexTest, ReadWriteWithFailedCommittedData) {
     ASSERT_TRUE(storage->FailWriteCacheContainer(container_test_helper->data_address(9)));
 
     ASSERT_TRUE(system->Stop(StopContext::FastStopContext()));
-    ASSERT_TRUE(system->Close());
+    delete system;
     system = NULL;
     storage = NULL;
 
@@ -512,7 +514,7 @@ TEST_P(BlockIndexTest, ReadWriteWithFailedCommittedData2) {
     ASSERT_TRUE(storage->FailWriteCacheContainer(container_test_helper->data_address(9)));
 
     ASSERT_TRUE(system->Stop(StopContext::FastStopContext()));
-    ASSERT_TRUE(system->Close());
+    delete system;
     system = NULL;
     storage = NULL;
 
@@ -579,7 +581,7 @@ TEST_P(BlockIndexTest, ReadWriteAfterCloseWithoutCommit) {
     final_mapping.set_version(m1.version());
     ASSERT_TRUE(m2.Equals(final_mapping)) << m2.DebugString() << std::endl << std::endl << final_mapping.DebugString();
 
-    system_backup->Close();
+    delete system_backup;
     system_backup = NULL;
 }
 
@@ -608,7 +610,7 @@ TEST_P(BlockIndexTest, ReadWriteAfterCloseWithCommit) {
 
     ASSERT_TRUE(system->Stop(StopContext::FastStopContext()));
 
-    ASSERT_TRUE(system->Close());
+    delete system;
     system = NULL;
 
     system = DedupSystemTest::CreateDefaultSystem(GetParam(), &info_store, &tp, true, true);
@@ -719,7 +721,7 @@ TEST_P(BlockIndexTest, PartiallyWrittenBlock) {
     ASSERT_TRUE(block_index->StoreBlock(orig, m1, NO_EC));
 
     ASSERT_TRUE(system->Stop(StopContext::FastStopContext()));
-    ASSERT_TRUE(system->Close());
+    delete system;
     system = NULL;
     block_index = NULL;
 
@@ -763,7 +765,7 @@ TEST_P(BlockIndexTest, PartiallyWrittenBlockDirtyReplay) {
     ASSERT_TRUE(block_index->StoreBlock(orig, m1, NO_EC));
 
     // only fast shutdown mode
-    ASSERT_TRUE(system->Close());
+    delete system;
     system = NULL;
     block_index = NULL;
 

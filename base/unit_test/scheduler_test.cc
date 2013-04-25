@@ -74,7 +74,7 @@ protected:
     }
 
     virtual void TearDown() {
-        ASSERT_TRUE(s.Close());
+        ASSERT_TRUE(s.Stop());
         ASSERT_TRUE(t.Stop());
     }
 

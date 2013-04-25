@@ -59,11 +59,11 @@ protected:
 
     virtual void TearDown() {
         if (smc) {
-            ASSERT_TRUE(smc->Close());
+            delete smc;
             smc = NULL;
         }
         if (system) {
-            ASSERT_TRUE(system->Close());
+            delete system;
         }
     }
 };

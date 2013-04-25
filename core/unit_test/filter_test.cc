@@ -54,7 +54,7 @@ void FilterTest::SetUp() {
 
 void FilterTest::TearDown() {
     if (filter) {
-        ASSERT_TRUE(filter->Close());
+        delete filter;
     }
 }
 
@@ -79,7 +79,7 @@ TEST_P(FilterTest, Create) {
 
 TEST_P(FilterTest, CreateDisabled) {
     if (filter) {
-        ASSERT_TRUE(filter->Close());
+        delete filter;
     }
     filter = CreateFilter(config + ";enabled=false");
     ASSERT_TRUE(filter) << "Failed to create filter";

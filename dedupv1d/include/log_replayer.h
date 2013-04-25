@@ -215,12 +215,6 @@ class LogReplayer: public dedupv1::IdleTickConsumer {
         bool Stop(const dedupv1::StopContext& stop_context);
 
         /**
-         * Closes the replayer and frees all its resources
-         * @return
-         */
-        bool Close();
-
-        /**
          * Pauses the log replayer.
          * @return
          */

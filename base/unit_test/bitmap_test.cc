@@ -50,7 +50,7 @@ protected:
             bitmap_ = 0;
         }
         if (index) {
-            index->Close();
+            delete index;
             index = NULL;
         }
         ASSERT_TRUE(ClearWork());
@@ -232,7 +232,7 @@ TEST_F(BitmapTest, Persistent)
             delete bitmap_;
             bitmap_ = NULL;
 
-            index->Close();
+            delete index;
             index = NULL;
             ClearWork();
         }

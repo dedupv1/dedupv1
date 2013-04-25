@@ -58,9 +58,6 @@ ChunkStore::ChunkStore() {
     chunk_storage_ = NULL;
 }
 
-ChunkStore::~ChunkStore() {
-}
-
 ChunkStore::Statistics::Statistics() {
     storage_reads_ = 0;
     storage_real_writes_ = 0;
@@ -104,14 +101,11 @@ bool ChunkStore::Flush(dedupv1::base::ErrorContext* ec) {
     return this->chunk_storage_->Flush(ec);
 }
 
-bool ChunkStore::Close() {
+ChunkStore::~ChunkStore() {
     if (this->chunk_storage_) {
-        CHECK(this->chunk_storage_->Close(), "Closing chunk storage failed");
+        delete chunk_storage_;
         this->chunk_storage_ = NULL;
     }
-    delete this;
-
-    return true;
 }
 
 bool ChunkStore::WriteBlock(ChunkMapping* chunk_mapping,

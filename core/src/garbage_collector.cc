@@ -133,10 +133,6 @@ GarbageCollector::GarbageCollector(enum gc_concept concept) : gc_concept_(concep
 GarbageCollector::~GarbageCollector() {
 }
 
-bool GarbageCollector::Init() {
-    return true;
-}
-
 bool GarbageCollector::SetOption(const std::string& option_name, const std::string& option) {
     ERROR("Invalid option: " << option_name << "=" << option);
     return false;
@@ -148,11 +144,6 @@ bool GarbageCollector::Start(const dedupv1::StartContext& start_context,
 }
 
 bool GarbageCollector::Stop(const dedupv1::StopContext& stop_context) {
-    return true;
-}
-
-bool GarbageCollector::Close() {
-    delete this;
     return true;
 }
 

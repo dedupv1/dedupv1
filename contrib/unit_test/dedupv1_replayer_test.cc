@@ -70,7 +70,7 @@ protected:
 
     virtual void TearDown() {
         if (system) {
-            ASSERT_TRUE(system->Close());
+            delete system;
         }
     }
 };
@@ -82,7 +82,7 @@ TEST_F(Dedupv1ReplayerTest, Init) {
     dedupv1::contrib::replay::Dedupv1Replayer replayer;
     ASSERT_FALSE(replayer.Initialize("data/dedupv1_test.conf")) <<
     "There is no system that can be replayed";
-    ASSERT_TRUE(replayer.Close());
+    ASSERT_TRUE(replayer.Stop());
 }
 
 TEST_F(Dedupv1ReplayerTest, Replay) {
@@ -105,12 +105,12 @@ TEST_F(Dedupv1ReplayerTest, Replay) {
     fclose(file);
     ASSERT_TRUE(system->Shutdown(dedupv1::StopContext::FastStopContext()));
     ASSERT_TRUE(system->Stop());
-    ASSERT_TRUE(system->Close());
+    delete system;
     system = NULL;
 
     // replay
     dedupv1::contrib::replay::Dedupv1Replayer replayer;
     ASSERT_TRUE(replayer.Initialize("data/dedupv1_test.conf"));
     ASSERT_TRUE(replayer.Replay());
-    ASSERT_TRUE(replayer.Close());
+    ASSERT_TRUE(replayer.Stop());
 }

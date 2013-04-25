@@ -152,10 +152,5 @@ bool BlockIndexBackgroundCommitter::Stop(const dedupv1::StopContext& stop_contex
     return !failed;
 }
 
-bool BlockIndexBackgroundCommitter::Close() {
-    // here it is ok, to not stop because the control lies in the block index mother component
-    return true;
-}
-
 }
 }

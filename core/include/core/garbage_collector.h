@@ -66,8 +66,6 @@ public:
      */
     virtual ~GarbageCollector();
 
-    virtual bool Init();
-
     /**
      * Starts the gc.
      *
@@ -102,12 +100,6 @@ public:
      * @return true iff ok, otherwise an error has occurred
      */
     virtual bool SetOption(const std::string& option_name, const std::string& option);
-
-    /**
-     * Closes the gc and frees all its resources
-     * @return true iff ok, otherwise an error has occurred
-     */
-    virtual bool Close();
 
     virtual bool StartProcessing();
 

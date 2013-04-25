@@ -1024,9 +1024,6 @@ ContainerStorage::Statistics::Statistics() : average_container_load_latency_(16)
     this->deleted_container_ = 0;
 }
 
-ContainerStorage::~ContainerStorage() {
-}
-
 bool ContainerStorage::SetOption(const string& option_name, const string& option) {
     if (option_name == "container-size") {
         CHECK(ToStorageUnit(option).valid(), "Illegal option " << option);
@@ -1351,7 +1348,6 @@ bool ContainerStorage::Start(const StartContext& start_context, DedupSystem* sys
             ScopedPtr<File> format_file(File::Open(this->file_[i].filename(), O_RDWR | O_LARGEFILE | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP));
             CHECK(format_file.Get(), "Failed to open file for formatting: " << this->file_[i].filename());
             CHECK(Format(this->file_[i], format_file.Get()), "Failed to format " << this->file_[i].filename());
-            CHECK(format_file.Release()->Close(), "Failed to close file " << this->file_[i].filename());
 
             ScopedPtr<File> tmp_file(File::Open(this->file_[i].filename(), O_RDWR | O_LARGEFILE | O_SYNC, 0));
             CHECK(tmp_file.Get(), "Failed to open container file " << file_[i].filename());
@@ -1494,7 +1490,7 @@ bool ContainerStorage::Run() {
     return true;
 }
 
-bool ContainerStorage::Close() {
+ContainerStorage::~ContainerStorage() {
     unsigned int i = 0;
 
     enum container_storage_state old_state = state_;
@@ -1507,7 +1503,7 @@ bool ContainerStorage::Close() {
 
     DEBUG("Closing container storage");
     if (this->gc_) {
-        CHECK(this->gc_->Close(), "Cannot close gc");
+        delete gc_;
         this->gc_ = NULL;
     }
 
@@ -1530,37 +1526,23 @@ bool ContainerStorage::Close() {
             WARNING("Container " << write_container->primary_id() << " not committed during shutdown");
         }
     }
-    if (!this->background_committer_.Close()) {
-        WARNING("Failed to close background committer");
-    }
-    if (!this->write_cache_.Close()) {
-        WARNING("Failed to close write cache");
-    }
     if (this->compression_) {
         // the compression must be closed after the last commit is done.s
         delete this->compression_;
         this->compression_ = NULL;
     }
     if (this->allocator_) {
-        CHECK(this->allocator_->Close(), "Failed to close allocator");
-        delete this->allocator_;
+        delete allocator_;
         this->allocator_ = NULL;
     }
     for (i = 0; i < this->file_.size(); i++) {
         if (this->file_[i].file()) {
-            if (!this->file_[i].file()->Close()) {
-                WARNING("Error closing container file");
-            }
+            delete file_[i].file();
         }
     }
     file_.clear();
-    if (!this->cache_.Close()) {
-        WARNING("Failed to close container read cache");
-    }
     if (this->meta_data_index_) {
-        if (!this->meta_data_index_->Close()) {
-            WARNING("Failed to close meta data index");
-        }
+        delete meta_data_index_;
         this->meta_data_index_ = NULL;
     }
     if (old_state == STARTED || old_state == RUNNING || old_state == STOPPED) {
@@ -1576,13 +1558,14 @@ bool ContainerStorage::Close() {
         }
     }
     if (this->state_ != STOPPED && this->timeout_committer_->IsStarted()) {
-        CHECK(this->timeout_committer_->Join(NULL), "Timeout committer returned false");
+        if(!this->timeout_committer_->Join(NULL)) {
+          WARNING("Timeout committer returned false");
+        }
     }
     if (timeout_committer_) {
         delete this->timeout_committer_;
     }
     chunk_index_ = NULL;
-    return Storage::Close();
 }
 
 bool ContainerStorage::Stop(const dedupv1::StopContext& stop_context) {
@@ -3276,7 +3259,7 @@ void ContainerStorage::ClearData() {
 
     this->background_committer_.Stop(dedupv1::StopContext::WritebackStopContext());
     if (this->meta_data_index_) {
-        this->meta_data_index_->Close();
+        delete meta_data_index_;
         this->meta_data_index_ = NULL;
     }
     chunk_index_ = NULL;

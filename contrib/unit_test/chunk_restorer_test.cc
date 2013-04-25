@@ -70,9 +70,9 @@ protected:
     }
 
     virtual void TearDown() {
-        EXPECT_TRUE(restorer.Close());
+        EXPECT_TRUE(restorer.Stop());
         if (system) {
-            ASSERT_TRUE(system->Close());
+            delete system;
         }
     }
 };
@@ -99,7 +99,7 @@ TEST_F(ChunkIndexRestorerTest, ChunkIndexRestorerRestore) {
 
     ASSERT_TRUE(system->Shutdown(dedupv1::StopContext()));
     ASSERT_TRUE(system->Stop());
-    ASSERT_TRUE(system->Close());
+    delete system;
     system = NULL;
 
     // TODO (dmeister): Get the filename directly from the config file
@@ -111,7 +111,7 @@ TEST_F(ChunkIndexRestorerTest, ChunkIndexRestorerRestore) {
     ASSERT_TRUE(restorer.RestoreChunkIndexFromContainerStorage());
 
     // Close down the restorer
-    restorer.Close();
+    restorer.Stop();
 }
 
 TEST_F(ChunkIndexRestorerTest, ChunkIndexRestorerFastShutdown) {
@@ -135,7 +135,7 @@ TEST_F(ChunkIndexRestorerTest, ChunkIndexRestorerFastShutdown) {
 
     ASSERT_TRUE(system->Shutdown(dedupv1::StopContext::FastStopContext()));
     ASSERT_TRUE(system->Stop());
-    ASSERT_TRUE(system->Close());
+    delete system;
     system = NULL;
 
     // TODO (dmeister): Get the filename directly from the config file
@@ -147,7 +147,7 @@ TEST_F(ChunkIndexRestorerTest, ChunkIndexRestorerFastShutdown) {
     ASSERT_TRUE(restorer.RestoreChunkIndexFromContainerStorage());
 
     // Close down the restorer
-    restorer.Close();
+    restorer.Stop();
 }
 
 TEST_F(ChunkIndexRestorerTest, ChunkIndexRestorerUsageCount) {
@@ -169,7 +169,7 @@ TEST_F(ChunkIndexRestorerTest, ChunkIndexRestorerUsageCount) {
 
     ASSERT_TRUE(system->Shutdown(dedupv1::StopContext()));
     ASSERT_TRUE(system->Stop());
-    ASSERT_TRUE(system->Close());
+    delete system;
     system = NULL;
 
     INFO("Before looking up mappings");
@@ -210,7 +210,7 @@ TEST_F(ChunkIndexRestorerTest, ChunkIndexRestorerUsageCount) {
 
     ASSERT_TRUE(system->Shutdown(dedupv1::StopContext::WritebackStopContext()));
     ASSERT_TRUE(system->Stop());
-    ASSERT_TRUE(system->Close());
+    delete system;
     system = NULL;
 
     // TODO (dmeister): Get the filename directly from the config file
@@ -222,7 +222,7 @@ TEST_F(ChunkIndexRestorerTest, ChunkIndexRestorerUsageCount) {
     ASSERT_TRUE(restorer.RestoreChunkIndexFromContainerStorage());
 
     // Close down the restorer
-    ASSERT_TRUE(restorer.Close());
+    ASSERT_TRUE(restorer.Stop());
     // Open yet another dedup system
     system = new Dedupv1d();
     ASSERT_TRUE(system->LoadOptions("data/dedupv1_test.conf"));
@@ -260,7 +260,7 @@ TEST_F(ChunkIndexRestorerTest, ChunkIndexRestorerEmptyFingerprint) {
 
     ASSERT_TRUE(system->Shutdown(dedupv1::StopContext()));
     ASSERT_TRUE(system->Stop());
-    ASSERT_TRUE(system->Close());
+    delete system;
     system = NULL;
 
     // TODO (dmeister): Get the filename directly from the config file
@@ -272,7 +272,7 @@ TEST_F(ChunkIndexRestorerTest, ChunkIndexRestorerEmptyFingerprint) {
     ASSERT_TRUE(restorer.RestoreChunkIndexFromContainerStorage());
 
     // Close down the restorer
-    ASSERT_TRUE(restorer.Close());
+    ASSERT_TRUE(restorer.Stop());
     // if the restore finished, without an error we are happy
 
 }

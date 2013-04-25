@@ -64,11 +64,6 @@ bool Storage::Stop(const dedupv1::StopContext& stop_context) {
     return true;
 }
 
-bool Storage::Close() {
-    delete this;
-    return true;
-}
-
 bool Storage::Flush(dedupv1::base::ErrorContext* ec) {
     return true;
 }

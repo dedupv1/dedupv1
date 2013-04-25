@@ -237,14 +237,7 @@ class ContainerStorageReadCache: public dedupv1::StatisticProvider {
          */
         explicit ContainerStorageReadCache(ContainerStorage* storage);
 
-        virtual ~ContainerStorageReadCache() {
-        }
-
-        /**
-         * Closes the read cache and frees all its resources.
-         * @return true iff ok, otherwise an error has occurred
-         */
-        bool Close();
+        virtual ~ContainerStorageReadCache();
 
         /**
          * Configures the read cache.
@@ -352,8 +345,8 @@ class ContainerStorageReadCache: public dedupv1::StatisticProvider {
         /**
          * Removes the given container from the cache if was in the cache.
          * If the container was not in the case, the method does nothing.
-         
-         * @param container_id container id to release from the cache line         
+
+         * @param container_id container id to release from the cache line
          * @param cache_entry valid and set cache entry. If successful, the cache entry is invalidated and the cache line
          * lock is released by this method.
          * @return true iff ok, otherwise an error has occurred

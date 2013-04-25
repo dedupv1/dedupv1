@@ -44,6 +44,8 @@ class ChunkIndexRestorer {
         FRIEND_TEST(DedupSystemTest, ChunkIndexRestorerRestore);
     public:
         ChunkIndexRestorer();
+        ~ChunkIndexRestorer();
+
 
         /**
         * Initializes the storage and chunk index from the config file.
@@ -58,7 +60,7 @@ class ChunkIndexRestorer {
         /**
         * Closes the system.
         */
-        bool Close();
+        bool Stop();
 
     private:
         dedupv1d::Dedupv1d* system_;

@@ -94,15 +94,14 @@ protected:
 
     virtual void TearDown() {
         if (chunk_store) {
-            ASSERT_TRUE(chunk_store->Close());
+            delete chunk_store;
         }
 
         if (log) {
-            ASSERT_TRUE(log->Close());
+            delete log;
         }
 
         if (idle_detector) {
-            ASSERT_TRUE(idle_detector->Close());
             delete idle_detector;
         }
 

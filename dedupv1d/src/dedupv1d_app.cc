@@ -275,10 +275,7 @@ int main(int argc, char** argv) {
         rc = 1;
     }
 
-    if (!ds->Close()) {
-        ERROR("Closing dedupv1d failed");
-        rc = 1;
-    }
+    delete ds;
     ds = NULL;
 
     google::protobuf::ShutdownProtobufLibrary();

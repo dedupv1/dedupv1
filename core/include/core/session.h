@@ -102,11 +102,6 @@ class Session {
         size_t buffer_size_;
 
         /**
-         * Fingerprint of the chunk filled with zeros.
-         */
-        bytestring empty_fp_;
-
-        /**
          * Session lock to avoid that a session is used by
          * more than one thread. Normally the session management
          * should be done by the SessionManagement class. And therefore
@@ -127,6 +122,8 @@ class Session {
          * @return
          */
         Session();
+
+        ~Session();
 
         /**
          * Inits a new session.
@@ -199,15 +196,6 @@ class Session {
      * @return true iff ok, otherwise an error has occurred
          */
         bool DeleteRequest(uint32_t index);
-
-        /**
-         * Closes the session and releases all it memory.
-         * However, the chunker session should be closed before because
-         * this might releases one or many new chunks that must be processed before
-         * the complete session can be closed.
-     * @return true iff ok, otherwise an error has occurred
-         */
-        bool Close();
 
         /**
          * Merges the open requests regarding the block with the given block mapping.

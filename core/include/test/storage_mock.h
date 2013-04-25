@@ -33,7 +33,6 @@ class MockStorage : public dedupv1::chunkstore::Storage {
 
         MOCK_METHOD2(Start, bool(const dedupv1::StartContext& start_context, dedupv1::DedupSystem* system));
         MOCK_METHOD0(Stop, bool());
-        MOCK_METHOD0(Close, bool());
 
         MOCK_METHOD1(IsCommittedWait, dedupv1::chunkstore::storage_commit_state(uint64_t address));
         MOCK_METHOD1(IsCommitted, dedupv1::chunkstore::storage_commit_state(uint64_t address));

@@ -135,9 +135,9 @@ bool DiskHashIndexTransactionSystem::Start(const StartContext& start_context, bo
         if (!allow_restore && this->transaction_file_[i]) {
             // the disk hash index as created a new set of file, then we should do the same
             INFO("Overwriting transaction file: " << this->transaction_filename_[i]);
-            this->transaction_file_[i]->Close();
-            CHECK(File::Remove(this->transaction_filename_[i]), "Failed to remove " << this->transaction_filename_[i]);
+            delete this->transaction_file_[i];
             this->transaction_file_[i] = NULL;
+            CHECK(File::Remove(this->transaction_filename_[i]), "Failed to remove " << this->transaction_filename_[i]);
         }
         if (this->transaction_file_[i] == NULL) {
             CHECK(start_context.create(), "Failed to open transaction file: " << this->transaction_filename_[i]);
@@ -343,8 +343,7 @@ bool DiskHashIndexTransactionSystem::Restore() {
     return !failed;
 }
 
-bool DiskHashIndexTransactionSystem::Close() {
-    bool failed = false;
+DiskHashIndexTransactionSystem::~DiskHashIndexTransactionSystem() {
     DEBUG("Close transaction system");
     for (std::vector<File*>::iterator i = transaction_file_.begin(); i != transaction_file_.end(); i++) {
         File* file = *i;
@@ -352,15 +351,11 @@ bool DiskHashIndexTransactionSystem::Close() {
             if (!file->Sync()) {
                 WARNING("Failed to sync transaction file: " << file->path());
             }
-            if (!file->Close()) {
-                WARNING("Failed to close transaction file: " << file->path());
-                failed = true;
-            }
+            delete file;
             *i = NULL;
         }
     }
     transaction_file_.clear();
-    return !failed;
 }
 
 bool DiskHashIndexTransaction::Init(DiskHashPage& original_page) {

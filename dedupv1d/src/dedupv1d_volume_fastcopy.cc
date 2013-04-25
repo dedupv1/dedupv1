@@ -369,14 +369,10 @@ bool Dedupv1dVolumeFastCopy::IsFastCopyTarget(uint32_t volume_id) {
     return fastcopy_map_.find(a, volume_id);
 }
 
-bool Dedupv1dVolumeFastCopy::Close() {
-    bool failed = false;
-
+Dedupv1dVolumeFastCopy::~Dedupv1dVolumeFastCopy() {
     if (!this->Stop(dedupv1::StopContext::FastStopContext())) {
         ERROR("Failed to stop volume fastcopy");
-        failed = true;
     }
-    return !failed;
 }
 
 #ifdef DEDUPV1D_TEST

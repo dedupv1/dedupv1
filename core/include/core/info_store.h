@@ -65,11 +65,6 @@ class InfoStore {
         /**
          * @return true iff ok, otherwise an error has occurred
          */
-        virtual bool Close();
-
-        /**
-         * @return true iff ok, otherwise an error has occurred
-         */
         virtual bool PersistInfo(std::string key, const google::protobuf::Message& message) = 0;
 
         virtual dedupv1::base::lookup_result RestoreInfo(std::string key, google::protobuf::Message* message) = 0;
@@ -108,11 +103,6 @@ class IndexInfoStore : public InfoStore {
          * @return true iff ok, otherwise an error has occurred
          */
         bool SetOption(const std::string& option_name, const std::string& option);
-
-        /**
-         * @return true iff ok, otherwise an error has occurred
-         */
-        bool Close();
 
         /**
          * @return true iff ok, otherwise an error has occurred

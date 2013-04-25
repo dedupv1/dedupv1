@@ -102,8 +102,7 @@ int main(int argc, char * argv[]) {
         ERROR("Unable to replay dedupv1 log");
         rc = 1;
     }
-    replayer.Close();
-    // Close down everyt
+    replayer.Stop();
     google::protobuf::ShutdownProtobufLibrary();
     return rc;
 }

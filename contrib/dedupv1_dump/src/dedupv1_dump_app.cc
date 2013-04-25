@@ -223,10 +223,7 @@ int main(int argc, char * argv[]) {
     if(!DumpLog(system->dedup_system())) {
         exit(1);
     }
-    INFO("Closing");
-    if(!system->Close()) {
-        WARNING("Failed to close system");
-    }
+    delete system;
     system = NULL;
 
     google::protobuf::ShutdownProtobufLibrary();

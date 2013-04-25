@@ -62,9 +62,6 @@ DedupVolume::DedupVolume() {
     maintainance_mode_ = false;
 }
 
-DedupVolume::~DedupVolume() {
-}
-
 bool DedupVolume::SetOption(const string& option_name, const string& option) {
     if (option_name == "logical-size") {
         CHECK(!system_, "System already started");
@@ -251,12 +248,12 @@ bool DedupVolume::ChangeMaintenanceMode(bool maintaince_mode) {
             CHECK(session_management_->GetAcquiredCount() == 0,
                 "Still sessions acquired");
 
-            session_management_->Close();
+            delete session_management_;
             session_management_ = NULL;
         }
         if (chunker_) {
-            chunker_->Close();
-            chunker_ = NULL;
+            delete chunker_;
+          chunker_ = NULL;
         }
     } else {
         // on
@@ -294,18 +291,14 @@ bool DedupVolume::ChangeMaintenanceMode(bool maintaince_mode) {
     return true;
 }
 
-bool DedupVolume::Close() {
-    DEBUG("Close " << this->DebugString());
+DedupVolume::~DedupVolume() {
     if (session_management_) {
-        CHECK(session_management_->Close(), "Failed to close sessions");
-        session_management_ = NULL;
+        delete session_management_;
     }
     if (chunker_) {
-        CHECK(chunker_->Close(), "Failed to close chunker");
+        delete chunker_;
         chunker_ = NULL;
     }
-
-    return true;
 }
 
 dedupv1::Chunker* DedupVolume::active_chunker() {

@@ -266,8 +266,6 @@ class SqliteIndex : public PersistentIndex {
 
     virtual uint64_t GetItemCount();
 
-    virtual bool Close();
-
     virtual bool SupportsCursor();
 
     virtual IndexCursor* CreateCursor();

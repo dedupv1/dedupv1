@@ -75,7 +75,7 @@ protected:
 
     virtual void TearDown() {
         if (group_info) {
-            ASSERT_TRUE(group_info->Close());
+            delete group_info;
             group_info = NULL;
         }
     }
@@ -87,7 +87,7 @@ protected:
     }
 
     void Restart() {
-        ASSERT_TRUE(group_info->Close());
+        delete group_info;
 
         // restart
         group_info = new Dedupv1dGroupInfo();

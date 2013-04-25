@@ -288,17 +288,10 @@ bool ContainerStorageBackgroundCommitter::Stop(const dedupv1::StopContext& stop_
     return true;
 }
 
-bool ContainerStorageBackgroundCommitter::Close() {
-
-    bool failed = false;
+ContainerStorageBackgroundCommitter::~ContainerStorageBackgroundCommitter() {
     if (!this->Stop(dedupv1::StopContext::FastStopContext())) {
         ERROR("Failed to stop background committer");
-        failed = true;
     }
-
-    CHECK(this->run_state_ == ContainerStorageBackgroundCommitter::CREATED ||
-        this->run_state_ == ContainerStorageBackgroundCommitter::STOPPED,
-        "Container background committer running: state " << this->run_state_);
     for (size_t i = 0; i < this->current_container_.size(); i++) {
         delete this->current_container_[i];
         this->current_container_[i] = NULL;
@@ -313,7 +306,6 @@ bool ContainerStorageBackgroundCommitter::Close() {
         delete this->start_barrier_;
         this->start_barrier_ = NULL;
     }
-    return !failed;
 }
 
 std::string ContainerStorageBackgroundCommitter::PrintEmbeddedTrace() {

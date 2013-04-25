@@ -53,56 +53,57 @@ namespace filter {
  *
  * \ingroup filterchain
  */
-class BlockIndexFilter : public Filter {
-private:
-
-    /**
-     * Statistics about the block index filter
-     */
-    class Statistics {
-public:
-        /**
-         * Constructor for the statistics
-         * @return
-         */
-        Statistics();
+class BlockIndexFilter: public Filter {
+    private:
 
         /**
-         * Number of filter reads
+         * Statistics about the block index filter
          */
-        tbb::atomic<uint64_t> reads_;
+        class Statistics {
+            public:
+                /**
+                 * Constructor for the statistics
+                 * @return
+                 */
+                Statistics();
+
+                /**
+                 * Number of filter reads
+                 */
+                tbb::atomic<uint64_t> reads_;
+
+                /**
+                 * Number of times the filter check hits
+                 */
+                tbb::atomic<uint64_t> hits_;
+
+                /**
+                 * Number of times the filter check misses
+                 */
+                tbb::atomic<uint64_t> miss_;
+
+                /**
+                 * Profiling information (filter time in ms)
+                 */
+                dedupv1::base::Profile time_;
+
+                /**
+                 * Profiling information (filter latency in ms)
+                 */
+                dedupv1::base::SimpleSlidingAverage average_latency_;
+        };
 
         /**
-         * Number of times the filter check hits
+         * Statistics about the block index filter
          */
-        tbb::atomic<uint64_t> hits_;
+        Statistics stats_;
 
-        /**
-         * Number of times the filter check misses
-         */
-        tbb::atomic<uint64_t> miss_;
+        blockindex::BlockIndex* block_index_;
 
-        /**
-         * Profiling information (filter time in ms)
-         */
-        dedupv1::base::Profile time_;
+        BlockChunkCache* block_chunk_cache_;
 
-        /**
-         * Profiling information (filter latency in ms)
-         */
-        dedupv1::base::SimpleSlidingAverage average_latency_;
-    };
+        bool use_block_chunk_cache_;
 
-    /**
-     * Statistics about the block index filter
-     */
-    Statistics stats_;
-
-    blockindex::BlockIndex* block_index_;
-
-    BlockChunkCache* block_chunk_cache_;
-
-    bool use_block_chunk_cache_;
 public:
     /**
      * Constructor.

@@ -42,7 +42,6 @@ protected:
 
     virtual void TearDown() {
         if (id) {
-            ASSERT_TRUE(id->Close());
             delete id;
             id = NULL;
         }

@@ -125,12 +125,6 @@ class Storage : public dedupv1::StatisticProvider {
     virtual bool Stop(const dedupv1::StopContext& stop_context);
 
     /**
-     * Closes the storage
-     * @return true iff ok, otherwise an error has occurred
-     */
-    virtual bool Close();
-
-    /**
      * Waits if the container is currently in the write cache or in the bg committer
      */
     virtual enum storage_commit_state IsCommittedWait(uint64_t address) = 0;

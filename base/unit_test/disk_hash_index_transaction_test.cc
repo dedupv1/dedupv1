@@ -64,7 +64,7 @@ protected:
     void Restart() {
         if (index) {
             ASSERT_TRUE(index);
-            ASSERT_TRUE(index->Close());
+            delete index;
         }
 
         CreateIndex();
@@ -110,7 +110,7 @@ protected:
 
     virtual void TearDown() {
         if (index) {
-            ASSERT_TRUE(index->Close());
+            delete index;
             trans_system = NULL;
         }
         if (buffer) {
@@ -218,7 +218,7 @@ TEST_F(DiskHashIndexTransactionTest, ScrambleTransactionData) {
     off_t transaction_area_file_size = trans_system->page_size();
 
     // crash
-    ASSERT_TRUE(index->Close());
+    delete index;
     index = NULL;
 
     File* transaction_file = File::Open("work/hash_test_trans", O_RDWR | O_LARGEFILE, 0);
@@ -228,7 +228,7 @@ TEST_F(DiskHashIndexTransactionTest, ScrambleTransactionData) {
     byte scample_buffer[transaction_area_file_size];
     memset(scample_buffer, 17, transaction_area_file_size);
     transaction_file->Write(transaction_area_file_offset, scample_buffer, transaction_area_file_size);
-    transaction_file->Close();
+    delete transaction_file;
     transaction_file = NULL;
 
     Restart();

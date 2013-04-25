@@ -243,9 +243,7 @@ int main(int argc, char * argv[]) {
         exit(1);
     }
     INFO("Closing");
-    if(!system->Close()) {
-        WARNING("Failed to close system");
-    }
+    delete system;
     system = NULL;
 
     google::protobuf::ShutdownProtobufLibrary();

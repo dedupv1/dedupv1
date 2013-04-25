@@ -68,7 +68,7 @@ class DedupVolumeInfo {
         DedupVolume* FindVolumeLocked(uint32_t id);
     public:
         DedupVolumeInfo();
-  
+
         virtual ~DedupVolumeInfo();
 
         /**
@@ -84,11 +84,6 @@ class DedupVolumeInfo {
      * @return true iff ok, otherwise an error has occurred
          */
         bool SetOption(const std::string& option_name, const std::string& option);
-
-        /**
-     * @return true iff ok, otherwise an error has occurred
-         */
-        bool Close();
 
         /**
         * Registers a new volume.

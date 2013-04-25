@@ -245,7 +245,7 @@ bool Dedupv1d::WriteDirtyState(const dedupv1::FileMode& file_mode, bool dirty, b
     CHECK(dirty_file->WriteSizedMessage(0, dirty_data, 8 * 4096, true) > 0,
         "Failed to write dirty file with data " << dirty_data.ShortDebugString());
     CHECK(dirty_file->Sync(), "Failed to sync dirty file");
-    CHECK(dirty_file->Close(), "Failed to close dirty file");
+    delete dirty_file;
     dirty_file = NULL;
 
     if (!dirty_file_exists.value() && file_mode.gid() != -1) {
@@ -273,12 +273,10 @@ Option<DirtyFileData> ReadDirtyFile(const std::string& filename) {
 
     if (!dirty_file->ReadSizedMessage(0, &dirty_data, 8 * 4096, true)) {
         ERROR("Failed to read dirty file: " << filename);
-        if (!dirty_file->Close()) {
-            WARNING("Failed to close dirty file: " << filename);
-        }
+        delete dirty_file;
         return false;
     }
-    CHECK(dirty_file->Close(), "Failed to close dirty file: " << filename);
+    delete dirty_file;
     return make_option(dirty_data);
 }
 
@@ -345,24 +343,24 @@ bool Dedupv1d::OpenLockfile() {
     CHECK(flock.valid(), "Failed to lock file " << lf->path());
     if (!flock.value()) {
         ERROR("Failed to get exclusive file lock: " << lf->path());
-        lf->Close();
+        delete lf;
         return false;
     }
     if (!lf->Truncate(0)) {
         ERROR("Failed to truncate lock file: " << lf->path());
-        lf->Close();
+        delete lf;
         return false;
     }
 
     string buffer = ToString(getpid());
     if (lf->Write(0, buffer.c_str(), buffer.size()) != buffer.size()) {
         ERROR("Failed to write pid: " << lf->path());
-        lf->Close();
+        delete lf;
         return false;
     }
     if (!lf->Sync()) {
         ERROR("Failed to fsync lock file: " << lf->path());
-        lf->Close();
+        delete lf;
         return false;
     }
 
@@ -668,18 +666,12 @@ bool Dedupv1d::Wait() {
     return !failed;
 }
 
-bool Dedupv1d::Close() {
-    bool failed = false;
-
+Dedupv1d::~Dedupv1d() {
     list<Dedupv1dVolume*>::iterator i;
     if (state_ == RUNNING || state_ == STARTED || state_ == STARTING) {
         if (!this->Stop()) {
             WARNING("Failed to stop dedupv1d");
         }
-    }
-    if (!this->scheduler_.Close()) {
-        ERROR("Failed to close scheduler");
-        failed = true;
     }
     if (this->monitor_) {
         if (this->monitor_->state() == MonitorSystem::MONITOR_STATE_STARTED) {
@@ -687,68 +679,36 @@ bool Dedupv1d::Close() {
                 WARNING("Cannot remove all monitor adapter");
             }
         }
-        if (!this->monitor_->Close()) {
-            ERROR("Cannot close monitor");
-            failed = true;
-        }
+        delete monitor_;
         this->monitor_ = NULL;
     }
     if (this->volume_info_) {
-        if (!this->volume_info_->Close()) {
-            ERROR("Cannot close volume info");
-            failed = true;
-        }
+        delete volume_info_;
         this->volume_info_ = NULL;
     }
     if (this->user_info_) {
-        if (!this->user_info_->Close()) {
-            ERROR("Cannot close user info");
-            failed = true;
-        }
+        delete user_info_;
         this->user_info_ = NULL;
     }
     if (this->target_info_) {
-        if (!this->target_info_->Close()) {
-            ERROR("Cannot close target info");
-            failed = true;
-        }
+        delete target_info_;
         this->target_info_ = NULL;
     }
     if (this->group_info_) {
-        if (!this->group_info_->Close()) {
-            ERROR("Cannot close group info");
-            failed = true;
-        }
+        delete group_info_;
         this->group_info_ = NULL;
     }
     if (this->log_replayer_) {
-        if (!this->log_replayer_->Close()) {
-            ERROR("Cannot close log replayer");
-            failed = true;
-        }
+        delete log_replayer_;
         this->log_replayer_ = NULL;
     }
     if (this->dedup_system_) {
-        if (!this->dedup_system_->Close()) {
-            ERROR("Cannot close dedup system");
-            failed = true;
-        }
+        delete dedup_system_;
         this->dedup_system_ = NULL;
     }
-    if (!this->persistent_stats_.Close()) {
-        ERROR("Failed to close persistent stats");
-        failed = true;
-    }
-
     if (!this->threads_.Stop()) {
         ERROR("cannot close threadpool");
-        failed = true;
     }
-    if (!this->info_store_.Close()) {
-        ERROR("Cannot close info store");
-        failed = true;
-    }
-
     if (this->lockfile_handle_) {
         string lockfile_path = lockfile_handle_->path();
         Option<bool> exists = File::Exists(lockfile_path);
@@ -757,14 +717,10 @@ bool Dedupv1d::Close() {
                 WARNING("Failed to remove lockfile");
             }
         }
-        this->lockfile_handle_->Close();
+        delete lockfile_handle_;
         this->lockfile_handle_ = NULL;
     }
-
     monitor_config_.clear();
-    delete this;
-    INFO("Shutdown dedupv1d complete");
-    return !failed;
 }
 
 bool Dedupv1d::LoadOptions(const string& filename) {
@@ -1022,9 +978,7 @@ bool Dedupv1d::Stop() {
         if (!lockfile_handle_->Unlock()) {
             WARNING("Failed to unlock lock file");
         }
-        if (!lockfile_handle_->Close()) {
-            WARNING("Failed to close lock file");
-        }
+        delete lockfile_handle_;
         lockfile_handle_ = NULL;
     }
 

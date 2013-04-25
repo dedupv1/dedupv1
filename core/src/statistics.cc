@@ -72,9 +72,6 @@ IndexPersistentStatistics::IndexPersistentStatistics() {
 #endif
 }
 
-IndexPersistentStatistics::~IndexPersistentStatistics() {
-}
-
 bool IndexPersistentStatistics::Start(const dedupv1::StartContext& start_context) {
     CHECK(!started_, "Statistics already started");
     DEBUG("Starting persistent statistics");
@@ -101,15 +98,11 @@ bool IndexPersistentStatistics::SetOption(const std::string& option_name, const 
     return true;
 }
 
-bool IndexPersistentStatistics::Close() {
-    bool failed = false;
+IndexPersistentStatistics::~IndexPersistentStatistics() {
     if (index_) {
-        if (!index_->Close()) {
-            WARNING("Failed to close stats index");
-        }
+        delete index_;
         index_ = NULL;
     }
-    return !failed;
 }
 
 bool IndexPersistentStatistics::Persist(const std::string& key, const google::protobuf::Message& message) {
@@ -152,9 +145,7 @@ void IndexPersistentStatistics::ClearData() {
     data_cleared_ = true;
     ThreadUtil::Sleep(1, ThreadUtil::SECONDS);
     if (this->index_) {
-        if (!this->index_->Close()) {
-            WARNING("Failed to close stats info");
-        }
+        delete index_;
         this->index_ = NULL;
     }
 }

@@ -53,8 +53,6 @@ class LogMonitorAdapter : public DefaultMonitorAdapter {
     explicit LogMonitorAdapter(dedupv1d::Dedupv1d* ds);
     virtual std::string Monitor();
     virtual bool ParseParam(const std::string& key, const std::string& value);
-
-    virtual bool Close();
 };
 
 }

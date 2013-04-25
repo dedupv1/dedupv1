@@ -67,11 +67,11 @@ protected:
 
     virtual void TearDown() {
         if (dsv) {
-            ASSERT_TRUE(dsv->Close());
+            delete dsv;
             dsv = NULL;
         }
         if (dedup_system) {
-            ASSERT_TRUE(dedup_system->Close());
+            delete dedup_system;
             dedup_system = NULL;
         }
     }

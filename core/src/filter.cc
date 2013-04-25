@@ -79,11 +79,6 @@ bool Filter::Abort(Session* session,
     return true;
 }
 
-bool Filter::Close() {
-    delete this;
-    return true;
-}
-
 bool Filter::SetOption(const string& option_name, const string& option) {
     if (option_name == "enabled") {
         Option<bool> b = To<bool>(option);

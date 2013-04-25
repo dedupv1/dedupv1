@@ -51,7 +51,7 @@ protected:
 
     virtual void TearDown() {
         if (rmc) {
-            rmc->Close();
+            delete rmc;
             rmc = NULL;
         }
     }

@@ -77,6 +77,8 @@ class Socket {
          */
         Socket();
 
+        ~Socket();
+
         /**
         * Creates a new socket.
         * @param domain Protocol family. One of AF_INET, AF_INET6, AF_LOCAL, AF_ROUTE, AF_KEY
@@ -120,12 +122,6 @@ class Socket {
          * @return true iff ok, otherwise an error has occurred
          */
         bool Connect(const std::string& host, in_port_t port);
-
-        /**
-         * Closes the socket.
-         * @return true iff ok, otherwise an error has occurred
-         */
-        bool Close();
 
         /**
          * Wait until new incoming connections are accepted.

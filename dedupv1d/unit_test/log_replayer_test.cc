@@ -100,15 +100,14 @@ protected:
 
     virtual void TearDown() {
         if (log_replayer) {
-            ASSERT_TRUE(log_replayer->Close());
+            delete log_replayer;
             log_replayer = NULL;
         }
         if (log) {
-            ASSERT_TRUE(log->Close());
+            delete log;
             log = NULL;
         }
         if (idle) {
-            ASSERT_TRUE(idle->Close());
             delete idle;
             idle = NULL;
         }

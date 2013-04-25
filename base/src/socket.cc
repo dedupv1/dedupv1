@@ -128,13 +128,12 @@ bool Socket::Connect(const string& host, in_port_t port) {
     return true;
 }
 
-bool Socket::Close() {
+Socket::~Socket() {
     if (this->state == SOCKET_STATE_BIND || this->state == SOCKET_STATE_CONNECTED) {
         if (shutdown(this->fd, 0) == -1) {
             WARNING("Failed to shutdown socket: " << strerror(errno));
         }
     }
-    return true;
 }
 
 Socket* Socket::Accept(struct sockaddr_in* addr) {

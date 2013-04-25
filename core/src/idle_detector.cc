@@ -78,10 +78,6 @@ IdleDetector::IdleDetector()
     this->last_tick_time_ = tbb::tick_count::now();
 }
 
-IdleDetector::~IdleDetector() {
-
-}
-
 bool IdleDetector::SetOption(const string& option_name, const string& option) {
     if (option_name == "idle-throughput") {
         CHECK(ToStorageUnit(option).valid(), "Illegal option " << option);
@@ -143,11 +139,13 @@ bool IdleDetector::Stop(const dedupv1::StopContext& stop_context) {
     return true;
 }
 
-bool IdleDetector::Close() {
+IdleDetector::~IdleDetector() {
     DEBUG("Closing idle detection");
 
     if (this->state_ == RUNNING) {
-        CHECK(this->Stop(dedupv1::StopContext::FastStopContext()), "Cannot stop idle thread");
+        if(!this->Stop(dedupv1::StopContext::FastStopContext())) {
+          WARNING("Cannot stop idle thread");
+      }
     }
 
     if (this->consumer_.size() > 0) {
@@ -156,9 +154,8 @@ bool IdleDetector::Close() {
         for (i = this->consumer_.begin(); i != this->consumer_.end(); i++) {
             consumer_names.push_back(i->first);
         }
-        ERROR("Cannot close idle detector with consumers: [" << Join(consumer_names.begin(), consumer_names.end(), ", ") << "]");
+        WARNING("Closing idle detector with consumers: [" << Join(consumer_names.begin(), consumer_names.end(), ", ") << "]");
     }
-    return true;
 }
 
 bool IdleDetector::ForceIdle(bool new_idle_value) {

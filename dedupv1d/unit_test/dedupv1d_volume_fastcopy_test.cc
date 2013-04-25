@@ -159,24 +159,24 @@ protected:
 
     virtual void TearDown() {
         if (volume_info) {
-            ASSERT_TRUE(volume_info->Close());
+            delete volume_info;
             volume_info = NULL;
             fast_copy = NULL;
         }
         if (target_info) {
-            ASSERT_TRUE(target_info->Close());
+            delete target_info;
             target_info = NULL;
         }
         if (group_info) {
-            ASSERT_TRUE(group_info->Close());
+            delete group_info;
             group_info = NULL;
         }
         if (base_volume_info) {
-            ASSERT_TRUE(base_volume_info->Close());
+            delete base_volume_info;
             base_volume_info = NULL;
         }
         if (user_info) {
-            ASSERT_TRUE(user_info->Close());
+            delete user_info;
             user_info = NULL;
         }
     }
@@ -212,19 +212,19 @@ protected:
     }
 
     void Restart() {
-        ASSERT_TRUE(volume_info->Close());
+        delete volume_info;
         volume_info = NULL;
         fast_copy = NULL;
 
-        base_volume_info->Close();
+        delete base_volume_info;
         base_volume_info = new DedupVolumeInfo();
         ASSERT_TRUE(base_volume_info);
         ASSERT_TRUE(base_volume_info->Start(&dedup_system));
         EXPECT_CALL(dedup_system, volume_info()).WillOnce(Return(base_volume_info));
 
-        ASSERT_TRUE(group_info->Close());
-        ASSERT_TRUE(target_info->Close());
-        ASSERT_TRUE(user_info->Close());
+        delete group_info;
+        delete target_info;
+        delete user_info;
         // restart
 
         dedupv1::StartContext start_context(dedupv1::StartContext::NON_CREATE);

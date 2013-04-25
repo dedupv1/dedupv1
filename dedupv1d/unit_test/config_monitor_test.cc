@@ -77,7 +77,7 @@ protected:
 
     virtual void TearDown() {
         if (ds) {
-            ASSERT_TRUE(ds->Close());
+            delete ds;
             ds = NULL;
             m = NULL;
         }

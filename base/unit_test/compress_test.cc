@@ -62,9 +62,7 @@ protected:
         if (comp) {
             delete comp;
         }
-        if (file) {
-            file->Close();
-        }
+        delete file;
     }
 };
 

@@ -129,6 +129,8 @@ class Dedupv1dUserInfo {
          */
         Dedupv1dUserInfo();
 
+        virtual ~Dedupv1dUserInfo();
+
         /**
          * Starts the user info.
          *
@@ -151,13 +153,6 @@ class Dedupv1dUserInfo {
          * @return true iff ok, otherwise an error has occurred
          */
         bool SetOption(const std::string& option_name, const std::string& option);
-
-
-        /**
-         * closes the user info and frees all its resources.
-         * @return true iff ok, otherwise an error has occurred
-         */
-        bool Close();
 
         /**
          *

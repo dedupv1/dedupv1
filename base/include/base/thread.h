@@ -87,7 +87,7 @@ class ThreadImpl {
          */
         ThreadImpl(void* context, void*(*runner)(void*));
 
-        /** 
+        /**
          * returns true iff the thread is started
          */
         bool IsStarted();
@@ -107,7 +107,7 @@ class ThreadImpl {
          * Detach the thread.
          */
         bool Detach();
-        
+
         /**
          * Cancels a thread
          */
@@ -176,7 +176,7 @@ template<class RT> class Thread {
             FINISHED,
             JOINING,
             JOINED,
-            
+
             /**
              * Starting the thread failed
              */
@@ -272,7 +272,7 @@ template<class RT> class Thread {
          * @return true iff the thread is finished
          */
         bool IsFinished();
-        
+
         /**
          * Returns true iff the thread failed, e.g. at the start.
          */
@@ -295,23 +295,23 @@ template<class RT> class Thread {
          * @return true iff ok, otherwise an error has occurred
          */
         bool Join(RT* return_value);
-        
+
         /**
          * Cancels a thread
-         * 
+         *
          * This is the last-resort. Always.
          * The thread is canceled the moment it reached a
-         * cancelation point and exits there. 
+         * cancelation point and exits there.
          * No memory is freed, no locks are released.
          * Don't do this until it is the last resort, e.g. to stop the system
          */
         bool Cancel();
-        
+
         /**
          * Detach the thread.
          */
         bool Detach();
-        
+
         /**
          * Convenience method used to execute a runnable,
          * wait for its completion and return the result.
@@ -480,7 +480,7 @@ template<class RT> Thread<RT>::~Thread() {
                 //thread not yet started
                 this->runnable_ = NULL;
                 if (r) {
-                    r->Close();
+                    delete r;
                 }
             }
         }
@@ -495,8 +495,8 @@ template<class RT> bool Thread<RT>::Start() {
         enum ThreadState old_state = state_;
         if (this->state_ == CREATED) {
             this->state_ = STARTED;
-        } 
-        
+        }
+
         // let the real error be handled by the impl.
         // we can't do logging here.
         bool ret = this->impl_->Start(this->prio_);
@@ -572,4 +572,4 @@ template<class RT> bool Thread<RT>::Join(RT* return_value) {
 
 #endif  // THREAD_H__
 
-  
+

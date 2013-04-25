@@ -169,7 +169,7 @@ lookup_result ContainerStorageWriteCache::GetWriteCacheContainer(uint64_t addres
     return LOOKUP_NOT_FOUND;
 }
 
-bool ContainerStorageWriteCache::Close() {
+ContainerStorageWriteCache::~ContainerStorageWriteCache() {
     storage_ = NULL;
     if (this->write_container.size() > 0) {
         for (int i = 0; i < this->write_container_count_; i++) {
@@ -181,13 +181,9 @@ bool ContainerStorageWriteCache::Close() {
         this->write_container.clear();
     }
     if (this->write_cache_strategy_) {
-        if (!this->write_cache_strategy_->Close()) {
-            WARNING("Failed to close write cache strategy");
-        }
-        delete this->write_cache_strategy_;
+        delete write_cache_strategy_;
         this->write_cache_strategy_ = NULL;
     }
-    return true;
 }
 
 bool ContainerStorageWriteCache::GetWriteCacheContainerByIndex(int index, Container** write_container, ReadWriteLock** write_cache_lock) {
@@ -291,10 +287,6 @@ bool ContainerStorageWriteCacheStrategy::Start(ContainerStorageWriteCache* write
     return true;
 }
 
-bool ContainerStorageWriteCacheStrategy::Close() {
-    return true;
-}
-
 ContainerStorageWriteCacheStrategy* RoundRobinContainerStorageWriteCacheStrategy::CreateWriteCacheStrategy() {
     return new RoundRobinContainerStorageWriteCacheStrategy();
 }
@@ -356,9 +348,6 @@ EarliestFreeContainerStorageWriteCacheStrategy::EarliestFreeContainerStorageWrit
     this->fallback_strategy = NULL;
 }
 
-EarliestFreeContainerStorageWriteCacheStrategy::~EarliestFreeContainerStorageWriteCacheStrategy() {
-}
-
 bool EarliestFreeContainerStorageWriteCacheStrategy::Start(ContainerStorageWriteCache* write_cache) {
     CHECK(write_cache, "Write cache not set");
     this->write_cache = write_cache;
@@ -370,15 +359,11 @@ bool EarliestFreeContainerStorageWriteCacheStrategy::Start(ContainerStorageWrite
     return true;
 }
 
-bool EarliestFreeContainerStorageWriteCacheStrategy::Close() {
+EarliestFreeContainerStorageWriteCacheStrategy::~EarliestFreeContainerStorageWriteCacheStrategy() {
     if (this->fallback_strategy) {
-        if (!this->fallback_strategy->Close()) {
-            WARNING("Failed to close fallback strategy");
-        }
-        delete this->fallback_strategy;
+        delete fallback_strategy;
         this->fallback_strategy = NULL;
     }
-    return ContainerStorageWriteCacheStrategy::Close();
 }
 
 bool EarliestFreeContainerStorageWriteCacheStrategy::GetNextWriteCacheContainer(Container** write_container,
@@ -426,7 +411,7 @@ ContainerStorageWriteCacheStrategy* ContainerStorageWriteCacheStrategyFactory::C
         CHECK_RETURN(a, NULL, "Cannot create new write cache strategy " << name);
         if (!a->Init()) {
             ERROR("Cannot init new write cache strategy: " << name);
-            a->Close();
+            delete a;
             return NULL;
         }
         return a;

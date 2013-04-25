@@ -52,7 +52,7 @@ protected:
 
     virtual void TearDown() {
         if (index) {
-            ASSERT_TRUE(index->Close());
+            delete index;
         }
     }
 };

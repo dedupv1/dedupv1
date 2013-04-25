@@ -139,6 +139,8 @@ class Dedupv1dTargetInfo {
          */
         Dedupv1dTargetInfo();
 
+        virtual ~Dedupv1dTargetInfo();
+
         /**
          * Starts the target info.
          *
@@ -167,13 +169,6 @@ class Dedupv1dTargetInfo {
          * @return true iff ok, otherwise an error has occurred
          */
         bool SetOption(const std::string& option_name, const std::string& option);
-
-
-        /**
-         * Closes the target info and frees all its resources.
-         * @return true iff ok, otherwise an error has occurred
-         */
-        bool Close();
 
         /**
          *

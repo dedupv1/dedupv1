@@ -99,9 +99,6 @@ TCBTreeIndex::TCBTreeIndex() : PersistentIndex(PERSISTENT_ITEM_COUNT | RETURNS_D
     this->estimated_max_items_per_bucket_ = kDefaultEstimatedMaxItemsPerBucket;
 }
 
-TCBTreeIndex::~TCBTreeIndex() {
-}
-
 TCBTreeIndex::Statistics::Statistics() {
     this->lock_busy_ = 0;
     this->lock_free_ = 0;
@@ -315,7 +312,7 @@ bool TCBTreeIndex::Start(const StartContext& start_context) {
                     // the only purpose of creating the wal file is that we want to control the permissions
                     File* wal_file = File::Open(wal_filename, O_RDWR | O_CREAT | O_LARGEFILE, start_context.file_mode().mode());
                     CHECK(wal_file, "Failed to create wal file " << wal_filename);
-                    CHECK(wal_file->Close(), "Failed to close wal file " << wal_filename);
+                    delete wal_file;
                 }
                 CHECK(File::Stat(wal_filename, &stat), "Failed stats of file: " << wal_filename);
 
@@ -561,7 +558,7 @@ enum delete_result TCBTreeIndex::Delete(const void* key, size_t key_size) {
     return DELETE_OK;
 }
 
-bool TCBTreeIndex::Close() {
+TCBTreeIndex::~TCBTreeIndex() {
     for (size_t i = 0; i < this->bdb_.size(); i++) {
         if (this->bdb_[i]) {
             if (!tcbdbclose(this->bdb_[i])) {
@@ -572,7 +569,6 @@ bool TCBTreeIndex::Close() {
         }
     }
     this->bdb_.clear();
-    return Index::Close();
 }
 
 bool TCBTreeIndex::SupportsCursor() {

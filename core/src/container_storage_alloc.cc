@@ -79,9 +79,6 @@ namespace chunkstore {
 ContainerStorageAllocator::ContainerStorageAllocator() {
 }
 
-ContainerStorageAllocator::~ContainerStorageAllocator() {
-}
-
 bool ContainerStorageAllocator::Start(const StartContext& start_context, ContainerStorage* storage) {
     return true;
 }
@@ -128,8 +125,7 @@ bool ContainerStorageAllocator::Stop(const dedupv1::StopContext& stop_context) {
     return true;
 }
 
-bool ContainerStorageAllocator::Close() {
-    return true;
+ContainerStorageAllocator::~ContainerStorageAllocator() {
 }
 
 #ifdef DEDUPV1_CORE_TEST
@@ -183,10 +179,6 @@ MemoryBitmapContainerStorageAllocator::Statistics::Statistics() {
     alloc_count_ = 0;
     free_count_ = 0;
     persist_count_ = 0;
-}
-
-MemoryBitmapContainerStorageAllocator::~MemoryBitmapContainerStorageAllocator() {
-
 }
 
 bool MemoryBitmapContainerStorageAllocator::SetOption(const string& option_name, const string& option) {
@@ -299,14 +291,9 @@ bool MemoryBitmapContainerStorageAllocator::Stop(const dedupv1::StopContext& sto
     return true;
 }
 
-bool MemoryBitmapContainerStorageAllocator::Close() {
-    DEBUG("Closing memory-mapped container storage allocator");
-
-    bool failed = false;
-
+MemoryBitmapContainerStorageAllocator::~MemoryBitmapContainerStorageAllocator() {
     if (!Stop(StopContext::FastStopContext())) {
         ERROR("Failed to stop bitmap storage allocator");
-        failed = true;
     }
 
     ScopedReadWriteLock scoped_lock(&lock_);
@@ -320,14 +307,9 @@ bool MemoryBitmapContainerStorageAllocator::Close() {
     }
     file_.clear();
     if (persistent_bitmap_) {
-        if (!persistent_bitmap_->Close()) {
-            ERROR("Failed to close persistent bitmap");
-            failed = true;
-        }
-        persistent_bitmap_ = NULL;
+        delete persistent_bitmap_;
     }
     this->storage_ = NULL;
-    return !failed;
 }
 
 bool MemoryBitmapContainerStorageAllocator::MarkAddressUsed(const ContainerStorageAddressData& address,
@@ -736,7 +718,7 @@ bool MemoryBitmapContainerStorageAllocator::OnMove(const ContainerMoveEventData&
 #ifdef DEDUPV1_CORE_TEST
 void MemoryBitmapContainerStorageAllocator::ClearData() {
     if (this->persistent_bitmap_) {
-        this->persistent_bitmap_->Close();
+        delete persistent_bitmap_;
         this->persistent_bitmap_ = NULL;
     }
     for (int i = 0; i < file_.size(); i++) {

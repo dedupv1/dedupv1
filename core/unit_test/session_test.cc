@@ -67,11 +67,11 @@ protected:
 
     virtual void TearDown() {
         if (session) {
-            ASSERT_TRUE(session->Close());
+            delete session;
             session = NULL;
         }
         if (system) {
-            ASSERT_TRUE(system->Close());
+            delete system;
         }
     }
 };

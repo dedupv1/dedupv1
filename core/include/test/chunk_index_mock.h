@@ -30,7 +30,6 @@ class MockChunkIndex : public dedupv1::chunkindex::ChunkIndex {
 
         MOCK_METHOD2(Start, bool(dedupv1::DedupSystem* system, bool create));
 
-        MOCK_METHOD0(Close, bool());
         MOCK_METHOD0(Sync, bool());
 
         MOCK_METHOD2(Delete, bool(const dedupv1::chunkindex::ChunkMapping& modified_mapping, dedupv1::base::ErrorContext* ec));

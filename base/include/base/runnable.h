@@ -55,8 +55,6 @@ template<class RT> class Runnable {
          * @return
          */
         virtual RT Run() = 0;
-
-        virtual void Close() = 0;
 };
 
 /**
@@ -142,10 +140,6 @@ template<class RT, class C> class MethodRunnable : public Runnable<RT> {
         delete this;
         return t;
     }
-
-    void Close() {
-        delete this;
-    }
 };
 
 /**
@@ -201,10 +195,6 @@ template<class RT, class C, class P> class MethodParameterRunnable : public Runn
         RT t = (this->object_->*this->method_)(this->parameter_);
         delete this;
         return t;
-    }
-
-    void Close() {
-        delete this;
     }
 };
 
@@ -265,10 +255,6 @@ template<class RT, class C, class P1, class P2> class Method2ParameterRunnable :
         RT t = (this->object_->*this->method_)(this->parameter1_, this->parameter2_);
         delete this;
         return t;
-    }
-
-    void Close() {
-        delete this;
     }
 };
 
@@ -332,10 +318,6 @@ template<class RT, class C, class P1, class P2, class P3> class Method3Parameter
         RT t = (this->object_->*this->method_)(this->parameter1_, this->parameter2_, this->parameter3_);
         delete this;
         return t;
-    }
-
-    void Close() {
-        delete this;
     }
 };
 
@@ -402,13 +384,6 @@ template<class RT, class C, class P1, class P2, class P3, class P4> class Method
         delete this;
         return t;
     }
-
-    /**
-     * Closes the runnable and frees its resources.
-     */
-    void Close() {
-        delete this;
-    }
 };
 
 /**
@@ -450,10 +425,6 @@ template<class RT> class FunctionRunnable : public Runnable<RT> {
         RT t = (*this->function_)();
         delete this;
         return t;
-    }
-
-    void Close() {
-        delete this;
     }
 };
 
@@ -501,10 +472,6 @@ template<class RT, class P> class FunctionParameterRunnable : public Runnable<RT
         RT t = (*this->function_)(this->parameter_);
         delete this;
         return t;
-    }
-
-    void Close() {
-        delete this;
     }
 };
 
@@ -556,10 +523,6 @@ template<class RT, class P1, class P2> class Function2ParameterRunnable : public
         RT t = (*this->function_)(this->parameter1_, this->parameter2_);
         delete this;
         return t;
-    }
-
-    void Close() {
-        delete this;
     }
 };
 
@@ -622,13 +585,6 @@ template<class RT, class P1, class P2, class P3> class Function3ParameterRunnabl
         RT t = (*this->function_)(this->parameter1_, this->parameter2_, this->parameter3_);
         delete this;
         return t;
-    }
-
-    /**
-     * Closes the runnable and frees all its resources
-     */
-    void Close() {
-        delete this;
     }
 };
 

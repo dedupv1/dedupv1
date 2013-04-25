@@ -647,10 +647,9 @@ class BlockIndex : public dedupv1::log::LogConsumer, public VolatileBlockCommitC
     BlockIndex();
 
     /**
-     * Closes the block index and frees all resources.
-     * @return
+     * Destructor
      */
-    bool Close();
+    virtual ~BlockIndex();
 
     /**
      * Stops the block index.

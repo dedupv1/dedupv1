@@ -640,13 +640,5 @@ IndexIterator* LeveldbIndex::CreateIterator() {
     return new LeveldbIndexIterator(this);
 }
 
-bool LeveldbIndex::Close() {
-    if (db_ != NULL) {
-        delete db_;
-        db_ = NULL;
-    }
-    return Index::Close();
-}
-
 }
 }

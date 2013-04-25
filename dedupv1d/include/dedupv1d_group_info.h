@@ -130,6 +130,8 @@ class Dedupv1dGroupInfo {
          */
         Dedupv1dGroupInfo();
 
+        virtual ~Dedupv1dGroupInfo();
+
         /**
          * Starts the group info.
          * @param start_context
@@ -150,13 +152,6 @@ class Dedupv1dGroupInfo {
          * @return true iff ok, otherwise an error has occurred
          */
         bool SetOption(const std::string& option_name, const std::string& option);
-
-
-        /**
-         * closes the group info and frees all its resources.
-         * @return true iff ok, otherwise an error has occurred
-         */
-        bool Close();
 
         /**
          * Adds a new group based on the group options.

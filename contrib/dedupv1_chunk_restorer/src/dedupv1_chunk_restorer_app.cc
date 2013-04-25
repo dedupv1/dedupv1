@@ -101,8 +101,7 @@ int main(int argc, char * argv[]) {
     } else {
         INFO("Finished restoring chunk index");
     }
-    // Close down everything.
-    restorer.Close();
+    restorer.Stop();
     google::protobuf::ShutdownProtobufLibrary();
     return rc;
 }

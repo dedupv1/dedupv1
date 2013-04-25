@@ -32,14 +32,10 @@ public:
     MOCK_METHOD0(GetMinChunkSize, size_t());
     MOCK_METHOD0(GetMaxChunkSize, size_t());
     MOCK_METHOD0(GetAvgChunkSize, size_t());
-
-    MOCK_METHOD0(Close, bool());
 };
 
 class MockChunkerSession : public dedupv1::ChunkerSession {
   public:
-  MOCK_METHOD0(Close, bool());
-
   MOCK_METHOD5(ChunkData, bool(const byte* data,
         unsigned int offset,
         unsigned int size,

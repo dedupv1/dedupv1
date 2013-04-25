@@ -55,10 +55,6 @@ void InfoStore::ClearData() {
 }
 #endif
 
-bool InfoStore::Close() {
-    return true;
-}
-
 IndexInfoStore::IndexInfoStore() {
     index_ = NULL;
     started_ = false;
@@ -68,6 +64,9 @@ IndexInfoStore::IndexInfoStore() {
 }
 
 IndexInfoStore::~IndexInfoStore() {
+  if (index_) {
+    delete index_;
+  }
 }
 
 bool IndexInfoStore::Start(const dedupv1::StartContext& start_context) {
@@ -94,17 +93,6 @@ bool IndexInfoStore::SetOption(const std::string& option_name, const std::string
     CHECK(this->index_, "Index not set");
     CHECK(this->index_->SetOption(option_name, option), "Failed to configure index");
     return true;
-}
-
-bool IndexInfoStore::Close() {
-    bool failed = false;
-    if (index_) {
-        if (!index_->Close()) {
-            WARNING("Failed to close stats index");
-        }
-        index_ = NULL;
-    }
-    return !failed;
 }
 
 bool IndexInfoStore::PersistInfo(std::string key, const google::protobuf::Message& message) {
@@ -141,9 +129,7 @@ lookup_result IndexInfoStore::RestoreInfo(std::string key, google::protobuf::Mes
 #ifdef DEDUPV1_CORE_TEST
 void IndexInfoStore::ClearData() {
     if (this->index_) {
-        if (!this->index_->Close()) {
-            WARNING("Failed to close info index");
-        }
+        delete index_;
         this->index_ = NULL;
     }
     data_cleared_ = true;

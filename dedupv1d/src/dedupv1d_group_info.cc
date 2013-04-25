@@ -120,19 +120,15 @@ bool Dedupv1dGroupInfo::Start(const StartContext& start_context) {
     return true;
 }
 
-bool Dedupv1dGroupInfo::Close() {
+Dedupv1dGroupInfo::~Dedupv1dGroupInfo() {
     DEBUG("Closing dedupv1d group info");
 
     this->group_list_.clear();
     this->group_map_.clear();
     if (info_) {
-        if (!info_->Close()) {
-            WARNING("Failed to close group info");
-        }
+        delete info_;
         info_ = NULL;
     }
-    delete this;
-    return true;
 }
 
 bool Dedupv1dGroupInfo::SetOption(const string& option_name, const string& option) {
@@ -356,7 +352,7 @@ string Dedupv1dGroupInfo::DebugStringOptions(const list< pair< string, string> >
 #ifdef DEDUPV1D_TEST
 void Dedupv1dGroupInfo::ClearData() {
     if (this->info_) {
-        this->info_->Close();
+        delete info_;
         this->info_ = NULL;
     }
 }

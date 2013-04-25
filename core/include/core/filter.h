@@ -228,12 +228,6 @@ public:
           dedupv1::chunkindex::ChunkMapping* chunk_mapping,
           dedupv1::base::ErrorContext* ec);
 
-    /**
-     * Closes the filter and frees all its resources.
-     * @return true iff ok, otherwise an error has occurred
-     */
-    virtual bool Close();
-
     inline int GetMaxFilterLevel() const;
 
     /**

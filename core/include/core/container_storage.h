@@ -673,12 +673,6 @@ public dedupv1::log::LogAckConsumer {
      */
     virtual bool Stop(const dedupv1::StopContext& stop_context);
 
-    /**
-     * Closes the storage system and frees all its resources.
-     * @return true iff ok, otherwise an error has occurred
-     */
-    virtual bool Close();
-
         /**
          *
          * @param key

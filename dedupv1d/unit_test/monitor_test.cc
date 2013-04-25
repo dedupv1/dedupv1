@@ -77,7 +77,7 @@ void MonitorAdapterTest::ParseParams() {
 
 void MonitorAdapterTest::TearDown() {
     if (ds) {
-        ASSERT_TRUE(ds->Close());
+        delete ds;
         ds = NULL;
     }
     m = NULL;
@@ -184,7 +184,7 @@ protected:
 
     virtual void TearDown() {
         if (m) {
-            m->Close();
+            delete m;
             m = NULL;
         }
     }
@@ -209,7 +209,7 @@ TEST_F(MonitorTest, StartWithAutoPort) {
     ASSERT_TRUE(m2->SetOption("port", port_str));
     ASSERT_TRUE(m2->SetOption("port", "auto"));
     ASSERT_TRUE(m2->Start(dedupv1::StartContext()));
-    ASSERT_TRUE(m2->Close());
+    delete m2;
 }
 
 TEST_F(MonitorTest, StartWithHostAddress) {
@@ -269,7 +269,7 @@ TEST_F(MonitorTest, NameDupliate) {
     ASSERT_TRUE(m->Remove("test"));
     ASSERT_EQ(0, m->monitor_count());
 
-    mta2->Close();
+    delete mta2;
 }
 
 TEST_F(MonitorTest, TwoMonitorAdapter) {

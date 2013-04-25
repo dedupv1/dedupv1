@@ -136,18 +136,17 @@ protected:
 
     virtual void TearDown() {
         if (storage) {
-            ASSERT_TRUE(storage->Close());
+            delete storage;
             storage = NULL;
             read_cache = NULL;
         }
 
         if (log) {
-            ASSERT_TRUE(log->Close());
+            delete log;
             log = NULL;
         }
 
         if (idle_detector) {
-            ASSERT_TRUE(idle_detector->Close());
             delete idle_detector;
             idle_detector = NULL;
         }

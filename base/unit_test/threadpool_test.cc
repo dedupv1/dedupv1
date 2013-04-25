@@ -136,7 +136,7 @@ TEST_F(ThreadpoolTest, StartWithSize256) {
     EXPECT_TRUE(f);
     if (f) {
         EXPECT_TRUE(f->Wait());
-        EXPECT_TRUE(f->Close());
+        delete f;
         f = NULL;
     }
     sleep(1);
@@ -152,7 +152,7 @@ TEST_F(ThreadpoolTest, SimpleSubmit) {
 
     Future<bool>* f = t.Submit(NewRunnable<bool>(&r, &ThreadpoolTestRunnable::Runner));
     ASSERT_TRUE(f);
-    f->Close();
+    delete f;
     f = NULL;
 
     sleep(1);
@@ -170,12 +170,12 @@ TEST_F(ThreadpoolTest, Priority) {
 
     Future<bool>* f = t.Submit(NewRunnable<bool>(&r1, &ThreadpoolTestRunnable::Runner), Threadpool::BACKGROUND_PRIORITY);
     ASSERT_TRUE(f);
-    f->Close();
+    delete f;
     f = NULL;
 
     f = t.Submit(NewRunnable<bool>(&r2, &ThreadpoolTestRunnable::Runner), Threadpool::HIGH_PRIORITY);
     ASSERT_TRUE(f);
-    f->Close();
+    delete f;
     f = NULL;
 
     sleep(15);
@@ -253,7 +253,7 @@ TEST_F(ThreadpoolTest, Reject) {
     // the overflow check currently only considers the queue.
     Runnable<bool>* secondRunnable = NewRunnable<bool>(&blocked, &ThreadpoolTestRunnable::Runner);
     EXPECT_FALSE(t.Submit(secondRunnable, Threadpool::BACKGROUND_PRIORITY, Threadpool::REJECT));
-    secondRunnable->Close(); // because it was rejected
+    delete secondRunnable;
     secondRunnable = NULL;
 
     // here we release job 1
@@ -264,13 +264,13 @@ TEST_F(ThreadpoolTest, Reject) {
     if (f1) {
         // Wait here until job 1 is finished
         EXPECT_TRUE(f1->Wait());
-        EXPECT_TRUE(f1->Close());
+        delete f1;
         f1 = NULL;
     }
     if (f2) {
         // Wait here until job 2 is finished
         EXPECT_TRUE(f2->Wait());
-        EXPECT_TRUE(f2->Close());
+        delete f2;
         f2 = NULL;
     }
     ThreadUtil::Sleep(5);
@@ -314,19 +314,19 @@ TEST_F(ThreadpoolTest, CallerRuns) {
     if (f1) {
         // Wait here until job 1 is finished
         EXPECT_TRUE(f3->Wait());
-        EXPECT_TRUE(f1->Close());
+        delete f1;
         f1 = NULL;
     }
     if (f2) {
         // Wait here until job 2 is finished
         EXPECT_TRUE(f3->Wait());
-        EXPECT_TRUE(f2->Close());
+        delete f2;
         f2 = NULL;
     }
     if (f3) {
         // Wait here until job 3 is finished
         EXPECT_TRUE(f3->Wait());
-        EXPECT_TRUE(f3->Close());
+        delete f3;
         f3 = NULL;
     }
     ThreadUtil::Sleep(5);

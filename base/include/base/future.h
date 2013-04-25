@@ -39,77 +39,76 @@ extern LOGGER_CLASS kFutureLogger;
  *
  * This is a simple implementation of a Future. It used a
  * reference count approach to managed the shared usage.
- * The resources are freed when the last client calls Close().
  *
  * A future cannot be allocated on the stack.
  */
-template<class RT> class Future {
+template<class RT> class FutureObject {
     private:
-        DISALLOW_COPY_AND_ASSIGN(Future);
+        DISALLOW_COPY_AND_ASSIGN(FutureObject);
 
-		/**
-		 * Lock to project the future members.
-		 * This lock is also used to wait on the condition
-		 */
+    /**
+     * Lock to project the future members.
+     * This lock is also used to wait on the condition
+     */
         MutexLock lock_;
 
-		/**
-		 * current reference count
-		 */
+    /**
+     * current reference count
+     */
         uint32_t ref_count_;
 
-		/**
-		 * stores the value if the value is set
-		 */
+    /**
+     * stores the value if the value is set
+     */
         RT value_;
 
-		/**
-		 * iff the value is set
-		 */
+    /**
+     * iff the value is set
+     */
         bool value_set_;
 
-		/**
-		 * iff the usage of the future is aborted.
-		 * The value will never be set in the future
-		 */
-        bool abort_;
+    /**
+     * iff the usage of the future is aborted.
+     * The value will never be set in the future
+     */
+      bool abort_;
 
-		/**
-		 * Condition clients of the future wait on
-		 */
+    /**
+     * Condition clients of the future wait on
+     */
         Condition condition_;
     public:
-		/**
-		 * Constructor.
-		 * The reference count is set to 1. That means that the initial
-		 * referencer shall not call AddRef().
-		 */
-        Future() {
+    /**
+     * Constructor.
+     * The reference count is set to 1. That means that the initial
+     * referencer shall not call AddRef().
+     */
+        FutureObject() {
             ref_count_ = 1; // the creator is the first user
             value_set_ = false;
             abort_ = false;
         }
 
-		/**
-		 * Adds a new reference
-		 * All clients that store a reference to the future must call this method.
-		 */
-        Future<RT>* AddRef() {
+    /**
+     * Adds a new reference
+     * All clients that store a reference to the future must call this method.
+     */
+        bool AddRef() {
             if (!lock_.AcquireLock()) {
                 ERROR_LOGGER(internal::kFutureLogger, "Failed to acquire future lock");
-                return NULL;
+                return false;
             }
             ref_count_++;
             lock_.ReleaseLock();
-            return this;
+            return true;
         }
 
-		/**
-		 * returns the value of the future.
-		 * If the value is not set and if it is not aborted, the method
-		 * blocks
-         * @return true iff ok, otherwise an error has occurred. If true, the value is set
-		 */
+    /**
+     * returns the value of the future.
+     * If the value is not set and if it is not aborted, the method
+     * blocks
+     * @return true iff ok, otherwise an error has occurred. If true, the value is set
+     */
         bool Get(RT* v) {
             if (!v) {
                 ERROR_LOGGER(internal::kFutureLogger, "Value not set");
@@ -184,9 +183,9 @@ template<class RT> class Future {
             return make_option(true);
         }
 
-		/**
-		 * returns true iff the future is aborted.
-		 */
+    /**
+     * returns true iff the future is aborted.
+     */
         bool is_abort() {
             if (!lock_.AcquireLock()) {
                 ERROR_LOGGER(internal::kFutureLogger, "Failed to acquire future lock");
@@ -235,10 +234,10 @@ template<class RT> class Future {
             return true;
         }
 
-		/**
-		 * Aborts the future
-         * @return true iff ok, otherwise an error has occurred
-		 */
+    /**
+     * Aborts the future
+     * @return true iff ok, otherwise an error has occurred
+     */
         bool Abort() {
             if (!lock_.AcquireLock()) {
                 ERROR_LOGGER(internal::kFutureLogger, "Failed to acquire future lock");
@@ -257,13 +256,7 @@ template<class RT> class Future {
             return true;
         }
 
-		/**
-		 * Closes the future.
-		 * If the method is called by the last user of the future,
-		 * all resources are freed.
-         * @return true iff ok, otherwise an error has occurred
-		 */
-        bool Close() {
+        bool Release() {
             bool d = false;
             lock_.AcquireLock();
             ref_count_--;
@@ -271,12 +264,108 @@ template<class RT> class Future {
                 d = true;
             }
             lock_.ReleaseLock();
-            if (d) {
-                delete this;
-            }
-            return true;
+            return d;
         }
 };
+
+template<class RT> class Future {
+  private:
+        DISALLOW_COPY_AND_ASSIGN(Future);
+    FutureObject<RT>* instance_;
+
+    explicit Future(FutureObject<RT>* instance) : instance_(instance) {
+    }
+  public:
+    /**
+     * Constructor.
+     * The reference count is set to 1. That means that the initial
+     * referencer shall not call AddRef().
+     */
+    Future() {
+      instance_ = new FutureObject<RT>();
+    }
+
+    /**
+     * Adds a new reference
+     * All clients that store a reference to the future must call this method.
+     */
+        Future<RT>* AddRef() {
+            if (!instance_->AddRef()) {
+              return NULL;
+            }
+            return new Future<RT>(instance_);
+        }
+
+    /**
+     * returns the value of the future.
+     * If the value is not set and if it is not aborted, the method
+     * blocks
+     * @return true iff ok, otherwise an error has occurred. If true, the value is set
+     */
+        bool Get(RT* v) {
+            return instance_->Get(v);
+        }
+
+        /**
+         * Waits until the future is aborted or until the value is set.
+         * After the method returns, the abort flag or the value is set.
+         *
+         * @return true iff ok, otherwise an error has occurred
+         */
+        bool Wait() {
+            return instance_->Wait();
+        }
+
+        /**
+         * Waits for the given future, but only for the given number of seconds (s).
+         *
+         * Returns an unset option (false) if an error occured. If the option is Some(false), the
+         * waiting is aborted due to a timeout. If the result is Some(true), the future is finished and
+         * the waiting succeeded. Now either the value is set or the future is aborted.
+         */
+        dedupv1::base::Option<bool> WaitTimeout(uint32_t s) {
+            return instance_->WaitTimeout(s);
+        }
+
+    /**
+     * returns true iff the future is aborted.
+     */
+        bool is_abort() {
+            return instance_->is_abort();
+        }
+
+        /**
+         * returns true iff the value is set
+         * @return
+         */
+        bool is_value_set() {
+            return instance_->is_value_set();
+        }
+
+        /**
+         * Sets the value.
+         * @param value
+         * @return true iff ok, otherwise an error has occurred
+         */
+        bool Set(RT value) {
+            return instance_->Set(value);
+        }
+
+    /**
+     * Aborts the future
+     * @return true iff ok, otherwise an error has occurred
+     */
+        bool Abort() {
+            return instance_->Abort();
+        }
+
+    ~Future() {
+      if (instance_->Release()) {
+        delete instance_;
+      }
+    }
+};
+
 
 }
 }

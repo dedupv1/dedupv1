@@ -53,7 +53,7 @@ void ChunkerTest::SetUp() {
 
 void ChunkerTest::TearDown() {
     if (chunker) {
-        ASSERT_TRUE(chunker->Close());
+        delete chunker;
     }
 }
 
@@ -128,7 +128,7 @@ TEST_P(ChunkerTest, ZeroDataChunking) {
         ASSERT_TRUE(session->ChunkData(data + pos, 0, size, last_call, &chunks));
         pos += size;
     }
-    ASSERT_TRUE(session->Close());
+    delete session;
     session = NULL;
 
     AdlerChecksum checksum2;
@@ -177,7 +177,7 @@ TEST_P(ChunkerTest, BasicChunking) {
         EXPECT_TRUE(session->ChunkData(data + pos, 0, size, last_call, &chunks));
         pos += size;
     }
-    EXPECT_TRUE(session->Close());
+    delete session;
     session = NULL;
 
     AdlerChecksum checksum2;

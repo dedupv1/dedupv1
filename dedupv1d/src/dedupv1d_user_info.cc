@@ -121,19 +121,15 @@ bool Dedupv1dUserInfo::Start(const StartContext& start_context) {
     return true;
 }
 
-bool Dedupv1dUserInfo::Close() {
+Dedupv1dUserInfo::~Dedupv1dUserInfo() {
     DEBUG("Closing dedupv1d user info");
 
     this->user_list_.clear();
     this->user_map_.clear();
     if (info_) {
-        if (!info_->Close()) {
-            WARNING("Failed to close user info");
-        }
+        delete info_;
         info_ = NULL;
     }
-    delete this;
-    return true;
 }
 
 bool Dedupv1dUserInfo::SetOption(const string& option_name, const string& option) {
@@ -440,7 +436,7 @@ string Dedupv1dUserInfo::DebugStringOptions(const list< pair< string, string> >&
 #ifdef DEDUPV1D_TEST
 void Dedupv1dUserInfo::ClearData() {
     if (this->info_) {
-        this->info_->Close();
+        delete info_;
         this->info_ = NULL;
     }
 }

@@ -284,12 +284,6 @@ class Dedupv1dVolume: public dedupv1::StatisticProvider {
         bool Stop(const dedupv1::StopContext& stop_context);
 
         /**
-         * Closes the volume
-         * @return true iff ok, otherwise an error has occurred
-         */
-        bool Close();
-
-        /**
          * Adds a new session.
          *
          * @param session

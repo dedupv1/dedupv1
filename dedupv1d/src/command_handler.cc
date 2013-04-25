@@ -1419,6 +1419,9 @@ CommandHandlerSession::CommandHandlerSession(CommandHandler* ch, int thread_id) 
 }
 
 CommandHandlerSession::~CommandHandlerSession() {
+    if (ch) {
+      ch->session_count_--;
+    }
 }
 
 CommandHandlerSession* CommandHandler::CreateSession(int thread_id) {
@@ -1432,13 +1435,6 @@ CommandHandlerSession* CommandHandler::CreateSession(int thread_id) {
     this->session_count_.fetch_and_increment();
 
     return chs;
-}
-
-bool CommandHandlerSession::Close() {
-    this->GetCommandHandler()->session_count_.fetch_and_decrement();
-    TRACE("Closing command handler thread: volume " << this->GetCommandHandler()->volume_->DebugString());
-    delete this;
-    return true;
 }
 
 CommandHandler::Statistics::Statistics() :

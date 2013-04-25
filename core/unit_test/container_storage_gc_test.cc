@@ -103,7 +103,7 @@ protected:
 
     virtual void TearDown() {
         if (gc) {
-            ASSERT_TRUE(gc->Close());
+            delete gc;
         }
     }
 

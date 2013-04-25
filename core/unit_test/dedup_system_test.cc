@@ -67,7 +67,7 @@ void DedupSystemTest::SetUp() {
 void DedupSystemTest::TearDown() {
     if (system) {
         ASSERT_TRUE(system->Stop(StopContext::FastStopContext()));
-        ASSERT_TRUE(system->Close());
+        delete system;
     }
 }
 
@@ -228,7 +228,7 @@ TEST_P(DedupSystemTest, PersistentStatistics) {
     MemoryPersistentStatistics mps;
     ASSERT_TRUE(system->PersistStatistics("dedup", &mps));
     if (system) {
-        ASSERT_TRUE(system->Close());
+        delete system;
         system = NULL;
     }
 

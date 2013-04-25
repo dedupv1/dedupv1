@@ -80,7 +80,7 @@ protected:
 
     virtual void TearDown() {
         if (ds) {
-            ASSERT_TRUE(ds->Close());
+            delete ds;
             ds = NULL;
         }
     }
@@ -110,7 +110,7 @@ TEST_F(Dedupv1dTest, TwoInstances) {
     ASSERT_TRUE(ds2->SetOption("monitor.port", PortUtil::getNextPort().c_str()));
     ASSERT_TRUE(ds2->SetOption("daemon.lockfile", "work/lock"));
     ASSERT_FALSE(ds2->OpenLockfile());
-    ASSERT_TRUE(ds2->Close());
+    delete ds2;
 }
 
 TEST_F(Dedupv1dTest, StopWithoutStart) {
@@ -130,7 +130,7 @@ TEST_F(Dedupv1dTest, Restart) {
     ASSERT_TRUE(ds->Start(dedupv1::StartContext())) << "Cannot start application";
     ASSERT_TRUE(ds->Run());
 
-    ASSERT_TRUE(ds->Close());
+    delete ds;
     ds = NULL;
 
     ds = new dedupv1d::Dedupv1d();
@@ -151,7 +151,7 @@ TEST_F(Dedupv1dTest, RestartWithOtherConfig) {
     ASSERT_TRUE(ds->Start(dedupv1::StartContext())) << "Cannot start application";
     ASSERT_TRUE(ds->Run());
 
-    ASSERT_TRUE(ds->Close());
+    delete ds;
     ds = NULL;
 
     ds = new dedupv1d::Dedupv1d();
@@ -174,7 +174,7 @@ TEST_F(Dedupv1dTest, RestartWithOtherConfigButForce) {
     ASSERT_TRUE(ds->Start(dedupv1::StartContext())) << "Cannot start application";
     ASSERT_TRUE(ds->Run());
 
-    ASSERT_TRUE(ds->Close());
+    delete ds;
     ds = NULL;
 
     ds = new dedupv1d::Dedupv1d();
@@ -207,7 +207,7 @@ TEST_F(Dedupv1dTest, DirtyFlagAfterNormalClose) {
     sleep(2);
     ASSERT_TRUE(ds->Shutdown(dedupv1::StopContext::FastStopContext())) << "Failed to shutdown dedupv1";
     ASSERT_TRUE(t.Join(NULL)) <<  "Failed to join run thread";
-    ASSERT_TRUE(ds->Close());
+    delete ds;
     ds = NULL;
 
     dedupv1::StartContext start_context2(dedupv1::StartContext::NON_CREATE);
@@ -245,7 +245,7 @@ TEST_F(Dedupv1dTest, DirtyFlagAfterCrashDestroyedDirtyfile) {
 
     string dirtyfile = ds->daemon_dirtyfile();
 
-    ASSERT_TRUE(ds->Close());
+    delete ds;
     ds = NULL;
 
     // this is pretty much like the system has crashed

@@ -225,13 +225,6 @@ class ContainerStorageAllocator : public dedupv1::StatisticProvider {
     virtual bool Stop(const dedupv1::StopContext& stop_context);
 
     /**
-     * Closes the allocator and frees all its resources.
-     *
-     * @return true iff ok, otherwise an error has occurred
-     */
-    virtual bool Close();
-
-    /**
      * Checks if the given address is free.
      *
      * @param address
@@ -510,8 +503,6 @@ class MemoryBitmapContainerStorageAllocator : public ContainerStorageAllocator {
         virtual bool Run();
 
         virtual bool Stop(const dedupv1::StopContext& stop_context);
-
-        virtual bool Close();
 
         virtual bool CheckIfFull();
 

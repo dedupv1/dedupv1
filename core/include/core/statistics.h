@@ -110,11 +110,6 @@ class IndexPersistentStatistics : public PersistStatistics {
          */
         bool SetOption(const std::string& option_name, const std::string& option);
 
-        /**
-     * @return true iff ok, otherwise an error has occurred
-         */
-        bool Close();
-
         virtual bool Persist(const std::string& key, const google::protobuf::Message& message);
 
         virtual bool Restore(const std::string& key, google::protobuf::Message* message);

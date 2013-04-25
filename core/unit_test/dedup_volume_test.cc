@@ -83,12 +83,10 @@ protected:
         EXPECT_CALL(content_storage, GetFilterList(_)).WillRepeatedly(Return(make_option(filter_list)));
         EXPECT_CALL(content_storage, default_chunker()).WillRepeatedly(Return(&chunker));
         EXPECT_CALL(chunker, CreateSession()).WillOnce(Return(&session));
-        EXPECT_CALL(session, Close()).WillRepeatedly(Return(true));
     }
 
     virtual void TearDown() {
         if (volume) {
-            ASSERT_TRUE(volume->Close());
             delete volume;
             volume = NULL;
         }

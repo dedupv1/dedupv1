@@ -114,7 +114,7 @@ int main(int argc, char * argv[]) {
         ERROR("Unable to read dedupv1: volume id " << FLAGS_volume_id << ", offset " << FLAGS_offset << ", size " << FLAGS_size);
         rc = 1;
     }
-    reader.Close();
+    reader.Stop();
     // Close down everything
     google::protobuf::ShutdownProtobufLibrary();
     return rc;

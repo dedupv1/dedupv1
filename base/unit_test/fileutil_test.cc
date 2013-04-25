@@ -47,7 +47,7 @@ protected:
 
     virtual void TearDown() {
         if (file) {
-            ASSERT_TRUE(file->Close());
+            delete file;
         }
     }
 };
@@ -88,7 +88,9 @@ TEST_F(FileUtilTest, Fallocate_allocate)
     ASSERT_EQ(1024, size.value());
 
     // And also after close and open
-    ASSERT_TRUE(file->Close());
+    delete file;
+    file = NULL;
+
     file = File::Open(path, O_RDWR | O_EXCL | O_LARGEFILE, S_IRUSR);
     ASSERT_TRUE(file);
     size = file->GetSize();
@@ -120,7 +122,9 @@ TEST_F(FileUtilTest, Fallocate_allocate)
 
     // We simply fail if offset is to big
     ASSERT_FALSE(file->Fallocate(5136, 17));
-    ASSERT_TRUE(file->Close());
+    delete file;
+    file = NULL;
+
     file = File::Open(path, O_RDWR | O_EXCL | O_LARGEFILE, S_IRUSR);
     ASSERT_TRUE(file);
     size = file->GetSize();
@@ -130,9 +134,9 @@ TEST_F(FileUtilTest, Fallocate_allocate)
     ASSERT_TRUE(size.valid());
     ASSERT_EQ(3859, size.value());
 
-    ASSERT_TRUE(file->Close());
-    ASSERT_TRUE(File::Remove(path));
+    delete file;
     file = NULL;
+    ASSERT_TRUE(File::Remove(path));
 }
 
 TEST_F(FileUtilTest, Fallocate_allocate_write)
@@ -159,7 +163,8 @@ TEST_F(FileUtilTest, Fallocate_allocate_write)
     ASSERT_EQ(1024, size.value());
 
     // And also after close and open
-    ASSERT_TRUE(file->Close());
+    delete file;
+
     file = File::Open(path, O_RDWR | O_EXCL | O_LARGEFILE, S_IRUSR);
     ASSERT_TRUE(file);
     size = file->GetSize();
@@ -191,7 +196,8 @@ TEST_F(FileUtilTest, Fallocate_allocate_write)
 
     // We simply fail if offset is to big
     ASSERT_FALSE(file->Fallocate(5136, 17));
-    ASSERT_TRUE(file->Close());
+    delete file;
+
     file = File::Open(path, O_RDWR | O_EXCL | O_LARGEFILE, S_IRUSR);
     ASSERT_TRUE(file);
     size = file->GetSize();
@@ -226,7 +232,7 @@ TEST_F(FileUtilTest, Fallocate_allocate_write)
     ASSERT_TRUE(size.valid());
     ASSERT_EQ(823296, size.value());
 
-    ASSERT_TRUE(file->Close());
+    delete file;
     ASSERT_TRUE(File::Remove(path));
     file = NULL;
 }
@@ -250,7 +256,8 @@ TEST_F(FileUtilTest, Fallocate_no_override)
     ASSERT_TRUE(file);
 
     ASSERT_EQ(strlen(test) + 1, file->Write(test, strlen(test) + 1));
-    ASSERT_TRUE(file->Close());
+    delete file;
+    file = NULL;
 
     size = File::GetFileSize(path);
     ASSERT_TRUE(size.valid());
@@ -267,7 +274,8 @@ TEST_F(FileUtilTest, Fallocate_no_override)
     }
 
     ASSERT_TRUE(file->Fallocate(0, 10));
-    ASSERT_TRUE(file->Close());
+    delete file;
+    file = NULL;
 
     size = File::GetFileSize(path);
     ASSERT_TRUE(size.valid());
@@ -283,7 +291,8 @@ TEST_F(FileUtilTest, Fallocate_no_override)
     }
 
     ASSERT_TRUE(file->Fallocate(strlen(test) - 5, 20));
-    ASSERT_TRUE(file->Close());
+    delete file;
+    file = NULL;
 
     size = File::GetFileSize(path);
     ASSERT_TRUE(size.valid());
@@ -300,10 +309,10 @@ TEST_F(FileUtilTest, Fallocate_no_override)
     for (int i = strlen(test) + 15; i < 1024; i++) {
         ASSERT_EQ(1, buffer[i]) << "Byte " << i << " has to be 1 but is " << (uint16_t) buffer[i] << " (strlen is " << strlen(test) << ")";
     }
-
-    ASSERT_TRUE(file->Close());
-    ASSERT_TRUE(File::Remove(path));
+    delete file;
     file = NULL;
+
+    ASSERT_TRUE(File::Remove(path));
 }
 
 TEST_F(FileUtilTest, Fallocate_no_override_write)
@@ -325,7 +334,8 @@ TEST_F(FileUtilTest, Fallocate_no_override_write)
     ASSERT_TRUE(file);
 
     ASSERT_EQ(strlen(test) + 1, file->Write(test, strlen(test) + 1));
-    ASSERT_TRUE(file->Close());
+    delete file;
+    file = NULL;
 
     size = File::GetFileSize(path);
     ASSERT_TRUE(size.valid());
@@ -342,7 +352,8 @@ TEST_F(FileUtilTest, Fallocate_no_override_write)
     }
 
     ASSERT_TRUE(file->Fallocate(0, 10));
-    ASSERT_TRUE(file->Close());
+    delete file;
+    file = NULL;
 
     size = File::GetFileSize(path);
     ASSERT_TRUE(size.valid());
@@ -358,7 +369,8 @@ TEST_F(FileUtilTest, Fallocate_no_override_write)
     }
 
     ASSERT_TRUE(file->Fallocate(strlen(test) - 5, 20));
-    ASSERT_TRUE(file->Close());
+    delete file;
+    file = NULL;
 
     size = File::GetFileSize(path);
     ASSERT_TRUE(size.valid());
@@ -375,10 +387,10 @@ TEST_F(FileUtilTest, Fallocate_no_override_write)
     for (int i = strlen(test) + 15; i < 1024; i++) {
         ASSERT_EQ(1, buffer[i]) << "Byte " << i << " has to be 1 but is " << (uint16_t) buffer[i] << " (strlen is " << strlen(test) << ")";
     }
-
-    ASSERT_TRUE(file->Close());
-    ASSERT_TRUE(File::Remove(path));
+    delete file;
     file = NULL;
+
+    ASSERT_TRUE(File::Remove(path));
 }
 
 TEST_F(FileUtilTest, GetLine)
@@ -449,7 +461,7 @@ TEST_F(FileUtilTest, ListDirectory)
     byte buffer[64 * 1024];
     memset(buffer, 0, 64 * 1024);
     ASSERT_EQ(file->Write(0, buffer, 64 * 1024), 64 * 1024);
-    file->Close();
+    delete file;
     file = NULL;
 
     ASSERT_TRUE(File::ListDirectory("work", &files));
@@ -519,7 +531,7 @@ TEST_F(FileUtilTest, ReadWrite)
     ASSERT_EQ(1024, f1->Write(1024, buffer, 1024));
 
     ASSERT_TRUE(f1->Sync());
-    ASSERT_TRUE(f1->Close());
+    delete f1;
 
     // read
     File* f2 = File::Open("work/tmp", O_RDONLY, S_IRUSR);
@@ -533,7 +545,7 @@ TEST_F(FileUtilTest, ReadWrite)
     ASSERT_EQ(1024, f2->Read(1024, read_buffer, 1024));
     ASSERT_TRUE(memcmp(buffer, read_buffer, 1024) == 0);
 
-    ASSERT_TRUE(f2->Close());
+    delete f2;
 
     unlink("work/tmp");
 }
@@ -556,7 +568,7 @@ TEST_F(FileUtilTest, Locking)
     ASSERT_FALSE(l.value());
 
     ASSERT_TRUE(f1->Unlock());
-    ASSERT_TRUE(f1->Close());
+    delete f1;
 
     l = f2->TryLock(true);
     ASSERT_TRUE(l.valid());
@@ -564,7 +576,7 @@ TEST_F(FileUtilTest, Locking)
 
     ASSERT_TRUE(f2->Unlock());
 
-    ASSERT_TRUE(f2->Close());
+    delete f2;
 }
 
 TEST_F(FileUtilTest, Copy)

@@ -314,7 +314,13 @@ bool ChunkIndexRestorer::RestoreUsageCount(ChunkIndex* chunk_index) {
     return true;
 }
 
-bool ChunkIndexRestorer::Close() {
+ChunkIndexRestorer::~ChunkIndexRestorer() {
+  if (system_) {
+    delete system_;
+  }
+}
+
+bool ChunkIndexRestorer::Stop() {
     // TODO (dmeister): Here we bypass the normal shutdown system. It should work, but is certainly not optimal
     DEBUG("Closing chunk index restorer");
     if (system_) {
@@ -332,9 +338,6 @@ bool ChunkIndexRestorer::Close() {
                 CHECK(dedup_system_->block_index()->Stop(stop_context), "Cannot stop block index");
             }
         }
-
-        CHECK(system_->Close(), "Failed to close system");
-        system_ = NULL;
     }
     return true;
 }

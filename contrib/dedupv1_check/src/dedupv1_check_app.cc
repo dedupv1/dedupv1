@@ -128,7 +128,7 @@ int main(int argc, char * argv[]) {
         }
     }
     // Close down everything.
-    checker.Close();
+    checker.Stop();
     google::protobuf::ShutdownProtobufLibrary();
     return rc;
 }

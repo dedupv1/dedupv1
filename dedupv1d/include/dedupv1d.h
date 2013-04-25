@@ -290,11 +290,7 @@ class Dedupv1d : public dedupv1::base::memory::NewHandlerListener, public dedupv
      */
     Dedupv1d();
 
-    /**
-     * Closes the system and frees all its resources
-     * @return true iff ok, otherwise an error has occurred
-     */
-    bool Close();
+    ~Dedupv1d();
 
     /**
      *

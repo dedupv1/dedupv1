@@ -49,7 +49,7 @@ protected:
 
     virtual void TearDown() {
         if (filter_chain) {
-            ASSERT_TRUE(filter_chain->Close());
+            delete filter_chain;
             filter_chain = NULL;
         }
     }

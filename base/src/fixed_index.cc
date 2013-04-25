@@ -81,9 +81,6 @@ FixedIndex::FixedIndex() : IDBasedIndex(NO_CAPABILITIES) {
     bucket_size = 0;
 }
 
-FixedIndex::~FixedIndex() {
-}
-
 bool FixedIndex::SetOption(const string& option_name, const string& option) {
     if (option_name == "filename") {
         CHECK(option.size() < 1024, "Illegal filename");
@@ -175,7 +172,7 @@ bool FixedIndex::Start(const StartContext& start_context) {
             CHECK(format_file, "Error opening storage file: " << this->filename[i] << ", message " << strerror(errno));
 
             CHECK(Format(format_file), "Failed to format file " << this->filename[i]);
-            CHECK(format_file->Close(), "Failed to close format file");
+            delete format_file;
             format_file = NULL;
 
             this->files[i] = File::Open(this->filename[i], io_flags, 0);
@@ -399,22 +396,19 @@ delete_result FixedIndex::Delete(const void* key, size_t key_size) {
     return r;
 }
 
-bool FixedIndex::Close() {
+FixedIndex::~FixedIndex() {
     DEBUG("Closing index");
     for (size_t i = 0; i < this->files.size(); i++) {
         if (this->files[i]) {
             if (!this->files[i]->Sync()) {
                 WARNING("Failed to sync transaction file: " << this->filename[i]);
             }
-            if (!files[i]->Close()) {
-                WARNING("Failed to close file: " << this->filename[i]);
-            }
+            delete files[i];
             this->files[i] = NULL;
         }
     }
     this->files.clear();
     DEBUG("Closed index");
-    return Index::Close();
 }
 
 string FixedIndex::PrintProfile() {

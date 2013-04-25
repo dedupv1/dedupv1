@@ -92,7 +92,7 @@ protected:
 
     virtual void TearDown() {
         if (ds) {
-            ASSERT_TRUE(ds->Close());
+            delete ds;
             ds = NULL;
         }
     }
@@ -229,8 +229,7 @@ TEST_F(Dedupv1dVolumeInfoIntegrationTest, WriteDetachWithClose) {
 
     ASSERT_TRUE(ds->volume_info()->DetachVolume(1));
 
-    ASSERT_TRUE(ds->Close());
-
+    delete ds;
     ds = Create("data/dedupv1_test.conf");
     ASSERT_TRUE(ds);
     dedupv1::StartContext start_context;

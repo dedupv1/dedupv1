@@ -199,7 +199,7 @@ TEST_F(ContainerTest, NoLineFeedInDebugString) {
     dedupv1::base::File* f = dedupv1::base::File::Open("work/container", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
     ASSERT_TRUE(f);
     ASSERT_TRUE(container.StoreToFile(f, 0, true));
-    ASSERT_TRUE(f->Close());
+    delete f;
     f = NULL;
 
     std::string debugstring = container.DebugString();
@@ -291,14 +291,14 @@ TEST_F(ContainerTest, StoreAndLoad) {
     dedupv1::base::File* f = dedupv1::base::File::Open("work/container", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
     ASSERT_TRUE(f);
     ASSERT_TRUE(container.StoreToFile(f, 0, true));
-    ASSERT_TRUE(f->Close());
+    delete f;
     f = NULL;
 
     f = dedupv1::base::File::Open("work/container", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
     ASSERT_TRUE(f);
     Container container2(Container::kLeastValidContainerId, CONTAINER_SIZE, false);
     ASSERT_TRUE(container2.LoadFromFile(f, 0, true));
-    ASSERT_TRUE(f->Close());
+    delete f;
     f = NULL;
 
     ASSERT_TRUE(container.Equals(container2));
@@ -317,7 +317,7 @@ TEST_F(ContainerTest, AddAfterLoad) {
     dedupv1::base::File* f = dedupv1::base::File::Open("work/container", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
     ASSERT_TRUE(f);
     ASSERT_TRUE(container.StoreToFile(f, 0, true));
-    ASSERT_TRUE(f->Close());
+    delete f;
     f = NULL;
 
     f = dedupv1::base::File::Open("work/container", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
@@ -328,7 +328,7 @@ TEST_F(ContainerTest, AddAfterLoad) {
     ASSERT_FALSE(
         container2.AddItem((byte *) &test_fp[3], sizeof(test_fp[3]), (byte *) test_data[3], (size_t) 16 * 1024, true, NULL)) <<
     "It is not allowed to add items to an loaded container";
-    EXPECT_TRUE(f->Close());
+    delete f;
 
 }
 
@@ -345,7 +345,7 @@ TEST_F(ContainerTest, AddAfterStore) {
     dedupv1::base::File* f = dedupv1::base::File::Open("work/container", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
     ASSERT_TRUE(f);
     ASSERT_TRUE(container.StoreToFile(f, 0, true));
-    ASSERT_TRUE(f->Close());
+    delete f;
     f = NULL;
 
     // Add last
@@ -445,14 +445,14 @@ TEST_F(ContainerTest, ActiveDataSizeAfterStoreLoad) {
     dedupv1::base::File* f = dedupv1::base::File::Open("work/container", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
     ASSERT_TRUE(f);
     ASSERT_TRUE(container.StoreToFile(f, 0, true));
-    ASSERT_TRUE(f->Close());
+    delete f;
     f = NULL;
 
     f = dedupv1::base::File::Open("work/container", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
     ASSERT_TRUE(f);
     Container container2(Container::kLeastValidContainerId, CONTAINER_SIZE, false);
     ASSERT_TRUE(container2.LoadFromFile(f, 0, true));
-    ASSERT_TRUE(f->Close());
+    delete f;
     f = NULL;
 
     DEBUG("After Load: " << container.active_data_size());
@@ -475,14 +475,14 @@ TEST_F(ContainerTest, DeleteItemAfterLoad) {
     dedupv1::base::File* f = dedupv1::base::File::Open("work/container", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
     ASSERT_TRUE(f);
     ASSERT_TRUE(container.StoreToFile(f, 0, true));
-    ASSERT_TRUE(f->Close());
+    delete f;
     f = NULL;
 
     f = dedupv1::base::File::Open("work/container", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
     ASSERT_TRUE(f);
     Container container2(Container::kLeastValidContainerId, CONTAINER_SIZE, false);
     ASSERT_TRUE(container2.LoadFromFile(f, 0, true));
-    ASSERT_TRUE(f->Close());
+    delete f;
     f = NULL;
 
     ASSERT_LT(container2.active_data_size(), old_active_data_size - (16 * 1024));
@@ -575,7 +575,7 @@ TEST_F(ContainerTest, LoadOnlyMetaData) {
     dedupv1::base::File* f = dedupv1::base::File::Open("work/container", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
     ASSERT_TRUE(f);
     ASSERT_TRUE(container.StoreToFile(f, 0, true));
-    ASSERT_TRUE(f->Close());
+    delete f;
     f = NULL;
 
     f = dedupv1::base::File::Open("work/container", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
@@ -591,7 +591,7 @@ TEST_F(ContainerTest, LoadOnlyMetaData) {
     memset(result, 0, 16 * 1024);
     ASSERT_FALSE(container2.CopyRawData(item, result, 16 * 1024)) << "Data access should fail in metadata mode";
 
-    ASSERT_TRUE(f->Close());
+    delete f;
     f = NULL;
 }
 
@@ -624,7 +624,7 @@ TEST_F(ContainerTest, CommitTime) {
     dedupv1::base::File* f = dedupv1::base::File::Open("work/container", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
     ASSERT_TRUE(f);
     ASSERT_TRUE(container.StoreToFile(f, 0, true));
-    ASSERT_TRUE(f->Close());
+    delete f;
     f = NULL;
 
     std::time_t t = container.commit_time();
@@ -636,7 +636,7 @@ TEST_F(ContainerTest, CommitTime) {
     ASSERT_TRUE(container2.LoadFromFile(f, 0, true));
     ASSERT_EQ(container2.commit_time(), t) << "Commit time should be preserved";
 
-    ASSERT_TRUE(f->Close());
+    delete f;
     f = NULL;
 }
 

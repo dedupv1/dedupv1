@@ -114,6 +114,8 @@ class Dedupv1dVolumeFastCopy {
          */
         explicit Dedupv1dVolumeFastCopy(Dedupv1dVolumeInfo* volume_info);
 
+        virtual ~Dedupv1dVolumeFastCopy();
+
         /**
          * Configures the cloner.
          *
@@ -142,14 +144,6 @@ class Dedupv1dVolumeFastCopy {
      * @return true iff ok, otherwise an error has occurred
          */
         bool Stop(const dedupv1::StopContext& stop_context);
-
-        /**
-         * Closes the volume detacher and frees all its
-         * resources.
-         *
-     * @return true iff ok, otherwise an error has occurred
-         */
-        bool Close();
 
         /**
          * The parameter has been validated, the dedupv1d volume info ensures that both volumes

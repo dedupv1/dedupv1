@@ -201,12 +201,12 @@ class Dedupv1dVolumeInfo: public dedupv1::StatisticProvider {
          */
         Dedupv1dVolumeInfo();
 
-	/**
-	 * Destructor
-	 */
-	virtual ~Dedupv1dVolumeInfo();
-        
-	/**
+        /**
+         * Destructor
+         */
+        virtual ~Dedupv1dVolumeInfo();
+
+        /**
          * Starts the volume info.
          *
          * @param system
@@ -244,12 +244,6 @@ class Dedupv1dVolumeInfo: public dedupv1::StatisticProvider {
          * @return true iff ok, otherwise an error has occurred
          */
         bool Stop(const dedupv1::StopContext& stop_context);
-
-        /**
-         * closes the volume info and frees all its resources.
-         * @return true iff ok, otherwise an error has occurred
-         */
-        bool Close();
 
         /**
          *

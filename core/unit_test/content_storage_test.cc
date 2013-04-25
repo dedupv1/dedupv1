@@ -119,12 +119,12 @@ protected:
 
     virtual void TearDown() {
         if (chunker) {
-            ASSERT_TRUE(chunker->Close());
+            delete chunker;
             chunker = NULL;
         }
         if (system) {
             ASSERT_TRUE(system->Stop(StopContext::FastStopContext()));
-            ASSERT_TRUE(system->Close());
+            delete system;
         }
     }
 };
@@ -150,7 +150,7 @@ TEST_P(ContentStorageTest, BasicReadWrite) {
     ReadTestData(session);
 
     DEBUG("Shutdown");
-    ASSERT_TRUE(session->Close());
+    delete session;
 }
 
 }

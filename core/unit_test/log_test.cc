@@ -169,8 +169,7 @@ protected:
             if (log->wasStarted_) {
                 started = true;
             }
-
-            ASSERT_TRUE(log->Close());
+            delete log;
 
             // Here we check if it is possible to reopen the log
             log = CreateLog(config_file());
@@ -183,7 +182,7 @@ protected:
             } else {
                 EXPECT_TRUE(log->Start(StartContext(), &system));
             }
-            ASSERT_TRUE(log->Close());
+            delete log;
         }
     }
 
@@ -299,7 +298,7 @@ TEST_P(LogTest, Restart) {
     ASSERT_TRUE(log->Start(StartContext(), &system));
     SystemStartEventData event_data;
     ASSERT_TRUE(log->CommitEvent(EVENT_TYPE_SYSTEM_START, &event_data, NULL, NULL, NO_EC));
-    ASSERT_TRUE(log->Close());
+    delete log;
 
     log = CreateLog(config_file());
     ASSERT_TRUE(log);
@@ -492,7 +491,8 @@ TEST_P(LogTest, MovingReplayID) {
     ASSERT_TRUE(log->CommitEvent(EVENT_TYPE_VOLUME_DETACH, &message2, NULL, NULL, NO_EC));
 
     ASSERT_TRUE(log->UnregisterConsumer("context"));
-    ASSERT_TRUE(log->Close());
+    delete log;
+
     log = NULL;
     context.Clear();
 
@@ -525,7 +525,7 @@ TEST_P(LogTest, ReplayCrash) {
     ASSERT_TRUE(log->CommitEvent(EVENT_TYPE_VOLUME_DETACH, &message2, NULL, NULL, NO_EC));
 
     ASSERT_TRUE(log->UnregisterConsumer("context"));
-    ASSERT_TRUE(log->Close());
+    delete log;
     log = NULL;
     context.Clear();
 
@@ -585,7 +585,7 @@ TEST_P(LogTest, ForbidParallelReplay) {
         ASSERT_TRUE(log->CommitEvent(EVENT_TYPE_VOLUME_DETACH, &message2, NULL, NULL, NO_EC));
     }
     ASSERT_TRUE(log->UnregisterConsumer("context"));
-    ASSERT_TRUE(log->Close());
+    delete log;
     log = NULL;
     context.Clear();
 
@@ -1012,7 +1012,7 @@ TEST_P(LogTest, RestartWithLargeValues) {
     ASSERT_EQ(context.type_map[kEventTypeTestLarge2], 5U); // 4 DIRECT, 1 BG
 
     ASSERT_TRUE(log->UnregisterConsumer("context"));
-    ASSERT_TRUE(log->Close());
+    delete log;
     log = NULL;
 
     log = CreateLog(config_file());
@@ -1065,7 +1065,7 @@ TEST_P(LogTest, RestartWithLargeValuesTailDestroyedNearHead) {
     INFO("Replayed " << replayed_ids[0] << ", " << replayed_ids[1]);
 
     ASSERT_TRUE(log->UnregisterConsumer("context"));
-    ASSERT_TRUE(log->Close());
+    delete log;
     log = NULL;
 
     // Remove the two bucket from the next entry to replay
@@ -1078,7 +1078,7 @@ TEST_P(LogTest, RestartWithLargeValuesTailDestroyedNearHead) {
     ASSERT_TRUE(log_index->Delete(&key, sizeof(key)) == DELETE_OK);
     key = (replayed_ids[1] * 2);
     ASSERT_TRUE(log_index->Delete(&key, sizeof(key)) == DELETE_OK);
-    ASSERT_TRUE(log_index->Close());
+    delete log;
     log_index = NULL;
 
     INFO("Destroy " << (replayed_ids[1] * 2) - 1 << ", " << ((replayed_ids[1] * 2)));
@@ -1153,7 +1153,7 @@ TEST_P(LogTest, FailedRestartWithDestroyedReplayEvent) {
     ASSERT_EQ(context.type_map[kEventTypeTestLarge2], 5U); // 4 DIRECT, 1 BG
 
     ASSERT_TRUE(log->UnregisterConsumer("context"));
-    ASSERT_TRUE(log->Close());
+    delete log;
     log = NULL;
 
     // Remove the two bucket from the next entry to replay
@@ -1166,7 +1166,7 @@ TEST_P(LogTest, FailedRestartWithDestroyedReplayEvent) {
     ASSERT_TRUE(log_index->Delete(&key, sizeof(key)) == DELETE_OK);
     key = (replayed_ids[1] * 2);
     ASSERT_TRUE(log_index->Delete(&key, sizeof(key)) == DELETE_OK);
-    ASSERT_TRUE(log_index->Close());
+    delete log;
     log_index = NULL;
 
     INFO("Destroy " << (replayed_ids[1] * 2) - 1 << ", " << ((replayed_ids[1] * 2)));
@@ -1178,7 +1178,7 @@ TEST_P(LogTest, FailedRestartWithDestroyedReplayEvent) {
     start_context.set_create(StartContext::NON_CREATE);
     ASSERT_FALSE(log->Start(start_context, &system));
     log->ClearData();
-    log->Close();
+    delete log;
     log = NULL;
 }
 
@@ -1213,7 +1213,7 @@ TEST_P(LogTest, RestartWithHeadDestroyedNearTail) {
     ASSERT_TRUE(log->Replay(EVENT_REPLAY_MODE_REPLAY_BG, 1, replayed_ids + 1, NULL));
 
     ASSERT_TRUE(log->UnregisterConsumer("context"));
-    ASSERT_TRUE(log->Close());
+    delete log;
     log = NULL;
 
     // Remove the two bucket from the next entry to replay
@@ -1231,7 +1231,7 @@ TEST_P(LogTest, RestartWithHeadDestroyedNearTail) {
     key = commit_log_id + event_size - 1;
     INFO("Delete " << key);
     ASSERT_TRUE(log_index->Delete(&key, sizeof(key)) == DELETE_OK);
-    ASSERT_TRUE(log_index->Close());
+    delete log_index;
     log_index = NULL;
 
     log = CreateLog(config_file());
@@ -1297,7 +1297,7 @@ TEST_P(LogTest, RestartWithLargeValuesNearHeadDestroyed) {
     ASSERT_EQ(context.type_map[kEventTypeTestLarge2], 5U); // 4 DIRECT, 1 BG
 
     ASSERT_TRUE(log->UnregisterConsumer("context"));
-    ASSERT_TRUE(log->Close());
+    delete log;
     log = NULL;
 
     // Remove the two bucket from the next entry to replay
@@ -1322,7 +1322,7 @@ TEST_P(LogTest, RestartWithLargeValuesNearHeadDestroyed) {
         log_index->Put(&key, sizeof(key), log_data);
     }
 
-    ASSERT_TRUE(log_index->Close());
+    delete log_index;
     log_index = NULL;
 
     log = CreateLog(config_file());
@@ -1336,14 +1336,14 @@ TEST_P(LogTest, RestartWithLargeValuesNearHeadDestroyed) {
 
     ASSERT_TRUE(log->UnregisterConsumer("context"));
 
-    ASSERT_TRUE(log->Close());
+    delete log;
     log = NULL;
 
     log = CreateLog(config_file());
     ASSERT_TRUE(log);
     ASSERT_TRUE(log->Start(StartContext(StartContext::NON_CREATE), &system));
     ASSERT_TRUE(log->PerformDirtyReplay());
-    ASSERT_TRUE(log->Close());
+    delete log;
     log = NULL;
 }
 
@@ -1382,7 +1382,7 @@ TEST_P(LogTest, NoRestartWithDestroyedLog) {
     ASSERT_EQ(2, number_replayed); // Two of the following ones
 
     ASSERT_TRUE(log->UnregisterConsumer("context"));
-    ASSERT_TRUE(log->Close());
+    delete log;
     log = NULL;
 
     // Remove the two bucket from the next entry to replay
@@ -1396,7 +1396,7 @@ TEST_P(LogTest, NoRestartWithDestroyedLog) {
     INFO("Delete " << key);
     ASSERT_TRUE(log_index->Delete(&key, sizeof(key)) == DELETE_OK);
 
-    ASSERT_TRUE(log_index->Close());
+    delete log_index;
     log_index = NULL;
 
     log = CreateLog(config_file());
@@ -1406,7 +1406,7 @@ TEST_P(LogTest, NoRestartWithDestroyedLog) {
     start_context.set_create(StartContext::NON_CREATE);
     ASSERT_FALSE(log->Start(start_context, &system));
     log->ClearData();
-    log->Close();
+    delete log;
     log = NULL;
 }
 
@@ -1452,7 +1452,7 @@ TEST_P(LogTest, RestartWithLargeValuesHeadDestroyed) {
     ASSERT_EQ(context.type_map[kEventTypeTestLarge2], 5U); // 4 DIRECT, 1 BG
 
     ASSERT_TRUE(log->UnregisterConsumer("context"));
-    ASSERT_TRUE(log->Close());
+    delete log;
     log = NULL;
 
     // Remove the two bucket from the next entry to replay
@@ -1470,7 +1470,7 @@ TEST_P(LogTest, RestartWithLargeValuesHeadDestroyed) {
     key = commit_log_id + event_size - 1;
     INFO("Delete " << key);
     ASSERT_TRUE(log_index->Delete(&key, sizeof(key)) == DELETE_OK);
-    ASSERT_TRUE(log_index->Close());
+    delete log_index;
     log_index = NULL;
 
     log = CreateLog(config_file());
@@ -1531,7 +1531,7 @@ TEST_P(LogTest, RestartWithLogEntries) {
     ASSERT_EQ(context.type_map[kEventTypeTestLarge2], 5U); // 4 DIRECT, 1 BG
 
     ASSERT_TRUE(log->UnregisterConsumer("context"));
-    ASSERT_TRUE(log->Close());
+    delete log;
     log = NULL;
 
     log = CreateLog(config_file());
@@ -1596,7 +1596,7 @@ TEST_P(LogTest, PickCorrectReplayIdAfterCrash) {
 
     int64_t replay_id = log->replay_id();
     log->ClearData();
-    log->Close();
+    delete log;
     log = NULL;
 
     log = CreateLog(config_file());
@@ -1650,7 +1650,7 @@ TEST_P(LogTest, RestartAfterCrash) {
     log->SetLogPosition(0); // introduce a corrupt state
     // log->SetReplayPosition(0); // introduce a corrupt state
 
-    ASSERT_TRUE(log->Close());
+    delete log;
     log = NULL;
 
     log = CreateLog(config_file());
@@ -1702,7 +1702,7 @@ TEST_P(LogTest, RestartLogWithOverflow) {
     EXPECT_GE(context.type_map[kEventTypeTestLarge], overflow_count + 10); // 4 DIRECT, 0 BG
 
     ASSERT_TRUE(log->UnregisterConsumer("context"));
-    ASSERT_TRUE(log->Close());
+    delete log;
     log = NULL;
 
     log = CreateLog(config_file());
@@ -1753,7 +1753,7 @@ TEST_P(LogTest, GenerateEmptyLogEvent) {
     EXPECT_EQ(context.type_list().back(), EVENT_TYPE_LOG_EMPTY);
 
     ASSERT_TRUE(log->UnregisterConsumer("context"));
-    ASSERT_TRUE(log->Close());
+    delete log;
     log = NULL;
 
     log = CreateLog(config_file());
@@ -1813,7 +1813,7 @@ TEST_P(LogTest, RestartRandom) {
         ASSERT_TRUE(b.valid());
         ASSERT_TRUE(b.value());
 
-        ASSERT_TRUE(log->Close());
+        delete log;
         log = NULL;
 
         log = CreateLog(config_file());
@@ -1867,7 +1867,7 @@ TEST_P(LogTest, RestartAll) {
         ASSERT_TRUE(b.valid());
         ASSERT_TRUE(b.value());
 
-        ASSERT_TRUE(log->Close());
+        delete log;
         log = NULL;
 
         log = CreateLog(config_file());
@@ -1918,7 +1918,7 @@ TEST_P(LogTest, RestartLogWithLogIdOnPositionZero) {
 
     ASSERT_TRUE(log->UnregisterConsumer("context"));
 
-    ASSERT_TRUE(log->Close());
+    delete log;
     log = NULL;
 
     log = CreateLog(config_file());
@@ -1970,7 +1970,7 @@ TEST_P(LogTest, RestartLogWithOverflowAndDeletedLastHalfAfterCrash) {
     log->SetLogPosition(log->replay_id_); // introduce a corrupt state
     // log->SetReplayPosition(0); // introduce a corrupt state
 
-    ASSERT_TRUE(log->Close());
+    delete log;
     log = NULL;
 
     log = CreateLog(config_file());
@@ -2016,7 +2016,7 @@ TEST_P(LogTest, RestartLogWithOverflowAndDeletedLastHalf) {
     int64_t current_replay_id = log->replay_id_;
 
     ASSERT_TRUE(log->UnregisterConsumer("context"));
-    ASSERT_TRUE(log->Close());
+    delete log;
     log = NULL;
 
     log = CreateLog(config_file());
@@ -2063,7 +2063,7 @@ TEST_P(LogTest, RestartLogWithOverflowAndDeletedMiddle) {
     int64_t current_replay_id = log->replay_id_;
 
     ASSERT_TRUE(log->UnregisterConsumer("context"));
-    ASSERT_TRUE(log->Close());
+    delete log;
     log = NULL;
 
     log = CreateLog(config_file());
@@ -2115,7 +2115,7 @@ TEST_P(LogTest, RestartLogWithOverflowAndDeletedStartAndEnd) {
     int64_t current_replay_id = log->replay_id_;
 
     ASSERT_TRUE(log->UnregisterConsumer("context"));
-    ASSERT_TRUE(log->Close());
+    delete log;
     log = NULL;
 
     log = CreateLog(config_file());

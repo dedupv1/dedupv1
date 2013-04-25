@@ -68,10 +68,7 @@ class ChunkerSession {
          * the given list.
          * Not all data that is given must be enclosed in the
          * chunks returns. There may be data that is not
-         * ready to be enclosed in a chunk (open data). All
-         * of this data should be enclosed in a chunk in later
-         * requests of ChunkData of the same session or at
-         * latest in Close or CloseRequest calls.
+         * ready to be enclosed in a chunk (open data).
          *
          * @param data data to chunk
          * @param offset offset within the block. Used by the static chunker for the alignment.
@@ -86,11 +83,6 @@ class ChunkerSession {
                 bool last_chunk_call,
                 std::list<Chunk*>* chunks) = 0;
 
-        /**
-         * Close the chunker session.
-          * @return true iff ok, otherwise an error has occurred
-         */
-        virtual bool Close();
 
         /**
          * returns the number of bytes that are currently chunked, but
@@ -170,13 +162,6 @@ class Chunker : public dedupv1::StatisticProvider {
      * @return
      */
     virtual bool SetOption(const std::string& option_name, const std::string& option);
-
-    /**
-     * Closes the chunker. The method is designed to be overwritten by subclasses.
-     * The default implementation frees its resources and returns true.
-     * @return
-     */
-    virtual bool Close();
 
     /**
      * Returns the minimal (normal) chunk size.

@@ -234,6 +234,8 @@ class Scheduler {
          */
         Scheduler();
 
+        virtual ~Scheduler();
+
         /**
          * Starts the scheduler
          * @return true iff ok, otherwise an error has occurred
@@ -245,12 +247,6 @@ class Scheduler {
          * @return true iff ok, otherwise an error has occurred
          */
         bool Run();
-
-        /**
-         * Closes the scheduler and frees all its resources.
-         * @return true iff ok, otherwise an error has occurred
-         */
-        bool Close();
 
         /**
          * Stops the scheduler

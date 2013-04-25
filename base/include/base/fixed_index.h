@@ -259,8 +259,6 @@ class FixedIndex : public IDBasedIndex {
 
         virtual uint64_t GetItemCount();
 
-        virtual bool Close();
-
         int64_t GetLimitId();
 
         virtual bool SupportsIterator();

@@ -134,6 +134,8 @@ class Dedupv1dVolumeDetacher {
          */
         explicit Dedupv1dVolumeDetacher(Dedupv1dVolumeInfo* volume_info);
 
+        virtual ~Dedupv1dVolumeDetacher();
+
         /**
          * Configures the detacher.
          *
@@ -163,14 +165,6 @@ class Dedupv1dVolumeDetacher {
      * @return true iff ok, otherwise an error has occurred
          */
         bool Stop(const dedupv1::StopContext& stop_context);
-
-        /**
-         * Closes the volume detacher and frees all its
-         * resources.
-         *
-     * @return true iff ok, otherwise an error has occurred
-         */
-        bool Close();
 
         /**
          * Detaches the given volume.

@@ -189,8 +189,6 @@ class TCMemHashIndex : public MemoryIndex {
 
         virtual uint64_t GetMemorySize();
 
-        virtual bool Close();
-
         virtual bool Clear();
 
         virtual std::string PrintProfile();

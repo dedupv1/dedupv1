@@ -117,12 +117,16 @@ bool Dedupv1Replayer::Replay() {
     return true;
 }
 
-bool Dedupv1Replayer::Close() {
+Dedupv1Replayer::~Dedupv1Replayer() {
+  if (system_) {
+    delete system_;
+  }
+}
+bool Dedupv1Replayer::Stop() {
     DEBUG("Closing dedupv1 replayer");
     if (system_) {
         CHECK(system_->Shutdown(dedupv1::StopContext::FastStopContext()), "Failed to start dedupv1 shutdown");
         CHECK(system_->Stop(), "Failed to stop dedupv1 system");
-        CHECK(system_->Close(), "Failed to close system");
     }
     return true;
 }

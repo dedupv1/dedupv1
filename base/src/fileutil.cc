@@ -167,18 +167,6 @@ File::~File() {
     }
 }
 
-bool File::Close() {
-    int i = close(this->fd_);
-    fd_ = 0;
-    if (i == -1) {
-        ERROR(path() << ", message " << strerror(errno));
-        return false;
-    }
-    TRACE("Close file " << path_);
-    delete this;
-    return true;
-}
-
 ssize_t File::Read(off_t offset, void* data, size_t size) {
     ssize_t bytes = 0;
     while (true) {
@@ -495,7 +483,7 @@ Option<bytestring> File::ReadContents(const string& filename) {
     }
     delete[] buffer;
     buffer = NULL;
-    CHECK(f->Close(), "Failed to close file");
+    delete f;
     f = NULL;
     CHECK(r >= 0, "Failed to read: filename " << filename << ", offset " << offset << ", message " << strerror(errno));
     return make_option(bs);
@@ -516,8 +504,7 @@ bool File::CopyFile(const std::string& src_name, const std::string& dest_name, i
     }
     File* dest = File::Open(dest_name, dest_flags, dest_mode);
     if (!dest) {
-        (void) src->Close();
-        // no warning or error as open already printed a good error message
+        delete src;
         return false;
     }
 
@@ -556,17 +543,8 @@ bool File::CopyFile(const std::string& src_name, const std::string& dest_name, i
         ERROR("Failed to sync dest");
         failed = true;
     }
-    if (!dest->Close()) {
-        ERROR("Failed to close dest");
-        failed = true;
-        dest = NULL;
-    }
-    if (!src->Close()) {
-        ERROR("Failed to close src");
-        failed = true;
-        src = NULL;
-    }
-
+    delete dest;
+    delete src;
     return !failed;
 }
 

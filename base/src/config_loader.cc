@@ -101,17 +101,13 @@ bool ConfigLoader::ProcessFile(const std::string& filename) {
     int line_index = 1;
     while (file->GetLine(&offset, &buffer, 1024)) {
         if (!ProcessLine(buffer, line_index)) {
-            if (!file->Close()) {
-                WARNING("Failed to close configuration file");
-            }
+            delete file;
             return false;
         }
         config_ += buffer + "\n";
         line_index++;
     }
-    if (!file->Close()) {
-        WARNING("Failed to close configuration file");
-    }
+    delete file;
     return true;
 }
 

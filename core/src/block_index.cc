@@ -315,7 +315,6 @@ bool BlockIndex::Stop(dedupv1::StopContext stop_context) {
     }
 
     CHECK(this->bg_committer_.Stop(stop_context), "Failed to stop bg committer");
-    CHECK(this->bg_committer_.Close(), "Failed to close bg committer");
 
     if ((state_ == STARTED || state_ == RUNNING) && stop_context.mode() == dedupv1::StopContext::WRITEBACK) {
         DCHECK(block_index_, "Persistent block index not set");
@@ -345,10 +344,12 @@ bool BlockIndex::Stop(dedupv1::StopContext stop_context) {
     return true;
 }
 
-bool BlockIndex::Close() {
+BlockIndex::~BlockIndex() {
     DEBUG("Closing block index");
 
-    CHECK(this->Stop(dedupv1::StopContext::FastStopContext()), "Failed to stop block index");
+    if(!this->Stop(dedupv1::StopContext::FastStopContext())) {
+      WARNING("Failed to stop block index");
+    }
 
     if (info_store_) {
         // if the block index is not started, there is nothing to dump
@@ -358,11 +359,11 @@ bool BlockIndex::Close() {
     }
 
     if (this->block_index_) {
-        CHECK(this->block_index_->Close(), "Error closing block index");
+        delete block_index_;
         this->block_index_ = NULL;
     }
     if (this->failed_block_write_index_) {
-        CHECK(this->failed_block_write_index_->Close(), "Error closing failed write index");
+        delete failed_block_write_index_;
         this->failed_block_write_index_ = NULL;
     }
 
@@ -376,9 +377,7 @@ bool BlockIndex::Close() {
         delete commit_state_callback;
     }
     if (this->auxiliary_block_index_) {
-        if (!this->auxiliary_block_index_->Close()) {
-            WARNING("Error closing auxiliary block index");
-        }
+       delete auxiliary_block_index_;
         this->auxiliary_block_index_ = NULL;
     }
 
@@ -391,7 +390,6 @@ bool BlockIndex::Close() {
         log_ = NULL;
 
     }
-    return true;
 }
 
 bool BlockIndex::DumpMetaInfo() {
@@ -409,16 +407,16 @@ bool BlockIndex::DumpMetaInfo() {
 void BlockIndex::ClearData() {
     this->bg_committer_.Stop(StopContext::WritebackStopContext());
     if (this->block_index_) {
-        this->block_index_->Close();
+        delete this->block_index_;
         block_index_ = NULL;
     }
     if (this->failed_block_write_index_) {
-        this->failed_block_write_index_->Close();
+        delete this->failed_block_write_index_;
         this->failed_block_write_index_ = NULL;
     }
 
     if (this->auxiliary_block_index_) {
-        this->auxiliary_block_index_->Close();
+        delete this->auxiliary_block_index_;
         auxiliary_block_index_ = NULL;
     }
     if (this->log_) {

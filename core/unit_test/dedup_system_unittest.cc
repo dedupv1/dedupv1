@@ -134,7 +134,7 @@ TEST_F(DedupSystemTest, ContainerMismatchSameRequest) {
     delete[] buffer;
     if (system) {
         ASSERT_TRUE(system->Stop(StopContext::FastStopContext()));
-        ASSERT_TRUE(system->Close());
+        delete system;
     }
     system = NULL;
 }

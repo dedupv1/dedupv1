@@ -63,7 +63,7 @@
           dedupv1::base::Profile update_time_;
 
           dedupv1::base::Profile delete_time_;
-          
+
           tbb::atomic<uint64_t> lookup_count_;
 
           tbb::atomic<uint64_t> update_count_;
@@ -72,7 +72,7 @@
       };
 
       Statistics stats_;
-    
+
       /**
        * Option to use a Bloom filter.
        *
@@ -90,7 +90,7 @@
        * Can be set using SetOptions().
        */
       size_t block_size_;
-      
+
       /**
        * Directory to store the index data in
        */
@@ -181,8 +181,8 @@
 
       /**
        * Write batch support for leveldb
-       */ 
-      virtual put_result PutBatch(const std::vector<std::tr1::tuple<bytestring, 
+       */
+      virtual put_result PutBatch(const std::vector<std::tr1::tuple<bytestring,
           const google::protobuf::Message*> >& data);
 
     virtual enum delete_result Delete(const void* key, size_t key_size);
@@ -204,17 +204,9 @@
     virtual uint64_t GetPersistentSize();
 
     /**
-     * Closes the leveldb.
-     * @return true iff ok, otherwise an error occurred.
-     * Regardless of the return code, all resources that can be
-     * freed are freed by the system. Do not call Close again.
-     */
-    virtual bool Close();
-
-    /**
      * Creats an iterator instance of the database
      */
-    virtual IndexIterator* CreateIterator(); 
+    virtual IndexIterator* CreateIterator();
 };
 
 }

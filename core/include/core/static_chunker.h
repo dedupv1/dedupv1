@@ -128,20 +128,13 @@ class StaticChunkerSession : public ChunkerSession {
     public:
         explicit StaticChunkerSession(StaticChunker* chunker);
 
-        virtual ~StaticChunkerSession() {
-
-        }
+        virtual ~StaticChunkerSession();
 
         /**
          * @return true iff ok, otherwise an error has occurred
          */
         virtual bool ChunkData(const byte* data,
                 unsigned int offset, unsigned int size, bool last_chunk_call, std::list<Chunk*>* chunks);
-
-        /**
-         * @return true iff ok, otherwise an error has occurred
-         */
-        virtual bool Close();
 
         virtual unsigned int open_chunk_position();
 
