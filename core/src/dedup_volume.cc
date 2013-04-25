@@ -45,7 +45,6 @@ using dedupv1::scsi::SCSI_KEY_NOT_READY;
 using dedupv1::scsi::ScsiResult;
 using dedupv1::base::Option;
 using dedupv1::base::ErrorContext;
-using dedupv1::base::ResourceManagement;
 
 LOGGER("DedupVolume");
 

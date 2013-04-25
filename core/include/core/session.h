@@ -30,7 +30,6 @@
 #include <core/block_mapping.h>
 #include <core/chunk_store.h>
 #include <core/storage.h>
-#include <base/resource_management.h>
 #include <core/chunk.h>
 #include <core/chunk_mapping.h>
 

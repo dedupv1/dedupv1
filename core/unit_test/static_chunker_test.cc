@@ -21,7 +21,6 @@
 #include <core/static_chunker.h>
 #include <core/chunker.h>
 #include <core/chunk_mapping.h>
-#include <base/resource_management.h>
 #include <core/chunk.h>
 #include <test_util/log_assert.h>
 

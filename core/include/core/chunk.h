@@ -22,7 +22,6 @@
 #define CHUNK_H__
 
 #include <core/dedup.h>
-#include <base/resource_management.h>
 
 namespace dedupv1 {
 

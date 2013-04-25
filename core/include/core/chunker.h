@@ -25,7 +25,6 @@
 #include <base/factory.h>
 #include <core/statistics.h>
 #include <core/chunk.h>
-#include <base/resource_management.h>
 
 #include <map>
 #include <list>

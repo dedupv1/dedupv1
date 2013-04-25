@@ -34,7 +34,7 @@
 #include <base/base.h>
 #include <base/index.h>
 #include <base/profile.h>
-#include <base/resource_management.h>
+#include <base/locks.h>
 #include <base/fileutil.h>
 
 #include <gtest/gtest_prod.h>

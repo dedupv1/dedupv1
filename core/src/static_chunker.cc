@@ -28,7 +28,6 @@
 
 #include <core/chunker.h>
 #include <base/strutil.h>
-#include <base/resource_management.h>
 #include <core/chunk.h>
 #include <base/logging.h>
 #include <base/timer.h>
@@ -39,7 +38,6 @@ using std::string;
 using std::stringstream;
 using std::list;
 using dedupv1::base::ProfileTimer;
-using dedupv1::base::ResourceManagement;
 using dedupv1::base::strutil::ToStorageUnit;
 
 LOGGER("StaticChunker");

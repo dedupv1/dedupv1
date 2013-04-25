@@ -46,7 +46,6 @@
 #include <base/strutil.h>
 #include <base/timer.h>
 #include <core/filter_chain.h>
-#include <base/resource_management.h>
 #include <base/logging.h>
 #include <core/open_request.h>
 #include <core/session.h>
@@ -84,7 +83,6 @@ using dedupv1::blockindex::BlockMapping;
 using dedupv1::chunkstore::ChunkStore;
 using dedupv1::chunkstore::Storage;
 using dedupv1::base::ScopedArray;
-using dedupv1::base::ResourceManagement;
 using dedupv1::filter::FilterChain;
 using dedupv1::base::CRC;
 using dedupv1::chunkindex::ChunkMapping;

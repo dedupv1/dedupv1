@@ -19,7 +19,6 @@
  */
 
 #include <core/dedup_system.h>
-#include <base/resource_management.h>
 #include <base/logging.h>
 
 #include "dedupv1d.h"

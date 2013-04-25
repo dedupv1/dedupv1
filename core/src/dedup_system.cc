@@ -91,7 +91,6 @@ using dedupv1::filter::FilterChain;
 using dedupv1::ContentStorage;
 using dedupv1::Session;
 using dedupv1::OpenRequest;
-using dedupv1::base::ResourceManagement;
 using dedupv1::log::Log;
 using dedupv1::gc::GarbageCollector;
 using dedupv1::gc::UsageCountGarbageCollector;

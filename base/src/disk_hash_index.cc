@@ -40,7 +40,6 @@
 #include <base/crc32.h>
 #include <base/locks.h>
 #include <base/strutil.h>
-#include <base/resource_management.h>
 #include <base/logging.h>
 #include <base/timer.h>
 #include <base/protobuf_util.h>
