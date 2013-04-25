@@ -449,21 +449,6 @@ public dedupv1::log::LogAckConsumer {
     bool had_been_started_;
 
     /**
-     * Usually this is true, but old installation may be missing this
-     *
-     * The super block creates a kind of a problem because the file size is usually a multiple of the container size
-     * and the super block doesn't really fit in this partiton of a container file into container places.
-     *
-     * We do three things:
-     * - The file size is really the container data size. The first 4k of the file is reserved for the super block. This 4k
-     *   are added to the file size. So the total real file size is "file_size_" + 4K
-     * - We correct the file offset at the last point possible. (WriteContainer/ReadContainer). If the container storage
-     * - has a superblock, we add the 4k offset to the file offset. That means that most but the very low level offsets are
-     *   the offset from the beginning of the container data area (offset 4K of the file)
-     */
-    bool has_superblock_;
-
-    /**
      * set of all containers that are currently moved or merged or deleted. It is used to overcome problems with the race
      * situation between the actual move/merge and LogAck calls
      *

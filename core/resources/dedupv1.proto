@@ -116,7 +116,6 @@ message ContainerLogfileData {
 
     optional uint32 size = 3;
     repeated ContainerFileData file = 4;
-    optional bool contains_superblock = 5;
 }
 
 message SystemStartEventData {

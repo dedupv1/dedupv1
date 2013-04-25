@@ -403,9 +403,8 @@ enum lookup_result ContainerStorage::ReadContainerLocked(Container* container,
     // LOOKUP_FOUND
     unsigned int file_index = container_address.file_index();
     uint64_t file_offset = container_address.file_offset();
-    if (has_superblock_) {
-        file_offset += kSuperBlockSize;
-    }
+    file_offset += kSuperBlockSize;
+
     CHECK_RETURN(file_index < this->file_.size(),
         LOOKUP_ERROR, "Illegal file index: " << file_index << ", file count " << this->file_.size());
     File* file = this->file_[file_index].file();
@@ -469,9 +468,7 @@ enum lookup_result ContainerStorage::ReadContainer(Container* container) {
     unsigned int file_index = container_address.second.file_index();
     uint64_t file_offset = container_address.second.file_offset();
 
-    if (has_superblock_) {
-        file_offset += kSuperBlockSize;
-    }
+    file_offset += kSuperBlockSize;
 
     CHECK_RETURN(file_index < this->file_.size(),
         LOOKUP_ERROR, "Illegal file index: " << file_index << ", file count " << this->file_.size());
@@ -552,9 +549,7 @@ bool ContainerStorage::WriteContainer(Container* container, const ContainerStora
     unsigned int file_index = container_address.file_index();
     uint64_t file_offset = container_address.file_offset();
 
-    if (has_superblock_) {
-        file_offset += kSuperBlockSize;
-    }
+    file_offset += kSuperBlockSize;
 
     File* file = this->file_[file_index].file();
     CHECK(file, "File not open: file index " << file_index);
@@ -996,7 +991,6 @@ ContainerStorage::ContainerStorage() : meta_data_cache_(this),
     info_store_ = NULL;
     calculate_container_checksum_ = true;
     timeout_committer_should_stop_ = false;
-    has_superblock_ = true;
     had_been_started_ = false;
     chunk_index_ = NULL;
     #ifdef DEDUPV1_CORE_TEST
@@ -1182,23 +1176,18 @@ bool ContainerStorage::Format(const ContainerFile& file, File* format_file) {
     DCHECK(format_file, "Format file not set");
     DCHECK(!file.uuid().IsNull(), "File uuid not set");
 
-    if (has_superblock_) {
-        ContainerSuperblockData superblock;
+    ContainerSuperblockData superblock;
         superblock.set_uuid(file.uuid().ToString());
 
-        CHECK(format_file->WriteSizedMessage(0, superblock, kSuperBlockSize, true) > 0,
-            "Failed to write superblock: " << superblock.DebugString());
-    }
+    CHECK(format_file->WriteSizedMessage(0, superblock, kSuperBlockSize, true) > 0,
+      "Failed to write superblock: " << superblock.DebugString());
 
     if (preallocate_) {
         uint64_t container_per_file = file.file_size() / container_size_;
 
-        if (has_superblock_) {
-            // Fallocate does never overwrite existing Data, so we can start at 0
-            CHECK(format_file->Fallocate(0, container_per_file * container_size_ + kSuperBlockSize), "Could not preallocate file " << file.filename());
-        } else {
-            CHECK(format_file->Fallocate(0, container_per_file * container_size_), "Could not preallocate file " << file.filename());
-        }
+        // Fallocate does never overwrite existing data, so we can start at 0
+        CHECK(format_file->Fallocate(0, container_per_file * container_size_ + kSuperBlockSize), 
+          "Could not preallocate file " << file.filename());
     }
     return true;
 }
@@ -1241,10 +1230,6 @@ bool ContainerStorage::Start(const StartContext& start_context, DedupSystem* sys
             "Container size mismatch (logged size " << log_data.container_size()
                                                     << ", configured size " << this->container_size_ << ")");
         this->last_given_container_id_ = log_data.last_given_container_id();
-
-        if (!log_data.has_contains_superblock() || !log_data.contains_superblock()) {
-            has_superblock_ = false; // legacy mode
-        }
     }
 
     // The complete file opening logic, we have to handle three (good/valid) cases
@@ -1295,7 +1280,7 @@ bool ContainerStorage::Start(const StartContext& start_context, DedupSystem* sys
             TRACE("Assign " << file_[i].file_size() << " to new file " << file_[i].filename() << ", size to assign " << size_to_assign);
 
             // Check super block contents
-            if (has_superblock_ && log_data.file_size() > i) {
+            if (log_data.file_size() > i) {
                 ContainerSuperblockData superblock;
 
                 CHECK(tmp_file->ReadSizedMessage(0, &superblock, kSuperBlockSize, true),
@@ -1315,9 +1300,7 @@ bool ContainerStorage::Start(const StartContext& start_context, DedupSystem* sys
                 Option<int64_t> fs = tmp_file->GetSize();
                 CHECK(fs.valid(), "Failed to get file size: " << file_[i].filename());
                 uint64_t total_file_size = fs.value();
-                if (has_superblock_) {
-                    total_file_size -= kSuperBlockSize;
-                }
+                total_file_size -= kSuperBlockSize;
                 CHECK(total_file_size == file_[i].file_size(), "Illegal file size: " << file_[i].filename() <<
                     ", reason file size not matching with pre-allocated on-disk size" <<
                     ", expected file size " <<  file_[i].file_size() <<
@@ -1702,7 +1685,6 @@ bool ContainerStorage::DumpMetaInfo() {
         file_data->set_file_size(file_[i].file_size());
         file_data->set_uuid(file_[i].uuid().ToString());
     }
-    data.set_contains_superblock(has_superblock_);
 
     CHECK(info_store_->PersistInfo("container-storage", data), "Failed to persist container storage info: " << data.ShortDebugString());
     DEBUG("Saved container storage state: " << data.ShortDebugString());

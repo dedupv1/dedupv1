@@ -1455,13 +1455,6 @@ class ContainerLogfileData : public ::google::protobuf::Message {
   inline ::google::protobuf::RepeatedPtrField< ::ContainerFileData >*
       mutable_file();
 
-  // optional bool contains_superblock = 5;
-  inline bool has_contains_superblock() const;
-  inline void clear_contains_superblock();
-  static const int kContainsSuperblockFieldNumber = 5;
-  inline bool contains_superblock() const;
-  inline void set_contains_superblock(bool value);
-
   // @@protoc_insertion_point(class_scope:ContainerLogfileData)
  private:
   inline void set_has_last_given_container_id();
@@ -1470,8 +1463,6 @@ class ContainerLogfileData : public ::google::protobuf::Message {
   inline void clear_has_container_size();
   inline void set_has_size();
   inline void clear_has_size();
-  inline void set_has_contains_superblock();
-  inline void clear_has_contains_superblock();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -1479,10 +1470,9 @@ class ContainerLogfileData : public ::google::protobuf::Message {
   ::google::protobuf::uint32 container_size_;
   ::google::protobuf::uint32 size_;
   ::google::protobuf::RepeatedPtrField< ::ContainerFileData > file_;
-  bool contains_superblock_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
 
   friend void  protobuf_AddDesc_dedupv1_2eproto();
   friend void protobuf_AssignDesc_dedupv1_2eproto();
@@ -6416,28 +6406,6 @@ ContainerLogfileData::file() const {
 inline ::google::protobuf::RepeatedPtrField< ::ContainerFileData >*
 ContainerLogfileData::mutable_file() {
   return &file_;
-}
-
-// optional bool contains_superblock = 5;
-inline bool ContainerLogfileData::has_contains_superblock() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
-}
-inline void ContainerLogfileData::set_has_contains_superblock() {
-  _has_bits_[0] |= 0x00000010u;
-}
-inline void ContainerLogfileData::clear_has_contains_superblock() {
-  _has_bits_[0] &= ~0x00000010u;
-}
-inline void ContainerLogfileData::clear_contains_superblock() {
-  contains_superblock_ = false;
-  clear_has_contains_superblock();
-}
-inline bool ContainerLogfileData::contains_superblock() const {
-  return contains_superblock_;
-}
-inline void ContainerLogfileData::set_contains_superblock(bool value) {
-  set_has_contains_superblock();
-  contains_superblock_ = value;
 }
 
 // -------------------------------------------------------------------
