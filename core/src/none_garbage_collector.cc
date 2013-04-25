@@ -236,7 +236,14 @@ bool NoneGarbageCollector::Stop(const dedupv1::StopContext& stop_context) {
             WARNING("Failed to unregister gc idle tick consumer");
         }
     }
-
+    if (this->log_) {
+        if (log_->IsRegistered("gc").value()) {
+            if (!this->log_->UnregisterConsumer("gc")) {
+                WARNING("Failed to unregister gc log consumer");
+            }
+        }
+        this->log_ = NULL;
+    }
     // we change the state after we removed the idle detector listener
     // so the idle callback cannot change the state
 

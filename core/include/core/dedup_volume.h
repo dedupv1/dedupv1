@@ -30,7 +30,6 @@
 #include <core/request.h>
 #include <core/filter_chain.h>
 #include <core/session.h>
-#include <base/resource_management.h>
 #include <core/chunker.h>
 #include <base/error.h>
 #include <core/statistics.h>
@@ -78,22 +77,6 @@ class DedupVolume : public dedupv1::StatisticProvider {
         dedupv1::Chunker* chunker_;
 
         bytestring zero_chunk_fingerprint_;
-
-        /**
-         * Session management.
-         *
-         * Sessions are very expensive to allocate and free.
-         * We therefore use (and reuse) a fixed number of sessions.
-         */
-        dedupv1::base::ResourceManagement<dedupv1::Session>* session_management_;
-
-        /**
-         * Number of sessions for the session management.
-         * This is also the maximal number of concurrency in the system.
-         * TODO: If there are no open sessions, the result should not be an error, but the
-         * thread should wait.
-         */
-        unsigned int session_count_;
 
         bool maintainance_mode_;
 
@@ -262,10 +245,6 @@ class DedupVolume : public dedupv1::StatisticProvider {
 
         inline const std::list<std::pair<std::string, std::string> >& chunking_config() const {
             return chunking_config_;
-        }
-
-        inline const dedupv1::base::ResourceManagement<dedupv1::Session>* session_management() const {
-            return session_management_;
         }
 
         /**

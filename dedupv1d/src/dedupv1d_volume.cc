@@ -113,7 +113,6 @@ bool Dedupv1dVolume::Start(DedupSystem* system) {
     this->block_count_ = this->volume()->GetLogicalSize() / this->block_size();
     CHECK(this->block_count() > 0, "Volume must have at least one block");
 
-    CHECK(this->volume_.SetOption("session-count", ToString(this->command_thread_count_ * 2)), "Failed to set session count");
     CHECK(this->handle()->SetOption("device-name", device_name()),
         "Cannot set default device name " << device_name()); // set default device-name
     CHECK(this->volume()->Start(system, this->maintenance_mode()), "Cannot start volume: base volume " << volume()->DebugString());

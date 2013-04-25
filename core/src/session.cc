@@ -84,7 +84,6 @@ bool Session::Init(DedupVolume* volume) {
     this->open_requests_.resize(max_requests);
     for (int i = 0; i < this->open_requests_.size(); i++) {
         this->open_requests_[i] = new OpenRequest(block_size);
-        CHECK(this->open_requests_[i], "Cannot create new open request");
     }
     this->open_request_count_ = 0;
     this->open_request_start_ = 0;
@@ -94,7 +93,6 @@ bool Session::Init(DedupVolume* volume) {
         this->buffer_size_ = Chunk::kMaxChunkSize;
     }
     this->buffer_ = new byte[this->buffer_size_];
-    CHECK(this->buffer_, "Alloc buffer failed");
     return true;
 }
 

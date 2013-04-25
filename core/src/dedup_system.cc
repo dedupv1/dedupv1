@@ -40,7 +40,6 @@
 #include <core/chunk_store.h>
 #include <core/content_storage.h>
 #include <base/crc32.h>
-#include <core/session_management.h>
 #include <base/thread.h>
 #include <base/runnable.h>
 #include <core/container_storage.h>
@@ -85,7 +84,6 @@ using dedupv1::base::strutil::ToStorageUnit;
 using dedupv1::base::strutil::StartsWith;
 using dedupv1::base::strutil::To;
 using dedupv1::base::strutil::ToString;
-using dedupv1::SessionResourceType;
 using dedupv1::base::ProfileTimer;
 using dedupv1::base::ScopedReadWriteLock;
 using dedupv1::chunkstore::ChunkStore;
@@ -126,7 +124,6 @@ namespace dedupv1 {
 
 const uint32_t DedupSystem::kDefaultLogFullPauseTime = 100 * 1000;
 const uint32_t DedupSystem::kDefaultBlockSize = 256 * 1024;
-const uint32_t DedupSystem::kDefaultSessionCount = 128;
 
 const ScsiResult DedupSystem::kFullError(dedupv1::scsi::SCSI_CHECK_CONDITION,
                                          dedupv1::scsi::SCSI_KEY_HARDWARE_ERROR, 0x03, 0x00);

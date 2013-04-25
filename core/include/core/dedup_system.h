@@ -35,8 +35,6 @@
 #include <core/chunk_store.h>
 #include <core/filter_chain.h>
 #include <core/content_storage.h>
-#include <core/session_management.h>
-#include <base/resource_management.h>
 #include <core/session.h>
 #include <core/log.h>
 #include <core/chunk.h>
@@ -73,9 +71,6 @@ class DedupSystem : public dedupv1::StatisticProvider {
      * Default: 256KB
      */
     static const uint32_t kDefaultBlockSize;
-
-    static const uint32_t kDefaultSessionCount;
-
 
     /**
      * State of the dedup system

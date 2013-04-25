@@ -60,7 +60,6 @@ protected:
     MockFilter filter;
     DedupVolume* volume;
     MockChunker chunker;
-    MockChunkerSession session;
 
     size_t buffer_size;
     byte buffer[8 * 1024];
@@ -82,7 +81,6 @@ protected:
         filter_list.push_back(&filter);
         EXPECT_CALL(content_storage, GetFilterList(_)).WillRepeatedly(Return(make_option(filter_list)));
         EXPECT_CALL(content_storage, default_chunker()).WillRepeatedly(Return(&chunker));
-        EXPECT_CALL(chunker, CreateSession()).WillOnce(Return(&session));
     }
 
     virtual void TearDown() {
@@ -128,15 +126,8 @@ TEST_F(DedupVolumeTest, StartWithinMainteinanceMode) {
     ASSERT_TRUE(volume->Start(&system, true));
 
     ASSERT_FALSE(volume->chunker());
-    ASSERT_FALSE(volume->session_management());
-
     ASSERT_TRUE(volume->ChangeMaintenanceMode(false));
-
-    ASSERT_TRUE(volume->session_management());
-
     ASSERT_TRUE(volume->ChangeMaintenanceMode(true));
-
-    ASSERT_FALSE(volume->session_management());
 }
 
 TEST_F(DedupVolumeTest, StartWithFilterConfig) {
@@ -198,6 +189,8 @@ TEST_F(DedupVolumeTest, StartWithChunkingConfigChangeFilter) {
 }
 
 TEST_F(DedupVolumeTest, MakeRequest) {
+    MockChunkerSession* chunker_session = new MockChunkerSession();
+    EXPECT_CALL(chunker, CreateSession()).WillOnce(Return(chunker_session));
     EXPECT_CALL(system, MakeRequest(_, REQUEST_READ, 0, 0, buffer_size, buffer, _))
     .Times(1)
     .WillOnce(::testing::Return(ScsiResult::kOk));

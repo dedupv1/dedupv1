@@ -46,7 +46,6 @@ using dedupv1::scsi::ScsiResult;
 using dedupv1::base::Option;
 using dedupv1::base::ErrorContext;
 using dedupv1::base::ResourceManagement;
-using dedupv1::SessionResourceType;
 
 LOGGER("DedupVolume");
 
@@ -57,8 +56,6 @@ DedupVolume::DedupVolume() {
     this->logical_size_ = 0;
     this->system_ = NULL;
     this->chunker_ = NULL;
-    this->session_management_ = NULL;
-    session_count_ = DedupSystem::kDefaultSessionCount;
     maintainance_mode_ = false;
 }
 
@@ -84,11 +81,6 @@ bool DedupVolume::SetOption(const string& option_name, const string& option) {
         CHECK(To<uint32_t>(option).valid(), "Illegal option " << option);
         this->id_ = To<uint32_t>(option).value();
         CHECK(this->id_ <= DedupVolume::kMaxVolumeId, "Illegal volume id: id " << this->id_ << ", max id " << DedupVolume::kMaxVolumeId);
-        return true;
-    }
-    if (option_name == "session-count") {
-        CHECK(ToStorageUnit(option).valid(), "Illegal option " << option);
-        this->session_count_ = ToStorageUnit(option).value();
         return true;
     }
     // per volume chunking config
@@ -177,13 +169,6 @@ bool DedupVolume::Start(DedupSystem* system, bool initial_maintaiance_mode) {
           enabled_filter_names_);
         CHECK(enabled_filter_list.valid(), "Illegal filter list");
         enabled_filter_list_ = enabled_filter_list.value();
-
-        CHECK(session_management_ == NULL, "Session management already set");
-        this->session_management_ = new ResourceManagement<Session>();
-        CHECK(this->session_management_, "Session Management failed");
-        CHECK(this->session_management_->Init("session",
-                this->session_count_,
-                new SessionResourceType(this)), "Failed to init session management");
     }
 
     return true;
@@ -244,13 +229,6 @@ bool DedupVolume::ChangeMaintenanceMode(bool maintaince_mode) {
     maintainance_mode_ = maintaince_mode;
     if (maintaince_mode) {
         // shut off
-        if (session_management_) {
-            CHECK(session_management_->GetAcquiredCount() == 0,
-                "Still sessions acquired");
-
-            delete session_management_;
-            session_management_ = NULL;
-        }
         if (chunker_) {
             delete chunker_;
           chunker_ = NULL;
@@ -258,7 +236,6 @@ bool DedupVolume::ChangeMaintenanceMode(bool maintaince_mode) {
     } else {
         // on
         DCHECK(!chunker_, "Chunker already set");
-        DCHECK(!session_management_, "Session management already set");
 
         if (!chunking_config_.empty()) {
 
@@ -281,20 +258,11 @@ bool DedupVolume::ChangeMaintenanceMode(bool maintaince_mode) {
         CHECK(enabled_filter_list.valid(), "Illegal filter list");
         enabled_filter_list_ = enabled_filter_list.value();
 
-        this->session_management_ = new ResourceManagement<Session>();
-        CHECK(this->session_management_, "Session Management failed");
-        CHECK(this->session_management_->Init("session",
-                this->session_count_,
-                new SessionResourceType(this)),
-            "Failed to init session management");
     }
     return true;
 }
 
 DedupVolume::~DedupVolume() {
-    if (session_management_) {
-        delete session_management_;
-    }
     if (chunker_) {
         delete chunker_;
         chunker_ = NULL;
@@ -437,19 +405,12 @@ dedupv1::scsi::ScsiResult DedupVolume::MakeRequest(enum request_type rw,
     CHECK_RETURN(this->MakeIndex(offset, &request_index, &request_offset), ScsiResult::kDefaultNotReady,
         "Failed to calculate block id: offset " << offset << ", volume " << this->DebugString());
 
-    Session* sess = this->session_management_->Acquire();
-    CHECK_RETURN(sess,
+    Session sess;;
+    CHECK_RETURN(sess.Init(this),
         (rw == REQUEST_READ ? ScsiResult::kReadError : ScsiResult::kWriteError),
         "No dedup session available");
-
-    DCHECK_RETURN(sess->open_request_count() == 0,
-        (rw == REQUEST_READ ? ScsiResult::kReadError : ScsiResult::kWriteError),
-        "Uncleared session");
-    dedupv1::scsi::ScsiResult scsi_result = this->system_->MakeRequest(sess, rw, request_index, request_offset, size, buffer, ec);
-    if (!this->session_management_->Release(sess)) {
-        WARNING("Failed to release session");
-    }
-
+    dedupv1::scsi::ScsiResult scsi_result =
+      this->system_->MakeRequest(&sess, rw, request_index, request_offset, size, buffer, ec);
     return scsi_result;
 }
 
