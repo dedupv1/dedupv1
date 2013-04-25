@@ -107,10 +107,6 @@ bool TCFixedIndex::SetOption(const string& option_name, const string& option) {
         this->size = ToStorageUnit(option).value();
         return true;
     }
-    if (option_name == "transactions") {
-        WARNING("Option transactions is depreciated");
-        return true;
-    }
     if (option_name == "checksum") {
         CHECK(To<bool>(option).valid(), "Illegal option " << option);
         this->checksum_ = To<bool>(option).value();

@@ -849,10 +849,6 @@ bool Dedupv1d::SetOption(const string& option_name, const string& option) {
         this->stats_persist_interval_ = d.value();
         return true;
     }
-    if (option_name == "stats.log-interval") {
-        WARNING("The option stats.log-interval is depreciated.");
-        return true;
-    }
     if (option_name == "update.log-interval") {
         Option<bool> b = To<bool>(option);
         if (b.valid()) {
@@ -872,10 +868,6 @@ bool Dedupv1d::SetOption(const string& option_name, const string& option) {
     }
     if (StartsWith(option_name, "info.")) {
         return this->info_store_.SetOption(option_name.substr(strlen("info.")), option);
-    }
-    if (option_name == "core-dump") {
-        WARNING("The option core-dump is depreciated. Use daemon.core-dump instead");
-        return SetOption("daemon.core-dump", option);
     }
     if (option_name == "logging") {
         return true;

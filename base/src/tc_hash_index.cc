@@ -102,14 +102,6 @@ bool TCHashIndex::SetOption(const string& option_name, const string& option) {
         this->filename_.push_back(option);
         return true;
     }
-    if (option_name == "sync") {
-        WARNING("Option sync is depreciated");
-        return true;
-    }
-    if (option_name == "lazy-sync") {
-        WARNING("Option lazy-sync is depreciated");
-        return true;
-    }
     if (option_name == "buckets") {
         CHECK(ToStorageUnit(option).valid(), "Illegal option " << option);
         this->buckets_ = ToStorageUnit(option).value();
@@ -159,10 +151,6 @@ bool TCHashIndex::SetOption(const string& option_name, const string& option) {
     if (option_name == "defrag") {
         CHECK(To<int32_t>(option).valid(), "Illegal option " << option);
         this->defrag_unit_ = To<int32_t>(option).value();
-        return true;
-    }
-    if (option_name == "transactions") {
-        WARNING("Option transactions is depreciated");
         return true;
     }
     if (option_name == "checksum") {

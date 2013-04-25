@@ -109,9 +109,6 @@ bool SqliteIndex::SetOption(const string& option_name, const string& option) {
         this->estimated_max_item_count = i.value();
         return true;
     }
-    if (option_name == "lazy-sync") {
-        return true; // ignore
-    }
     if (option_name == "max-key-size") {
         CHECK(To<size_t>(option).valid(), "Illegal option " << option);
         size_t v = To<size_t>(option).value();

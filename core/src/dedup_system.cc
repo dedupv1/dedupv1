@@ -210,10 +210,6 @@ bool DedupSystem::SetOption(const string& option_name, const string& option) {
         this->read_retry_count_ = To<uint32_t>(option).value();
         return true;
     }
-    if (option_name == "session-count") {
-        WARNING("Option session-count is depreciated");
-        return true;
-    }
     // Block index
     if (StartsWith(option_name, "block-index.")) {
         CHECK(this->block_index_, "Block index not set");
