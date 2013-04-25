@@ -48,14 +48,13 @@ namespace chunkstore {
  * It adds some statistics gathering to the storage system.
  */
 class ChunkStore : public dedupv1::StatisticProvider {
-    private:
-
+private:
 
     /**
      * Statistics about the chunk store
      */
     class Statistics {
-        public:
+public:
         Statistics();
 
         tbb::atomic<uint64_t> storage_reads_;
@@ -78,8 +77,7 @@ class ChunkStore : public dedupv1::StatisticProvider {
      * Statistics about the chunk store
      */
     Statistics stats_;
-
-    public:
+public:
     /**
      * Constructor
      * @return
@@ -111,8 +109,8 @@ class ChunkStore : public dedupv1::StatisticProvider {
      * @return true iff ok, otherwise an error has occurred
      */
     bool Start(
-            const dedupv1::StartContext& start_context,
-            dedupv1::DedupSystem* system);
+        const dedupv1::StartContext& start_context,
+        dedupv1::DedupSystem* system);
 
     /**
      * @return true iff ok, otherwise an error has occurred
@@ -138,8 +136,8 @@ class ChunkStore : public dedupv1::StatisticProvider {
      * @return true iff ok, otherwise an error has occurred
      */
     virtual bool WriteBlock(
-            dedupv1::chunkindex::ChunkMapping* chunk_mappings,
-            dedupv1::base::ErrorContext* ec);
+        dedupv1::chunkindex::ChunkMapping* chunk_mappings,
+        dedupv1::base::ErrorContext* ec);
 
     /**
      * On Success, it sets the data address member of the block mapping item.
@@ -151,10 +149,11 @@ class ChunkStore : public dedupv1::StatisticProvider {
      * @return true iff ok, otherwise an error has occurred
      */
     virtual bool ReadBlock(
-            dedupv1::blockindex::BlockMappingItem* item,
-            byte* buffer,
-            size_t* buffer_size,
-            dedupv1::base::ErrorContext* ec);
+        dedupv1::blockindex::BlockMappingItem* item,
+        byte* buffer,
+        uint32_t chunk_offset,
+        uint32_t size,
+        dedupv1::base::ErrorContext* ec);
 
     /**
      * Flushes all open data to disk

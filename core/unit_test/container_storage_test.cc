@@ -63,6 +63,8 @@ using dedupv1::base::NewRunnable;
 using testing::Return;
 using testing::_;
 using ::std::tr1::tuple;
+using dedupv1::base::Option;
+
 LOGGER("ContainerStorageTest");
 
 namespace dedupv1 {
@@ -173,9 +175,12 @@ protected:
 
         for (i = 0; i < TEST_DATA_COUNT; i++) {
             size_t result_size = TEST_DATA_SIZE;
-            ASSERT_FALSE(storage->Read(container_helper->data_address(i), container_helper->fingerprint(i).data()
-                    , container_helper->fingerprint(i).size(), result, &result_size, NO_EC))
-            << "Found data that should be deleted: key " << Fingerprinter::DebugString(container_helper->fingerprint(i));
+            Option<uint32_t> r = storage->Read(container_helper->data_address(i),
+                container_helper->fingerprint(i).data(),
+                container_helper->fingerprint(i).size(),
+                result, 0, result_size, NO_EC);
+            ASSERT_FALSE(r.valid()) << "Found data that should be deleted: key " <<
+            Fingerprinter::DebugString(container_helper->fingerprint(i));
         }
 
         delete[] result;
@@ -222,9 +227,14 @@ protected:
             memset(result, 0, TEST_DATA_SIZE);
             result_size = TEST_DATA_SIZE;
 
-            ASSERT_TRUE(storage->Read(container_helper->data_address(i), container_helper->fingerprint(i).data()
-                    , container_helper->fingerprint(i).size(), result, &result_size, NO_EC)) << "Read " << i << " failed";
-            ASSERT_TRUE(result_size == TEST_DATA_SIZE) << "Read " << i << " error";
+            Option<uint32_t> r = storage->Read(container_helper->data_address(i),
+                container_helper->fingerprint(i).data(),
+                container_helper->fingerprint(i).size(),
+                result,
+                0,
+                result_size, NO_EC);
+            ASSERT_TRUE(r.valid()) << "Read " << i << " failed";
+            ASSERT_TRUE(r.value() == TEST_DATA_SIZE) << "Read " << i << " error";
             ASSERT_TRUE(memcmp(container_helper->data(i), result, result_size) == 0) << "Compare " << i << " error";
         }
     }
@@ -570,8 +580,12 @@ bool ReadAndCheckContainer(ContainerStorage* storage, tbb::atomic<bool>* stop_fl
 
     while (!(*stop_flag) && !failed) {
         data_size = 512 * 1024;
-        bool r = storage->Read(container_helper->data_address(14), container_helper->fingerprint(14).data(), container_helper->fingerprint(14).size(), data_buffer, &data_size, NO_EC);
-        if (!r) {
+        Option<uint32_t> r =
+            storage->Read(container_helper->data_address(14),
+                container_helper->fingerprint(14).data(),
+                container_helper->fingerprint(14).size(),
+                data_buffer, 0, data_size, NO_EC);
+        if (!r.valid()) {
             failed = true;
         }
     }
@@ -1315,15 +1329,15 @@ TEST_P(ContainerStorageTest, Merge) {
     result_size[1] = TEST_DATA_SIZE;
 
     for (i = 0; i < 2; i++) {
-        ASSERT_TRUE(storage->Read(container_helper->data_address(i + 2),
-                container_helper->fingerprint(i + 2).data(),
-                container_helper->fingerprint(i + 2).size(), result[i], &result_size[i], NO_EC)) << "Read " << (i + 2) << " failed";
-        DEBUG("Read CRC " << (i + 2) << " - " << crc(result[i], result_size[i]));
-    }
-
-    for (int i = 0; i < 2; i++) {
-        ASSERT_TRUE(result_size[i] == TEST_DATA_SIZE) << "Read " << i << " error";
-        ASSERT_TRUE(memcmp(container_helper->data(i + 2), result[i], result_size[i]) == 0) << "Compare " << (i + 2) << " error";
+        Option<uint32_t> r = storage->Read(container_helper->data_address(i + 2),
+            container_helper->fingerprint(i + 2).data(),
+            container_helper->fingerprint(i + 2).size(), result[i],
+            0, result_size[i], NO_EC);
+        ASSERT_TRUE(r.valid()) << "Read " << (i + 2) << " failed";
+        DEBUG("Read CRC " << (i + 2) << " - " << crc(result[i], r.value()));
+        ASSERT_TRUE(r.value() == TEST_DATA_SIZE) << "Read " << i << " error";
+        ASSERT_TRUE(memcmp(container_helper->data(i + 2), result[i], r.value()) == 0) <<
+        "Compare " << (i + 2) << " error";
     }
 }
 
@@ -1396,15 +1410,14 @@ TEST_P(ContainerStorageTest, MergeWithCrash) {
     result_size[1] = TEST_DATA_SIZE;
 
     for (i = 0; i < 2; i++) {
-        EXPECT_TRUE(storage->Read(container_helper->data_address(i + 2),
-                container_helper->fingerprint(i + 2).data(),
-                container_helper->fingerprint(i + 2).size(), result[i], &result_size[i], NO_EC)) << "Read " << (i + 2) << " failed";
-        DEBUG("Read CRC " << (i + 2) << " - " << crc(result[i], result_size[i]));
-    }
-
-    for (int i = 0; i < 2; i++) {
-        EXPECT_TRUE(result_size[i] == TEST_DATA_SIZE) << "Read " << i << " error";
-        EXPECT_TRUE(memcmp(container_helper->data(i + 2), result[i], result_size[i]) == 0) << "Compare " << (i + 2) << " error";
+        Option<uint32_t> r = storage->Read(container_helper->data_address(i + 2),
+            container_helper->fingerprint(i + 2).data(),
+            container_helper->fingerprint(i + 2).size(), result[i],
+            0, result_size[i], NO_EC);
+        ASSERT_TRUE(r.valid()) << "Read " << (i + 2) << " failed";
+        DEBUG("Read CRC " << (i + 2) << " - " << crc(result[i], r.value()));
+        EXPECT_TRUE(r.value() == TEST_DATA_SIZE) << "Read " << i << " error";
+        EXPECT_TRUE(memcmp(container_helper->data(i + 2), result[i], r.value()) == 0) << "Compare " << (i + 2) << " error";
     }
 }
 
@@ -1518,7 +1531,7 @@ TEST_P(ContainerStorageTest, ReadContainer) {
 
     for (int i = 0; i < TEST_DATA_COUNT; i++) {
         Container container(container_helper->data_address(i),
-            storage->GetContainerSize(), false);
+                            storage->GetContainerSize(), false);
 
         enum lookup_result r = storage->ReadContainer(&container);
         ASSERT_EQ(r, LOOKUP_FOUND);
@@ -1536,7 +1549,7 @@ TEST_P(ContainerStorageTest, ReadContainerWithCache) {
 
     for (int i = 0; i < TEST_DATA_COUNT; i++) {
         Container container(container_helper->data_address(i),
-            storage->GetContainerSize(), false);
+                            storage->GetContainerSize(), false);
 
         enum lookup_result r = storage->ReadContainerWithCache(
             &container);

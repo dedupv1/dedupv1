@@ -200,7 +200,7 @@ Option<list<Filter*> > ContentStorage::GetFilterList(const std::set<std::string>
                 filters.push_back(filter);
             }
         }
-      CHECK(filters.size() == enabled_filter_names.size(), "Illegal filter chain configuration");
+        CHECK(filters.size() == enabled_filter_names.size(), "Illegal filter chain configuration");
     } else {
         // use defaults
         list<Filter*> all_filters = filter_chain_->GetChain();
@@ -624,7 +624,7 @@ bool ContentStorage::FingerprintChunks(Session* session, Request* request, Reque
 
         // here we rewrite the calculated fp of the empty chunk with the static empty fp.
         if (raw_compare(chunk_mappings->at(i).fingerprint(),
-              chunk_mappings->at(i).fingerprint_size(),
+                chunk_mappings->at(i).fingerprint_size(),
                 zero_chunk_fp.data(), zero_chunk_fp.size()) == 0) {
             // the fp is the empty fp
 
@@ -780,15 +780,15 @@ bool ContentStorage::ProcessFilterChain(Session* session,
 }
 
 bool ContentStorage::MergeChunksIntoCurrentRequest(uint64_t block_id,
-    RequestStatistics* request_stats,
-    unsigned int block_offset,
-    unsigned long open_chunk_pos,
-    bool already_failed,
-    Session* session,
-    const BlockMapping* original_block_mapping,
-    const BlockMapping* updated_block_mapping,
-    vector<ChunkMapping>* chunk_mappings,
-    ErrorContext* ec) {
+                                                   RequestStatistics* request_stats,
+                                                   unsigned int block_offset,
+                                                   unsigned long open_chunk_pos,
+                                                   bool already_failed,
+                                                   Session* session,
+                                                   const BlockMapping* original_block_mapping,
+                                                   const BlockMapping* updated_block_mapping,
+                                                   vector<ChunkMapping>* chunk_mappings,
+                                                   ErrorContext* ec) {
     DCHECK(session->open_chunk_position() <= chunk_mappings->at(0).chunk()->size(),
         "Illegal open chunk position");
 
@@ -1141,37 +1141,15 @@ dedupv1::Chunker* ContentStorage::default_chunker() {
 
 bool ContentStorage::ReadDataForItem(BlockMappingItem* item, Session* session, byte* data_buffer,
                                      unsigned int data_pos, int count, int offset, dedupv1::base::ErrorContext* ec) {
-    if (item->fingerprint_size() > 0) {
-        // Chunk is finished and normally stored in the index => Read data from storage
-        size_t local_buffer_size = session->buffer_size();
-        memset(session->buffer(), 0, session->buffer_size());
+    DCHECK(item, "Block mapping item not set");
+    CHECK(item->fingerprint_size() > 0, "Illegal block mapping item: " << item->DebugString());
 
-        CHECK(this->chunk_store_->ReadBlock(item, session->buffer(), &local_buffer_size, ec),
-            "Chunk reading failed " << item->DebugString() << ", offset = " << offset);
-
-        CHECK(local_buffer_size >= item->chunk_offset() + item->size(),
-            "Buffer length error (offset " << item->chunk_offset() <<
-            ", size " << item->size() << ", buffer size " << local_buffer_size << ")");
-        CHECK(item->chunk_offset() + item->size() <= session->buffer_size(), "Item doesn't fit in buffer");
-
-        // If we want to read data then read it to the data buffer.
-        if (count > 0) {
-            memcpy(data_buffer + data_pos, &session->buffer()[item->chunk_offset() + offset], count);
-        }
-    } else {
-        /* No fingerprint stored => Chunk isn't finished => Get data from open chunk */
-        unsigned long open_chunk_pos = session->chunker_session()->open_chunk_position();
-        CHECK(open_chunk_pos >= item->chunk_offset() + item->size(), "Open Chunk Assertion Chunk Position");
-        ScopedArray<byte> buffer(new byte[item->size()]);
-        CHECK(buffer.Get() != NULL, "Failed to alloc buffer");
-
-        CHECK(session->chunker_session()->GetOpenChunkData(buffer.Get(), item->chunk_offset(), item->size()), "Open data reading failed");
-
-        // If we want to read data then read it to the data buffer.
-        if (count > 0) {
-            memcpy(data_buffer + data_pos, buffer.Get() + offset, count);
-        }
+    if (count == 0) {
+        return true;
     }
+    uint32_t final_chunk_offset = item->chunk_offset() + offset;
+    CHECK(this->chunk_store_->ReadBlock(item, data_buffer + data_pos, final_chunk_offset, count, ec),
+        "Chunk reading failed " << item->DebugString() << ", offset = " << offset);
     return true;
 }
 

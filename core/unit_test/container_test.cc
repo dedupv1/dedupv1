@@ -105,7 +105,7 @@ protected:
             ASSERT_EQ(item->raw_size(), (size_t) 16 * 1024);
 
             byte buffer[item->raw_size()];
-            ASSERT_TRUE(container.CopyRawData(item, buffer, item->raw_size()));
+            ASSERT_TRUE(container.CopyRawData(item, buffer, 0, item->raw_size()));
 
             DEBUG("Get " << i << ", " << crc(buffer, 16 * 1024));
             ASSERT_TRUE(memcmp(buffer, test_data[i], item->raw_size()) == 0);
@@ -132,7 +132,7 @@ protected:
             ASSERT_EQ(item->raw_size(), (size_t) 16 * 1024);
 
             byte buffer[item->raw_size()];
-            ASSERT_TRUE(container.CopyRawData(item, buffer, item->raw_size()));
+            ASSERT_TRUE(container.CopyRawData(item, buffer, 0, item->raw_size()));
             DEBUG("Get " << i << ": " << crc(buffer, 16 * 1024));
             ASSERT_TRUE(memcmp(buffer, test_data[i], item->raw_size()) == 0);
         }
@@ -354,7 +354,7 @@ TEST_F(ContainerTest, AddAfterStore) {
 
 TEST_F(ContainerTest, StoreMinimalChunks) {
     Container container(Container::kLeastValidContainerId,
-        Container::kDefaultContainerSize, false);
+                        Container::kDefaultContainerSize, false);
 
     size_t data_size = Chunk::kMinChunkSize;
     size_t key_size = Fingerprinter::kMaxFingerprintSize;
@@ -372,7 +372,7 @@ TEST_F(ContainerTest, StoreMinimalChunks) {
 
 TEST_F(ContainerTest, StoreMinimalCompressableChunks) {
     Container container(Container::kLeastValidContainerId,
-        Container::kDefaultContainerSize, false);
+                        Container::kDefaultContainerSize, false);
 
     size_t data_size = Container::kMinCompressedChunkSize;
     size_t key_size = Fingerprinter::kMaxFingerprintSize;
@@ -390,7 +390,7 @@ TEST_F(ContainerTest, StoreMinimalCompressableChunks) {
 
 TEST_F(ContainerTest, DeleteItem) {
     Container container(Container::kLeastValidContainerId,
-        CONTAINER_SIZE, false);
+                        CONTAINER_SIZE, false);
     for (int i = 0; i < 4; i++) {
         // Use small items to avoid an overflow
         ASSERT_TRUE(container.AddItem((byte *) &test_fp[i], sizeof(test_fp[i]), (byte *) test_data[i], (size_t) 16 * 1024, true, NULL))
@@ -522,7 +522,7 @@ TEST_F(ContainerTest, MergeContainer) {
 
         byte result[16 * 1024];
         memset(result, 0, 16 * 1024);
-        ASSERT_TRUE(new_container.CopyRawData(new_item, result, 16 * 1024));
+        ASSERT_TRUE(new_container.CopyRawData(new_item, result, 0, 16 * 1024));
         ASSERT_TRUE(memcmp(result, (byte *) test_data[i], 16 * 1024) == 0);
     }
 }
@@ -557,7 +557,7 @@ TEST_F(ContainerTest, MergeContainerSwitched) {
 
         byte result[16 * 1024];
         memset(result, 0, 16 * 1024);
-        ASSERT_TRUE(new_container.CopyRawData(new_item, result, 16 * 1024));
+        ASSERT_TRUE(new_container.CopyRawData(new_item, result, 0, 16 * 1024));
         ASSERT_TRUE(memcmp(result, (byte *) test_data[i], 16 * 1024) == 0);
     }
 }
@@ -589,7 +589,7 @@ TEST_F(ContainerTest, LoadOnlyMetaData) {
 
     byte result[16 * 1024];
     memset(result, 0, 16 * 1024);
-    ASSERT_FALSE(container2.CopyRawData(item, result, 16 * 1024)) << "Data access should fail in metadata mode";
+    ASSERT_FALSE(container2.CopyRawData(item, result, 0, 16 * 1024)) << "Data access should fail in metadata mode";
 
     delete f;
     f = NULL;

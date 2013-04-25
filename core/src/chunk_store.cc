@@ -48,6 +48,7 @@ using dedupv1::log::Log;
 using dedupv1::IdleDetector;
 using dedupv1::chunkindex::ChunkMapping;
 using dedupv1::base::ErrorContext;
+using dedupv1::base::Option;
 
 LOGGER("ChunkStore");
 
@@ -147,26 +148,31 @@ bool ChunkStore::CheckIfFull() {
 }
 
 bool ChunkStore::ReadBlock(BlockMappingItem* item,
-    byte* buffer,
-    size_t* buffer_size,
-    ErrorContext* ec) {
+                           byte* buffer,
+                           uint32_t offset,
+                           uint32_t size,
+                           ErrorContext* ec) {
     ProfileTimer timer(this->stats_.time_);
 
     CHECK(item, "Item not set");
     CHECK(buffer, "Buffer not set");
-    CHECK(buffer_size, "Buffer size not set");
-    CHECK(*buffer_size > 0, "Buffer size value not set");
+    CHECK(size > 0, "Buffer size value not set");
 
     if (item->data_address() == Storage::EMPTY_DATA_STORAGE_ADDRESS) { // Null Chunk
-        memset(buffer, 0, *buffer_size);
+        memset(buffer, 0, size);
     } else {
-      CHECK(chunk_storage_->Read(item->data_address(),
+        Option<uint32_t> read_result = chunk_storage_->Read(item->data_address(),
             item->fingerprint(),
-            item->fingerprint_size(), buffer, buffer_size, ec),
-          "Reading of chunk failed: " << item->DebugString());
+            item->fingerprint_size(),
+            buffer,
+            offset,
+            size,
+            ec);
+        CHECK(read_result.valid() && read_result.value() == size,
+            "Reading of chunk failed: " << item->DebugString());
     }
     this->stats_.storage_reads_++;
-    this->stats_.storage_reads_bytes_ += (*buffer_size);
+    this->stats_.storage_reads_bytes_ += size;
     return true;
 }
 

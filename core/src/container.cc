@@ -207,32 +207,32 @@ Container::Container(uint64_t id, size_t container_size, bool metadata_only) {
     this->commit_time_ = 0;
 
     if (!metadata_only) {
-      this->data_ = new byte[container_size];
-      memset(this->data_, 0, container_size);
+        this->data_ = new byte[container_size];
+        memset(this->data_, 0, container_size);
 
-    this->pos_ = kMetaDataSize;
-    this->active_data_size_ = kMetaDataSize;
-    this->primary_id_ = id;
-    this->items_.clear();
-    this->item_count_ = 0;
-    this->container_size_ = container_size;
-    this->stored_ = false;
-    this->metaDataOnly_ = false;
-    this->commit_time_ = 0;
+        this->pos_ = kMetaDataSize;
+        this->active_data_size_ = kMetaDataSize;
+        this->primary_id_ = id;
+        this->items_.clear();
+        this->item_count_ = 0;
+        this->container_size_ = container_size;
+        this->stored_ = false;
+        this->metaDataOnly_ = false;
+        this->commit_time_ = 0;
 
     } else {
-    this->data_ = new byte[kMetaDataSize];
-    memset(this->data_, 0, kMetaDataSize);
+        this->data_ = new byte[kMetaDataSize];
+        memset(this->data_, 0, kMetaDataSize);
 
-    this->pos_ = kMetaDataSize;
-    this->active_data_size_ = kMetaDataSize;
-    this->primary_id_ = id;
-    this->items_.clear();
-    this->item_count_ = 0;
-    this->container_size_ = container_size;
-    this->stored_ = false;
-    this->metaDataOnly_ = true;
-    this->commit_time_ = 0;
+        this->pos_ = kMetaDataSize;
+        this->active_data_size_ = kMetaDataSize;
+        this->primary_id_ = id;
+        this->items_.clear();
+        this->item_count_ = 0;
+        this->container_size_ = container_size;
+        this->stored_ = false;
+        this->metaDataOnly_ = true;
+        this->commit_time_ = 0;
     }
 }
 
@@ -269,20 +269,31 @@ Compression* GetCompression(CompressionMode mode) {
     return NULL;
 }
 
-bool DecompressItem(const ContainerItemValueData& item_data, const byte* data, void* dest, size_t dest_size) {
+bool DecompressItem(
+    const ContainerItem* item,
+    const ContainerItemValueData& item_data,
+    const byte* data,
+    void* dest,
+    uint32_t offset,
+    uint32_t size) {
     Compression* comp = GetCompression(item_data.compression());
     DCHECK(comp, "Cannot create compression");
 
+    byte* buffer = new byte[item->raw_size()];
     bool failed = false;
-    if (comp->Decompress(dest, dest_size, data, item_data.on_disk_size()) < 0) {
+    if (comp->Decompress(buffer, item->raw_size(), data, item_data.on_disk_size()) < 0) {
         ERROR("Failed to decompress container data");
         failed = true;
+    } else {
+        memcpy(dest, buffer + offset, size);
     }
+    delete buffer;
     delete comp;
     return !failed;
 }
 }
-bool Container::CopyRawData(const ContainerItem* item, void* dest, size_t dest_size) const {
+
+bool Container::CopyRawData(const ContainerItem* item, void* dest, uint32_t chunk_offset, uint32_t size) const {
     DCHECK(item, "Item not set");
     DCHECK(this->data_, "Container not inited");
     CHECK(metaDataOnly_ == false, "Container has only loaded meta data");
@@ -291,9 +302,16 @@ bool Container::CopyRawData(const ContainerItem* item, void* dest, size_t dest_s
         "offset " << item->offset_ <<
         ", item size " << item->item_size_ <<
         ", raw size " << item->raw_size_ <<
-        ", dest size " << dest_size);
+        ", chunk offset " << chunk_offset <<
+        ", dest size " << size);
+    DCHECK(item->offset() + item->item_size() <= container_size_,
+        "Illegal item: " << item->DebugString());
+    DCHECK(chunk_offset + size <= item->raw_size(),
+        "Illegal item request: " <<
+        "offset " << chunk_offset <<
+        ", size " << size <<
+        ", item " << item->DebugString());
 
-    DCHECK(item->offset() + item->item_size() <= container_size_, "Illegal item: " << item->DebugString());
     ContainerItemValueData item_data;
     Option<size_t> message_size = ParseSizedMessage(&item_data, this->data_ + item->offset(), item->item_size(), false);
     CHECK(message_size.valid(), "cannot parse sized message");
@@ -302,26 +320,27 @@ bool Container::CopyRawData(const ContainerItem* item, void* dest, size_t dest_s
         ", message size " << message_size.value() <<
         ", data offset " << item->offset_ + message_size.value() <<
         ", stored sha1 " << sha1(data_ + item->offset_ + message_size.value(), item_data.on_disk_size()));
-
     size_t data_offset = item->offset_ + message_size.value();
-
-    TRACE("Data crc " << crc(this->data_ + data_offset, item_data.on_disk_size()));
 
     if (!item_data.has_compression() || item_data.compression() == COMPRESSION_NO) {
         DCHECK(item_data.on_disk_size() == item->raw_size(),
             "Illegal item size: " << item->DebugString() <<
             ", item data " << item_data.ShortDebugString());
-        DCHECK(dest_size >= item_data.on_disk_size(), "Illegal destination size");
+
+        DCHECK(chunk_offset + size <= item_data.on_disk_size(), "Illegal destination size");
         DCHECK(data_offset + item_data.on_disk_size() <= container_size_, "Illegal source offset");
-        memcpy(dest, this->data_ + data_offset, item_data.on_disk_size());
+        memcpy(dest, this->data_ + data_offset + chunk_offset, size);
     } else {
-        CHECK(DecompressItem(item_data, this->data_ + data_offset, dest, dest_size),
+        bool r = DecompressItem(
+            item,
+            item_data,
+            this->data_ + data_offset,
+            dest, chunk_offset,
+            size);
+        CHECK(r,
             "Failed to decompress item: " << item->DebugString() <<
             ", item data " << item_data.ShortDebugString());
     }
-    TRACE("Data offset " << data_offset <<
-        ", data crc " << crc(this->data_ + data_offset, item_data.on_disk_size()) <<
-        ", raw crc " << crc(dest, dest_size));
     return true;
 }
 

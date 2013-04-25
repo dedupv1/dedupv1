@@ -75,63 +75,63 @@ class ContainerStorageMetadataCache;
  * This is used to increase the performance the IsCommit calls
  */
 class ContainerStorageMetadataCache {
-    private:
-        static const size_t kDefaultCacheSize = 1024;
+private:
+    static const size_t kDefaultCacheSize = 1024;
 
-        /**
-         * Reference to the storage system
-         */
-        ContainerStorage* storage_;
+    /**
+     * Reference to the storage system
+     */
+    ContainerStorage* storage_;
 
-        /**
-         * Mutex to protect the members
-         */
-        tbb::spin_mutex mutex_;
+    /**
+     * Mutex to protect the members
+     */
+    tbb::spin_mutex mutex_;
 
-        /**
-         * map from a container id to the most recently checked commit state
-         */
-        std::map<uint64_t, enum storage_commit_state> commit_state_map_;
+    /**
+     * map from a container id to the most recently checked commit state
+     */
+    std::map<uint64_t, enum storage_commit_state> commit_state_map_;
 
-        /**
-         * replacement strategy
-         */
-        dedupv1::base::LRUCacheStrategy<uint64_t> cache_strategy_;
+    /**
+     * replacement strategy
+     */
+    dedupv1::base::LRUCacheStrategy<uint64_t> cache_strategy_;
 
-        /**
-         * size of the cache
-         */
-        size_t cache_size_;
-    public:
-        /**
-         * Constructor
-         * @param storage
-         * @return
-         */
-        explicit ContainerStorageMetadataCache(ContainerStorage* storage);
+    /**
+     * size of the cache
+     */
+    size_t cache_size_;
+public:
+    /**
+     * Constructor
+     * @param storage
+     * @return
+     */
+    explicit ContainerStorageMetadataCache(ContainerStorage* storage);
 
-        /**
-         * @return true iff ok, otherwise an error has occurred
-         */
-        bool Lookup(uint64_t address, bool* found, enum storage_commit_state* state);
+    /**
+     * @return true iff ok, otherwise an error has occurred
+     */
+    bool Lookup(uint64_t address, bool* found, enum storage_commit_state* state);
 
-        /**
-         * @param sticky if sticky is true, the cache item should not removed from the cache until
-         * it is unstick.
-         *
-         * @return true iff ok, otherwise an error has occurred
-         */
-        bool Update(uint64_t address, enum storage_commit_state state, bool sticky = false);
+    /**
+     * @param sticky if sticky is true, the cache item should not removed from the cache until
+     * it is unstick.
+     *
+     * @return true iff ok, otherwise an error has occurred
+     */
+    bool Update(uint64_t address, enum storage_commit_state state, bool sticky = false);
 
-        /**
-         * @return true iff ok, otherwise an error has occurred
-         */
-        bool Unstick(uint64_t);
+    /**
+     * @return true iff ok, otherwise an error has occurred
+     */
+    bool Unstick(uint64_t);
 
-        /**
-         * @return true iff ok, otherwise an error has occurred
-         */
-        bool Delete(uint64_t address);
+    /**
+     * @return true iff ok, otherwise an error has occurred
+     */
+    bool Delete(uint64_t address);
 };
 
 /**
@@ -167,9 +167,9 @@ class ContainerStorageMetadataCache {
  * - Acquire a container lock (with the intention to use the container) only when holding the meta data lock.
  */
 class ContainerStorage : public Storage, public dedupv1::log::LogConsumer, public IdleTickConsumer,
-public dedupv1::log::LogAckConsumer {
+    public dedupv1::log::LogAckConsumer {
     DISALLOW_COPY_AND_ASSIGN(ContainerStorage);
-    public:
+public:
 
     /**
      * Gives the default number of seconds a container can be open before it times out.
@@ -183,72 +183,71 @@ public dedupv1::log::LogAckConsumer {
      * Runtime states of the container storage
      */
     enum container_storage_state {
-        CREATED, //!< CREATED
-        STARTING,//!< STARTING
-        STARTED, //!< STARTED
-        RUNNING, //!< RUNNING
-        STOPPED, //!< STOPPED
+        CREATED, // !< CREATED
+        STARTING, // !< STARTING
+        STARTED, // !< STARTED
+        RUNNING, // !< RUNNING
+        STOPPED, // !< STOPPED
     };
 
     class ContainerFile {
-        public:
-            ContainerFile();
-            ~ContainerFile();
+public:
+        ContainerFile();
+        ~ContainerFile();
 
-            void Init(const std::string& f);
+        void Init(const std::string& f);
 
-            bool Start(dedupv1::base::File* file, bool is_new);
+        bool Start(dedupv1::base::File* file, bool is_new);
 
-            const std::string filename() const {
-                return filename_;
-            }
+        const std::string filename() const {
+            return filename_;
+        }
 
-            void set_uuid(const dedupv1::base::UUID& uuid) {
-                uuid_ = uuid;
-            }
+        void set_uuid(const dedupv1::base::UUID& uuid) {
+            uuid_ = uuid;
+        }
 
-            uint64_t file_size() const {
-                return file_size_;
-            }
+        uint64_t file_size() const {
+            return file_size_;
+        }
 
-            dedupv1::base::File* file() {
-                return file_;
-            }
+        dedupv1::base::File* file() {
+            return file_;
+        }
 
-            bool new_file() const {
-                return new_;
-            }
+        bool new_file() const {
+            return new_;
+        }
 
-            const dedupv1::base::UUID& uuid() const {
-                return uuid_;
-            }
+        const dedupv1::base::UUID& uuid() const {
+            return uuid_;
+        }
 
-            void set_file_size(uint64_t fs) {
-                file_size_ = fs;
-            }
+        void set_file_size(uint64_t fs) {
+            file_size_ = fs;
+        }
 
-            dedupv1::base::MutexLock* lock() {
-                return lock_;
-            }
-        private:
-            std::string filename_;
-            dedupv1::base::File* file_;
+        dedupv1::base::MutexLock* lock() {
+            return lock_;
+        }
+private:
+        std::string filename_;
+        dedupv1::base::File* file_;
 
-            dedupv1::base::MutexLock* lock_;
+        dedupv1::base::MutexLock* lock_;
 
-            uint64_t file_size_;
+        uint64_t file_size_;
 
-            bool new_;
+        bool new_;
 
-            dedupv1::base::UUID uuid_;
+        dedupv1::base::UUID uuid_;
     };
-
-    private:
+private:
     /**
      * Type for statistics about the container storage.
      */
     class Statistics {
-        public:
+public:
         Statistics();
         /**
          * Number of container read requests
@@ -477,10 +476,10 @@ public dedupv1::log::LogAckConsumer {
      * @return true iff ok, otherwise an error has occurred
      */
     bool FillMergedContainerEventData(
-            ContainerMergedEventData* event_data,
-            const Container& leader_container, const ContainerStorageAddressData& leader_address,
-            const Container& slave_container, const ContainerStorageAddressData& slave_address,
-            const ContainerStorageAddressData& new_container_address);
+        ContainerMergedEventData* event_data,
+        const Container& leader_container, const ContainerStorageAddressData& leader_address,
+        const Container& slave_container, const ContainerStorageAddressData& slave_address,
+        const ContainerStorageAddressData& new_container_address);
 
     /**
      * @return true iff ok, otherwise an error has occurred
@@ -488,7 +487,7 @@ public dedupv1::log::LogAckConsumer {
     bool MarkContainerCommitAsFailed(Container* container);
 
     dedupv1::base::lookup_result ReadContainerLocked(Container* container,
-            const ContainerStorageAddressData& container_address);
+                                                     const ContainerStorageAddressData& container_address);
 
     /**
      * Writes the given container (directly) to disk. No locks must be hold at the call.
@@ -571,48 +570,51 @@ public dedupv1::log::LogAckConsumer {
     bool Format(const ContainerFile& file, dedupv1::base::File* format_file);
 
     bool DoDeleteContainer(Container* container,
-            const ContainerStorageAddressData& container_address,
-            dedupv1::base::ReadWriteLock* container_lock);
-
+                           const ContainerStorageAddressData& container_address,
+                           dedupv1::base::ReadWriteLock* container_lock);
 
     bool FinishDirtyLogReplay();
 
+    /**
+     * Reads the given fp in the given container.
+     *
+     * We use this utility method as the storage session has to do a bit more than
+     * the normal FindItem/CopyRawData pair, e.g. notifying the gc and other components.
+     *
+     * @param container
+     * @param key
+     * @param key_size
+     * @param data
+     * @param data_size
+     * @return
+     */
+    dedupv1::base::Option<uint32_t> ReadInContainer(const Container& container,
+                                                    const void* key,
+                                                    size_t key_size,
+                                                    void* data,
+                                                    uint32_t offset,
+                                                    uint32_t size,
+                                                    bool* found);
 
-        /**
-         * Reads the given fp in the given container.
-         *
-         * We use this utility method as the storage session has to do a bit more than
-         * the normal FindItem/CopyRawData pair, e.g. notifying the gc and other components.
-         *
-         * @param container
-         * @param key
-         * @param key_size
-         * @param data
-         * @param data_size
-         * @return
-         */
-        dedupv1::base::lookup_result ReadInContainer(const Container& container, const void* key,
-                size_t key_size, void* data, size_t* data_size);
-
-        /**
-         * Performs the deletion of items from the given container
-         * The method assumes that
-         * - the container is in the in_move_set_
-         * - the cache entry lock may be held for writing.
-         *
-         * The method gets a lock on the container and will release it before returning.
-         * The method will release the lock on the cache entry in all cases.
-         *
-         * It is used by the Delete method of the session mainly to make the handling
-         * of the in-move set easier.
-         */
-        bool DoDelete(uint64_t container_id,
-                uint64_t primary_id,
-                const ContainerStorageAddressData& address,
-                const std::list<bytestring>& key_list,
-                CacheEntry* cache_entry,
-                dedupv1::base::ErrorContext* ec);
-    public:
+    /**
+     * Performs the deletion of items from the given container
+     * The method assumes that
+     * - the container is in the in_move_set_
+     * - the cache entry lock may be held for writing.
+     *
+     * The method gets a lock on the container and will release it before returning.
+     * The method will release the lock on the cache entry in all cases.
+     *
+     * It is used by the Delete method of the session mainly to make the handling
+     * of the in-move set easier.
+     */
+    bool DoDelete(uint64_t container_id,
+                  uint64_t primary_id,
+                  const ContainerStorageAddressData& address,
+                  const std::list<bytestring>& key_list,
+                  CacheEntry* cache_entry,
+                  dedupv1::base::ErrorContext* ec);
+public:
     /**
      * Constructor
      * @return
@@ -689,34 +691,36 @@ public dedupv1::log::LogAckConsumer {
             uint64_t* address,
             dedupv1::base::ErrorContext* ec);
 
-        /**
-         *
-         * Note: In contrast to ReadInContainer and other methods, the Read method should report an error, if the
-         * key has not been found in the container.
-         *
-         * @param address
-         * @param key
-         * @param key_size
-         * @param data
-         * @param data_size
-         * @param ec error context (can be NULL)
-         * @return
-         */
-        virtual bool Read(uint64_t address,
-                const void* key, size_t key_size,
-                void* data, size_t* data_size,
-                dedupv1::base::ErrorContext* ec);
+    /**
+     *
+     * Note: In contrast to ReadInContainer and other methods, the Read method should report an error, if the
+     * key has not been found in the container.
+     *
+     * @param address
+     * @param key
+     * @param key_size
+     * @param data
+     * @param data_size
+     * @param ec error context (can be NULL)
+     * @return
+     */
+    virtual dedupv1::base::Option<uint32_t> Read(uint64_t address,
+                                                 const void* key, size_t key_size,
+                                                 void* data,
+                                                 uint32_t offset,
+                                                 uint32_t size,
+                                                 dedupv1::base::ErrorContext* ec);
 
-        /**
-         *
-         * @param address
-         * @param key_list
-         * @param ec error context (can be NULL)
-         * @return
-         */
-        virtual bool DeleteChunks(uint64_t address,
-                const std::list<bytestring>& key_list,
-                dedupv1::base::ErrorContext* ec);
+    /**
+     *
+     * @param address
+     * @param key_list
+     * @param ec error context (can be NULL)
+     * @return
+     */
+    virtual bool DeleteChunks(uint64_t address,
+                              const std::list<bytestring>& key_list,
+                              dedupv1::base::ErrorContext* ec);
 
     /**
      * Waits if the container is currently in the write cache or in the bg committer
@@ -785,7 +789,7 @@ public dedupv1::log::LogAckConsumer {
      * @return
      */
     dedupv1::base::lookup_result ReadContainerWithCache(
-            Container* container);
+        Container* container);
 
     uint64_t GetLastGivenContainerId();
 
@@ -832,12 +836,12 @@ public dedupv1::log::LogAckConsumer {
      * @return true iff ok, otherwise an error has occurred
      */
     bool LogReplay(dedupv1::log::event_type event_type,
-            const LogEventData& event_value,
-            const dedupv1::log::LogReplayContext& context);
+                   const LogEventData& event_value,
+                   const dedupv1::log::LogReplayContext& context);
 
     virtual bool LogAck(dedupv1::log::event_type event_type,
-            const google::protobuf::Message* log_message,
-            const dedupv1::log::LogReplayContext& context);
+                        const google::protobuf::Message* log_message,
+                        const dedupv1::log::LogReplayContext& context);
 
     /**
      * Flushes all data to disk, even if the containers are not yet full.
@@ -912,9 +916,9 @@ public dedupv1::log::LogAckConsumer {
      */
     virtual std::pair<dedupv1::base::lookup_result, ContainerStorageAddressData>
     LookupContainerAddress(
-            uint64_t container_id,
-            dedupv1::base::ReadWriteLock** primary_container_lock,
-            bool acquire_write_lock);
+        uint64_t container_id,
+        dedupv1::base::ReadWriteLock** primary_container_lock,
+        bool acquire_write_lock);
 
     /**
      * Looking up the container address, but wait for the container if the container is currently being committed.
@@ -925,9 +929,9 @@ public dedupv1::log::LogAckConsumer {
      * @return
      */
     std::pair<dedupv1::base::lookup_result, ContainerStorageAddressData> LookupContainerAddressWait(
-            uint64_t container_id,
-            dedupv1::base::ReadWriteLock** primary_container_lock,
-            bool acquire_write_lock);
+        uint64_t container_id,
+        dedupv1::base::ReadWriteLock** primary_container_lock,
+        bool acquire_write_lock);
 
     /**
      * Returns the primary id of the given container id.
@@ -944,9 +948,9 @@ public dedupv1::log::LogAckConsumer {
      * @return
      */
     dedupv1::base::lookup_result GetPrimaryId(uint64_t container_id,
-            uint64_t* primary_id,
-            dedupv1::base::ReadWriteLock** primary_container_lock,
-            bool acquire_write_lock);
+                                              uint64_t* primary_id,
+                                              dedupv1::base::ReadWriteLock** primary_container_lock,
+                                              bool acquire_write_lock);
 
     /**
      * Returns the write cache.

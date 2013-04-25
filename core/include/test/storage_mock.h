@@ -43,9 +43,11 @@ class MockStorage : public dedupv1::chunkstore::Storage {
                 uint64_t* address,
                 dedupv1::base::ErrorContext* ec));
 
-        MOCK_METHOD6(Read, bool(uint64_t address,
+        MOCK_METHOD7(Read, dedupv1::base::Option<uint32_t>(uint64_t address,
               const void* key, size_t key_size,
-                void* data, size_t* data_size,
+                void* data,
+                uint32_t offset,
+                uint32_t size,
                 dedupv1::base::ErrorContext* ec));
 
         MOCK_METHOD4(DeleteChunk, bool(uint64_t address,

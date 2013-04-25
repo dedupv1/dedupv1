@@ -55,206 +55,205 @@ class Filter;
  * use a session pool (SessionManagement) to save resources.
  */
 class Session {
-        DISALLOW_COPY_AND_ASSIGN(Session);
+    DISALLOW_COPY_AND_ASSIGN(Session);
 
-        DedupVolume* volume_;
+    DedupVolume* volume_;
 
-        /**
-         * Reference to the chunker session used in the session
-         */
-        ChunkerSession* chunker_session_;
+    /**
+     * Reference to the chunker session used in the session
+     */
+    ChunkerSession* chunker_session_;
 
-        /**
-         * Number of bytes currently in the chunker.
-         * This value is used to transfer this value from block request to block request.
-         */
-        uint32_t open_chunk_pos_;
+    /**
+     * Number of bytes currently in the chunker.
+     * This value is used to transfer this value from block request to block request.
+     */
+    uint32_t open_chunk_pos_;
 
-        /**
-         * This member stored a cyclic list of open requests.
-         * An open request is an request whose processing (MakeRequest) is finished, but the chunking
-         * could not finish right at the end of the request, the chunker session
-         * contains some data of the request that is not processed yet. This can happen
-         * when using the RabinChunker without block_awareness enabled. In such cases
-         * we postpone to write the block mapping back to the index and save to mapping. If the data of the
-         * mapping is assigned to a chunk, we block mapping processing is finished.
-         *
-         * Note: The open request list is implemented as cyclic buffer. So never access elements of the open_requests array
-         * directly. Use Session::GetRequest instead.
-         * Rationale:
-         * - Normal array didn't worked out well because often the complete array contents except the last element should be deleted.
-         * - I want to avoid a linked list at nearly all costs to avoid dynamic memory allocation (still true?)
-         */
-        std::vector<OpenRequest*> open_requests_;
+    /**
+     * This member stored a cyclic list of open requests.
+     * An open request is an request whose processing (MakeRequest) is finished, but the chunking
+     * could not finish right at the end of the request, the chunker session
+     * contains some data of the request that is not processed yet. This can happen
+     * when using the RabinChunker without block_awareness enabled. In such cases
+     * we postpone to write the block mapping back to the index and save to mapping. If the data of the
+     * mapping is assigned to a chunk, we block mapping processing is finished.
+     *
+     * Note: The open request list is implemented as cyclic buffer. So never access elements of the open_requests array
+     * directly. Use Session::GetRequest instead.
+     * Rationale:
+     * - Normal array didn't worked out well because often the complete array contents except the last element should be deleted.
+     * - I want to avoid a linked list at nearly all costs to avoid dynamic memory allocation (still true?)
+     */
+    std::vector<OpenRequest*> open_requests_;
 
-        /**
-         * Maximal number of allowed open requests.
-         */
-        uint32_t open_request_count_;
+    /**
+     * Maximal number of allowed open requests.
+     */
+    uint32_t open_request_count_;
 
-        /**
-         * Current start of the open request cyclic buffer.
-         */
-        uint32_t open_request_start_;
+    /**
+     * Current start of the open request cyclic buffer.
+     */
+    uint32_t open_request_start_;
 
-        byte* buffer_;
+    byte* buffer_;
 
-        size_t buffer_size_;
+    size_t buffer_size_;
 
-        /**
-         * Session lock to avoid that a session is used by
-         * more than one thread. Normally the session management
-         * should be done by the SessionManagement class. And therefore
-         * a session should never be used by more than one thread.
-         * This lock is more a safety net.
-         */
-        dedupv1::base::MutexLock lock_;
+    /**
+     * Session lock to avoid that a session is used by
+     * more than one thread. Normally the session management
+     * should be done by the SessionManagement class. And therefore
+     * a session should never be used by more than one thread.
+     * This lock is more a safety net.
+     */
+    dedupv1::base::MutexLock lock_;
+public:
+    enum block_mapping_open_state {
+        BLOCK_MAPPING_OPEN_ERROR,
+        BLOCK_MAPPING_IS_OPEN,
+        BLOCK_MAPPING_IS_NOT_OPEN,
+    };
 
-    public:
-        enum block_mapping_open_state {
-            BLOCK_MAPPING_OPEN_ERROR,
-            BLOCK_MAPPING_IS_OPEN,
-            BLOCK_MAPPING_IS_NOT_OPEN,
-        };
+    /**
+     * Constructs a new session
+     * @return
+     */
+    Session();
 
-        /**
-         * Constructs a new session
-         * @return
-         */
-        Session();
+    ~Session();
 
-        ~Session();
-
-        /**
-         * Inits a new session.
-         *
-         * @param block_size
-         * @param chunk_store
-         * @param chunker_factory
-         * @param fingerprinter
+    /**
+     * Inits a new session.
+     *
+     * @param block_size
+     * @param chunk_store
+     * @param chunker_factory
+     * @param fingerprinter
      * @return true iff ok, otherwise an error has occurred
-         */
-        bool Init(DedupVolume* volume);
+     */
+    bool Init(DedupVolume* volume);
 
-        /**
-         * Appends a block mapping to the open requests.
-         *
-         * @param original_mapping
-         * @param updated_mapping
+    /**
+     * Appends a block mapping to the open requests.
+     *
+     * @param original_mapping
+     * @param updated_mapping
      * @return true iff ok, otherwise an error has occurred
-         */
-        bool AppendBlock(const dedupv1::blockindex::BlockMapping& original_mapping,
-                const dedupv1::blockindex::BlockMapping& updated_mapping);
+     */
+    bool AppendBlock(const dedupv1::blockindex::BlockMapping& original_mapping,
+                     const dedupv1::blockindex::BlockMapping& updated_mapping);
 
-        /**
-         * Appends a new block mapping item (related to a chunk) to the
-         * matching open request.
-         *
-         * @param block_id
-         * @param offset
-         * @param request
+    /**
+     * Appends a new block mapping item (related to a chunk) to the
+     * matching open request.
+     *
+     * @param block_id
+     * @param offset
+     * @param request
      * @return true iff ok, otherwise an error has occurred
-         */
-        bool AppendRequest(uint64_t block_id, uint32_t offset,
-                const dedupv1::blockindex::BlockMappingItem& request);
+     */
+    bool AppendRequest(uint64_t block_id, uint32_t offset,
+                       const dedupv1::blockindex::BlockMappingItem& request);
 
-        /**
-         * Clear the first clear_count requests and only keep
-         * the open requests afterwards.
-         *
-         * Should not fail except for programming errors.
-         *
-         * @param clear_count
+    /**
+     * Clear the first clear_count requests and only keep
+     * the open requests afterwards.
+     *
+     * Should not fail except for programming errors.
+     *
+     * @param clear_count
      * @return true iff ok, otherwise an error has occurred
-         */
-        bool ClearRequests(uint32_t clear_count);
+     */
+    bool ClearRequests(uint32_t clear_count);
 
-        /**
-         * Get the block mapping of the open request with the given index (index not block_id!).
-         *
-         * @param index
-         * @return
-         */
-        OpenRequest* GetRequest(uint32_t index);
+    /**
+     * Get the block mapping of the open request with the given index (index not block_id!).
+     *
+     * @param index
+     * @return
+     */
+    OpenRequest* GetRequest(uint32_t index);
 
-        /**
-         * Get the block mapping of the open request with the given index (index not block_id!).
-         *
-         * Should not fail except for programming errors.
-         *
-         * @param index
-         * @return
-         */
-        const OpenRequest* GetRequest(uint32_t index) const;
+    /**
+     * Get the block mapping of the open request with the given index (index not block_id!).
+     *
+     * Should not fail except for programming errors.
+     *
+     * @param index
+     * @return
+     */
+    const OpenRequest* GetRequest(uint32_t index) const;
 
-        /**
-         * Delete the open request block mapping with the given index.
-         *
-         * Should not fail except for programming errors.
-         *
-         * @param index
+    /**
+     * Delete the open request block mapping with the given index.
+     *
+     * Should not fail except for programming errors.
+     *
+     * @param index
      * @return true iff ok, otherwise an error has occurred
-         */
-        bool DeleteRequest(uint32_t index);
+     */
+    bool DeleteRequest(uint32_t index);
 
-        /**
-         * Merges the open requests regarding the block with the given block mapping.
-         *
-         * @param mapping
-         * @return
-         */
-        enum block_mapping_open_state AppendIfOpen(dedupv1::blockindex::BlockMapping* mapping) const;
+    /**
+     * Merges the open requests regarding the block with the given block mapping.
+     *
+     * @param mapping
+     * @return
+     */
+    enum block_mapping_open_state AppendIfOpen(dedupv1::blockindex::BlockMapping* mapping) const;
 
-        /**
-         * Locks the session
+    /**
+     * Locks the session
      * @return true iff ok, otherwise an error has occurred
-         */
-        bool Lock();
+     */
+    bool Lock();
 
-        /**
-         * Unlocks the session
+    /**
+     * Unlocks the session
      * @return true iff ok, otherwise an error has occurred
-         */
-        bool Unlock();
+     */
+    bool Unlock();
 
-        /**
-         * returns the chunker session
-         */
-        inline dedupv1::ChunkerSession* chunker_session();
+    /**
+     * returns the chunker session
+     */
+    inline dedupv1::ChunkerSession* chunker_session();
 
-        /**
-         * returns the number of open requests
-         */
-        inline uint32_t open_request_count();
+    /**
+     * returns the number of open requests
+     */
+    inline uint32_t open_request_count();
 
-        /**
-         * TODO(dmeister): ?? Used when ??
-         */
-        inline void set_open_chunk_position(uint32_t new_pos);
+    /**
+     * TODO(dmeister): ?? Used when ??
+     */
+    inline void set_open_chunk_position(uint32_t new_pos);
 
-        inline uint32_t open_chunk_position();
+    inline uint32_t open_chunk_position();
 
-        inline byte* buffer();
+    // inline byte* buffer();
 
-        inline size_t buffer_size();
+    // inline size_t buffer_size();
 
-        /**
+    /**
      * @return true iff ok, otherwise an error has occurred
-         */
-        bool Clear();
+     */
+    bool Clear();
 
-        inline DedupVolume* volume() {
-          return volume_;
-        }
+    inline DedupVolume* volume() {
+        return volume_;
+    }
 };
 
-byte* Session::buffer() {
-    return buffer_;
-}
+// byte* Session::buffer() {
+//    return buffer_;
+// }
 
-size_t Session::buffer_size() {
-    return buffer_size_;
-}
+// size_t Session::buffer_size() {
+//    return buffer_size_;
+// }
 
 uint32_t Session::open_chunk_position() {
     return this->open_chunk_pos_;

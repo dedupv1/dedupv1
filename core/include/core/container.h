@@ -37,7 +37,6 @@
 namespace dedupv1 {
 namespace chunkstore {
 
-
 /**
  * A container item stored the chunk data of exactly one chunk.
  * The key of the container items is the fingerprint of the chunk data.
@@ -189,136 +188,136 @@ class ContainerItem {
  * item which presents a stored chunk data.
  */
 class Container {
-    private:
-        DISALLOW_COPY_AND_ASSIGN(Container);
-        friend class ContainerTest;
-        FRIEND_TEST(ContainerTest, SerializeContainer);
+private:
+    DISALLOW_COPY_AND_ASSIGN(Container);
+    friend class ContainerTest;
+    FRIEND_TEST(ContainerTest, SerializeContainer);
 
-        /**
-         * Current data position.
-         * pos - META_DATA_SIZE gives you the current on-disk size of all data in the container
-         */
-        size_t pos_;
+    /**
+     * Current data position.
+     * pos - META_DATA_SIZE gives you the current on-disk size of all data in the container
+     */
+    size_t pos_;
 
-        /**
-         * After deleting items, the space is not directly freed, but we hold a record how much
-         * space is actually used by active items.
-         */
-        size_t active_data_size_;
+    /**
+     * After deleting items, the space is not directly freed, but we hold a record how much
+     * space is actually used by active items.
+     */
+    size_t active_data_size_;
 
-        /**
-         * Size of the container (usually 4 MB).
-         */
-        size_t container_size_;
+    /**
+     * Size of the container (usually 4 MB).
+     */
+    size_t container_size_;
 
-        /**
-         * Primary id of the container.
-         * During merge operations, the primary id of the container can change. The new primary id
-         * is the least used container id of both containers. Used here means that there exists a non-deleted item with that
-         * container id. All other used
-         * ids are collected into the secondary id list.
-         */
-        uint64_t primary_id_;
+    /**
+     * Primary id of the container.
+     * During merge operations, the primary id of the container can change. The new primary id
+     * is the least used container id of both containers. Used here means that there exists a non-deleted item with that
+     * container id. All other used
+     * ids are collected into the secondary id list.
+     */
+    uint64_t primary_id_;
 
-        /**
-         * Secondary ids of the container.
-         * If two containers are merged, the least used container id is the new primary id and all other used
-         * ids become the new secondary ids. All id that are not used anymore are not used anymore and should be deleted
-         * from the container storage meta data index during merge.
-         */
-        std::set<uint64_t> secondary_ids_;
+    /**
+     * Secondary ids of the container.
+     * If two containers are merged, the least used container id is the new primary id and all other used
+     * ids become the new secondary ids. All id that are not used anymore are not used anymore and should be deleted
+     * from the container storage meta data index during merge.
+     */
+    std::set<uint64_t> secondary_ids_;
 
-        /**
-         * List of container items of the container.
-         * The items are maintained in a sorted fashion by fingerprint to allow a fast binary search.
-         */
-        std::vector<ContainerItem*> items_;
+    /**
+     * List of container items of the container.
+     * The items are maintained in a sorted fashion by fingerprint to allow a fast binary search.
+     */
+    std::vector<ContainerItem*> items_;
 
-        /**
-         * Note: We do not use items.size() because IsFull is called very often and items.size() takes some time.
-         * The item count currently contains the deleted and the undeleted items.
-         */
-        int32_t item_count_;
+    /**
+     * Note: We do not use items.size() because IsFull is called very often and items.size() takes some time.
+     * The item count currently contains the deleted and the undeleted items.
+     */
+    int32_t item_count_;
 
-        /**
-         * Flag signaling if the container is already stored or not.
-         * If a container is stored, the operations allowed are limited, e.g. adding a new
-         * item is forbidden. The only mutable allowed operation is the merging of two containers into a
-         * new container.
-         */
-        bool stored_;
+    /**
+     * Flag signaling if the container is already stored or not.
+     * If a container is stored, the operations allowed are limited, e.g. adding a new
+     * item is forbidden. The only mutable allowed operation is the merging of two containers into a
+     * new container.
+     */
+    bool stored_;
 
-        /**
-         * container data.
-         * This includes the meta data part that is not updated and written during the in-memory
-         * operations). The meta data part is only serialized and unserializes during load and read operations.
-         */
-        byte* data_;
+    /**
+     * container data.
+     * This includes the meta data part that is not updated and written during the in-memory
+     * operations). The meta data part is only serialized and unserializes during load and read operations.
+     */
+    byte* data_;
 
-        /**
-         * flag that indicates if the container has loaded only its meta data.
-         * Certain data operations are forbidden in this state.
-         */
-        bool metaDataOnly_;
+    /**
+     * flag that indicates if the container has loaded only its meta data.
+     * Certain data operations are forbidden in this state.
+     */
+    bool metaDataOnly_;
 
-        /**
-         * Time the container has been committed or merged.
-         * Set to "0" if the container has not been committed before.
-         *
-         * As the commit time uses the system clock, it should only be used for documentation purposes.
-         */
-        time_t commit_time_;
+    /**
+     * Time the container has been committed or merged.
+     * Set to "0" if the container has not been committed before.
+     *
+     * As the commit time uses the system clock, it should only be used for documentation purposes.
+     */
+    time_t commit_time_;
 
-        /**
-         * Returns a mutable pointer to the data
-         * @return
-         */
-        inline byte* mutable_data();
+    /**
+     * Returns a mutable pointer to the data
+     * @return
+     */
+    inline byte* mutable_data();
 
-        static void InsertItemSorted(std::vector<ContainerItem*>* items, ContainerItem* item);
-    public:
-        static const uint64_t kLeastValidContainerId = 1;
+    static void InsertItemSorted(std::vector<ContainerItem*>* items, ContainerItem* item);
+public:
+    static const uint64_t kLeastValidContainerId = 1;
 
-        /**
-         * The default container size
-         */
-        static uint32_t const kDefaultContainerSize = 4 * 1024 * 1024;
+    /**
+     * The default container size
+     */
+    static uint32_t const kDefaultContainerSize = 4 * 1024 * 1024;
 
-        /**
-         * The minimal size of chunks are can be compressed.
-         */
-        static const size_t kMinCompressedChunkSize = 128;
+    /**
+     * The minimal size of chunks are can be compressed.
+     */
+    static const size_t kMinCompressedChunkSize = 128;
 
-        /**
-         * Size of the meta data region
-         */
-        static uint32_t const kMetaDataSize = 124 * 1024;
+    /**
+     * Size of the meta data region
+     */
+    static uint32_t const kMetaDataSize = 124 * 1024;
 
-        /**
-         * Maximal (serialized) size of an item metadata. Used to detect
-         * if there is enough space for a new item to be added.
-         */
-        static const size_t kMaxSerializedItemMetadataSize = 84;
+    /**
+     * Maximal (serialized) size of an item metadata. Used to detect
+     * if there is enough space for a new item to be added.
+     */
+    static const size_t kMaxSerializedItemMetadataSize = 84;
 
-        /**
-         * Constructor.
-         */
-        Container(uint64_t id, size_t container_size, bool metadata_only);
+    /**
+     * Constructor.
+     */
+    Container(uint64_t id, size_t container_size, bool metadata_only);
 
-        /**
-         * Destructor.
-         * @return
-         */
-        ~Container();
+    /**
+     * Destructor.
+     * @return
+     */
+    ~Container();
 
-        /**
+    /**
      * @return true iff ok, otherwise an error has occurred
-         */
-        void Reuse(uint64_t id);
+     */
+    void Reuse(uint64_t id);
 
-        bool CopyItem(const Container& parent_container, const ContainerItem& item);
+    bool CopyItem(const Container& parent_container, const ContainerItem& item);
 
-        /**
+    /**
      * @return true iff ok, otherwise an error has occurred
          */
         bool AddItem(const byte* key, size_t key_size,
@@ -326,147 +325,151 @@ class Container {
                 bool is_indexed,
                 dedupv1::base::Compression* comp);
 
-        /**
+    /**
      * @return true iff ok, otherwise an error has occurred
-         */
-        bool DeleteItem(const byte* key, size_t key_size);
+     */
+    bool DeleteItem(const byte* key, size_t key_size);
 
-        inline std::vector<ContainerItem*>& items();
-        inline const std::vector<ContainerItem*>& items() const;
+    inline std::vector<ContainerItem*>& items();
+    inline const std::vector<ContainerItem*>& items() const;
 
-        /**
-         * Returns the primary id
-         * @return
-         */
-        inline uint64_t primary_id() const;
+    /**
+     * Returns the primary id
+     * @return
+     */
+    inline uint64_t primary_id() const;
 
-        inline const std::set<uint64_t>& secondary_ids() const;
+    inline const std::set<uint64_t>& secondary_ids() const;
 
-        inline uint32_t data_position() const;
+    inline uint32_t data_position() const;
 
-        inline uint32_t total_data_size() const;
-        inline uint32_t active_data_size() const;
+    inline uint32_t total_data_size() const;
+    inline uint32_t active_data_size() const;
 
-        inline uint32_t item_count() const;
-        inline size_t container_size() const;
+    inline uint32_t item_count() const;
+    inline size_t container_size() const;
 
-        inline std::time_t commit_time() const;
+    inline std::time_t commit_time() const;
 
-        /**
-         * Unserialized metadata from the beginning section of the container
-         * @return 0 means error, otherwise the length of the meta data
-         */
-        bool UnserializeMetadata(bool verify_checksum);
+    /**
+     * Unserialized metadata from the beginning section of the container
+     * @return 0 means error, otherwise the length of the meta data
+     */
+    bool UnserializeMetadata(bool verify_checksum);
 
-        /**
-         * Serializes the metadata to the beginning section of the container
-         * @return 0 means error, otherwise the length of the meta data
-         */
-        size_t SerializeMetadata(bool calculate_checksum);
+    /**
+     * Serializes the metadata to the beginning section of the container
+     * @return 0 means error, otherwise the length of the meta data
+     */
+    size_t SerializeMetadata(bool calculate_checksum);
 
-        /**
-         * Stores the container to the given file at the given offset. Every
-         * contents at the given position is overwritten without any further notice.
-         *
-         * The container must be valid (id set, etc) for this method.
-         *
-         * @param file file to store the container to
-         * @param offset offset inside the file to store the container
-         * @param calculate_checksum calculates the checksum of the given container and
-         * store the checksum besides the data.
+    /**
+     * Stores the container to the given file at the given offset. Every
+     * contents at the given position is overwritten without any further notice.
+     *
+     * The container must be valid (id set, etc) for this method.
+     *
+     * @param file file to store the container to
+     * @param offset offset inside the file to store the container
+     * @param calculate_checksum calculates the checksum of the given container and
+     * store the checksum besides the data.
      * @return true iff ok, otherwise an error has occurred
-         */
-        bool StoreToFile(dedupv1::base::File* file, off_t offset, bool calculate_checksum);
+     */
+    bool StoreToFile(dedupv1::base::File* file, off_t offset, bool calculate_checksum);
 
-        /**
-         * Loads the container from the given file at the given offset.
-         * The primary id of the container must be set to the primary or any secondary id of the container
-         * at that data position.
-         * The primary id is changed to the stored primary id if a secondary id has been set.
-         *
-         * @param file
-         * @param offset
-         * @param verify_checksum iff true, the checksum of the container on disk
-         * should be verified.
+    /**
+     * Loads the container from the given file at the given offset.
+     * The primary id of the container must be set to the primary or any secondary id of the container
+     * at that data position.
+     * The primary id is changed to the stored primary id if a secondary id has been set.
+     *
+     * @param file
+     * @param offset
+     * @param verify_checksum iff true, the checksum of the container on disk
+     * should be verified.
      * @return true iff ok, otherwise an error has occurred
-         */
-        bool LoadFromFile(dedupv1::base::File* file, off_t offset, bool verify_checksum);
+     */
+    bool LoadFromFile(dedupv1::base::File* file, off_t offset, bool verify_checksum);
 
-        bool CopyFrom(const Container& container, bool copyId = false);
+    bool CopyFrom(const Container& container, bool copyId = false);
 
-        /**
-         * Tests for equality.
-         * The next pointer (used for C style linked lists) is not part of the equality
-         * definition.
-         * @param container
-         * @return
-         */
-        bool Equals(const Container& container) const;
+    /**
+     * Tests for equality.
+     * The next pointer (used for C style linked lists) is not part of the equality
+     * definition.
+     * @param container
+     * @return
+     */
+    bool Equals(const Container& container) const;
 
-        /**
-         * Checks (using a simple heuristic) if the container is too full to add a new
-         * item with the given fp_size and the given data size.
-         *
-         * @param fp_size
-         * @param data_size
-         * @return
-         */
-        inline bool IsFull(size_t fp_size, size_t data_size);
+    /**
+     * Checks (using a simple heuristic) if the container is too full to add a new
+     * item with the given fp_size and the given data size.
+     *
+     * @param fp_size
+     * @param data_size
+     * @return
+     */
+    inline bool IsFull(size_t fp_size, size_t data_size);
 
-        /**
-         * Copies the raw (uncompressed) data of the given container item.
-         *
-         * @param item
-         * @param dest
-         * @param dest_size
+    /**
+     * Copies the raw (uncompressed) data of the given container item.
+     *
+     * @param item
+     * @param dest
+     * @param offset offset of the data to copy within the container item
+     * @param dest_size
      * @return true iff ok, otherwise an error has occurred
-         */
-        bool CopyRawData(const ContainerItem* item, void* dest, size_t dest_size) const;
+     */
+    bool CopyRawData(const ContainerItem* item,
+                     void* dest,
+                     uint32_t offset,
+                     uint32_t dest_size) const;
 
-        /**
-         * Searches for an item with the given fingerprint in the container.
-         *
-         * @param fp
-         * @param fp_size
-         * @param find_deleted
-         * @return
-         */
-        const ContainerItem* FindItem(const void* fp, size_t fp_size, bool find_deleted = false) const;
+    /**
+     * Searches for an item with the given fingerprint in the container.
+     *
+     * @param fp
+     * @param fp_size
+     * @param find_deleted
+     * @return
+     */
+    const ContainerItem* FindItem(const void* fp, size_t fp_size, bool find_deleted = false) const;
 
-        /**
-         * Seareches for an item with the given fingerprint in the container.
-         * @param fp
-         * @param fp_size
-         * @param find_deleted
-         * @return
-         */
-        ContainerItem* FindItem(const void* fp, size_t fp_size, bool find_deleted = false);
+    /**
+     * Seareches for an item with the given fingerprint in the container.
+     * @param fp
+     * @param fp_size
+     * @param find_deleted
+     * @return
+     */
+    ContainerItem* FindItem(const void* fp, size_t fp_size, bool find_deleted = false);
 
-        /**
-         * Merges the both containers into a new container
-         *
-         * @param container1
-         * @param container2
+    /**
+     * Merges the both containers into a new container
+     *
+     * @param container1
+     * @param container2
      * @return true iff ok, otherwise an error has occurred
-         */
-        bool MergeContainer(const Container& container1, const Container& container2);
+     */
+    bool MergeContainer(const Container& container1, const Container& container2);
 
-        /**
-         * Checks if the container has the given id as primary or secondary id.
-         *
-         * @param id
-         * @return
-         */
-        bool HasId(uint64_t id) const;
+    /**
+     * Checks if the container has the given id as primary or secondary id.
+     *
+     * @param id
+     * @return
+     */
+    bool HasId(uint64_t id) const;
 
-        std::string DebugString() const;
+    std::string DebugString() const;
 
-        inline bool is_stored() const;
+    inline bool is_stored() const;
 
-        inline bool is_metadata_only() const;
+    inline bool is_metadata_only() const;
 };
 
-uint32_t Container::item_count() const  {
+uint32_t Container::item_count() const {
     return this->item_count_;
 }
 

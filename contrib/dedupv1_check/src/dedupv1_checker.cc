@@ -396,7 +396,7 @@ bool Dedupv1Checker::CheckContainerItem(ChunkIndex* chunk_index, Fingerprinter* 
     size_t chunk_data_buffer_size = Chunk::kMaxChunkSize;
     byte chunk_data_buffer[chunk_data_buffer_size];
 
-    CHECK(container->CopyRawData(item, chunk_data_buffer, chunk_data_buffer_size),
+    CHECK(container->CopyRawData(item, chunk_data_buffer, 0, chunk_data_buffer_size),
         "Failed to copy item data: " << item->DebugString());
 
     byte fp[fp_gen->GetFingerprintSize()];
@@ -495,7 +495,7 @@ bool Dedupv1Checker::ReadChunkIndex() {
             }
 
             Container container(chunk_mapping.data_address(),
-                storage->GetContainerSize(), true);
+                                storage->GetContainerSize(), true);
             lookup_result read_result = storage->ReadContainer(&container);
             CHECK(read_result != LOOKUP_ERROR, "Failed to read container " << chunk_mapping.data_address());
             if (read_result == LOOKUP_NOT_FOUND) {
@@ -924,10 +924,10 @@ bool Dedupv1Checker::Stop() {
 }
 
 Dedupv1Checker::~Dedupv1Checker() {
-  if (system_) {
-    delete system_;
-    system_ = NULL;
-  }
+    if (system_) {
+        delete system_;
+        system_ = NULL;
+    }
 }
 
 bool Dedupv1Checker::set_passes(const uint32_t passes) {

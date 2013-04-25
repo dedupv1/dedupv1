@@ -47,10 +47,10 @@ namespace chunkstore {
  * Type for the commit state of a address
  */
 enum storage_commit_state {
-    STORAGE_ADDRESS_ERROR = 0,              //!< STORAGE_ADDRESS_ERROR
-    STORAGE_ADDRESS_COMMITED = 1,           //!< STORAGE_ADDRESS_COMMITED
-    STORAGE_ADDRESS_NOT_COMMITED = 2,       //!< STORAGE_ADDRESS_NOT_COMMITED
-    STORAGE_ADDRESS_WILL_NEVER_COMMITTED = 3//!< STORAGE_ADDRESS_WILL_NEVER_COMMITTED
+    STORAGE_ADDRESS_ERROR = 0,              // !< STORAGE_ADDRESS_ERROR
+    STORAGE_ADDRESS_COMMITED = 1,           // !< STORAGE_ADDRESS_COMMITED
+    STORAGE_ADDRESS_NOT_COMMITED = 2,       // !< STORAGE_ADDRESS_NOT_COMMITED
+    STORAGE_ADDRESS_WILL_NEVER_COMMITTED = 3 // !< STORAGE_ADDRESS_WILL_NEVER_COMMITTED
 };
 
 /**
@@ -63,11 +63,11 @@ enum storage_commit_state {
  * is used.
  */
 class Storage : public dedupv1::StatisticProvider {
-    private:
+private:
     DISALLOW_COPY_AND_ASSIGN(Storage);
 
     static MetaFactory<Storage> factory_;
-    public:
+public:
 
     static MetaFactory<Storage>& Factory();
 
@@ -136,7 +136,7 @@ class Storage : public dedupv1::StatisticProvider {
      */
     virtual enum storage_commit_state IsCommitted(uint64_t address) = 0;
 
-        /**
+    /**
      * @return true iff ok, otherwise an error has occurred
          */
         virtual bool WriteNew(const void* key, size_t key_size, const void* data,
@@ -145,27 +145,34 @@ class Storage : public dedupv1::StatisticProvider {
                 uint64_t* address,
                 dedupv1::base::ErrorContext* ec) = 0;
 
-        /**
+    /**
+     * Short reads are possible to the chunk is less offset+size.
+     * In this case, read returns the number of read bytes.
+     *
      * @return true iff ok, otherwise an error has occurred
-         */
-        virtual bool Read(uint64_t address, const void* key, size_t key_size,
-                void* data, size_t* data_size, dedupv1::base::ErrorContext* ec) = 0;
+     */
+    virtual dedupv1::base::Option<uint32_t> Read(uint64_t address,
+                                                 const void* key, size_t key_size,
+                                                 void* data,
+                                                 uint32_t offset,
+                                                 uint32_t size,
+                                                 dedupv1::base::ErrorContext* ec) = 0;
 
-        /**
-         * Deletes the record from the storage system.
-         *
-         * @param address
-         * @param key_list
-         * @param ec
-         * @return
-         */
-        virtual bool DeleteChunks(uint64_t address, const std::list<bytestring>& key_list,
-            dedupv1::base::ErrorContext* ec) = 0;
+    /**
+     * Deletes the record from the storage system.
+     *
+     * @param address
+     * @param key_list
+     * @param ec
+     * @return
+     */
+    virtual bool DeleteChunks(uint64_t address, const std::list<bytestring>& key_list,
+                              dedupv1::base::ErrorContext* ec) = 0;
 
-        /**
+    /**
      * @return true iff ok, otherwise an error has occurred
-         */
-        virtual bool DeleteChunk(uint64_t address, const byte* key, size_t key_size, dedupv1::base::ErrorContext* ec);
+     */
+    virtual bool DeleteChunk(uint64_t address, const byte* key, size_t key_size, dedupv1::base::ErrorContext* ec);
 
     /**
      * Flushes all open data to disk.

@@ -1169,17 +1169,17 @@ bool ContainerStorage::Format(const ContainerFile& file, File* format_file) {
     DCHECK(!file.uuid().IsNull(), "File uuid not set");
 
     ContainerSuperblockData superblock;
-        superblock.set_uuid(file.uuid().ToString());
+    superblock.set_uuid(file.uuid().ToString());
 
     CHECK(format_file->WriteSizedMessage(0, superblock, kSuperBlockSize, true) > 0,
-      "Failed to write superblock: " << superblock.DebugString());
+        "Failed to write superblock: " << superblock.DebugString());
 
     if (preallocate_) {
         uint64_t container_per_file = file.file_size() / container_size_;
 
         // Fallocate does never overwrite existing data, so we can start at 0
         CHECK(format_file->Fallocate(0, container_per_file * container_size_ + kSuperBlockSize),
-          "Could not preallocate file " << file.filename());
+            "Could not preallocate file " << file.filename());
     }
     return true;
 }
@@ -1558,8 +1558,8 @@ ContainerStorage::~ContainerStorage() {
         }
     }
     if (this->state_ != STOPPED && this->timeout_committer_->IsStarted()) {
-        if(!this->timeout_committer_->Join(NULL)) {
-          WARNING("Timeout committer returned false");
+        if (!this->timeout_committer_->Join(NULL)) {
+            WARNING("Timeout committer returned false");
         }
     }
     if (timeout_committer_) {
@@ -2212,8 +2212,8 @@ bool ContainerStorage::DoDelete(
 }
 
 bool ContainerStorage::DeleteChunks(uint64_t container_id,
-                                     const list<bytestring>& key_list,
-                                     ErrorContext* ec) {
+                                    const list<bytestring>& key_list,
+                                    ErrorContext* ec) {
     ProfileTimer timer(stats_.total_delete_time_);
 
     Container* write_container = NULL;
@@ -2309,8 +2309,14 @@ bool ContainerStorage::DeleteChunks(uint64_t container_id,
     return delete_result;
 }
 
-enum lookup_result ContainerStorage::ReadInContainer(const Container& container, const void* key,
-                                                            size_t key_size, void* data, size_t* data_size) {
+Option<uint32_t> ContainerStorage::ReadInContainer(const Container& container,
+                                                   const void* key,
+                                                   size_t key_size, void* data,
+                                                   uint32_t offset,
+                                                   uint32_t size,
+                                                   bool* found) {
+    DCHECK(data, "Data not set");
+    DCHECK(key, "Fingerprint not set");
     stats_.reads_++;
 
     const ContainerItem* item = container.FindItem(key, key_size);
@@ -2332,22 +2338,28 @@ enum lookup_result ContainerStorage::ReadInContainer(const Container& container,
             "container " << container.DebugString() <<
             ", container items " << items_debug_string <<
             ", key " << Fingerprinter::DebugString(static_cast<const byte*>(key), key_size));
-        return LOOKUP_NOT_FOUND;
+        if (found) {
+            *found = false;
+        }
+        return make_option(0U);
     }
-    CHECK_RETURN(!item->is_deleted(), LOOKUP_ERROR, "Found a deleted item: " << item->DebugString());
-    CHECK_RETURN(item->raw_size() <= *data_size, LOOKUP_ERROR, "Data length error: " <<
+    if (found) {
+        *found = true;
+    }
+    CHECK(!item->is_deleted(), "Found a deleted item: " << item->DebugString());
+    if (offset >= item->raw_size()) {
+        // short read
+        return make_option(0U);
+    }
+    if (offset + size >= item->raw_size()) {
+        size = item->raw_size() - offset;
+    }
+    bool b = container.CopyRawData(item, data, offset, size);
+    CHECK(b,
+        "Cannot copy data: " <<
         "container " << container.DebugString() <<
         ", item " << item->DebugString() <<
-        ", data size " << (*data_size));
-    if (data) {
-        CHECK_RETURN(container.CopyRawData(item, data, *data_size), LOOKUP_ERROR,
-            "Cannot copy data: " <<
-            "container " << container.DebugString() <<
-            ", item " << item->DebugString() <<
-            ", fp " << Fingerprinter::DebugString((const byte *) key, key_size));
-    }
-    *data_size = item->raw_size();
-
+        ", fp " << Fingerprinter::DebugString((const byte *) key, key_size));
     if (gc_) {
         if (!gc_->OnRead(container, key, key_size)) {
             WARNING("Error while updating storage gc");
@@ -2358,19 +2370,20 @@ enum lookup_result ContainerStorage::ReadInContainer(const Container& container,
             WARNING("Error while updating storage allocator");
         }
     }
-    return LOOKUP_FOUND;
+    return make_option(size);
 }
 
-bool ContainerStorage::Read(uint64_t address, const void* key,
-                                   size_t key_size, void* data, size_t* data_size,
-                                   ErrorContext* ec) {
+Option<uint32_t> ContainerStorage::Read(uint64_t address, const void* key,
+                                        size_t key_size,
+                                        void* data,
+                                        uint32_t offset,
+                                        uint32_t size,
+                                        ErrorContext* ec) {
     ProfileTimer timer(stats_.total_read_time_);
 
     CHECK(state_ == ContainerStorage::RUNNING ||
         state_ == ContainerStorage::STARTED, "Illegal state to read data: " << state_);
-
-    CHECK(key, "Key NULL");
-    CHECK(data_size, "Data Size Pointer NULL");
+    DCHECK(key, "Key NULL");
 
     Container* write_container = NULL;
     ReadWriteLock* write_cache_lock = NULL;
@@ -2385,10 +2398,20 @@ bool ContainerStorage::Read(uint64_t address, const void* key,
         stats_.write_cache_hit_++;
         TRACE("Read item " << Fingerprinter::DebugString((byte *) key, key_size) << " from container " << address << " (write cache)");
 
-        enum lookup_result r = this->ReadInContainer(*write_container, key, key_size, data, data_size);
-        CHECK(r != LOOKUP_ERROR, "Failed to read in container: " << write_container->DebugString());
+        bool found = false;
+        Option<uint32_t> r = this->ReadInContainer(*write_container,
+            key,
+            key_size,
+            data,
+            offset,
+            size,
+            &found);
+        CHECK(r.valid(), "Failed to read in container: " << write_container->DebugString());
         scoped_write_cache_lock.ReleaseLock();
-        return r == LOOKUP_FOUND;
+        if (!found) {
+            return false;
+        }
+        return r;
     }
 
     // Not found in write cache => Try read cache
@@ -2410,13 +2433,16 @@ bool ContainerStorage::Read(uint64_t address, const void* key,
         TRACE("Read item " << Fingerprinter::DebugString((byte *) key, key_size) << " from container " << cache_container->DebugString() << " (read cache)");
 
         // We hold the cache entry lock, we can now also allocate the container lock
-        enum lookup_result r = this->ReadInContainer(*cache_container, key, key_size, data, data_size);
-        CHECK(r != LOOKUP_ERROR, "Failed to read in container: "
+        bool found = false;
+        Option<uint32_t> r = this->ReadInContainer(*cache_container, key, key_size, data, offset, size, &found);
+        CHECK(r.valid(), "Failed to read in container: "
             << "container " << cache_container->DebugString()
             << ", key " << Fingerprinter::DebugString(key, key_size));
-
         CHECK(scoped_cache_lock.ReleaseLock(), "Failed to release cache lock");
-        return r == LOOKUP_FOUND;
+        if (!found) {
+            return false;
+        }
+        return r;
     }
     // read_resulkt == LOOKUP_NOT_FOUND => not found in read cache
     // cache lock might/should be set
@@ -2455,11 +2481,16 @@ bool ContainerStorage::Read(uint64_t address, const void* key,
 
     // found
     CHECK(read_container.HasId(address), "Wrong active container: " << read_container.DebugString() << ", address " << address);
-    enum lookup_result r2 = this->ReadInContainer(read_container, key, key_size, data, data_size);
-    CHECK(r2 != LOOKUP_ERROR, "Failed to read in container: "
+    bool found = false;
+    Option<uint32_t> r2 = this->ReadInContainer(read_container,
+        key, key_size, data, offset, size, &found);
+    CHECK(r2.valid(), "Failed to read in container: "
         << "container " << read_container.DebugString()
         << ", key " << Fingerprinter::DebugString(key, key_size));
-    return r2 == LOOKUP_FOUND;
+    if (!found) {
+        return false;
+    }
+    return r2;
 }
 
 storage_commit_state ContainerStorage::IsCommittedWait(uint64_t address) {

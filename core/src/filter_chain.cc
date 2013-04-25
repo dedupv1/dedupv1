@@ -240,7 +240,7 @@ bool FilterChain::ReadChunkInfo(Session* session,
     bool failed = false;
     DEBUG("Check for chunk " << chunk_mapping->DebugString());
     if (!this->CheckChunk(session, block_mapping, chunk_mapping, ec)) {
-        if (!ec->is_full()) {
+        if (ec == NULL || !ec->is_full()) {
             ERROR("Failed to check chunk: " << chunk_mapping->DebugString());
         }
         failed = true;
