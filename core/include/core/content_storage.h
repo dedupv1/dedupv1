@@ -136,8 +136,6 @@ class ContentStorage : public dedupv1::StatisticProvider {
 
             dedupv1::base::Profile chunking_time_;
 
-            dedupv1::base::Profile checksum_time_;
-
             tbb::atomic<uint64_t> threads_in_filter_chain_;
 
             dedupv1::base::SimpleSlidingAverage average_write_block_latency_;

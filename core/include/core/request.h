@@ -53,7 +53,6 @@ class RequestStatistics {
             FILTER_CHAIN,
             OPEN_REQUEST_HANDLING,
             BLOCK_STORING, // Part of OPEN_REQUEST_HANDLING
-            CHECKSUM,
             PROCESSING
         };
     private:

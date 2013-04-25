@@ -371,8 +371,11 @@ bool ContentStorage::FastCopyBlock(uint64_t src_block_id,
     return true;
 }
 
-bool ContentStorage::WriteBlock(Session* session, Request* request, RequestStatistics* request_stats, bool last_block,
-                                dedupv1::base::ErrorContext* ec) {
+bool ContentStorage::WriteBlock(Session* session,
+    Request* request,
+    RequestStatistics* request_stats,
+    bool last_block,
+    dedupv1::base::ErrorContext* ec) {
     ProfileTimer timer(this->stats_.profiling_);
     SlidingAverageProfileTimer average_timer(this->stats_.average_write_block_latency_);
     REQUEST_STATS_START(request_stats, RequestStatistics::PROCESSING);
@@ -475,11 +478,6 @@ bool ContentStorage::WriteBlock(Session* session, Request* request, RequestStati
         reported_full_chunk_index_before_ = false;
     }
 
-    if (result) {
-        REQUEST_STATS_START(request_stats, RequestStatistics::CHECKSUM);
-        ProfileTimer checksum_timer(this->stats_.checksum_time_);
-        REQUEST_STATS_FINISH(request_stats, RequestStatistics::CHECKSUM);
-    }
     list<Chunk*> chunks;
     if (result) {
         // Chunk everything
@@ -1125,7 +1123,6 @@ string ContentStorage::PrintProfile() {
          << std::endl;
     sstr << "\"average write block latency\": " << this->stats_.average_write_block_latency_.GetAverage() << ","
          << std::endl;
-    sstr << "\"checksum\": " << this->stats_.checksum_time_.GetSum() << "," << std::endl;
     sstr << "\"content store\": " << this->stats_.profiling_.GetSum() << "," << std::endl;
     sstr << "\"chunking\": " << this->stats_.chunking_time_.GetSum() << "," << std::endl;
     sstr << "\"fingerprinting\": " << this->stats_.fingerprint_profiling_.GetSum() << std::endl;

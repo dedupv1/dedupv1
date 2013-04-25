@@ -87,7 +87,6 @@ std::string RequestStatistics::DebugString() {
     s << "total " << latency(TOTAL);
     s << ", waiting " << latency(WAITING);
     s << ", processing " << latency(PROCESSING);
-    s << ", checksum " << latency(CHECKSUM);
     s << ", chunking " << latency(CHUNKING);
     s << ", fingerprinting " << latency(FINGERPRINTING);
     s << ", filter chain " << latency(FILTER_CHAIN);
