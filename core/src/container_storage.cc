@@ -1232,16 +1232,13 @@ bool ContainerStorage::Start(const StartContext& start_context, DedupSystem* sys
         this->last_given_container_id_ = log_data.last_given_container_id();
     }
 
-    // The complete file opening logic, we have to handle three (good/valid) cases
+    // The complete file opening logic, we have to handle two (good/valid) cases
     // a) file existed and was already stored in the log data: Easy
-    // b) file existed and was not stored in the log data. This happened on old systems that to not have
-    //    the file information in the log data.
-    // c) file doesn't exists
+    // b) file doesn't exists
     //
     // another aspect that must be considered is the explicit setting of file sizes
 
     int64_t size_to_assign = size_;
-    bool use_comp_mode = false;
     bool use_extend_feature = false; // extending storage later and explicit file sizes are
     // new features that are not compatible with the comp mode.
     // Workaround: start the system once with a unchanged config to upgrade the state to the
@@ -1257,15 +1254,7 @@ bool ContainerStorage::Start(const StartContext& start_context, DedupSystem* sys
                 // no explicit file size set and not a newly created file
 
                 // now we have to search the correct file size
-                // there are two possibilities: a) log info entry exists => done b) backup path => assume default file size
-                if (log_data.file_size() <= i || !log_data.file(i).has_file_size()) {
-                    // use default file size
-                    uint64_t default_size_per_file = size_ /  file_.size();
-                    file_[i].set_file_size(default_size_per_file);
-                    use_comp_mode = true;
-                } else {
-                    file_[i].set_file_size(log_data.file(i).file_size());
-                }
+                file_[i].set_file_size(log_data.file(i).file_size());
             } else {
                 // files are not allowed to change their file size
                 if (log_data.file_size() > i && log_data.file(i).has_file_size()) {
@@ -1277,7 +1266,9 @@ bool ContainerStorage::Start(const StartContext& start_context, DedupSystem* sys
                 use_extend_feature = true;
             }
             size_to_assign -= file_[i].file_size();
-            TRACE("Assign " << file_[i].file_size() << " to new file " << file_[i].filename() << ", size to assign " << size_to_assign);
+            TRACE("Assign " << file_[i].file_size() << " to new file " << 
+                file_[i].filename() << 
+                ", size to assign " << size_to_assign);
 
             // Check super block contents
             if (log_data.file_size() > i) {
@@ -1311,7 +1302,6 @@ bool ContainerStorage::Start(const StartContext& start_context, DedupSystem* sys
             tmp_file.Release();
         }
     }
-    CHECK(!(use_comp_mode && use_extend_feature), "Explicit file size assigning is not possible in compatibility mode");
     DEBUG("Size to assign: " << size_to_assign);
     // not found: what now
     uint64_t file_count_no_explicit_fs = 0;
@@ -1337,7 +1327,6 @@ bool ContainerStorage::Start(const StartContext& start_context, DedupSystem* sys
 
             if (!start_context.create() && start_context.force()) {
                 use_extend_feature = true;
-                CHECK(!use_comp_mode, "Extending is not possible in compatibility mode");
             }
             CHECK(start_context.create() || start_context.force(),
                 "Error opening storage file: filename " << this->file_[i].filename());
