@@ -1,10 +1,10 @@
 #!/usr/bin/python
 #
 # dedupv1 - iSCSI based Deduplication System for Linux
-# 
+#
 # (C) 2008 Dirk Meister
 # (C) 2009 - 2011, Dirk Meister, Paderborn Center for Parallel Computing
-# 
+#
 
 import os
 import sys
@@ -67,7 +67,7 @@ def install_crcutil(options):
 @install()
 def install_tc(options):
     print "Install tokyocabinet"
-    run("tar -zxf dmeister-tokyocabinet-5ad8b9b.tar.gz") 
+    run("tar -zxf dmeister-tokyocabinet-5ad8b9b.tar.gz")
     run("LDFLAGS=-L/opt/dedupv1/lib  ./configure --enable-fastest --prefix=/opt/dedupv1", cwd = "dmeister-tokyocabinet-5ad8b9b/")
     run("make -j%s" % get_cpu_count(), cwd = "dmeister-tokyocabinet-5ad8b9b/")
     run("make install", cwd = "dmeister-tokyocabinet-5ad8b9b/")
@@ -170,7 +170,7 @@ def install_scst(options):
     # Activate expected values
     run('sed -i.aa s/"#EXTRA_CFLAGS += \-DCONFIG_SCST_USE_EXPECTED_VALUES"/"EXTRA_CFLAGS += \-DCONFIG_SCST_USE_EXPECTED_VALUES"/ Makefile',
         cwd = "scst/scst/src")
-    
+
     run("make enable_proc", cwd="scst")
     if not options.debug:
         run("make 2perf", cwd = "scst/scst")
@@ -181,8 +181,8 @@ def install_scst(options):
     # scst_local
     if not options.debug:
         run("make 2perf", cwd = "scst/scst_local")
-    if options.scst_sbin_dir: 
-        run("sed -i 's;SBINDIR := /usr/local/sbin;SBINDIR := %s;ig' Makefile" % options.scst_sbin_dir, 
+    if options.scst_sbin_dir:
+        run("sed -i 's;SBINDIR := /usr/local/sbin;SBINDIR := %s;ig' Makefile" % options.scst_sbin_dir,
             cwd = "scst/scst_local")
     run("make clean", cwd = "scst/scst_local")
     run("make -j%s" % get_cpu_count(), cwd = "scst/scst_local")
@@ -191,13 +191,13 @@ def install_scst(options):
     # iscsi-scst
     if not options.debug:
         run("make 2perf", cwd = "scst/iscsi-scst")
-    
-    if options.scst_sbin_dir: 
-        run("sed -i 's;SBINDIR := /usr/local/sbin;SBINDIR := %s;ig' Makefile_user_space_only" % options.scst_sbin_dir, 
+
+    if options.scst_sbin_dir:
+        run("sed -i 's;SBINDIR := /usr/local/sbin;SBINDIR := %s;ig' Makefile_user_space_only" % options.scst_sbin_dir,
             cwd = "scst/iscsi-scst")
-        run("sed -i 's;SBINDIR := /usr/local/sbin;SBINDIR := %s;ig' Makefile" % options.scst_sbin_dir, 
+        run("sed -i 's;SBINDIR := /usr/local/sbin;SBINDIR := %s;ig' Makefile" % options.scst_sbin_dir,
             cwd = "scst/iscsi-scst")
-    
+
     # dmeister: I have no clue why we need make clean here, after an update to Ubuntu 10.10 it is needed
     run("make clean", cwd="scst/iscsi-scst")
     run("make -j%s" % get_cpu_count(), cwd = "scst/iscsi-scst/")
@@ -209,10 +209,10 @@ def install_jsoncpp(options):
     print "Install jsoncpp"
     run("tar -xzf jsoncpp-src-0.5.0.tar.gz")
     run("scons platform=linux-gcc", cwd="jsoncpp-src-0.5.0")
-    
+
     p = subprocess.Popen("gcc -dumpversion",shell = True, stdout = subprocess.PIPE)
     cxx_version=p.stdout.read().strip()
-    
+
     if os.path.exists("/opt/dedupv1/include/json"):
         shutil.rmtree("/opt/dedupv1/include/json")
         #os.mkdir("/opt/dedupv1/include/json")
@@ -225,14 +225,14 @@ def install_jsoncpp(options):
         shutil.copytree("jsoncpp-src-0.5.0/include/json", "/opt/dedupv1/include/json")
         shutil.copy("jsoncpp-src-0.5.0/libs/linux-gcc-%s/libjson_linux-gcc-%s_libmt.a" % (cxx_version, cxx_version), "/opt/dedupv1/lib/libjson.a")
         shutil.copy("jsoncpp-src-0.5.0/libs/linux-gcc-%s/libjson_linux-gcc-%s_libmt.dylib" % (cxx_version, cxx_version), "/opt/dedupv1/lib/libjson.dylib")
-        
+
         # Fix library path
         # Without it the first build path (e.g. buildscons/linux-gcc-4.2.1/src/lib_json/libjson_linux-gcc-4.2.1_libmt.dylib)
         # is baked into the library, linking will succeed, but running will fail because
         # the library cannot be found. Here we change the path to the correct one
         # More information: http://blogs.sun.com/dipol/entry/dynamic_libraries_rpath_and_mac
         run("install_name_tool -id \"/opt/dedupv1/lib/libjson.dylib\" /opt/dedupv1/lib/libjson.dylib")
-        
+
 @install()
 def install_bz2(options):
     print "Install bz2"
@@ -248,7 +248,7 @@ def install_lz4(options):
     run("make -j%s CFLAGS=\"-fPIC -Wall -Winline -O2 -g -D_FILE_OFFSET_BITS=64\"" % get_cpu_count(), cwd="lz4-r53")
     run("make install PREFIX=/opt/dedupv1", cwd="lz4-r53")
 
-    
+
 @install()
 def install_re2(options):
     print "Install re2"
@@ -256,28 +256,7 @@ def install_re2(options):
     run("patch -p 0 < ../re2-Makefile.patch", cwd="re2")
     run("make", cwd="re2")
     run("make install", cwd="re2")
-    
-@install()
-def install_icu(options):
-    def copy_and_modify_astro_h():
-        src = open("icu/source/i18n/astro.h")
-        dest = open("icu/source/i18n/unicode/astro.h", "w")
-        
-        for line in src:
-            if line.find("gregoimp.h") >= 0:
-                continue
-            dest.write(line)
-    print "Install icu"
-    run("tar -xf icu4c-4_8-src.tgz")
-    
-    run("./configure --prefix=/opt/dedupv1", cwd="icu/source")
-    run("make", cwd="icu/source")
-    
-    copy_and_modify_astro_h()
-    
-    run("make install", cwd="icu/source")
-    shutil.rmtree("/opt/dedupv1/include/layout")
-    
+
 @install()
 def install_tbb(options):
     tbb_version = "tbb30_131oss"
@@ -286,7 +265,7 @@ def install_tbb(options):
     run("make -j%s tbb_build_prefix=tbb" % get_cpu_count(), cwd=tbb_version)
     run("cp build/tbb_release/libtbb* /opt/dedupv1/lib", cwd=tbb_version)
     run("cp -r include/tbb /opt/dedupv1/include", cwd=tbb_version)
-        
+
 @install()
 def install_sparsehash(options):
     print "Install sparsehash"
@@ -294,7 +273,7 @@ def install_sparsehash(options):
     run("./configure --prefix=/opt/dedupv1", cwd="sparsehash-1.7")
     run("make -j%s" % get_cpu_count(), cwd="sparsehash-1.7")
     run("make install", cwd="sparsehash-1.7")
-    
+
 @install()
 def install_gflags(options):
     print "Install gflags"
@@ -303,7 +282,7 @@ def install_gflags(options):
     run("patch -p1 < ../gflags_stripped_help.patch", cwd="gflags-1.4")
     run("make -j%s" % get_cpu_count(), cwd="gflags-1.4")
     run("make install", cwd="gflags-1.4")
-    
+
 @install()
 def install_sqlite(options):
     print "Install sqlite"
@@ -320,7 +299,7 @@ def install_snappy(options):
     run("make -j%s" % get_cpu_count(), cwd="snappy-1.0.4")
     run("make check", cwd="snappy-1.0.4")
     run("make install", cwd="snappy-1.0.4")
-    
+
 @install("test")
 def install_xmlreporting(options):
     print "Install xml reporting (py)"
@@ -347,7 +326,7 @@ def install_protobuf_json(options):
 
     dir_name = "/opt/dedupv1/lib/python2.7/site-packages/protobuf-json.egg"
     if not os.path.isdir(dir_name):
-        os.mkdir(dir_name) 
+        os.mkdir(dir_name)
     shutil.copy("protobuf-json/protobuf_json.py", dir_name)
 
 @install()
@@ -376,17 +355,17 @@ def do(name, options):
         execute(c, options)
     except Exception as e:
         print str(e)
-        fails.append((name, e))        
+        fails.append((name, e))
 
 class Component:
     def __init__(self, name, f_name, fn):
         self.name = name
         self.f_name = f_name
         self.fn = fn
-        
+
     def modules(self):
         return self.fn.__dict__.get("modules", None)
-    
+
     def option(self, key):
         return self.fn.__dict__.get("options", {}).get(key, None)
 
@@ -441,7 +420,7 @@ def install_all(options, excludes, modules):
         if not excludes or not c.name in excludes:
             if check_extra_modules(c, modules) and check_os(c):
                 execute(c, options)
-    
+
 if __name__ == "__main__":
     def parse_excludes(option, opt, value, parser):
         current = getattr(parser.values, option.dest)
@@ -449,18 +428,18 @@ if __name__ == "__main__":
             current = []
         current.extend([v.strip() for v in value.split(',')])
         setattr(parser.values, option.dest, current)
-        
+
     def parse_extra_modules(option, opt, value, parser):
         current = getattr(parser.values, option.dest)
         if not current:
             current = []
         current.extend([v.strip() for v in value.split(',')])
         setattr(parser.values, option.dest, current)
-                
+
     usage = """usage: %prog
-    
+
     Examples:
-    %prog 
+    %prog
     %prog apr
     %prog --exclude apr
     %prog --exclude apr, apr_util
@@ -489,11 +468,11 @@ if __name__ == "__main__":
                   action='callback',
                   callback=parse_extra_modules)
     (options, argv) = parser.parse_args()
-    
+
     if not os.path.exists("/opt/dedupv1") or not os.path.isdir("/opt/dedupv1"):
         print "Create user-writable directory /opt/dedupv1"
         sys.exit(1)
-    
+
     if len(argv) == 0 or ("all" in argv):
         install_all(options, options.excludes, options.modules)
     elif len(argv) == 1 and argv[0] == "list":
@@ -509,7 +488,7 @@ if __name__ == "__main__":
         components = set(argv)
         for component in components:
             do(component, options)
-            
+
     print
     print "Successful installed libs:"
     if len(success):
@@ -518,12 +497,12 @@ if __name__ == "__main__":
     else:
         print "None"
     print
-    
+
     if len(fails):
         print "Failed to install libs:"
         for (name, e) in fails:
             print name, ":", str(e)
-            print    
-    
+            print
+
     sys.exit(len(fails))
-    
+

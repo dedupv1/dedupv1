@@ -100,7 +100,6 @@
 #include "session_monitor.h"
 #include "monitor_monitor.h"
 #include "container_gc_monitor.h"
-#include "sun_monitor.h"
 #include "version.h"
 #include "dedupv1d_target_info.h"
 #include "dedupv1d_group_info.h"
@@ -164,7 +163,6 @@ Dedupv1d::Dedupv1d() :
     this->monitor_config_["error"] = MONITOR_ENABLED;
     this->monitor_config_["session"] = MONITOR_ENABLED;
     this->monitor_config_["monitor"] = MONITOR_ENABLED;
-    this->monitor_config_["sun"] = MONITOR_ENABLED;
 #ifdef FAULT_INJECTION
     this->monitor_config_["fault-inject"] = MONITOR_ENABLED;
 #else
@@ -567,10 +565,6 @@ bool Dedupv1d::Start(const StartContext& preliminary_start_context, bool no_log_
     }
     if (this->monitor_config_["monitor"] == MONITOR_ENABLED) {
         CHECK(this->monitor_->Add("monitor", new dedupv1d::monitor::MonitorMonitorAdapter(this)), "Cannot add monitor monitor");
-    }
-    if (this->monitor_config_["sun"] == MONITOR_ENABLED) {
-        CHECK(this->monitor_->Add("sun", new dedupv1d::monitor::SunMonitorAdapter()),
-            "Cannot add sun monitor");
     }
     CHECK(this->monitor_->Start(start_context_), "Cannot start monitor");
 
