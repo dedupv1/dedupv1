@@ -89,8 +89,6 @@ TEST_F(Dedupv1ReplayerTest, Replay) {
 
     // write some data to the system
     system = new Dedupv1d();
-    ASSERT_TRUE(system);
-    ASSERT_TRUE(system->Init());
     ASSERT_TRUE(system->LoadOptions("data/dedupv1_test.conf"));
     ASSERT_TRUE(system->Start(dedupv1::StartContext()));
     ASSERT_TRUE(system->Run());

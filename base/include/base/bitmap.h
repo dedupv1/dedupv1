@@ -121,13 +121,6 @@ class Bitmap {
         ~Bitmap();
 
         /**
-         * Init the Bitmap.
-         *
-         * Here we get e.g. the memory for the Bitmap.
-         */
-        bool Init();
-
-        /**
          * set the persistence of the index
          *
          * The key is copied in this method, so the caller keeps to be responsible to delete it.
@@ -228,7 +221,7 @@ class Bitmap {
         /**
          * Clears the hole Bitmap, so it is in the same state as after construction
          */
-        bool ClearAll();
+        void ClearAll();
 
         /**
          * Negates the whole bitmap, so each Bit that was set gets clean and each clean bit will be set.

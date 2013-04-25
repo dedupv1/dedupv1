@@ -54,10 +54,6 @@ Filter::Filter(const string& name, enum filter_result max_filter_level) {
 Filter::~Filter() {
 }
 
-bool Filter::Init() {
-    return true;
-}
-
 bool Filter::Start(DedupSystem* system) {
     return true;
 }

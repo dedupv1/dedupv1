@@ -122,20 +122,13 @@ Dedupv1Checker::Dedupv1Checker(bool check_log_only, bool repair) {
 bool Dedupv1Checker::Initialize(const std::string& filename) {
     CHECK(!started_, "Dedupv1 check already started");
     system_ = new Dedupv1d();
-
-    CHECK(system_, "Error creating dedup system");
-    CHECK(system_->Init(),"Error initializing dedup system");
     CHECK(system_->LoadOptions(filename), "Error loading options");
-
     CHECK(system_->OpenLockfile(), "Failed to acquire lock on lockfile");
-
     StartContext start_context(StartContext::NON_CREATE, StartContext::CLEAN, StartContext::FORCE);
 
     CHECK(system_->Start(start_context, true), // no log replay, we wait for the log check
         "Failed to start dedupv1 system");
-
     CHECK(system_->dedup_system()->idle_detector()->ForceBusy(true), "Could not force busy");
-
     dedup_system_ = system_->dedup_system();
 
     started_ = true;
@@ -501,8 +494,8 @@ bool Dedupv1Checker::ReadChunkIndex() {
                 }
             }
 
-            Container container;
-            container.InitInMetadataOnlyMode(chunk_mapping.data_address(), storage->GetContainerSize());
+            Container container(chunk_mapping.data_address(),
+                storage->GetContainerSize(), true);
             lookup_result read_result = storage->ReadContainer(&container);
             CHECK(read_result != LOOKUP_ERROR, "Failed to read container " << chunk_mapping.data_address());
             if (read_result == LOOKUP_NOT_FOUND) {
@@ -848,8 +841,7 @@ bool Dedupv1Checker::ReadContainerData() {
         // non processed container
 
         // Read the container.
-        Container container;
-        container.Init(container_id, storage->GetContainerSize());
+        Container container(container_id, storage->GetContainerSize(), false);
         lookup_result read_result = storage->ReadContainer(&container);
         if (read_result == LOOKUP_ERROR) {
             WARNING("Failed to read container " << container_id << ", address " << container_address.ShortDebugString());
@@ -917,7 +909,7 @@ bool Dedupv1Checker::ReadContainerData() {
     }
     container_address_inverse_map_.clear(); // we don't need the data anymore
 
-    fp_gen->Close();
+    delete fp_gen;
     fp_gen = NULL;
     return true;
 }

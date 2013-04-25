@@ -102,8 +102,6 @@ protected:
         CHECK_RETURN(Split(config, ";", &options), NULL, "Failed to split: " << config);
 
         dedupv1d::Dedupv1d* system = new dedupv1d::Dedupv1d();
-        CHECK_RETURN(system, NULL, "Cannot create system");
-        CHECK_RETURN(system->Init(), NULL, "Failed to init system");
         CHECK_RETURN(system->LoadOptions(options[0]), NULL, "Cannot load options");
 
         for (size_t i = 1; i < options.size(); i++) {

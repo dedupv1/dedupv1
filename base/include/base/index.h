@@ -121,7 +121,7 @@ enum index_capability {
      * Capability to support iterators
      */
     HAS_ITERATOR = 2,
-    
+
     /**
      * Capability to support a write back cache.
      * However, an index with this Capability might support this feature only
@@ -223,12 +223,6 @@ class Index {
          * Destructor
          */
         virtual ~Index();
-
-        /**
-         * Inits the index. The default implementations simply returns true.
-         * @return true iff ok, otherwise an error has occurred
-         */
-        virtual bool Init();
 
         /**
          * Configures the index.
@@ -427,7 +421,7 @@ class Index {
 
         /**
         * Create a new iterator. All persistent index should support an
-        * iterator. Memory indexes can support the iterator. The support can be checked via 
+        * iterator. Memory indexes can support the iterator. The support can be checked via
         * the HAS_ITERATOR capability.
         *
         * @return a new iterator pointer or NULL if an error occurred.

@@ -195,7 +195,7 @@ size_t Container::SerializeMetadata(bool calculate_checksum) {
     return meta_data_size.value();
 
 }
-Container::Container() {
+Container::Container(uint64_t id, size_t container_size, bool metadata_only) {
     this->data_ = NULL;
     this->pos_ = 0;
     this->primary_id_ = Storage::ILLEGAL_STORAGE_ADDRESS;
@@ -205,13 +205,10 @@ Container::Container() {
     this->metaDataOnly_ = false;
     this->item_count_ = 0;
     this->commit_time_ = 0;
-}
 
-bool Container::Init(uint64_t id, size_t container_size) {
-    CHECK(container_size >= kMetaDataSize, "Container size must be larger then meta data area: container size " << container_size);
-    this->data_ = new byte[container_size];
-    CHECK(this->data_, "Container init failed");
-    memset(this->data_, 0, container_size);
+    if (!metadata_only) {
+      this->data_ = new byte[container_size];
+      memset(this->data_, 0, container_size);
 
     this->pos_ = kMetaDataSize;
     this->active_data_size_ = kMetaDataSize;
@@ -222,13 +219,9 @@ bool Container::Init(uint64_t id, size_t container_size) {
     this->stored_ = false;
     this->metaDataOnly_ = false;
     this->commit_time_ = 0;
-    return true;
-}
 
-bool Container::InitInMetadataOnlyMode(uint64_t id, size_t container_size) {
-    CHECK(container_size >= kMetaDataSize, "Container size must be larger then meta data area: container size " << container_size);
+    } else {
     this->data_ = new byte[kMetaDataSize];
-    CHECK(this->data_, "Container init failed");
     memset(this->data_, 0, kMetaDataSize);
 
     this->pos_ = kMetaDataSize;
@@ -240,7 +233,7 @@ bool Container::InitInMetadataOnlyMode(uint64_t id, size_t container_size) {
     this->stored_ = false;
     this->metaDataOnly_ = true;
     this->commit_time_ = 0;
-    return true;
+    }
 }
 
 void Container::Reuse(uint64_t id) {

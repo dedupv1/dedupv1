@@ -195,35 +195,17 @@ Dedupv1d::Dedupv1d() :
 
     this->max_memory = 0;
     startup_tick_count_ = tbb::tick_count::now();
-}
 
-bool Dedupv1d::Init() {
-    CHECK(this->threads_.SetOption("size", ToString(kDefaultThreadpoolSize)),
-        "Cannot set threadpool size to default value");
+    // TODO (dmeister): This should not be an set options call
+    this->threads_.SetOption("size", ToString(kDefaultThreadpoolSize));
 
     this->dedup_system_ = new DedupSystem();
-    CHECK(this->dedup_system_, "Cannot create dedup system");
-    CHECK(this->dedup_system_->Init(), "Cannot init dedup system");
-
     this->monitor_ = new MonitorSystem();
-    CHECK(this->monitor_, "Cannot create monitor");
-
     this->log_replayer_ = new LogReplayer();
-    CHECK(this->log_replayer_, "Cannot create log replayer");
-
     this->volume_info_ = new Dedupv1dVolumeInfo();
-    CHECK(this->volume_info_, "Cannot create volume info");
-
     this->target_info_ = new Dedupv1dTargetInfo();
-    CHECK(this->target_info_, "Cannot create target info");
-
     this->group_info_ = new Dedupv1dGroupInfo();
-    CHECK(this->group_info_, "Cannot create group info");
-
     this->user_info_ = new Dedupv1dUserInfo();
-    CHECK(this->user_info_, "Cannot create user info");
-
-    return true;
 }
 
 bool Dedupv1d::WriteDirtyState(const dedupv1::FileMode& file_mode, bool dirty, bool stopped) {

@@ -86,8 +86,6 @@ DedupSystem* DedupSystemTest::CreateDefaultSystem(string config_option,
     CHECK_RETURN(Split(config_option, ";", &options), NULL, "Failed to split: " << config_option);
 
     DedupSystem* system = new DedupSystem();
-    CHECK_RETURN(system, NULL, "Cannot create system");
-    CHECK_RETURN(system->Init(), NULL, "Failed to init system");
     CHECK_RETURN(system->LoadOptions(options[0]), NULL, "Cannot load options");
 
     for (size_t i = 1; i < options.size(); i++) {

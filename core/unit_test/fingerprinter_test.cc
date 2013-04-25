@@ -60,7 +60,7 @@ void FingerprinterTest::TearDown() {
         delete[] buffer;
     }
     if (fingerprinter) {
-        ASSERT_TRUE(fingerprinter->Close());
+        delete fingerprinter;
     }
 }
 

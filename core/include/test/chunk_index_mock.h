@@ -26,7 +26,6 @@
 
 class MockChunkIndex : public dedupv1::chunkindex::ChunkIndex {
     public:
-        MOCK_METHOD1(Init, bool(const std::string& index_type));
         MOCK_METHOD2(SetOption, bool(const std::string&, const std::string& option));
 
         MOCK_METHOD2(Start, bool(dedupv1::DedupSystem* system, bool create));

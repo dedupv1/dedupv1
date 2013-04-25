@@ -582,10 +582,8 @@ bool UsageCountGarbageCollector::ProcessGCCandidateItem(const GarbageCollectionC
             } else {
                 // Read container for reporting
                 enum lookup_result r = LOOKUP_ERROR;
-                Container c;
-                if (c.Init(chunk_mapping.data_address(), this->storage_->GetContainerSize())) {
-                    r = this->storage_->ReadContainerWithCache(&c);
-                }
+                Container c(chunk_mapping.data_address(), storage_->GetContainerSize(), false);
+                r = this->storage_->ReadContainerWithCache(&c);
                 string container_debug_string;
                 if (r == LOOKUP_ERROR) {
                     container_debug_string += "<read error>";

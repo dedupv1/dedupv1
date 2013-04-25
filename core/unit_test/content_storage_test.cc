@@ -138,16 +138,10 @@ TEST_P(ContentStorageTest, Start) {
     ASSERT_EQ(system->block_size(), (size_t) BLOCK_SIZE);
 }
 
-TEST_P(ContentStorageTest, InitSession) {
-    Session* session = system->content_storage()->CreateSession(chunker, NULL);
-    ASSERT_TRUE(session);
-
-    session->Close();
-}
 
 TEST_P(ContentStorageTest, BasicReadWrite) {
-    Session* session = system->content_storage()->CreateSession(chunker, NULL);
-    ASSERT_TRUE(session);
+    Session* session = new Session();
+    ASSERT_TRUE(session->Init(system->GetVolume(0)));
 
     DEBUG("Write data");
     WriteTestData(session);

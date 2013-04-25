@@ -40,6 +40,8 @@
 #include <core/chunk_mapping.h>
 #include <core/storage.h>
 #include <core/content_storage.h>
+#include <core/dedup_volume.h>
+#include <core/dedup_system.h>
 
 using std::list;
 using std::string;
@@ -55,29 +57,27 @@ namespace dedupv1 {
 
 Session::Session() {
     chunker_session_ = NULL;
-    fingerprinter_ = NULL;
     open_chunk_pos_ = 0;
     open_request_count_ = 0;
     open_request_start_ = 0;
     buffer_ = 0;
     buffer_size_ = 0;
+    volume_ = NULL;
 }
 
-bool Session::Init(uint32_t block_size, Chunker* chunker, Fingerprinter* fingerprinter,
-                   const std::set<const dedupv1::filter::Filter*>& enabled_filters) {
-    DCHECK(chunker, "chunker not set");
-    DCHECK(fingerprinter, "Fingerprinter not set");
+bool Session::Init(DedupVolume* volume) {
+    DCHECK(volume, "Volume not set");
+    DCHECK(volume->dedup_system(), "Dedup system not set");
 
+    uint32_t block_size = volume->dedup_system()->block_size();
     uint32_t max_requests = (block_size / Chunk::kMaxChunkSize) + 1;
 
-    CHECK(ContentStorage::InitEmptyFingerprint(chunker, fingerprinter, &empty_fp_),
-        "Failed to calculate empty fingerprint");
-
-    this->enabled_filters_ = enabled_filters;
+    volume_ = volume;
+    Chunker* chunker = volume->active_chunker();
+    DCHECK(chunker, "Chunker not set");
     this->chunker_session_ = chunker->CreateSession();
-    CHECK(this->chunker_session_, "Failed to create chunker session");
+    DCHECK(this->chunker_session_, "Failed to create chunker session");
 
-    this->fingerprinter_ = fingerprinter; // session takes over the ownership and closes it
     this->open_chunk_pos_ = 0;
 
     // Maximal possible number of blocks per chunk
@@ -139,11 +139,6 @@ bool Session::Close() {
         this->buffer_ = NULL;
     }
     this->buffer_size_ = 0;
-
-    if (this->fingerprinter_) {
-        this->fingerprinter_->Close();
-        this->fingerprinter_ = NULL;
-    }
     delete this;
     return true;
 }

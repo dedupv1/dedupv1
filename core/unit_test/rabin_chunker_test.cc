@@ -270,7 +270,7 @@ TEST_F(RabinChunkerTest, SwitchingFingerprint) {
     for (list<Chunk*>::iterator i = chunks.begin(); i != chunks.end(); i++) {
         delete *i;
     }
-    EXPECT_TRUE(fp->Close());
+    delete fp;
     fp = NULL;
 }
 
@@ -329,7 +329,7 @@ TEST_F(RabinChunkerTest, Fingerprint) {
         delete *i;
 
     }
-    fp->Close();
+    delete fp;
 }
 
 TEST_F(RabinChunkerTest, Performance) {

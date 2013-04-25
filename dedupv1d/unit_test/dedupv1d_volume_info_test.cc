@@ -50,9 +50,9 @@
 #include <test/storage_mock.h>
 #include <test/log_mock.h>
 #include <test/content_storage_mock.h>
-#include <test/session_mock.h>
 #include <test/filter_mock.h>
 #include <test/filter_chain_mock.h>
+#include <test/chunker_mock.h>
 
 #include "dedupv1d.pb.h"
 
@@ -72,6 +72,7 @@ using dedupv1::base::DELETE_NOT_FOUND;
 using dedupv1::base::LOOKUP_FOUND;
 using dedupv1::base::PUT_OK;
 using dedupv1::IdleDetector;
+using dedupv1::base::make_option;
 
 LOGGER("Dedupv1dVolumeInfoTest");
 
@@ -86,9 +87,10 @@ protected:
     MockBlockIndex block_index;
     MockStorage storage;
     MockContentStorage content_storage;
-    MockSession session;
     MockFilterChain filter_chain;
     MockFilter filter;
+    MockChunker chunker;
+    MockChunkerSession session;
 
     IdleDetector idle_detector;
     dedupv1::MemoryInfoStore info_store;
@@ -112,7 +114,13 @@ protected:
         EXPECT_CALL(dedup_system, content_storage()).WillRepeatedly(Return(&content_storage));
         EXPECT_CALL(dedup_system, filter_chain()).WillRepeatedly(Return(&filter_chain));
         EXPECT_CALL(filter_chain, GetFilterByName(_)).WillRepeatedly(Return(&filter));
-        EXPECT_CALL(content_storage, CreateSession(_, _)).WillRepeatedly(Return(&session));
+
+        list<dedupv1::filter::Filter*> filter_list;
+        filter_list.push_back(&filter);
+        EXPECT_CALL(content_storage, GetFilterList(_)).WillRepeatedly(Return(make_option(filter_list)));
+        EXPECT_CALL(content_storage, default_chunker()).WillRepeatedly(Return(&chunker));
+        EXPECT_CALL(chunker, CreateSession()).WillRepeatedly(Return(&session));
+        EXPECT_CALL(session, Close()).WillRepeatedly(Return(true));
 
         base_volume_info = new DedupVolumeInfo();
         ASSERT_TRUE(base_volume_info);

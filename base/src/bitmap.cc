@@ -37,7 +37,6 @@ Bitmap::Bitmap(size_t size) {
     if ((size % 64) > 0) {
         bitfield_size_++;
     }
-    bitfield_ = NULL;
     clean_bits_ = size;
     persistent_index_ = NULL;
     key_ = 0;
@@ -45,6 +44,9 @@ Bitmap::Bitmap(size_t size) {
     dirty_ = true;
     page_size_ = 0;
     dirtyBitmap_ = NULL;
+    bitfield_ = new uint64_t[bitfield_size_];
+    ClearAll();
+    dirty_ = true;
 }
 
 Bitmap::~Bitmap() {
@@ -57,17 +59,8 @@ Bitmap::~Bitmap() {
     }
 }
 
-bool Bitmap::Init() {
-    bitfield_ = new uint64_t[bitfield_size_];
-    CHECK(bitfield_, "Could not allocate memory for Bitfield. bitfield_size is " << bitfield_size_ << " and size is " << size_);
-    CHECK(ClearAll(), "Could not clear bitfield");
-    dirty_ = true;
-    return true;
-}
-
 bool Bitmap::Load(bool crashed) {
     // TODO(fermat): But size_ and clean_bits_ into the data structure and build the CRC over all
-    CHECK(bitfield_, "Bitfield is not set, Call Init first.");
     CHECK(persistent_index_, "No persistence set");
 
     DEBUG("Loading Bitmap. crash: " << crashed);
@@ -134,7 +127,6 @@ bool Bitmap::Load(bool crashed) {
 
 bool Bitmap::Store(bool is_new) {
     // TODO(fermat): But size_ and clean_bits_ into the data structure and build the CRC over all
-    CHECK(bitfield_, "Bitfield is not set, Call Init first.");
     CHECK(persistent_index_, "No persistence set");
 
     CHECK(StoreMetadata(is_new), "Could not Store Metadata");
@@ -142,7 +134,7 @@ bool Bitmap::Store(bool is_new) {
     for (uint32_t i = 0; i < pages(); i++) {
         CHECK(StorePageWithoutMetadata(i, is_new), "Could not store page " << i);
     }
-    CHECK(dirtyBitmap_->ClearAll(), "Could not clear dirty bitmap during store");
+    dirtyBitmap_->ClearAll();
     dirty_ = false;
 
     return true;
@@ -206,7 +198,6 @@ bool Bitmap::StorePageWithoutMetadata(uint32_t page, bool is_new) {
 }
 
 Option<bool> Bitmap::StorePage(uint32_t page) {
-    CHECK(bitfield_, "Bitfield is not set, Call Init first.");
     CHECK(persistent_index_, "No persistence set");
     CHECK(page < pages(), "page " << page << " out of range, only " << pages() << " available");
 
@@ -223,8 +214,7 @@ Option<bool> Bitmap::StorePage(uint32_t page) {
     return make_option(stored);
 }
 
-bool Bitmap::ClearAll() {
-    CHECK(bitfield_, "Bitfield is not set, Call Init first.");
+void Bitmap::ClearAll() {
     memset(bitfield_, 0, bitfield_size_ * sizeof(uint64_t));
     // I set all unreachabe bit, so I have not to tread this special during search
     if ((size_ % 64) > 0) {
@@ -238,11 +228,9 @@ bool Bitmap::ClearAll() {
         // I do not want to check for each page if it had set bits before
         dirtyBitmap_->SetAll();
     }
-    return true;
 }
 
 bool Bitmap::SetAll() {
-    CHECK(bitfield_, "Bitfield is not set, Call Init first.");
     memset(bitfield_, 0xFF, bitfield_size_ * sizeof(uint64_t));
     // I set all unreachabe bit, so I have not to tread this special during search
     clean_bits_ = 0;
@@ -255,7 +243,6 @@ bool Bitmap::SetAll() {
 }
 
 bool Bitmap::Negate() {
-    CHECK(bitfield_, "Bitfield is not set, Call Init first.");
     for (size_t i = 0; i < bitfield_size_; i++) {
         bitfield_[i] = ~(bitfield_[i]);
     }
@@ -273,7 +260,6 @@ bool Bitmap::Negate() {
 
 bool Bitmap::setPersistence(PersistentIndex* persistent_index, const void* key_prefix, const size_t key_prefix_size,
         size_t page_size) {
-    CHECK(bitfield_, "Bitfield is not set, Call Init first.");
     CHECK(persistent_index, "Persistence Index is NULL");
     CHECK(key_prefix, "Key has to be set");
     CHECK(key_prefix_size > 0, "Key size has to be greater then 0");
@@ -298,7 +284,6 @@ bool Bitmap::setPersistence(PersistentIndex* persistent_index, const void* key_p
 
     dirtyBitmap_ = new Bitmap(pages);
     CHECK(dirtyBitmap_, "Could not create dirty Bitmap with size " << pages);
-    CHECK(dirtyBitmap_->Init(), "Could not initialize dirty Bitmap with size " << pages);
     CHECK(dirtyBitmap_->SetAll(), "Could not set all bits of dirty bitmap");
     dirty_ = true;
 
@@ -306,7 +291,6 @@ bool Bitmap::setPersistence(PersistentIndex* persistent_index, const void* key_p
 }
 
 Option<size_t> Bitmap::find_next_unset(size_t start_position, size_t end_position) {
-    CHECK(bitfield_, "Bitfield is not set, Call Init first.");
     CHECK(start_position < size_, "Startposition has to be smaller then size");
     CHECK(end_position <= size_, "Endposition has to be smaller or equal to size");
 

@@ -82,8 +82,6 @@ TEST_F(ChunkIndexRestorerTest, Init) {
 
 TEST_F(ChunkIndexRestorerTest, ChunkIndexRestorerRestore) {
     system = new Dedupv1d();
-    ASSERT_TRUE(system);
-    ASSERT_TRUE(system->Init());
     ASSERT_TRUE(system->LoadOptions("data/dedupv1_test.conf"));
     ASSERT_TRUE(system->Start(dedupv1::StartContext()));
     ASSERT_TRUE(system->Run());
@@ -120,8 +118,6 @@ TEST_F(ChunkIndexRestorerTest, ChunkIndexRestorerFastShutdown) {
     EXPECT_LOGGING(dedupv1::test::WARN).Matches("Still").Repeatedly();
 
     system = new Dedupv1d();
-    ASSERT_TRUE(system);
-    ASSERT_TRUE(system->Init());
     ASSERT_TRUE(system->LoadOptions("data/dedupv1_test.conf"));
     ASSERT_TRUE(system->Start(dedupv1::StartContext()));
     ASSERT_TRUE(system->Run());
@@ -156,8 +152,6 @@ TEST_F(ChunkIndexRestorerTest, ChunkIndexRestorerFastShutdown) {
 
 TEST_F(ChunkIndexRestorerTest, ChunkIndexRestorerUsageCount) {
     system = new Dedupv1d();
-    ASSERT_TRUE(system);
-    ASSERT_TRUE(system->Init());
     ASSERT_TRUE(system->LoadOptions("data/dedupv1_test.conf"));
     ASSERT_TRUE(system->Start(dedupv1::StartContext()));
     ASSERT_TRUE(system->Run());
@@ -185,8 +179,6 @@ TEST_F(ChunkIndexRestorerTest, ChunkIndexRestorerUsageCount) {
     dedupv1::StartContext start_context;
     start_context.set_create(dedupv1::StartContext::NON_CREATE);
     system = new Dedupv1d();
-    ASSERT_TRUE(system);
-    ASSERT_TRUE(system->Init());
     ASSERT_TRUE(system->LoadOptions("data/dedupv1_test.conf"));
     ASSERT_TRUE(system->Start(start_context));
 
@@ -233,8 +225,6 @@ TEST_F(ChunkIndexRestorerTest, ChunkIndexRestorerUsageCount) {
     ASSERT_TRUE(restorer.Close());
     // Open yet another dedup system
     system = new Dedupv1d();
-    ASSERT_TRUE(system);
-    ASSERT_TRUE(system->Init());
     ASSERT_TRUE(system->LoadOptions("data/dedupv1_test.conf"));
     ASSERT_TRUE(system->Start(start_context));
     chunk_index = system->dedup_system()->chunk_index();
@@ -257,8 +247,6 @@ TEST_F(ChunkIndexRestorerTest, ChunkIndexRestorerUsageCount) {
 
 TEST_F(ChunkIndexRestorerTest, ChunkIndexRestorerEmptyFingerprint) {
     system = new Dedupv1d();
-    ASSERT_TRUE(system);
-    ASSERT_TRUE(system->Init());
     ASSERT_TRUE(system->LoadOptions("data/dedupv1_test.conf"));
     ASSERT_TRUE(system->Start(dedupv1::StartContext()));
     ASSERT_TRUE(system->Run());

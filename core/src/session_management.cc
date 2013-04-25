@@ -42,29 +42,21 @@ using std::string;
 
 namespace dedupv1 {
 
-SessionResourceType::SessionResourceType(ContentStorage* content_storage, DedupVolume* volume) {
-    this->content_storage_ = content_storage;
-    if (!this->content_storage_) {
-        WARNING("Content storage not set");
-    }
+SessionResourceType::SessionResourceType(DedupVolume* volume) {
     this->volume_ = volume;
-    if (!volume) {
-        WARNING("Volume not set");
-    }
 }
 
 SessionResourceType::~SessionResourceType() {
-    this->content_storage_ = NULL;
 }
 
 Session* SessionResourceType::Create() {
-    DCHECK_RETURN(this->content_storage_, NULL, "Content storage not set");
     DCHECK_RETURN(this->volume_, NULL, "Volume not set");
-    set<string> filter_names = volume_->enabled_filter_names();
-    Session* sess = content_storage_->CreateSession(volume_->chunker(), &filter_names);
-
-    CHECK_RETURN(sess, NULL, "Failed to init content storage session:" <<
-        "volume " << this->volume_->DebugString());
+    Session* sess = new Session();
+    if (!sess->Init(volume_)) {
+      ERROR("Failed to init session");
+      sess->Close();
+      return NULL;
+    }
     return sess;
 }
 

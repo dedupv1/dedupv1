@@ -174,8 +174,7 @@ bool ContainerRead(ContainerStorage* storage, uint64_t container_id) {
     for (int j = 0; j < 4; j++) {
         storage->GetReadCache()->ClearCache();
         for (int i = 0; i < 4; i++) {
-            Container c;
-            c.Init(i, storage->GetContainerSize());
+            Container c(i, storage->GetContainerSize(), false);
             CHECK(storage->ReadContainer(&c), "Failed to read container");
             DEBUG("Read container: " << c.DebugString());
         }

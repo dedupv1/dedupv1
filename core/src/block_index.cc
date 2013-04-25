@@ -178,10 +178,6 @@ BlockIndex::Statistics::Statistics() : import_latency_(1024) {
     incomplete_imports_ = 0;
 }
 
-bool BlockIndex::Init() {
-    return true;
-}
-
 bool BlockIndex::SetOption(const string& option_name, const string& option) {
     CHECK(this->state_ == CREATED, "Block index already started");
     CHECK(option.size() > 0, "Option not set");

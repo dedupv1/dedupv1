@@ -76,8 +76,6 @@ protected:
 
     virtual void SetUp() {
         ds = new dedupv1d::Dedupv1d();
-        ASSERT_TRUE(ds);
-        ASSERT_TRUE(ds->Init());
     }
 
     virtual void TearDown() {
@@ -108,8 +106,6 @@ TEST_F(Dedupv1dTest, TwoInstances) {
     ASSERT_TRUE(ds->Start(dedupv1::StartContext())) << "Cannot start application";
 
     dedupv1d::Dedupv1d* ds2 = new dedupv1d::Dedupv1d();
-    ASSERT_TRUE(ds2);
-    ASSERT_TRUE(ds2->Init());
     ASSERT_TRUE(ds2->LoadOptions("data/dedupv1_test.conf"));
     ASSERT_TRUE(ds2->SetOption("monitor.port", PortUtil::getNextPort().c_str()));
     ASSERT_TRUE(ds2->SetOption("daemon.lockfile", "work/lock"));
@@ -138,8 +134,6 @@ TEST_F(Dedupv1dTest, Restart) {
     ds = NULL;
 
     ds = new dedupv1d::Dedupv1d();
-    ASSERT_TRUE(ds);
-    ASSERT_TRUE(ds->Init());
     ASSERT_TRUE(ds->LoadOptions("data/dedupv1_test.conf"));
     ASSERT_TRUE(ds->SetOption("monitor.port", PortUtil::getNextPort().c_str()));
 
@@ -161,8 +155,6 @@ TEST_F(Dedupv1dTest, RestartWithOtherConfig) {
     ds = NULL;
 
     ds = new dedupv1d::Dedupv1d();
-    ASSERT_TRUE(ds);
-    ASSERT_TRUE(ds->Init());
     ASSERT_TRUE(ds->LoadOptions("data/dedupv1_minimal_test.conf"));
     ASSERT_TRUE(ds->SetOption("monitor.port", PortUtil::getNextPort().c_str()));
     dedupv1::StartContext start_context;
@@ -186,8 +178,6 @@ TEST_F(Dedupv1dTest, RestartWithOtherConfigButForce) {
     ds = NULL;
 
     ds = new dedupv1d::Dedupv1d();
-    ASSERT_TRUE(ds);
-    ASSERT_TRUE(ds->Init());
     ASSERT_TRUE(ds->LoadOptions("data/dedupv1_minimal_test.conf"));
     ASSERT_TRUE(ds->SetOption("monitor.port", PortUtil::getNextPort().c_str()));
     dedupv1::StartContext start_context;
@@ -222,8 +212,6 @@ TEST_F(Dedupv1dTest, DirtyFlagAfterNormalClose) {
 
     dedupv1::StartContext start_context2(dedupv1::StartContext::NON_CREATE);
     ds = new dedupv1d::Dedupv1d();
-    ASSERT_TRUE(ds);
-    ASSERT_TRUE(ds->Init());
     ASSERT_TRUE(ds->LoadOptions("data/dedupv1_test.conf"));
     ASSERT_TRUE(ds->SetOption("monitor.port", PortUtil::getNextPort()));
     ASSERT_TRUE(ds->Start(start_context2)) << "Cannot start application";
@@ -267,7 +255,6 @@ TEST_F(Dedupv1dTest, DirtyFlagAfterCrashDestroyedDirtyfile) {
 
     dedupv1::StartContext start_context2(dedupv1::StartContext::NON_CREATE); // the dirty flag should be recovered by the dedupv1d
     ds = new dedupv1d::Dedupv1d();
-    ds->Init();
     ASSERT_TRUE(ds->LoadOptions("data/dedupv1_test.conf"));
     ASSERT_TRUE(ds->SetOption("monitor.port", PortUtil::getNextPort()));
     ASSERT_TRUE(ds->Start(start_context2)) << "Cannot start application";

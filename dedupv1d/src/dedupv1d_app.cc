@@ -237,8 +237,6 @@ int main(int argc, char** argv) {
     CHECK_RETURN(argc >= 2, 1, "Cannot start dedupv1d without configuration file argument");
 
     ds = new dedupv1d::Dedupv1d();
-    CHECK_RETURN(ds, 1, "Cannot create application context");
-    CHECK_RETURN(ds->Init(), 1, "Cannot init application context");
     CHECK_RETURN(ds->LoadOptions(argv[1]), 1, "Cannot load options: file " << argv[1]);
 
     StartContext start_context(create);

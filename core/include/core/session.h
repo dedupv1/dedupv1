@@ -36,8 +36,8 @@
 
 namespace dedupv1 {
 
+class DedupVolume;
 class OpenRequest;
-class Fingerprinter;
 class Chunker;
 class ChunkerSession;
 
@@ -57,17 +57,12 @@ class Filter;
 class Session {
         DISALLOW_COPY_AND_ASSIGN(Session);
 
+        DedupVolume* volume_;
+
         /**
          * Reference to the chunker session used in the session
          */
         ChunkerSession* chunker_session_;
-
-        /**
-         * Reference to a fingerprinter used in this session
-         */
-        Fingerprinter* fingerprinter_;
-
-        std::set<const dedupv1::filter::Filter*> enabled_filters_;
 
         /**
          * Number of bytes currently in the chunker.
@@ -142,10 +137,7 @@ class Session {
          * @param fingerprinter
      * @return true iff ok, otherwise an error has occurred
          */
-        bool Init(uint32_t block_size,
-                Chunker* chunker_factory,
-                Fingerprinter* fingerprinter,
-                const std::set<const dedupv1::filter::Filter*>& enabled_filter);
+        bool Init(DedupVolume* volume);
 
         /**
          * Appends a block mapping to the open requests.
@@ -198,10 +190,6 @@ class Session {
          */
         const OpenRequest* GetRequest(uint32_t index) const;
 
-        inline bool is_filter_enabled(const dedupv1::filter::Filter* f) {
-            return (enabled_filters_.find(f) != enabled_filters_.end());
-        }
-
         /**
          * Delete the open request block mapping with the given index.
          *
@@ -241,40 +229,35 @@ class Session {
          */
         bool Unlock();
 
-		/**
+        /**
          * returns the chunker session
          */
         inline dedupv1::ChunkerSession* chunker_session();
 
-		/**
-		 * returns the number of open requests
+        /**
+         * returns the number of open requests
          */
         inline uint32_t open_request_count();
 
-		/**
-		 * TODO(dmeister): ?? Used when ??
-		 */
+        /**
+         * TODO(dmeister): ?? Used when ??
+         */
         inline void set_open_chunk_position(uint32_t new_pos);
 
         inline uint32_t open_chunk_position();
-
-		/**
-		 * returns the current fingerprinter
-         */
-        inline Fingerprinter* fingerprinter();
 
         inline byte* buffer();
 
         inline size_t buffer_size();
 
-        inline const bytestring& empty_fp() const {
-            return empty_fp_;
-        }
-
         /**
      * @return true iff ok, otherwise an error has occurred
          */
         bool Clear();
+
+        inline DedupVolume* volume() {
+          return volume_;
+        }
 };
 
 byte* Session::buffer() {
@@ -299,10 +282,6 @@ dedupv1::ChunkerSession* Session::chunker_session() {
 
 uint32_t Session::open_request_count() {
     return open_request_count_;
-}
-
-Fingerprinter* Session::fingerprinter() {
-    return fingerprinter_;
 }
 
 }

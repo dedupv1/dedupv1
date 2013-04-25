@@ -54,7 +54,6 @@ LOGGER("MonitorTest");
 
 void MonitorAdapterTest::SetUp() {
     ds = new dedupv1d::Dedupv1d();
-    ASSERT_TRUE(ds->Init());
     m = ds->monitor();
     ASSERT_TRUE(m);
 

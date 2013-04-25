@@ -58,13 +58,6 @@ class ContainerGCStrategy : public dedupv1::StatisticProvider {
     virtual ~ContainerGCStrategy();
 
     /**
-     * Inits the container gc strategy.
-     * The default implementation simply returns true.
-     * @return true iff ok, otherwise an error has occurred
-     */
-    virtual bool Init();
-
-    /**
      * @return true iff ok, otherwise an error has occurred
      */
     virtual bool Start(const dedupv1::StartContext& start_context, ContainerStorage* storge);

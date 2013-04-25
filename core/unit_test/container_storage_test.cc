@@ -99,7 +99,6 @@ protected:
         ASSERT_TRUE(container_helper->SetUp());
 
         idle_detector = new IdleDetector();
-        ASSERT_TRUE(idle_detector);
         EXPECT_CALL(system, idle_detector()).WillRepeatedly(Return(idle_detector));
         EXPECT_CALL(system, info_store()).WillRepeatedly(Return(&info_store));
         EXPECT_CALL(system, chunk_index()).WillRepeatedly(Return(&chunk_index));
@@ -107,8 +106,6 @@ protected:
         EXPECT_CALL(chunk_index, ChangePinningState(_,_,_)).WillRepeatedly(Return(LOOKUP_FOUND));
 
         log = new Log();
-        ASSERT_TRUE(log);
-        ASSERT_TRUE(log->Init());
         ASSERT_TRUE(log->SetOption("filename", "work/log"));
         ASSERT_TRUE(log->SetOption("max-log-size", "1M"));
         ASSERT_TRUE(log->SetOption("info.type", "sqlite-disk-btree"));
@@ -385,6 +382,7 @@ TEST_P(ContainerStorageTest, CrashedDuringCrashLogReplay) {
     DEBUG("Writing data");
 
     WriteTestData(storage);
+    ASSERT_TRUE(storage->Flush(NO_EC));
 
     DEBUG("Crashing");
     storage->ClearData();
@@ -1451,11 +1449,9 @@ TEST_P(ContainerStorageTest, MergeWithSameContainerLock) {
     memset(buffer, 0, 1024);
     uint64_t key1 = 1;
     uint64_t key2 = 2;
-    Container container1;
-    ASSERT_TRUE(container1.Init(container_id1, storage->GetContainerSize()));
+    Container container1(container_id1, storage->GetContainerSize(), false);
     ASSERT_TRUE(container1.AddItem(reinterpret_cast<const byte*>(&key1), sizeof(key1), buffer, 1024, true, NULL));
-    Container container2;
-    ASSERT_TRUE(container2.Init(container_id2, storage->GetContainerSize()));
+    Container container2(container_id2, storage->GetContainerSize(), false);
     ASSERT_TRUE(container2.AddItem(reinterpret_cast<const byte*>(&key2), sizeof(key2), buffer, 1024, true, NULL));
 
     ContainerStorageAddressData address1;
@@ -1523,8 +1519,8 @@ TEST_P(ContainerStorageTest, ReadContainer) {
     ASSERT_TRUE(storage->Flush(NO_EC)); // data is no committed
 
     for (int i = 0; i < TEST_DATA_COUNT; i++) {
-        Container container;
-        container.Init(container_helper->data_address(i), storage->GetContainerSize());
+        Container container(container_helper->data_address(i),
+            storage->GetContainerSize(), false);
 
         enum lookup_result r = storage->ReadContainer(&container);
         ASSERT_EQ(r, LOOKUP_FOUND);
@@ -1541,8 +1537,8 @@ TEST_P(ContainerStorageTest, ReadContainerWithCache) {
     ASSERT_TRUE(storage->Flush(NO_EC)); // data is now committed
 
     for (int i = 0; i < TEST_DATA_COUNT; i++) {
-        Container container;
-        ASSERT_TRUE(container.Init(container_helper->data_address(i), storage->GetContainerSize()));
+        Container container(container_helper->data_address(i),
+            storage->GetContainerSize(), false);
 
         enum lookup_result r = storage->ReadContainerWithCache(
             &container);

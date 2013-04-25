@@ -221,14 +221,6 @@ int main(int argc, char * argv[]) {
 
     DedupSystem::RegisterDefaults();
     Dedupv1d* system = new Dedupv1d();
-    if(!system) {
-        ERROR("Failed to init system");
-        exit(1);
-    }
-    if(!system->Init()) {
-        ERROR("Failed to init system");
-        exit(1);
-    }
     INFO("Loading options: " << FLAGS_config);
     if (!system->LoadOptions(FLAGS_config)) {
         exit(1);

@@ -207,15 +207,6 @@ protected:
         CHECK_RETURN(Split(config_option, ";", &options), NULL, "Failed to split: " << config_option);
 
         Log* log = new Log();
-        CHECK_RETURN(log, NULL, "Failed to create log");
-        if (!log->Init()) {
-            ERROR("Failed to init log");
-            if (!log->Close()) {
-                WARNING("Failed to close log");
-            }
-            return NULL;
-        }
-
         for (size_t i = 0; i < options.size(); i++) {
             string option_name;
             string option;

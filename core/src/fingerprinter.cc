@@ -122,15 +122,6 @@ string Fingerprinter::DebugString(const string& fp) {
     return Fingerprinter::DebugString((const byte *) fp.c_str(), fp.size());
 }
 
-bool Fingerprinter::Init() {
-    return true;
-}
-
-bool Fingerprinter::Close() {
-    delete this;
-    return true;
-}
-
 std::string Fingerprinter::PrintLockStatistics() {
     return "null";
 }

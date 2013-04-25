@@ -72,7 +72,6 @@ protected:
         chunk_store = NULL;
 
         idle_detector = new IdleDetector();
-        ASSERT_TRUE(idle_detector);
         EXPECT_CALL(system, idle_detector()).WillRepeatedly(Return(idle_detector));
         EXPECT_CALL(system, info_store()).WillRepeatedly(Return(&info_store));
         EXPECT_CALL(system, chunk_index()).WillRepeatedly(Return(&chunk_index));
@@ -80,8 +79,6 @@ protected:
         EXPECT_CALL(chunk_index, ChangePinningState(_,_,_)).WillRepeatedly(Return(LOOKUP_FOUND));
 
         log = new Log();
-        ASSERT_TRUE(log);
-        ASSERT_TRUE(log->Init());
         ASSERT_TRUE(log->SetOption("filename", "work/log"));
         ASSERT_TRUE(log->SetOption("max-log-size", "1M"));
         ASSERT_TRUE(log->SetOption("info.type", "sqlite-disk-btree"));
@@ -91,7 +88,6 @@ protected:
         EXPECT_CALL(system, log()).WillRepeatedly(Return(log));
 
         chunk_store = new ChunkStore();
-        ASSERT_TRUE(chunk_store);
         ASSERT_TRUE(chunk_store->Init("container-storage"));
         SetDefaultStorageOptions(chunk_store, make_tuple(4, 0, false, 4));
     }

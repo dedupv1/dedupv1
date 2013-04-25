@@ -626,12 +626,6 @@ public dedupv1::log::LogAckConsumer {
     virtual ~ContainerStorage();
 
     /**
-     * Inits a storage implementation
-     * @return true iff ok, otherwise an error has occurred
-     */
-    virtual bool Init();
-
-    /**
      * Sets an option of an storage implementation. set_option should only be called before calling start
      *
      * Available options:
@@ -962,15 +956,11 @@ public dedupv1::log::LogAckConsumer {
 
     /**
      * Returns the write cache.
-     * Is set after the Init call
-     * @return
      */
     inline ContainerStorageWriteCache* GetWriteCache();
 
     /**
      * Returns the read cache
-     * Is set after the Init call
-     * @return
      */
     inline ContainerStorageReadCache* GetReadCache();
 

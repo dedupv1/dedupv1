@@ -69,10 +69,7 @@ bool ContainerStorageWriteCache::Start() {
 
     this->write_container.resize(this->write_container_count_);
     for (int i = 0; i < this->write_container_count_; i++) {
-        this->write_container[i] = new Container();
-        CHECK(this->write_container[i], "Failed to alloc container");
-        CHECK(this->write_container[i]->Init(Storage::ILLEGAL_STORAGE_ADDRESS, this->storage_->GetContainerSize()),
-            "Container init failed");
+        this->write_container[i] = new Container(Storage::ILLEGAL_STORAGE_ADDRESS, this->storage_->GetContainerSize(), false);
     }
     this->write_container_lock_.Init(this->write_container_count_);
 

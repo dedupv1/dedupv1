@@ -62,8 +62,6 @@ protected:
 
     virtual void SetUp() {
         ds = new dedupv1d::Dedupv1d();
-        ASSERT_TRUE(ds);
-        ASSERT_TRUE(ds->Init());
         m = ds->monitor();
         ASSERT_TRUE(m);
 

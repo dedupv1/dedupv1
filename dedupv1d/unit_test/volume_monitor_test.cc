@@ -61,7 +61,6 @@ protected:
 
     virtual void SetUp() {
         ds = new dedupv1d::Dedupv1d();
-        ds->Init();
         m = ds->monitor();
 
         ASSERT_TRUE(ds->LoadOptions( "data/dedupv1_test.conf"));

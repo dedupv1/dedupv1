@@ -87,8 +87,6 @@ protected:
         storage.SetOption("container-size", ToString(CONTAINER_SIZE));
 
         gc = new GreedyContainerGCStrategy();
-        ASSERT_TRUE(gc);
-        ASSERT_TRUE(gc->Init());
 
         int fd = open("/dev/urandom", O_RDONLY);
         for (size_t i = 0; i < 16; i++) {
@@ -155,8 +153,7 @@ TEST_P(GreedyContainerGCStrategyTest, OnRead) {
     SetDefaultConfig(gc);
     ASSERT_TRUE(gc->Start(StartContext(), &storage));
 
-    Container c;
-    ASSERT_TRUE(c.Init(0, CONTAINER_SIZE));
+    Container c(0, CONTAINER_SIZE, false);
     FillDefaultContainer(&c, 0, 4 );
 
     ASSERT_TRUE(gc->OnRead(c, (void *) &test_fp[2], sizeof(test_fp[2])));
@@ -166,8 +163,7 @@ TEST_P(GreedyContainerGCStrategyTest, OnCommitFullContainer) {
     SetDefaultConfig(gc);
     ASSERT_TRUE(gc->Start(StartContext(), &storage));
 
-    Container c;
-    ASSERT_TRUE(c.Init(0, CONTAINER_SIZE));
+    Container c(0, CONTAINER_SIZE, false);
     FillDefaultContainer(&c, 0, 12 );
 
     ContainerCommittedEventData data;
@@ -186,8 +182,7 @@ TEST_P(GreedyContainerGCStrategyTest, OnCommitEmptyContainer) {
     SetDefaultConfig(gc);
     ASSERT_TRUE(gc->Start(StartContext(), &storage));
 
-    Container c;
-    ASSERT_TRUE(c.Init(0, CONTAINER_SIZE));
+    Container c(0, CONTAINER_SIZE, false);
     FillDefaultContainer(&c, 0, 1);
 
     ContainerCommittedEventData data;
@@ -210,8 +205,7 @@ TEST_P(GreedyContainerGCStrategyTest, OnCommitEmptyContainerWithExistingBucket) 
     SetDefaultConfig(gc);
     ASSERT_TRUE(gc->Start(StartContext(), &storage));
 
-    Container c;
-    c.Init(0, CONTAINER_SIZE);
+    Container c(0, CONTAINER_SIZE, false);
     FillDefaultContainer(&c, 0, 2);
 
     ContainerCommittedEventData data1;
@@ -220,8 +214,7 @@ TEST_P(GreedyContainerGCStrategyTest, OnCommitEmptyContainerWithExistingBucket) 
     data1.set_item_count(c.item_count());
     ASSERT_TRUE(gc->OnCommit(data1));
 
-    Container c2;
-    ASSERT_TRUE(c2.Init(1, CONTAINER_SIZE));
+    Container c2(1, CONTAINER_SIZE, false);
     FillDefaultContainer(&c2, 0, 2);
 
     ContainerCommittedEventData data2;
@@ -247,8 +240,7 @@ TEST_P(GreedyContainerGCStrategyTest, OnDeleteFull) {
     SetDefaultConfig(gc);
     ASSERT_TRUE(gc->Start(StartContext(), &storage));
 
-    Container c;
-    c.Init(0, CONTAINER_SIZE);
+    Container c(0, CONTAINER_SIZE, false);
     FillDefaultContainer(&c, 0, 12);
 
     uint32_t old_active_data_size = c.active_data_size();
@@ -289,8 +281,7 @@ TEST_P(GreedyContainerGCStrategyTest, OnDeleteHalfFull) {
     SetDefaultConfig(gc);
     ASSERT_TRUE(gc->Start(StartContext(), &storage));
 
-    Container c;
-    ASSERT_TRUE(c.Init(0, CONTAINER_SIZE));
+    Container c(0, CONTAINER_SIZE, false);
     FillDefaultContainer(&c, 0, 4 );
 
     uint32_t old_active_data_size = c.active_data_size();
@@ -347,8 +338,7 @@ TEST_P(GreedyContainerGCStrategyTest, OnIdleOneCandidates) {
     SetDefaultConfig(gc);
     ASSERT_TRUE(gc->Start(StartContext(), &storage));
 
-    Container c;
-    c.Init(0, CONTAINER_SIZE);
+    Container c(0, CONTAINER_SIZE, false);
     FillDefaultContainer(&c, 0, 2);
 
     ContainerCommittedEventData data;
@@ -383,8 +373,7 @@ TEST_P(GreedyContainerGCStrategyTest, OnIdleTwoCandidates) {
     SetDefaultConfig(gc);
     ASSERT_TRUE(gc->Start(StartContext(), &storage));
 
-    Container c;
-    c.Init(0, CONTAINER_SIZE);
+    Container c(0, CONTAINER_SIZE, false);
     FillDefaultContainer(&c, 0, 2);
     ContainerCommittedEventData data;
     data.set_container_id(c.primary_id());
@@ -392,8 +381,7 @@ TEST_P(GreedyContainerGCStrategyTest, OnIdleTwoCandidates) {
     data.set_item_count(c.item_count());
     ASSERT_TRUE(gc->OnCommit(data));
 
-    Container c2;
-    c2.Init(1, CONTAINER_SIZE);
+    Container c2(1, CONTAINER_SIZE, false);
     FillDefaultContainer(&c2, 0, 2);
     ContainerCommittedEventData data2;
     data2.set_container_id(c2.primary_id());
@@ -427,8 +415,7 @@ TEST_P(GreedyContainerGCStrategyTest, OnIdleThreeCandidatesinSingleBucket) {
     SetDefaultConfig(gc);
     ASSERT_TRUE(gc->Start(StartContext(), &storage));
 
-    Container c;
-    c.Init(0, CONTAINER_SIZE);
+    Container c(0, CONTAINER_SIZE, false);
     FillDefaultContainer(&c, 0, 2);
     ContainerCommittedEventData data;
     data.set_container_id(c.primary_id());
@@ -436,8 +423,7 @@ TEST_P(GreedyContainerGCStrategyTest, OnIdleThreeCandidatesinSingleBucket) {
     data.set_item_count(c.item_count());
     ASSERT_TRUE(gc->OnCommit(data));
 
-    Container c2;
-    c2.Init(1, CONTAINER_SIZE);
+    Container c2(1, CONTAINER_SIZE, false);
     FillDefaultContainer(&c2, 0, 2);
     ContainerCommittedEventData data2;
     data2.set_container_id(c2.primary_id());
@@ -445,8 +431,7 @@ TEST_P(GreedyContainerGCStrategyTest, OnIdleThreeCandidatesinSingleBucket) {
     data2.set_item_count(c2.item_count());
     ASSERT_TRUE(gc->OnCommit(data2));
 
-    Container c3;
-    c3.Init(2, CONTAINER_SIZE);
+    Container c3(2, CONTAINER_SIZE, false);
     FillDefaultContainer(&c3, 0, 2);
     ContainerCommittedEventData data3;
     data3.set_container_id(c3.primary_id());
@@ -465,66 +450,3 @@ TEST_P(GreedyContainerGCStrategyTest, OnIdleThreeCandidatesinSingleBucket) {
     ASSERT_EQ(candidate_data.item_size(), 1);
 }
 
-TEST_P(GreedyContainerGCStrategyTest, OnIdleThreeCandidatesinTwoBucket) {
-    EXPECT_CALL(storage, TryDeleteContainer(_,_)).Times(1).WillOnce(Return(true));
-    EXPECT_CALL(storage, TryMergeContainer(_,_,_)).Times(1).WillOnce(Return(true));
-
-    ContainerStorageAddressData address2;
-    address2.set_file_index(1);
-    address2.set_file_offset(0);
-    ContainerStorageAddressData address1;
-    address1.set_file_index(2);
-    address1.set_file_offset(0);
-    ContainerStorageAddressData address0;
-    address0.set_file_index(3);
-    address0.set_file_offset(0);
-    EXPECT_CALL(storage, LookupContainerAddress(0, _, _)).WillRepeatedly(Return(make_pair(LOOKUP_FOUND, address0)));
-    EXPECT_CALL(storage, LookupContainerAddress(1, _, _)).WillRepeatedly(Return(make_pair(LOOKUP_FOUND, address1)));
-    EXPECT_CALL(storage, LookupContainerAddress(2, _, _)).WillRepeatedly(Return(make_pair(LOOKUP_FOUND, address2)));
-
-    SetDefaultConfig(gc);
-    ASSERT_TRUE(gc->Start(StartContext(), &storage));
-
-    Container c;
-    c.Init(0, CONTAINER_SIZE);
-    FillDefaultContainer(&c, 0, 0);
-    ContainerCommittedEventData data;
-    data.set_container_id(c.primary_id());
-    data.set_active_data_size(c.active_data_size());
-    data.set_item_count(c.item_count());
-    ASSERT_TRUE(gc->OnCommit(data));
-
-    Container c2;
-    c2.Init(1, CONTAINER_SIZE);
-    FillDefaultContainer(&c2, 0, 2);
-    ContainerCommittedEventData data2;
-    data2.set_container_id(c2.primary_id());
-    data2.set_active_data_size(c2.active_data_size());
-    data2.set_item_count(c2.item_count());
-    ASSERT_TRUE(gc->OnCommit(data2));
-
-    Container c3;
-    c3.Init(2, CONTAINER_SIZE);
-    FillDefaultContainer(&c3, 0, 2);
-    ContainerCommittedEventData data3;
-    data3.set_container_id(c3.primary_id());
-    data3.set_active_data_size(c3.active_data_size());
-    data3.set_item_count(c3.item_count());
-    ASSERT_TRUE(gc->OnCommit(data3));
-
-    ASSERT_TRUE(gc->OnIdle());
-
-    PersistentIndex* mc = gc->merge_candidates();
-    ASSERT_TRUE(mc);
-
-    ContainerGreedyGCCandidateData candidate_data;
-    uint64_t bucket = gc->GetBucket(c2.active_data_size());
-    ASSERT_EQ(LOOKUP_FOUND, mc->Lookup(&bucket, sizeof(bucket), &candidate_data));
-    ASSERT_EQ(candidate_data.item_size(), 2);
-
-    // Now delete the other two
-    ASSERT_TRUE(gc->OnIdle());
-
-    mc = gc->merge_candidates();
-    ASSERT_EQ(0, mc->GetItemCount());
-}

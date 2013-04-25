@@ -46,19 +46,10 @@ using dedupv1::base::Barrier;
 
 namespace dedupv1 {
 
-TEST_F(DedupSystemTest, Create) {
-    system = new DedupSystem();
-    ASSERT_TRUE(system);
-    ASSERT_TRUE(system->Init());
-}
-
 TEST_F(DedupSystemTest, StartWithoutConfig) {
     EXPECT_LOGGING(dedupv1::test::ERROR).Once();
 
     system = new DedupSystem();
-    ASSERT_TRUE(system);
-    ASSERT_TRUE(system->Init());
-
     ASSERT_FALSE(system->Start(StartContext(), &info_store, &tp)) << "System should not start without configuration";
 }
 
@@ -66,8 +57,6 @@ TEST_F(DedupSystemTest, DoubleStart) {
     EXPECT_LOGGING(dedupv1::test::ERROR).Once();
 
     system = new DedupSystem();
-    ASSERT_TRUE(system);
-    ASSERT_TRUE(system->Init());
     ASSERT_TRUE(system->LoadOptions("data/dedupv1_test.conf"));
 
     ASSERT_TRUE(system->Start(StartContext(), &info_store, &tp));
@@ -78,8 +67,6 @@ TEST_F(DedupSystemTest, DoubleRun) {
     EXPECT_LOGGING(dedupv1::test::ERROR).Once();
 
     system = new DedupSystem();
-    ASSERT_TRUE(system);
-    ASSERT_TRUE(system->Init());
     ASSERT_TRUE(system->LoadOptions("data/dedupv1_test.conf"));
 
     ASSERT_TRUE(system->Start(StartContext(), &info_store, &tp));
@@ -91,8 +78,6 @@ TEST_F(DedupSystemTest, RunWithoutStart) {
     EXPECT_LOGGING(dedupv1::test::ERROR).Once();
 
     system = new DedupSystem();
-    ASSERT_TRUE(system);
-    ASSERT_TRUE(system->Init());
     ASSERT_TRUE(system->LoadOptions("data/dedupv1_test.conf"));
 
     ASSERT_FALSE(system->Run());
@@ -100,8 +85,6 @@ TEST_F(DedupSystemTest, RunWithoutStart) {
 
 TEST_F(DedupSystemTest, MakeReadRequestWithOffsetInEmptySystem) {
     system = new DedupSystem();
-    ASSERT_TRUE(system);
-    ASSERT_TRUE(system->Init());
     ASSERT_TRUE(system->LoadOptions("data/dedupv1_test.conf"));
     ASSERT_TRUE(system->Start(StartContext(), &info_store, &tp));
     ASSERT_TRUE(system->Run());
@@ -134,8 +117,6 @@ TEST_F(DedupSystemTest, MakeReadRequestWithOffsetInEmptySystem) {
  */
 TEST_F(DedupSystemTest, ContainerMismatchSameRequest) {
     system = new DedupSystem();
-    ASSERT_TRUE(system);
-    ASSERT_TRUE(system->Init());
     ASSERT_TRUE(system->LoadOptions("data/dedupv1_test.conf"));
     ASSERT_TRUE(system->Start(StartContext(), &info_store, &tp));
     ASSERT_TRUE(system->Run());
@@ -194,8 +175,6 @@ bool MakeSameRequestRunner(tuple<DedupSystem*, Barrier*, int> args) {
  */
 TEST_F(DedupSystemTest, ContainerMismatchMultipleThreads) {
     system = new DedupSystem();
-    ASSERT_TRUE(system);
-    ASSERT_TRUE(system->Init());
     ASSERT_TRUE(system->LoadOptions("data/dedupv1_test.conf"));
     ASSERT_TRUE(system->Start(StartContext(), &info_store, &tp));
     ASSERT_TRUE(system->Run());

@@ -74,8 +74,6 @@ protected:
         EXPECT_CALL(system, info_store()).WillRepeatedly(Return(&info_store));
 
         log = new Log();
-        ASSERT_TRUE(log);
-        ASSERT_TRUE(log->Init());
         ASSERT_TRUE(log->SetOption("filename", "work/log"));
         ASSERT_TRUE(log->SetOption("max-log-size", "16M"));
         ASSERT_TRUE(log->SetOption("info.type", "sqlite-disk-btree"));

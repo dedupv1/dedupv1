@@ -107,7 +107,6 @@ protected:
         EXPECT_CALL(dedup_system, log()).WillRepeatedly(Return(&log));
         EXPECT_CALL(dedup_system, content_storage()).WillRepeatedly(Return(&content_storage));
         EXPECT_CALL(dedup_system, FastCopy(_,_,_,_,_,_)).WillRepeatedly(Return(dedupv1::scsi::ScsiResult::kOk));
-        EXPECT_CALL(content_storage, CreateSession(_, _)).WillRepeatedly(Return(&session));
 
         base_volume_info = new DedupVolumeInfo();
         ASSERT_TRUE(base_volume_info);

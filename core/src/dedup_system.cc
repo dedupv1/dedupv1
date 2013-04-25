@@ -163,38 +163,21 @@ DedupSystem::DedupSystem() {
 #else
     report_long_running_requests_ = true;
 #endif
-    state_ = CREATED;
-}
-
-DedupSystem::~DedupSystem() {
-}
-
-bool DedupSystem::Init() {
     filter_chain_ = new FilterChain();
-    CHECK(this->filter_chain_, "Filter chain Init failed");
-
     this->content_storage_ = new ContentStorage();
-    CHECK(this->content_storage_, "Content storage Init failed");
-
     this->log_ = new Log();
-    CHECK(this->log_, "Cannot create log");
-    CHECK(this->log_->Init(), "Cannot init log");
 
     // chunk index is a configurable type and it therefore created
     // later
     this->chunk_index_ = NULL;
 
     this->block_index_ = new BlockIndex();
-    CHECK(this->block_index_, "Block index creation failed");
-    CHECK(this->block_index_->Init(), "Block index init failed");
-
     this->volume_info_ = new DedupVolumeInfo();
-    CHECK(this->volume_info_, "cannot create volume info");
-
     gc_ = NULL;
-
     state_ = CREATED;
-    return true;
+}
+
+DedupSystem::~DedupSystem() {
 }
 
 bool DedupSystem::LoadOptions(const string& filename) {
@@ -398,8 +381,6 @@ bool DedupSystem::Start(const StartContext& start_context,
     CHECK(this->filter_chain_, "Filter chain not configured");
     CHECK(this->filter_chain_->Start(this), "Filter chain starting failed");
 
-    CHECK(this->volume_info_->Start(this), "Cannot start volume info");
-
     CHECK(this->content_storage_, "Content Storage not configured");
     CHECK(this->content_storage_->Start(
             this->tp_,
@@ -415,6 +396,7 @@ bool DedupSystem::Start(const StartContext& start_context,
     CHECK(this->gc_->Start(start_context, this), "Cannot start gc");
     CHECK(this->idle_detector_.Start(), "Cannot start idle detection");
     CHECK(this->block_locks_.Start(), "Failed to start block locks");
+    CHECK(this->volume_info_->Start(this), "Cannot start volume info");
 
     if (!start_context.readonly()) {
         SystemStartEventData event_data;

@@ -136,13 +136,6 @@ class ContainerStorageAllocator : public dedupv1::StatisticProvider {
     virtual bool OnAbortContainer(const Container& container, const ContainerStorageAddressData& address) = 0;
 
     /**
-     * Inits the allocator. The default implementation simply returns true.
-     *
-     * @return true iff ok, otherwise an error has occurred
-     */
-    virtual bool Init();
-
-    /**
      * Configures the allocator. The default implementation logs and
      * error (unknown option) and returns false.
      *
@@ -345,7 +338,7 @@ class MemoryBitmapContainerStorageAllocator : public ContainerStorageAllocator {
                     last_free_pos_ = 0;
                 }
 
-                /** 
+                /**
                  * free/used bitmap
                  */
                 dedupv1::base::Bitmap* bitmap_;

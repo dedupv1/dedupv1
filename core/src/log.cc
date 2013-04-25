@@ -169,10 +169,6 @@ Log::Statistics::Statistics() :
 Log::~Log() {
 }
 
-bool Log::Init() {
-    return true;
-}
-
 IDBasedIndex* Log::CreateDefaultLogData() {
     IDBasedIndex* index = dynamic_cast<IDBasedIndex*>(Index::Factory().Create(Log::kDefaultLogIndexType));
     CHECK_RETURN(index, NULL, "Cannot create log data store");
@@ -1022,7 +1018,7 @@ bool Log::CommitEvent(enum event_type event_type, const google::protobuf::Messag
 
     TRACE("Prepare commit: " << Log::GetEventTypeName(event_type) <<
         ", event value " << (message ? FriendlySubstr(message->ShortDebugString(), 0, 256, " ...") : "null")
-                             << ", event size " << (message ? message->ByteSize() : 0));
+        << ", event size " << (message ? message->ByteSize() : 0));
 
     const EventTypeInfo& event_type_info(EventTypeInfo::GetInfo(event_type));
     LogEventData event_data;

@@ -71,9 +71,13 @@ class DedupVolume : public dedupv1::StatisticProvider {
 
         std::set<std::string> enabled_filter_names_;
 
+        std::list<dedupv1::filter::Filter*> enabled_filter_list_;
+
         std::list<std::pair<std::string, std::string> > chunking_config_;
 
         dedupv1::Chunker* chunker_;
+
+        bytestring zero_chunk_fingerprint_;
 
         /**
          * Session management.
@@ -92,6 +96,8 @@ class DedupVolume : public dedupv1::StatisticProvider {
         unsigned int session_count_;
 
         bool maintainance_mode_;
+
+        bool InitZeroChunkFingerprint();
 
         bool ChangePerVolumeOption(const std::string& option_name, const std::string& option);
     protected:
@@ -243,6 +249,8 @@ class DedupVolume : public dedupv1::StatisticProvider {
             return chunker_;
         }
 
+        dedupv1::Chunker* active_chunker();
+
         /**
          * Returns true iff the volume has been started
          */
@@ -266,6 +274,18 @@ class DedupVolume : public dedupv1::StatisticProvider {
          * Returns a developer-readable representation of the volume
          */
         std::string DebugString() const;
+
+        inline const bytestring& zero_chunk_fingerprint() {
+          return zero_chunk_fingerprint_;
+        }
+
+        inline const std::list<dedupv1::filter::Filter*>& enabled_filter_list() {
+          return enabled_filter_list_;
+        }
+
+        inline DedupSystem* dedup_system() {
+          return system_;
+        }
 };
 
 uint32_t DedupVolume::GetId() const {

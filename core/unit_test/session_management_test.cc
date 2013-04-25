@@ -45,8 +45,6 @@ protected:
         ASSERT_TRUE(tp.Start());
 
         system = new DedupSystem();
-        ASSERT_TRUE(system);
-        ASSERT_TRUE(system->Init());
         ASSERT_TRUE(system->LoadOptions("data/dedupv1_test.conf"));
         ASSERT_TRUE(system->Start(StartContext(), &info_store, &tp));
         ASSERT_TRUE(system->Run());
@@ -56,7 +54,7 @@ protected:
 
         smc = new ResourceManagement<Session>();
         ASSERT_TRUE(smc);
-        ASSERT_TRUE(smc->Init("session", 2, new SessionResourceType(system->content_storage(), volume)));
+        ASSERT_TRUE(smc->Init("session", 2, new SessionResourceType(volume)));
     }
 
     virtual void TearDown() {

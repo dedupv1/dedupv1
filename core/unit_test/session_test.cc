@@ -28,6 +28,7 @@
 #include <core/chunker.h>
 #include <test_util/log_assert.h>
 #include "filter_chain_test_util.h"
+#include <core/dedup_system.h>
 
 using dedupv1::chunkstore::ChunkStore;
 
@@ -39,25 +40,29 @@ protected:
     USE_LOGGING_EXPECTATION();
 
     Session* session;
-    Chunker* chunker;
-    Fingerprinter* fingerprinter;
-    dedupv1::filter::FilterChain* filter_chain;
+
+    DedupSystem* system;
+    dedupv1::MemoryInfoStore info_store;
+    dedupv1::base::Threadpool tp;
 
     virtual void SetUp() {
         session = NULL;
-        filter_chain = NULL;
+        system = NULL;
 
-        chunker = Chunker::Factory().Create("static-chunker");
-        ASSERT_TRUE(chunker->Start());
-        fingerprinter = Fingerprinter::Factory().Create("sha1");
+        ASSERT_TRUE(tp.SetOption("size", "8"));
+        ASSERT_TRUE(tp.Start());
 
-        ASSERT_TRUE(chunker);
-        ASSERT_TRUE(fingerprinter);
+        system = new DedupSystem();
+        ASSERT_TRUE(system->LoadOptions("data/dedupv1_test.conf"));
+        ASSERT_TRUE(system->Start(StartContext(), &info_store, &tp));
+        ASSERT_TRUE(system->Run());
+
+        DedupVolume* volume = system->GetVolume(0);
+        ASSERT_TRUE(volume);
 
         session = new Session();
         ASSERT_TRUE(session);
-        std::set<const dedupv1::filter::Filter*> filters;
-        ASSERT_TRUE(session->Init(64 * 1024, chunker, fingerprinter, filters));
+        ASSERT_TRUE(session->Init(volume));
     }
 
     virtual void TearDown() {
@@ -65,16 +70,8 @@ protected:
             ASSERT_TRUE(session->Close());
             session = NULL;
         }
-
-        // The ownership is taken over by the session
-        fingerprinter = NULL;
-
-        ASSERT_TRUE(chunker->Close());
-        chunker = NULL;
-
-        if (filter_chain) {
-            ASSERT_TRUE(filter_chain->Close());
-            filter_chain = NULL;
+        if (system) {
+            ASSERT_TRUE(system->Close());
         }
     }
 };

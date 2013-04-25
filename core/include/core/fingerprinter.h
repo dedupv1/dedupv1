@@ -85,12 +85,6 @@ class Fingerprinter {
         virtual ~Fingerprinter();
 
         /**
-         * Inits the fingerprinter
-     * @return true iff ok, otherwise an error has occurred
-         */
-        virtual bool Init();
-
-        /**
          * Calculates the fingerprint of the given data.
          *
          * @param data data to calculate a fingerprint for
@@ -99,12 +93,6 @@ class Fingerprinter {
          * @param fp_size Pointer to the size of the fp buffer. Set to the actual size of the fingerprint as result.
          */
         virtual bool Fingerprint(const byte* data, size_t size, byte* fp, size_t* fp_size) = 0;
-
-        /**
-         * Closes the fingerprinter and frees all its resouces.
-     * @return true iff ok, otherwise an error has occurred
-         */
-        virtual bool Close();
 
         /**
          * Returns the fingerprint size in bytes.

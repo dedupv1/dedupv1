@@ -151,13 +151,6 @@ public:
     virtual ~Filter();
 
     /**
-     * Inits a new filter. This method should be
-     * called directly after the creation of the object.
-     * @return true iff ok, otherwise an error has occurred
-     */
-    virtual bool Init();
-
-    /**
      * Configures the filter.
      *
      * The supported options depend on the concrete filter.

@@ -112,6 +112,30 @@ bool DedupVolume::SetOption(const string& option_name, const string& option) {
     return false;
 }
 
+bool DedupVolume::InitZeroChunkFingerprint() {
+    DCHECK(system_, "System not set");
+    DCHECK(chunker_, "Chunker not set");
+
+    Fingerprinter* fp_gen =
+      Fingerprinter::Factory().Create(system_->content_storage()->fingerprinter_name());
+    CHECK(fp_gen, "Failed to create fingerprinter");
+
+    bytestring buffer;
+    buffer.resize(chunker_->GetMaxChunkSize(), 0);
+
+    byte fp[Fingerprinter::kMaxFingerprintSize];
+    size_t fp_size = Fingerprinter::kMaxFingerprintSize;
+    bool failed = false;
+    if (!fp_gen->Fingerprint(buffer.data(), buffer.size(), fp, &fp_size)) {
+        ERROR("Failed to fingerprint an empty chunk");
+        failed = true;
+    } else {
+        zero_chunk_fingerprint_.assign(fp, fp_size);
+    }
+    delete fp_gen;
+    return !failed;
+}
+
 bool DedupVolume::Start(DedupSystem* system, bool initial_maintaiance_mode) {
     CHECK(system, "System not set");
     CHECK(this->id_ != kUnsetVolumeId, "Volume ID not set");
@@ -149,14 +173,20 @@ bool DedupVolume::Start(DedupSystem* system, bool initial_maintaiance_mode) {
 
             CHECK(this->chunker_->Start(), "Failed to start per-volume chunker: " <<
                 "volume " << DebugString());
+            CHECK(InitZeroChunkFingerprint(), "Failed to init zero-chunk");
         }
+
+        Option<list<dedupv1::filter::Filter*> > enabled_filter_list = system_->content_storage()->GetFilterList(
+          enabled_filter_names_);
+        CHECK(enabled_filter_list.valid(), "Illegal filter list");
+        enabled_filter_list_ = enabled_filter_list.value();
 
         CHECK(session_management_ == NULL, "Session management already set");
         this->session_management_ = new ResourceManagement<Session>();
         CHECK(this->session_management_, "Session Management failed");
         CHECK(this->session_management_->Init("session",
                 this->session_count_,
-                new SessionResourceType(system->content_storage(), this)), "Failed to init session management");
+                new SessionResourceType(this)), "Failed to init session management");
     }
 
     return true;
@@ -240,18 +270,26 @@ bool DedupVolume::ChangeMaintenanceMode(bool maintaince_mode) {
 
             list<pair<string, string> >::iterator i = ++chunking_config_.begin();
             for (; i != chunking_config_.end(); ++i) {
-                CHECK(chunker_->SetOption(i->first, i->second), "Failed to configure chunker");
+                CHECK(chunker_->SetOption(i->first, i->second),
+                    "Failed to configure chunker");
             }
 
             CHECK(this->chunker_->Start(), "Failed to start per-volume chunker: " <<
                 "volume " << DebugString());
+            CHECK(InitZeroChunkFingerprint(), "Failed to init zero-chunk");
         }
+
+        Option<list<dedupv1::filter::Filter*> > enabled_filter_list = system_->content_storage()->GetFilterList(
+          enabled_filter_names_);
+        CHECK(enabled_filter_list.valid(), "Illegal filter list");
+        enabled_filter_list_ = enabled_filter_list.value();
 
         this->session_management_ = new ResourceManagement<Session>();
         CHECK(this->session_management_, "Session Management failed");
         CHECK(this->session_management_->Init("session",
                 this->session_count_,
-                new SessionResourceType(system_->content_storage(), this)), "Failed to init session management");
+                new SessionResourceType(this)),
+            "Failed to init session management");
     }
     return true;
 }
@@ -268,6 +306,14 @@ bool DedupVolume::Close() {
     }
 
     return true;
+}
+
+dedupv1::Chunker* DedupVolume::active_chunker() {
+    if (chunker_) {
+      return chunker_;
+    }
+    DCHECK_RETURN(system_, NULL, "System not set");
+    return system_->content_storage()->default_chunker();
 }
 
 dedupv1::scsi::ScsiResult DedupVolume::FastCopyTo(

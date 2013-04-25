@@ -127,8 +127,7 @@ string Inspect::ShowContainerHeader(uint64_t container_id) {
         } else if (storage->state() != ContainerStorage::RUNNING && storage->state() != ContainerStorage::STARTED) {
             sstr << "\"ERROR\": \"Storage not started\"" << std::endl;
         } else {
-            Container container;
-            container.Init(container_id, storage->GetContainerSize());
+            Container container(container_id, storage->GetContainerSize(), false);
 
             enum lookup_result r = storage->ReadContainer(&container);
             if (r == LOOKUP_ERROR) {
@@ -195,8 +194,7 @@ string Inspect::ShowContainer(uint64_t container_id, bytestring* fp_filter) {
         } else if (storage->state() != ContainerStorage::RUNNING && storage->state() != ContainerStorage::STARTED) {
             sstr << "\"ERROR\": \"Storage not started\"" << std::endl;
         } else {
-            Container container;
-            container.Init(container_id, storage->GetContainerSize());
+            Container container(container_id, storage->GetContainerSize(), false);
 
             enum lookup_result r = storage->ReadContainer(&container);
             if (r == LOOKUP_ERROR) {

@@ -26,7 +26,6 @@
 
 class MockDedupSystem : public dedupv1::DedupSystem {
     public:
-        MOCK_METHOD0(Init, bool());
         MOCK_METHOD1(LoadOptions, bool(const std::string& filename_));
         MOCK_METHOD2(SetOption, bool(const std::string& option_name, const std::string& option));
 

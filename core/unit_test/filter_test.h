@@ -30,6 +30,7 @@
 #include <test/dedup_system_mock.h>
 #include <test/block_index_mock.h>
 #include <test/chunk_index_mock.h>
+#include <test/storage_mock.h>
 
 namespace dedupv1 {
 namespace filter {
@@ -47,6 +48,7 @@ class FilterTest : public testing::TestWithParam<const char*> {
     MockDedupSystem system_;
     MockChunkIndex chunk_index_;
     MockBlockIndex block_index_;
+    MockStorage storage_;
 
     virtual void SetUp();
     virtual void TearDown();

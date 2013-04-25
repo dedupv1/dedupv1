@@ -190,8 +190,7 @@ TEST_P(MemoryBitmapAllocatorTest, GetNextFile) {
 TEST_P(MemoryBitmapAllocatorTest, OnCommit) {
     CreateSystem(GetParam());
 
-    Container c;
-    c.Init(0, CONTAINER_SIZE);
+    Container c(0, CONTAINER_SIZE, false);
     FillDefaultContainer(&c, 0, 12 );
 
     uint64_t free_areas = alloc->free_count();
@@ -222,8 +221,7 @@ TEST_P(MemoryBitmapAllocatorTest, OnCommit) {
 TEST_P(MemoryBitmapAllocatorTest, OnContainerForMerge) {
     CreateSystem(GetParam());
 
-    Container c;
-    c.Init(0, CONTAINER_SIZE);
+    Container c(0, CONTAINER_SIZE, false);
     FillDefaultContainer(&c, 0, 12 );
 
     ContainerStorageAddressData address_data;
@@ -247,8 +245,7 @@ TEST_P(MemoryBitmapAllocatorTest, OnContainerForMerge) {
 TEST_P(MemoryBitmapAllocatorTest, Overflow) {
     CreateSystem(GetParam());
 
-    Container c;
-    c.Init(0, CONTAINER_SIZE);
+    Container c(0, CONTAINER_SIZE, false);
     FillDefaultContainer(&c, 0, 12 );
 
     map<int, ContainerStorageAddressData> address_map;
@@ -296,8 +293,7 @@ TEST_P(MemoryBitmapAllocatorTest, Overflow) {
 TEST_P(MemoryBitmapAllocatorTest, OnCommitAndFree) {
     CreateSystem(GetParam());
 
-    Container c;
-    c.Init(0, CONTAINER_SIZE);
+    Container c(0, CONTAINER_SIZE, false);
     FillDefaultContainer(&c, 0, 12 );
 
     map<int, ContainerStorageAddressData> address_map;

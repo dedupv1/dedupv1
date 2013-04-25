@@ -108,7 +108,9 @@ class ChunkerSession {
          * @param size
          * @return true iff ok, otherwise an error has occurred
          */
-        virtual bool GetOpenChunkData(byte* data, unsigned int offset, unsigned int size) = 0;
+        virtual bool GetOpenChunkData(byte* data,
+            unsigned int offset,
+            unsigned int size) = 0;
 
         /**
          * Clears the chunker session.
@@ -141,13 +143,6 @@ class Chunker : public dedupv1::StatisticProvider {
      * @return
      */
     virtual ~Chunker();
-
-    /**
-     * Inits the chunker. The method is designed to be overwritten by subclasses.
-     * The default implementation returns true.
-     * @return
-     */
-    virtual bool Init();
 
     /**
      * Starts the chunker. The method must be overwritten by subclasses. The

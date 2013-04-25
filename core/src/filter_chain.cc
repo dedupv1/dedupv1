@@ -30,6 +30,7 @@
 #include <core/storage.h>
 #include <core/chunker.h>
 #include <core/filter.h>
+#include <core/dedup_volume.h>
 #include <base/logging.h>
 #include <base/strutil.h>
 
@@ -137,31 +138,28 @@ bool FilterChain::StoreChunkInfo(Session* session,
         failed = true;
     }
 
+    const list<Filter*>& chain(session->volume()->enabled_filter_list());
+
     if (!failed && chunk_mapping->is_known_chunk() == false) {
-        for (list<Filter*>::iterator j = this->chain_.begin(); j != this->chain_.end(); j++) {
+        for (list<Filter*>::const_iterator j = chain.begin(); j != chain.end(); j++) {
             Filter* filter = *j;
-            if (session->is_filter_enabled(filter)) {
                 if (!filter->Update(session, block_mapping, chunk_mapping, ec)) {
                     ERROR("Update of filter index failed: " << chunk_mapping->DebugString());
                     failed = true;
                 }
-            }
         }
         this->stats_.index_writes_++;
     } else if (!failed && chunk_mapping->is_known_chunk()) {
-        for (list<Filter*>::iterator j = this->chain_.begin(); j != this->chain_.end(); j++) {
+        for (list<Filter*>::const_iterator j = chain.begin(); j != chain.end(); j++) {
             Filter* filter = *j;
-            if (session->is_filter_enabled(filter)) {
                 if (!filter->UpdateKnownChunk(session, block_mapping, chunk_mapping, ec)) {
                     ERROR("Update of filter index failed: " << chunk_mapping->DebugString());
                     failed = true;
                 }
-            }
         }
     } else {
-        for (list<Filter*>::iterator j = this->chain_.begin(); j != this->chain_.end(); j++) {
+        for (list<Filter*>::const_iterator j = chain.begin(); j != chain.end(); j++) {
             Filter* filter = *j;
-            if (session->is_filter_enabled(filter)) {
                 if (!filter->Abort(session, block_mapping, chunk_mapping, ec)) {
                     if (ec) {
                         ERROR("Abort of filter failed: " << chunk_mapping->DebugString() << " because " << ec->DebugString());
@@ -170,7 +168,6 @@ bool FilterChain::StoreChunkInfo(Session* session,
                     }
                     failed = true;
                 }
-            }
         }
     }
     // now everything should have a valid address
@@ -188,12 +185,13 @@ bool FilterChain::CheckChunk(Session* session,
     DCHECK_RETURN(chunk_mapping, Filter::FILTER_ERROR, "Chunk mapping not set");
     chunk_mapping->set_data_address(Storage::ILLEGAL_STORAGE_ADDRESS);
 
+    const list<Filter*>& chain(session->volume()->enabled_filter_list());
+
     Filter::filter_result result = Filter::FILTER_WEAK_MAYBE;
-    list<Filter*>::iterator j;
-    for (j = this->chain_.begin(); j != this->chain_.end() &&
+    list<Filter*>::const_iterator j;
+    for (j = chain.begin(); j != chain.end() &&
          (result == Filter::FILTER_WEAK_MAYBE || result == Filter::FILTER_STRONG_MAYBE); j++) {
         Filter* filter = *j;
-        if (session->is_filter_enabled(filter)) {
             if (result == Filter::FILTER_WEAK_MAYBE
                 || filter->GetMaxFilterLevel() == Filter::FILTER_EXISTING) {
                 result = filter->Check(session, block_mapping, chunk_mapping, ec);
@@ -214,20 +212,16 @@ bool FilterChain::CheckChunk(Session* session,
                       ", result " << Filter::GetFilterResultName(result));
                 }
             }
-        }
     }
     if (result == Filter::FILTER_ERROR) {
         // Abort every that has to be aborted
         // j is the iterator of the filter where it failed
-        for (list<Filter*>::iterator k = this->chain_.begin(); k != j; k++) {
+        for (list<Filter*>::const_iterator k = chain.begin(); k != j; k++) {
             Filter* filter = *k;
-            if (filter) {
-                if (session->is_filter_enabled(filter)) {
+            DCHECK_RETURN(filter, Filter::FILTER_ERROR, "Filter not set");
                     if (!filter->Abort(session, block_mapping, chunk_mapping, ec)) {
                         WARNING("Failed to abort filter: " << filter->GetName() << ", chunk " << chunk_mapping->DebugString());
                     }
-                }
-            }
         }
     } else {
         // result is fine
@@ -263,21 +257,21 @@ bool FilterChain::AbortChunkInfo(
     const BlockMapping* block_mapping,
     ChunkMapping* chunk_mapping,
     ErrorContext* ec) {
-    list<Filter*>::iterator j;
     DCHECK(session, "Session not set");
     DCHECK(chunk_mapping, "Chunk mapping not set");
 
+    const list<Filter*>& chain(session->volume()->enabled_filter_list());
+
     bool failed = false;
     DEBUG("Abort filter chain: chunk " << chunk_mapping->DebugString());
-    for (j = this->chain_.begin(); j != this->chain_.end(); j++) {
+    list<Filter*>::const_iterator j;
+    for (j = chain.begin(); j != chain.end(); j++) {
         Filter* filter = *j;
         DCHECK(filter, "Filter not set");
-        if (session->is_filter_enabled(filter)) {
             if (!filter->Abort(session, block_mapping, chunk_mapping, ec)) {
                 ERROR("Abort of filter failed: " << chunk_mapping->DebugString());
                 failed = true;
             }
-        }
     }
     return !failed;
 }

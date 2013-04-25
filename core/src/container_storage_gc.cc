@@ -66,10 +66,6 @@ ContainerGCStrategy::ContainerGCStrategy() {
 ContainerGCStrategy::~ContainerGCStrategy() {
 }
 
-bool ContainerGCStrategy::Init() {
-    return true;
-}
-
 bool ContainerGCStrategy::Start(const StartContext& start_context, ContainerStorage* storge) {
     return true;
 }
@@ -124,11 +120,6 @@ ContainerGCStrategy* ContainerGCStrategyFactory::Create(const string& name) {
     if (f) {
         ContainerGCStrategy* gc = f();
         CHECK_RETURN(gc, NULL, "Cannot create new gc strategy" << name);
-        if (!gc->Init()) {
-            ERROR("Cannot init new gc strategy: " << name);
-            gc->Close();
-            return NULL;
-        }
         return gc;
     }
     ERROR("Cannot find gc strategy: " << name);

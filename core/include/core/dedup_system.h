@@ -280,12 +280,6 @@ class DedupSystem : public dedupv1::StatisticProvider {
     virtual ~DedupSystem();
 
     /**
-     * Inits the dedup subsystem.
-     * @return true iff ok, otherwise an error has occurred
-     */
-    virtual bool Init();
-
-    /**
      * Loads a configuration from a file. The
      * file is parsed line by line and and not out-commented line (# prefix)
      * is passed to the SetOption method. Each configuration line is assumed

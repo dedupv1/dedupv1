@@ -993,6 +993,9 @@ ContainerStorage::ContainerStorage() : meta_data_cache_(this),
     timeout_committer_should_stop_ = false;
     had_been_started_ = false;
     chunk_index_ = NULL;
+    this->timeout_committer_ = new Thread<bool>(
+        NewRunnable(this, &ContainerStorage::TimeoutCommitRunner),
+        "timeout commit");
     #ifdef DEDUPV1_CORE_TEST
     clear_data_called_ = false;
     #endif
@@ -1022,14 +1025,6 @@ ContainerStorage::Statistics::Statistics() : average_container_load_latency_(16)
 }
 
 ContainerStorage::~ContainerStorage() {
-}
-
-bool ContainerStorage::Init() {
-    this->timeout_committer_ = new Thread<bool>(
-        NewRunnable(this, &ContainerStorage::TimeoutCommitRunner),
-        "timeout commit");
-    CHECK(this->timeout_committer_, "Failed to alloc timeout committer");
-    return true;
 }
 
 bool ContainerStorage::SetOption(const string& option_name, const string& option) {
@@ -1451,8 +1446,7 @@ bool ContainerStorage::Run() {
             DEBUG("Check for ophran chunks: low container id " << id << ", high container id " << last_given_container_id_);
             for (; id <= last_given_container_id_; id++) {
                 TRACE("Check for ophrans in container: container id " << id);
-                Container container;
-                container.Init(id, container_size_);
+                Container container(id, container_size_, false);
                 lookup_result lr = ReadContainerWithCache(&container);
                 CHECK(lr != LOOKUP_ERROR, "Failed to read container: " << container.DebugString());
                 if (lr == LOOKUP_FOUND) {
@@ -2147,16 +2141,7 @@ bool ContainerStorage::DoDelete(
         return false;
     }
 
-    Container container;
-    if (!container.Init(container_id, GetContainerSize())) {
-        ERROR("Failed to init container: container id " << container_id);
-
-        if (cache_entry->is_set()) {
-            CHECK(cache_entry->lock()->ReleaseLock(), "Failed to release cache lock");
-        }
-
-        return false;
-    }
+    Container container(container_id, GetContainerSize(), false);
 
     // we have to force a read from disk to ensure that we use the latest version
     // if would not remove the container from the cache and use a cache-aware container read method (ReadContainerWithCache)
@@ -2454,15 +2439,7 @@ bool ContainerStorage::Read(uint64_t address, const void* key,
     // cache lock might/should be set
     TRACE("Read item " << Fingerprinter::DebugString((byte *) key, key_size) << " from container " << address << " (disk)");
 
-    Container read_container;
-    if (!read_container.Init(address, container_size_)) {
-        ERROR("Failed to init container: container id " << address);
-        if (!cache_.ReleaseCacheline(address, &cache_entry)) {
-            WARNING("Failed to release cache line: container id " << address << ", cache line " << cache_entry.DebugString());
-        }
-        return false;
-    }
-
+    Container read_container(address, container_size_, false);
     // I have no container lock here, we will acquire and release it during ReadContainer
     read_result = ReadContainer(&read_container); // without cache
     if (read_result == LOOKUP_ERROR) {
@@ -2940,11 +2917,8 @@ bool ContainerStorage::TryMergeContainer(uint64_t container_id_1, uint64_t conta
     CHECK(container_id_1 != container_id_2,
         "Illegal to merge a container with itself: container " << container_id_1);
 
-    Container container1;
-    CHECK(container1.Init(container_id_1, this->container_size_), "Failed to init container");
-
-    Container container2;
-    CHECK(container2.Init(container_id_2, this->container_size_), "Failed to init container");
+    Container container1(container_id_1, container_size_, false);
+    Container container2(container_id_2, container_size_, false);
 
     // get both addresses
     // we cannot use the normal lookup address method here as that would lead to problems when
@@ -3076,8 +3050,7 @@ bool ContainerStorage::TryMergeContainer(uint64_t container_id_1, uint64_t conta
         ", reason container id should be primary");
 
     // merge the two containers into the new container
-    Container new_container;
-    CHECK(new_container.Init(0, this->container_size_), "Failed to init container");
+    Container new_container(0, container_size_, false);
     CHECK(new_container.MergeContainer(container1, container2), "Failed to merge containers: " <<
         container1.DebugString() << ", " << container2.DebugString());
 
@@ -3184,8 +3157,7 @@ bool ContainerStorage::TryDeleteContainer(uint64_t container_id, bool* aborted) 
     FAULT_POINT("container-storage.delete.pre");
     // TODO (dmeister): We want an good state even if the delete fails
 
-    Container container;
-    CHECK(container.Init(container_id, this->container_size_), "Failed to init container");
+    Container container(container_id, container_size_, false);
 
     // we cannot use the normal lookup address method here as that would lead to problems with the locking
     uint64_t id = container.primary_id();

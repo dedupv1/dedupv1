@@ -239,10 +239,8 @@ bool ContainerStorageBackgroundCommitter::Start(ContainerStorage* storage) {
 
     this->current_container_.resize(this->thread_count_);
     for (size_t i = 0; i < this->thread_count_; i++) {
-        this->current_container_[i] = new Container();
-        CHECK(this->current_container_[i], "Failed to create container");
-        CHECK(this->current_container_[i]->Init(Storage::ILLEGAL_STORAGE_ADDRESS, storage->GetContainerSize()),
-            "Failed to init container");
+        this->current_container_[i] = new Container(Storage::ILLEGAL_STORAGE_ADDRESS,
+            storage->GetContainerSize(), false);
     }
     this->run_state_ = STARTING;
     return true;

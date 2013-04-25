@@ -201,7 +201,7 @@ class BlockIndex : public dedupv1::log::LogConsumer, public VolatileBlockCommitC
      * main block index, must be persisted by the chunk index and in the storage.
      */
     dedupv1::base::PersistentIndex* block_index_;
-    
+
     /**
      * Persistent index containing an entry for all block/version pairs that are failed, but whose
      * failed event is not yet replayed (in the background).
@@ -274,7 +274,7 @@ class BlockIndex : public dedupv1::log::LogConsumer, public VolatileBlockCommitC
      * Helper structure that manages all uncommitted block mappings during a dirty replay.
      * We cannot know for sure if a container has been committed, when the block mapping is replayed in
      * dirty mode. The problem is that the container metadata is not consistent at the time of the
-     * block mapping written event. 
+     * block mapping written event.
      * If should be noted that we use the same callback method
      */
     VolatileBlockStore dirty_volatile_blocks_;
@@ -396,7 +396,7 @@ class BlockIndex : public dedupv1::log::LogConsumer, public VolatileBlockCommitC
 
     /**
      * TODO (dmeister) Remove this.
-     */ 
+     */
     uint32_t minimal_replay_import_size_;
 
     int import_batch_size_;
@@ -623,7 +623,7 @@ class BlockIndex : public dedupv1::log::LogConsumer, public VolatileBlockCommitC
     bool LogReplayBlockMappingWrittenDirty(dedupv1::log::replay_mode replay_mode,
                                                    const LogEventData& event_value,
                                                    const dedupv1::log::LogReplayContext& context);
-                                                   
+
     bool LogReplayBlockMappingWriteFailedDirty(dedupv1::log::replay_mode replay_mode,
                                                     const LogEventData& event_value,
                                                     const dedupv1::log::LogReplayContext& context);
@@ -631,9 +631,9 @@ class BlockIndex : public dedupv1::log::LogConsumer, public VolatileBlockCommitC
     bool LogReplayBlockMappingWriteFailedBackground(dedupv1::log::replay_mode replay_mode,
                                                     const LogEventData& event_value,
                                                     const dedupv1::log::LogReplayContext& context);
-    
+
     dedupv1::base::Option<bool> IsKnownAsFailedBlock(uint64_t block_id, uint32_t version);
-                                                    
+
     /**
      * Checks if the given container is is committed.
      */
@@ -645,14 +645,6 @@ class BlockIndex : public dedupv1::log::LogConsumer, public VolatileBlockCommitC
      * @return
      */
     BlockIndex();
-
-    /**
-     * Inits the block index.
-     * This method should called directly after the creation of a new block index.
-     *
-     * @return
-     */
-    bool Init();
 
     /**
      * Closes the block index and frees all resources.
@@ -894,7 +886,7 @@ class BlockIndex : public dedupv1::log::LogConsumer, public VolatileBlockCommitC
 
     /**
      * Returns the block size of the blocks in the block index.
-     */ 
+     */
     inline uint32_t block_size() const;
 
 #ifdef DEDUPV1_CORE_TEST

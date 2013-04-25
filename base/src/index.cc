@@ -75,10 +75,6 @@ PersistentIndex::PersistentIndex(int capabilities)
     : Index(true, capabilities | HAS_ITERATOR) {
 }
 
-bool Index::Init() {
-    return true;
-}
-
 PersistentIndex* Index::AsPersistentIndex() {
     if (!IsPersistent()) {
         return NULL;

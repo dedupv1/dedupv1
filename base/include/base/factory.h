@@ -86,13 +86,6 @@ template<class T> class MetaFactory {
                     ERROR_LOGGER(logger_, "Cannot create new " << type_name_ << ": " << name);
                     return NULL;
                 }
-                if (!o->Init()) {
-                    ERROR_LOGGER(logger_, "Cannot init new " << type_name_ << ": " << name);
-                    if(!o->Close()) {
-                        WARNING_LOGGER(logger_, "Failed to close " << type_name_ << ": " << name);
-                    }
-                    return NULL;
-                }
                 return o;
             }
             std::string available_types;

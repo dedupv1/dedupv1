@@ -86,8 +86,6 @@ TEST_F(BitmapTest, Create)
         DEBUG("Size " << size);
 
         bitmap_ = new Bitmap(size);
-        ASSERT_TRUE(bitmap_);
-        ASSERT_TRUE(bitmap_->Init());
 
         ASSERT_EQ(size, bitmap_->size());
         Option<bool> value;
@@ -105,37 +103,9 @@ TEST_F(BitmapTest, Create)
     }
 }
 
-TEST_F(BitmapTest, NotInitialized)
-{
-    EXPECT_LOGGING(dedupv1::test::ERROR).Times(7); // clearAll, find_next_unset, both Store, both Load, setPersistence
-    bitmap_ = new Bitmap(62);
-    ASSERT_TRUE(bitmap_);
-
-    index = dedupv1::testing::CreateIndex("sqlite-disk-btree;filename=work/tc_test_data;max-key-size=8;max-item-count=16K");
-    dedupv1::base::PersistentIndex* pi = index->AsPersistentIndex();
-    ASSERT_TRUE(pi);
-    uint32_t key = 1;
-    size_t key_size = sizeof(uint32_t);
-
-    ASSERT_FALSE(bitmap_->clear(0));
-    ASSERT_FALSE(bitmap_->ClearAll());
-    ASSERT_FALSE(bitmap_->find_next_unset(0, 0).valid());
-    ASSERT_FALSE(bitmap_->set(0));
-    ASSERT_FALSE(bitmap_->hasPersistence());
-    ASSERT_TRUE(bitmap_->isDirty());
-    ASSERT_FALSE(bitmap_->is_set(0).valid());
-    ASSERT_FALSE(bitmap_->Store(false));
-    ASSERT_FALSE(bitmap_->Store(true));
-    ASSERT_FALSE(bitmap_->Load(false));
-    ASSERT_FALSE(bitmap_->Load(true));
-    ASSERT_FALSE(bitmap_->setPersistence(pi, &key, key_size, 4096));
-}
-
 TEST_F(BitmapTest, SetPersistenceFailing)
 {
     bitmap_ = new Bitmap(62);
-    ASSERT_TRUE(bitmap_);
-    ASSERT_TRUE(bitmap_->Init());
 
     index = dedupv1::testing::CreateIndex("sqlite-disk-btree;filename=work/tc_test_data;max-key-size=8;max-item-count=16K");
     dedupv1::base::PersistentIndex* pi = index->AsPersistentIndex();
@@ -156,8 +126,6 @@ TEST_F(BitmapTest, SetPersistenceFailing)
 TEST_F(BitmapTest, NoPersistence)
 {
     bitmap_ = new Bitmap(62);
-    ASSERT_TRUE(bitmap_);
-    ASSERT_TRUE(bitmap_->Init());
 
     EXPECT_LOGGING(dedupv1::test::ERROR).Times(4); // both Store and both Load
 
@@ -204,15 +172,12 @@ TEST_F(BitmapTest, Persistent)
             DEBUG("Size " << size);
 
             bitmap_ = new Bitmap(size);
-            ASSERT_TRUE(bitmap_);
-            ASSERT_TRUE(bitmap_->Init());
 
             DEBUG("Size is " << size);
             index = dedupv1::testing::CreateIndex(
                 "sqlite-disk-btree;filename=work/tc_test_data;max-key-size=8;max-item-count=16K");
             dedupv1::base::PersistentIndex* pi = index->AsPersistentIndex();
             ASSERT_TRUE(pi);
-            ASSERT_TRUE(pi->Init());
             ASSERT_TRUE(pi->Start(dedupv1::StartContext()));
 
             uint32_t key = 1;
@@ -238,7 +203,6 @@ TEST_F(BitmapTest, Persistent)
             delete bitmap_;
 
             bitmap_ = new Bitmap(size);
-            ASSERT_TRUE(bitmap_->Init());
             ASSERT_FALSE(bitmap_->hasPersistence());
             ASSERT_TRUE(bitmap_->setPersistence(pi, &key, key_size, page_size));
             ASSERT_TRUE(bitmap_->hasPersistence());
@@ -260,7 +224,6 @@ TEST_F(BitmapTest, Persistent)
             delete bitmap_;
 
             bitmap_ = new Bitmap(size);
-            ASSERT_TRUE(bitmap_->Init());
             ASSERT_FALSE(bitmap_->hasPersistence());
             ASSERT_TRUE(bitmap_->setPersistence(pi, &key, key_size, page_size));
             ASSERT_TRUE(bitmap_->hasPersistence());
@@ -282,7 +245,6 @@ TEST_F(BitmapTest, StorePage)
     size_t bits_per_page = page_size * 8;
     bitmap_ = new Bitmap(bits_per_page * 32); // 32 Pages
     ASSERT_TRUE(bitmap_);
-    ASSERT_TRUE(bitmap_->Init());
 
     index = dedupv1::testing::CreateIndex("sqlite-disk-btree;filename=work/tc_test_data;max-key-size=8;max-item-count=16K");
     dedupv1::base::PersistentIndex* pi = index->AsPersistentIndex();
@@ -318,7 +280,6 @@ TEST_F(BitmapTest, StorePage)
     Option<bool> value;
     bitmap_ = new Bitmap(bits_per_page * 32);
     ASSERT_TRUE(bitmap_);
-    ASSERT_TRUE(bitmap_->Init());
     ASSERT_TRUE(bitmap_->setPersistence(pi, &key, key_size, page_size));
     ASSERT_TRUE(bitmap_->Load(false));
     value = bitmap_->is_set(bits_per_page + 5);
@@ -338,7 +299,6 @@ TEST_F(BitmapTest, StorePage)
 
     bitmap_ = new Bitmap(bits_per_page * 32);
     ASSERT_TRUE(bitmap_);
-    ASSERT_TRUE(bitmap_->Init());
     ASSERT_TRUE(bitmap_->setPersistence(pi, &key, key_size, page_size));
     ASSERT_TRUE(bitmap_->Load(true)); // Now we count the zeros
     value = bitmap_->is_set(bits_per_page + 5);
@@ -362,7 +322,6 @@ TEST_F(BitmapTest, Override)
 
     bitmap_ = new Bitmap(4096); // 32 Pages
     ASSERT_TRUE(bitmap_);
-    ASSERT_TRUE(bitmap_->Init());
 
     index = dedupv1::testing::CreateIndex("sqlite-disk-btree;filename=work/tc_test_data;max-key-size=8;max-item-count=16K");
     dedupv1::base::PersistentIndex* pi = index->AsPersistentIndex();
@@ -380,7 +339,6 @@ TEST_F(BitmapTest, Override)
     Option<bool> value;
     bitmap_ = new Bitmap(4096);
     ASSERT_TRUE(bitmap_);
-    ASSERT_TRUE(bitmap_->Init());
     ASSERT_TRUE(bitmap_->setPersistence(pi, &key, key_size, 64));
     ASSERT_TRUE(bitmap_->Load(false));
     for (size_t i = 0; i < bitmap_->size(); i++) {
@@ -394,7 +352,6 @@ TEST_F(BitmapTest, Override)
 
     bitmap_ = new Bitmap(4096);
     ASSERT_TRUE(bitmap_);
-    ASSERT_TRUE(bitmap_->Init());
     ASSERT_TRUE(bitmap_->setPersistence(pi, &key, key_size, 64));
     ASSERT_TRUE(bitmap_->Load(false));
     for (size_t i = 0; i < bitmap_->size(); i++) {
@@ -410,13 +367,11 @@ TEST_F(BitmapTest, PersistentWrongSize)
 
     bitmap_ = new Bitmap(63);
     ASSERT_TRUE(bitmap_);
-    ASSERT_TRUE(bitmap_->Init());
 
     index = dedupv1::testing::CreateIndex(
         "sqlite-disk-btree;filename=work/tc_test_data;max-key-size=8;max-item-count=16K");
     dedupv1::base::PersistentIndex* pi = index->AsPersistentIndex();
     ASSERT_TRUE(pi);
-    ASSERT_TRUE(pi->Init());
     pi->Start(dedupv1::StartContext());
 
     uint32_t key = 1;
@@ -431,7 +386,6 @@ TEST_F(BitmapTest, PersistentWrongSize)
     delete bitmap_;
 
     bitmap_ = new Bitmap(64);
-    ASSERT_TRUE(bitmap_->Init());
     ASSERT_FALSE(bitmap_->hasPersistence());
     ASSERT_TRUE(bitmap_->setPersistence(pi, &key, key_size, 4096));
     ASSERT_TRUE(bitmap_->hasPersistence());
@@ -439,7 +393,6 @@ TEST_F(BitmapTest, PersistentWrongSize)
 
     delete bitmap_;
     bitmap_ = new Bitmap(62);
-    ASSERT_TRUE(bitmap_->Init());
     ASSERT_FALSE(bitmap_->hasPersistence());
     ASSERT_TRUE(bitmap_->setPersistence(pi, &key, key_size, 4096));
     ASSERT_TRUE(bitmap_->hasPersistence());
@@ -450,7 +403,6 @@ TEST_F(BitmapTest, Negate)
 {
     bitmap_ = new Bitmap(295);
     ASSERT_TRUE(bitmap_);
-    ASSERT_TRUE(bitmap_->Init());
     ASSERT_EQ(295, bitmap_->clean_bits());
 
     ASSERT_TRUE(bitmap_->Negate());
@@ -526,7 +478,6 @@ TEST_F(BitmapTest, SetAndClear)
 
         bitmap_ = new Bitmap(size);
         ASSERT_TRUE(bitmap_);
-        ASSERT_TRUE(bitmap_->Init());
 
         // Set
         Option<bool> value;
@@ -597,7 +548,6 @@ TEST_F(BitmapTest, SetAndClearAll)
 
         bitmap_ = new Bitmap(size);
         ASSERT_TRUE(bitmap_);
-        ASSERT_TRUE(bitmap_->Init());
 
         Option<bool> value;
         for (size_t i = 0; i < size; i++) {
@@ -607,7 +557,7 @@ TEST_F(BitmapTest, SetAndClearAll)
             ASSERT_TRUE(bitmap_->set(i));
         }
 
-        ASSERT_TRUE(bitmap_->ClearAll());
+        bitmap_->ClearAll();
 
         for (size_t i = 0; i < size; i++) {
             value = bitmap_->is_set(i);
@@ -661,7 +611,6 @@ TEST_F(BitmapTest, FindNextClean)
 
         bitmap_ = new Bitmap(size);
         ASSERT_TRUE(bitmap_);
-        ASSERT_TRUE(bitmap_->Init());
 
         size_t start[5];
         start[0] = 0;
@@ -755,7 +704,7 @@ TEST_F(BitmapTest, FindNextClean)
                     ASSERT_TRUE(pos_value.valid());
                     ASSERT_EQ((startpos + 8) % size, pos_value.value());
                 }
-                ASSERT_TRUE(bitmap_->ClearAll());
+                bitmap_->ClearAll();
             }
         }
 

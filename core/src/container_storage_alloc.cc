@@ -82,10 +82,6 @@ ContainerStorageAllocator::ContainerStorageAllocator() {
 ContainerStorageAllocator::~ContainerStorageAllocator() {
 }
 
-bool ContainerStorageAllocator::Init() {
-    return true;
-}
-
 bool ContainerStorageAllocator::Start(const StartContext& start_context, ContainerStorage* storage) {
     return true;
 }
@@ -159,11 +155,6 @@ ContainerStorageAllocator* ContainerStorageAllocatorFactory::Create(const string
     if (f) {
         ContainerStorageAllocator* a = f();
         CHECK_RETURN(a, NULL, "Cannot create new allocator" << name);
-        if (!a->Init()) {
-            ERROR("Cannot init new allocator: " << name);
-            a->Close();
-            return NULL;
-        }
         return a;
     }
     ERROR("Cannot find allocator: " << name);
@@ -260,7 +251,6 @@ bool MemoryBitmapContainerStorageAllocator::Start(const StartContext& start_cont
         size_t container_in_file_ = file_size / storage_->GetContainerSize();
 
         Bitmap* bitmap = new Bitmap(container_in_file_);
-        CHECK(bitmap->Init(), "Could not init Bitmap " << i);
         CHECK(bitmap->setPersistence(persistent_bitmap_, &i, sizeof(uint32_t), page_size_), "Could not set persistency for Bitmap " << i);
         if (storage_->file(i).new_file()) {
             ProfileTimer alloc_timer(this->stats_.disk_time_);

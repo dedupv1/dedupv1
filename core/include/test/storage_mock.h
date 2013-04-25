@@ -29,7 +29,6 @@
  */
 class MockStorage : public dedupv1::chunkstore::Storage {
     public:
-        MOCK_METHOD0(Init, bool());
         MOCK_METHOD2(SetOption, bool(const std::string& option_name, const std::string& option));
 
         MOCK_METHOD2(Start, bool(const dedupv1::StartContext& start_context, dedupv1::DedupSystem* system));

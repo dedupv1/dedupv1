@@ -122,7 +122,6 @@ protected:
         system.set_threadpool(&tp);
 
         chunk_index = new ChunkIndex();
-        ASSERT_TRUE(chunk_index->Init());
         ASSERT_TRUE(chunk_index->SetOption("persistent","static-disk-hash"));
         ASSERT_TRUE(chunk_index->SetOption("persistent.page-size","4K"));
         ASSERT_TRUE(chunk_index->SetOption("persistent.size","4M"));

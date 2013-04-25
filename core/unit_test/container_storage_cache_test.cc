@@ -93,8 +93,6 @@ protected:
         EXPECT_CALL(chunk_index, ChangePinningState(_,_,_)).WillRepeatedly(Return(LOOKUP_FOUND));
 
         log = new Log();
-        ASSERT_TRUE(log);
-        ASSERT_TRUE(log->Init());
         ASSERT_TRUE(log->SetOption("filename", "work/log"));
         ASSERT_TRUE(log->SetOption("max-log-size", "1M"));
         ASSERT_TRUE(log->SetOption("info.type", "sqlite-disk-btree"));
@@ -167,8 +165,7 @@ TEST_F(ContainerStorageCacheTest, Simple) {
     lookup_result lr = read_cache->GetCache(1, &cache_entry);
     ASSERT_EQ(LOOKUP_NOT_FOUND, lr);
     ASSERT_TRUE(cache_entry.is_set());
-    Container container;
-    container.Init(1, storage->GetContainerSize());
+    Container container(1, storage->GetContainerSize(), false);
 
     ASSERT_TRUE(read_cache->CopyToReadCache(container, &cache_entry));
 
@@ -185,8 +182,7 @@ TEST_F(ContainerStorageCacheTest, SimpleWithReplace) {
         ASSERT_EQ(LOOKUP_NOT_FOUND, lr);
         ASSERT_TRUE(cache_entry.is_set());
 
-        Container container;
-        container.Init(i, storage->GetContainerSize());
+        Container container(i, storage->GetContainerSize(), false);
 
         ASSERT_TRUE(read_cache->CopyToReadCache(container, &cache_entry));
     }
@@ -203,8 +199,7 @@ TEST_F(ContainerStorageCacheTest, GetCache) {
     lookup_result lr = read_cache->GetCache(1, &cache_entry);
     ASSERT_EQ(LOOKUP_NOT_FOUND, lr);
     ASSERT_TRUE(cache_entry.is_set());
-    Container container;
-    container.Init(1, storage->GetContainerSize());
+    Container container(1, storage->GetContainerSize(), false);
     ASSERT_TRUE(read_cache->CopyToReadCache(container, &cache_entry));
 
     const Container* cache_container = NULL;
@@ -227,8 +222,7 @@ TEST_F(ContainerStorageCacheTest, CheckCacheWithUpdate) {
     ASSERT_EQ(LOOKUP_NOT_FOUND, lr);
     ASSERT_TRUE(cache_entry.is_set());
 
-    Container container;
-    container.Init(1, storage->GetContainerSize());
+    Container container(1, storage->GetContainerSize(), false);
     ASSERT_TRUE(read_cache->CopyToReadCache(container, &cache_entry));
 
     lr = read_cache->CheckCache(1, &cache_container, true, true, &cache_entry);

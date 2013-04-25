@@ -60,8 +60,6 @@ protected:
         ASSERT_TRUE(dsv);
 
         dedup_system = new DedupSystem();
-        ASSERT_TRUE(dedup_system);
-        ASSERT_TRUE(dedup_system->Init());
         ASSERT_TRUE(dedup_system->LoadOptions("data/dedupsystem.conf"));
         ASSERT_TRUE(dedup_system->Start(dedupv1::StartContext(), &info_store, &tp));
         ASSERT_TRUE(dedup_system->Run());

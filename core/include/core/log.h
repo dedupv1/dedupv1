@@ -843,12 +843,6 @@ class Log: public dedupv1::StatisticProvider {
         virtual ~Log();
 
         /**
-         * Inits the log.
-         * @return true iff ok, otherwise an error has occurred
-         */
-        bool Init();
-
-        /**
          * Starts the log.
          *
          * @param start_context Start context

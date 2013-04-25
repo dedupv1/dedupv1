@@ -86,9 +86,7 @@ bool ContainerStorageReadCache::Start() {
     // read cache containers
     this->read_cache_.resize(this->read_cache_size_);
     for (int i = 0; i < this->read_cache_size_; i++) {
-        this->read_cache_[i] = new Container();
-        CHECK(this->read_cache_[i], "Failed to alloc container");
-        CHECK(this->read_cache_[i]->Init(Storage::ILLEGAL_STORAGE_ADDRESS, this->storage_->GetContainerSize()), "Container init failed");
+        this->read_cache_[i] = new Container(Storage::ILLEGAL_STORAGE_ADDRESS, this->storage_->GetContainerSize(), false);
     }
     // read cache locks
     this->read_cache_lock_.Init(this->read_cache_size_);

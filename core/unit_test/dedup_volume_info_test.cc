@@ -44,6 +44,7 @@ using testing::Return;
 using dedupv1::base::strutil::ToString;
 using dedupv1::log::EVENT_TYPE_VOLUME_ATTACH;
 using dedupv1::log::EVENT_TYPE_VOLUME_DETACH;
+using dedupv1::base::make_option;
 
 namespace dedupv1 {
 
@@ -65,7 +66,8 @@ protected:
 
         EXPECT_CALL(dedup_system, content_storage()).WillRepeatedly(Return(&content_storage));
         EXPECT_CALL(dedup_system, log()).WillRepeatedly(Return(&log));
-        EXPECT_CALL(content_storage, CreateSession(_, _)).WillRepeatedly(Return(&session));
+        std::list<dedupv1::filter::Filter*> filter_list;
+        EXPECT_CALL(content_storage, GetFilterList(_)).WillRepeatedly(Return(make_option(filter_list)));
 
         for (int i = 0; i < 4; i++) {
             ASSERT_TRUE(volumes[i].SetOption("id", ToString(i + 4)));

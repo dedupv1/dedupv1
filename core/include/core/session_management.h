@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with dedupv1. If not, see http://www.gnu.org/licenses/.
  */
- 
+
 #ifndef SESSION_MANAGEMENT_H__
 #define SESSION_MANAGEMENT_H__
 
@@ -36,10 +36,9 @@ class DedupVolume;
 class SessionResourceType : public dedupv1::base::ResourceType<Session> {
     private:
     DISALLOW_COPY_AND_ASSIGN(SessionResourceType);
-    ContentStorage* content_storage_;
     DedupVolume* volume_;
     public:
-    explicit SessionResourceType(ContentStorage* content_storage, DedupVolume* volume);
+    explicit SessionResourceType(DedupVolume* volume);
     ~SessionResourceType();
 
     virtual Session* Create();

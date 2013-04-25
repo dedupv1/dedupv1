@@ -303,27 +303,13 @@ class Container {
         /**
          * Constructor.
          */
-        Container();
+        Container(uint64_t id, size_t container_size, bool metadata_only);
 
         /**
          * Destructor.
          * @return
          */
         ~Container();
-
-        /**
-         * Inits the container to use the given primary id and the given container size.
-         *
-         * @param id
-         * @param container_size
-     * @return true iff ok, otherwise an error has occurred
-         */
-        bool Init(uint64_t id, size_t container_size);
-
-        /**
-     * @return true iff ok, otherwise an error has occurred
-         */
-        bool InitInMetadataOnlyMode(uint64_t id, size_t container_size);
 
         /**
      * @return true iff ok, otherwise an error has occurred

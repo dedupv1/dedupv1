@@ -52,10 +52,6 @@ Storage::Storage() {
 Storage::~Storage() {
 }
 
-bool Storage::Init() {
-    return true;
-}
-
 bool Storage::Start(const StartContext& start_context, DedupSystem* system) {
     return true;
 }

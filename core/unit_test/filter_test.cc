@@ -46,6 +46,7 @@ void FilterTest::SetUp() {
 
     EXPECT_CALL(system_, chunk_index()).WillRepeatedly(Return(&chunk_index_));
     EXPECT_CALL(system_, block_index()).WillRepeatedly(Return(&block_index_));
+    EXPECT_CALL(system_, storage()).WillRepeatedly(Return(&storage_));
 
     filter = CreateFilter(config);
     ASSERT_TRUE(filter) << "Failed to create filter";

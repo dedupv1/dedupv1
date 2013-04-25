@@ -76,9 +76,6 @@ ChunkIndexRestorer::ChunkIndexRestorer() : dedup_system_(NULL), started_(false) 
 bool ChunkIndexRestorer::InitializeStorageAndChunkIndex(const std::string& filename) {
     CHECK(!started_, "Chunk index restorer already started");
     system_ = new Dedupv1d();
-
-    CHECK(system_, "Error creating dedup system");
-    CHECK(system_->Init(),"Error initializing dedup system");
     CHECK(system_->LoadOptions(filename), "Error loading options");
 
     CHECK(system_->OpenLockfile(), "Failed to acquire lock on lockfile");
@@ -188,8 +185,7 @@ bool ChunkIndexRestorer::ReadContainerData(ChunkIndex* chunk_index) {
         }
         if (!duplicate_ids.at(container_id)) {
             // Read the container.
-            Container container;
-            container.InitInMetadataOnlyMode(container_id, storage->GetContainerSize());
+            Container container(container_id, storage->GetContainerSize(), true);
             lookup_result read_result = storage->ReadContainer(&container);
             CHECK(read_result != LOOKUP_ERROR, "Failed to read container " << container_id);
             if (read_result == LOOKUP_NOT_FOUND) {

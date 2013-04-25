@@ -33,6 +33,7 @@
 #include <test_util/log_assert.h>
 #include <test/filter_chain_mock.h>
 #include <test/filter_mock.h>
+#include <test/chunker_mock.h>
 
 using std::list;
 using std::pair;
@@ -42,6 +43,8 @@ using dedupv1::base::strutil::ToStorageUnit;
 using dedupv1::scsi::ScsiResult;
 using testing::Return;
 using testing::_;
+using dedupv1::base::make_option;
+using dedupv1::filter::Filter;
 
 LOGGER("DedupVolumeTest");
 
@@ -53,10 +56,11 @@ protected:
 
     MockDedupSystem system;
     MockContentStorage content_storage;
-    MockSession* session;
     MockFilterChain filter_chain;
     MockFilter filter;
     DedupVolume* volume;
+    MockChunker chunker;
+    MockChunkerSession session;
 
     size_t buffer_size;
     byte buffer[8 * 1024];
@@ -68,15 +72,18 @@ protected:
         volume = new DedupVolume();
         buffer_size = 8 * 1024;
 
-        // get new session by new. this is necessary to hook into the resource management
-        session = new MockSession();
-
         EXPECT_CALL(system, block_size()).WillRepeatedly(Return(64 * 1024));
         EXPECT_CALL(system, content_storage()).WillRepeatedly(Return(&content_storage));
         EXPECT_CALL(system, filter_chain()).WillRepeatedly(Return(&filter_chain));
         EXPECT_CALL(filter_chain, GetFilterByName(_)).WillRepeatedly(Return(&filter));
         EXPECT_CALL(filter_chain, GetFilterByName("chunk-index-filter")).WillRepeatedly(Return(&filter));
-        EXPECT_CALL(content_storage, CreateSession(_, _)).WillRepeatedly(Return(session));
+
+        list<Filter*> filter_list;
+        filter_list.push_back(&filter);
+        EXPECT_CALL(content_storage, GetFilterList(_)).WillRepeatedly(Return(make_option(filter_list)));
+        EXPECT_CALL(content_storage, default_chunker()).WillRepeatedly(Return(&chunker));
+        EXPECT_CALL(chunker, CreateSession()).WillOnce(Return(&session));
+        EXPECT_CALL(session, Close()).WillRepeatedly(Return(true));
     }
 
     virtual void TearDown() {
@@ -85,11 +92,6 @@ protected:
             delete volume;
             volume = NULL;
         }
-        if (session) {
-            // session may be freed by resource management system, but here it is not
-            delete session;
-        }
-        session = NULL;
     }
 };
 
@@ -207,9 +209,6 @@ TEST_F(DedupVolumeTest, MakeRequest) {
     ASSERT_TRUE(volume->Start(&system, false));
 
     ASSERT_TRUE(volume->MakeRequest(REQUEST_READ, 0, buffer_size, buffer, NO_EC));
-
-    session = NULL; // session will be auto-freed by resource management. A kind of bad hack necessary
-    // because of all the mocking
 }
 
 TEST_F(DedupVolumeTest, GetBlockInterval) {

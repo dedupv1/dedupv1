@@ -52,10 +52,6 @@ Chunker::Chunker() {
 Chunker::~Chunker() {
 }
 
-bool Chunker::Init() {
-    return true;
-}
-
 bool Chunker::Close() {
     delete this;
     return true;

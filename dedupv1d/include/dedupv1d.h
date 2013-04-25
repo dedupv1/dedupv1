@@ -291,12 +291,6 @@ class Dedupv1d : public dedupv1::base::memory::NewHandlerListener, public dedupv
     Dedupv1d();
 
     /**
-     * Inits the system
-     * @return true iff ok, otherwise an error has occurred
-     */
-    bool Init();
-
-    /**
      * Closes the system and frees all its resources
      * @return true iff ok, otherwise an error has occurred
      */

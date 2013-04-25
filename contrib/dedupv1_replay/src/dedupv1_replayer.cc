@@ -60,9 +60,6 @@ Dedupv1Replayer::Dedupv1Replayer() {
 bool Dedupv1Replayer::Initialize(const std::string& filename) {
     CHECK(!started_, "Dedupv1 replayer already started");
     system_ = new Dedupv1d();
-
-    CHECK(system_, "Error creating dedup system");
-    CHECK(system_->Init(),"Error initializing dedup system");
     CHECK(system_->LoadOptions(filename), "Error loading options");
 
     CHECK(system_->OpenLockfile(), "Failed to acquire lock on lockfile");

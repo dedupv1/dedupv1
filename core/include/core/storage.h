@@ -96,12 +96,6 @@ class Storage : public dedupv1::StatisticProvider {
     virtual ~Storage();
 
     /**
-     * Inits a storage implementation
-     * @return true iff ok, otherwise an error has occurred
-     */
-    virtual bool Init();
-
-    /**
      * Sets an option of an storage implementation. set_option should only be called before calling start
      *
      * No available options
