@@ -85,9 +85,7 @@ TEST_F(ChunkMappingTest, InitWithFP) {
 TEST_F(ChunkMappingTest, InitWitChunk) {
     uint64_t fp = 1;
 
-    Chunk c;
-    c.Init(8 * 1024);
-
+    Chunk c(8 * 1024);
     ChunkMapping m((byte *) &fp, sizeof(fp));
     ASSERT_TRUE(m.Init(&c));
 
@@ -100,9 +98,7 @@ TEST_F(ChunkMappingTest, InitWitChunk) {
 TEST_F(ChunkMappingTest, Copy) {
     uint64_t fp = 1;
 
-    Chunk c;
-    c.Init(8 * 1024);
-
+    Chunk c(8 * 1024);
     ChunkMapping m((byte *) &fp, sizeof(fp));
     ASSERT_TRUE(m.Init(&c));
 

@@ -53,7 +53,6 @@ class MockDedupSystem : public dedupv1::DedupSystem {
 
         MOCK_CONST_METHOD0(block_size, uint32_t());
 
-        MOCK_METHOD0(chunk_management, dedupv1::base::ResourceManagement<dedupv1::Chunk>*());
         MOCK_METHOD0(log, dedupv1::log::Log*());
         MOCK_METHOD0(chunk_index, dedupv1::chunkindex::ChunkIndex*());
         MOCK_METHOD0(block_index, dedupv1::blockindex::BlockIndex*());

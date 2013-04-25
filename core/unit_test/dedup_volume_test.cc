@@ -57,7 +57,6 @@ protected:
     MockFilterChain filter_chain;
     MockFilter filter;
     DedupVolume* volume;
-    dedupv1::base::ResourceManagement<Chunk>* cmc;
 
     size_t buffer_size;
     byte buffer[8 * 1024];
@@ -72,14 +71,8 @@ protected:
         // get new session by new. this is necessary to hook into the resource management
         session = new MockSession();
 
-        this->cmc = new dedupv1::base::ResourceManagement<Chunk>();
-        ASSERT_TRUE(cmc);
-        ASSERT_TRUE(this->cmc->Init("chunk", 32,
-                new dedupv1::ChunkResourceType(), false));
-
         EXPECT_CALL(system, block_size()).WillRepeatedly(Return(64 * 1024));
         EXPECT_CALL(system, content_storage()).WillRepeatedly(Return(&content_storage));
-        EXPECT_CALL(system, chunk_management()).WillRepeatedly(Return(cmc));
         EXPECT_CALL(system, filter_chain()).WillRepeatedly(Return(&filter_chain));
         EXPECT_CALL(filter_chain, GetFilterByName(_)).WillRepeatedly(Return(&filter));
         EXPECT_CALL(filter_chain, GetFilterByName("chunk-index-filter")).WillRepeatedly(Return(&filter));
@@ -91,10 +84,6 @@ protected:
             ASSERT_TRUE(volume->Close());
             delete volume;
             volume = NULL;
-        }
-        if (cmc) {
-            ASSERT_TRUE(cmc->Close());
-            cmc = NULL;
         }
         if (session) {
             // session may be freed by resource management system, but here it is not

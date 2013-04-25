@@ -31,59 +31,13 @@ LOGGER("Chunk");
 
 namespace dedupv1 {
 
-Chunk::Chunk() {
-    data_ = NULL;
-    size_ = 0;
-    max_size_ = 0;
-}
-
-bool Chunk::Init(size_t size) {
-    this->data_ = new byte[size];
-    CHECK(this->data_, "Alloc Chunk Data failed");
-    memset(this->data_, 0, size);
-    this->size_ = size;
-    this->max_size_ = size;
-    return true;
-}
-
-void Chunk::Detach() {
-    this->size_ = 0;
+Chunk::Chunk(uint32_t size) {
+    data_ = new byte[size];
+    size_ = size;
 }
 
 Chunk::~Chunk() {
-    if (this->data_) {
-        delete[] this->data_;
-        this->data_ = NULL;
-    }
-    this->size_ = 0;
-    this->max_size_ = 0;
-}
-
-Chunk* ChunkResourceType::Create() {
-    Chunk* c = new Chunk();
-    CHECK_RETURN(c, NULL, "Memalloc chunk failed");
-    if (!c->Init(Chunk::kMaxChunkSize)) {
-        ERROR("Init chunk failed");
-        delete c;
-        return NULL;
-    }
-    return c;
-}
-
-void ChunkResourceType::Close(Chunk* c) {
-    if (!c) {
-        WARNING("Chunk not set");
-        return;
-    }
-    delete c;
-}
-
-void ChunkResourceType::Reinit(Chunk* c) {
-    if (!c) {
-        WARNING("Chunk not set");
-        return;
-    }
-    c->Detach();
+  delete[] this->data_;
 }
 
 }

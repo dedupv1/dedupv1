@@ -64,7 +64,6 @@ class DedupSystem : public dedupv1::StatisticProvider {
     public:
     DISALLOW_COPY_AND_ASSIGN(DedupSystem);
 
-    static const size_t kChunkResourceFactor;
     static const uint32_t kDefaultLogFullPauseTime;
 
     static const dedupv1::scsi::ScsiResult kFullError;
@@ -168,12 +167,6 @@ class DedupSystem : public dedupv1::StatisticProvider {
     uint32_t block_size_;
 
     /**
-     * Chunk management.
-     * Chunks are expensive to allocate and free.
-     */
-    dedupv1::base::ResourceManagement<Chunk>* chunk_management_;
-
-    /**
      * Information about the current volumes in the system.
      * TODO (dmeister) Not clear if the volume management should be part of the base system. Consider
      * a refactoring.
@@ -252,7 +245,7 @@ class DedupSystem : public dedupv1::StatisticProvider {
 
 	/**
      * Makes a read or write request on the given block
-     * 
+     *
      * @param session session to use
      * @param block_request request information, incl. the block id
      * @param last_block_request true iff this is the last block request in the iSCSI request
@@ -560,11 +553,6 @@ class DedupSystem : public dedupv1::StatisticProvider {
      * @return
      */
     inline dedupv1::base::Threadpool* threadpool();
-
-    /**
-     * Returns the chunk resource management
-     */
-    virtual dedupv1::base::ResourceManagement<Chunk>* chunk_management();
 
     /**
      * returns the volume with the given id

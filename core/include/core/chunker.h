@@ -81,7 +81,10 @@ class ChunkerSession {
          * @return true iff ok, otherwise an error has occurred
          */
         virtual bool ChunkData(const byte* data,
-                unsigned int offset, unsigned int size, bool last_chunk_call, std::list<Chunk*>* chunks) = 0;
+                unsigned int offset,
+                unsigned int size,
+                bool last_chunk_call,
+                std::list<Chunk*>* chunks) = 0;
 
         /**
          * Close the chunker session.
@@ -153,7 +156,7 @@ class Chunker : public dedupv1::StatisticProvider {
      * @param cmc
      * @return
      */
-    virtual bool Start(dedupv1::base::ResourceManagement<Chunk>* cmc) = 0;
+    virtual bool Start() = 0;
 
     /**
      * Creates a new thread-bound chunker session.

@@ -25,7 +25,6 @@
 #include <core/block_mapping.h>
 #include <core/open_request.h>
 #include <core/session.h>
-#include <core/chunk_store.h>
 #include <core/chunker.h>
 #include <test_util/log_assert.h>
 #include "filter_chain_test_util.h"
@@ -40,30 +39,25 @@ protected:
     USE_LOGGING_EXPECTATION();
 
     Session* session;
-    ChunkStore* chunk_store;
     Chunker* chunker;
     Fingerprinter* fingerprinter;
     dedupv1::filter::FilterChain* filter_chain;
 
     virtual void SetUp() {
         session = NULL;
-        chunk_store = NULL;
         filter_chain = NULL;
 
-        chunk_store = new ChunkStore();
-        ASSERT_TRUE(chunk_store->Init("null-storage"));
-        chunker = Chunker::Factory().Create("null-chunker");
-        ASSERT_TRUE(chunker->Start(NULL));
+        chunker = Chunker::Factory().Create("static-chunker");
+        ASSERT_TRUE(chunker->Start());
         fingerprinter = Fingerprinter::Factory().Create("sha1");
 
-        ASSERT_TRUE(chunk_store);
         ASSERT_TRUE(chunker);
         ASSERT_TRUE(fingerprinter);
 
         session = new Session();
         ASSERT_TRUE(session);
         std::set<const dedupv1::filter::Filter*> filters;
-        ASSERT_TRUE(session->Init(64 * 1024, chunk_store, chunker, fingerprinter, filters));
+        ASSERT_TRUE(session->Init(64 * 1024, chunker, fingerprinter, filters));
     }
 
     virtual void TearDown() {
@@ -77,9 +71,6 @@ protected:
 
         ASSERT_TRUE(chunker->Close());
         chunker = NULL;
-
-        ASSERT_TRUE(chunk_store->Close());
-        chunk_store = NULL;
 
         if (filter_chain) {
             ASSERT_TRUE(filter_chain->Close());

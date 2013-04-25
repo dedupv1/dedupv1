@@ -116,7 +116,7 @@ class RabinChunker : public Chunker {
      * default minimal chunk size
      */
     static const uint32_t kDefaultMinChunkSize = 2028;
-    
+
     /**
      * default maximal chunk size
      */
@@ -175,13 +175,6 @@ class RabinChunker : public Chunker {
     unsigned int position_window_before_min_size_;
 
     /**
-     * Reference to the chunk management system, that holds
-     * lots of empty chunks, so that we do not need to
-     * allocate data for every chunk
-     */
-    dedupv1::base::ResourceManagement<Chunk>* cmc_;
-
-    /**
      * Statistics about the rabin chunker
      */
     Statistics stats_;
@@ -225,7 +218,7 @@ class RabinChunker : public Chunker {
      * @param cmc
      * @return true iff ok, otherwise an error has occurred
      */
-    virtual bool Start(dedupv1::base::ResourceManagement<Chunk>* cmc);
+    virtual bool Start();
 
     /**
      * Creates a new chunker session that should only be used
@@ -283,7 +276,7 @@ class RabinChunker : public Chunker {
      * returns the configured minimal chunk size
      */
     virtual size_t GetMinChunkSize();
-    
+
     /**
      * returns the configured maximal chunk size
      */
@@ -360,7 +353,7 @@ class RabinChunkerSession : public ChunkerSession {
          * Constructor
          */
         explicit RabinChunkerSession(RabinChunker* chunker);
-        
+
         /**
          * Destructor
          */
@@ -381,7 +374,7 @@ class RabinChunkerSession : public ChunkerSession {
          * Closes the rabin chunker session and frees all its resources.
          */
         virtual bool Close();
-        
+
         /**
          * return the number of bytes that are processed, but not assigned to a chunk
          */

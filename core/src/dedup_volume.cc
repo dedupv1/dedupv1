@@ -147,9 +147,7 @@ bool DedupVolume::Start(DedupSystem* system, bool initial_maintaiance_mode) {
                 CHECK(chunker_->SetOption(i->first, i->second), "Failed to configure chunker");
             }
 
-            ResourceManagement<Chunk>* cmc = system->chunk_management();
-            CHECK(cmc, "Chunk management not set");
-            CHECK(this->chunker_->Start(cmc), "Failed to start per-volume chunker: " <<
+            CHECK(this->chunker_->Start(), "Failed to start per-volume chunker: " <<
                 "volume " << DebugString());
         }
 
@@ -245,9 +243,7 @@ bool DedupVolume::ChangeMaintenanceMode(bool maintaince_mode) {
                 CHECK(chunker_->SetOption(i->first, i->second), "Failed to configure chunker");
             }
 
-            ResourceManagement<Chunk>* cmc = system_->chunk_management();
-            CHECK(cmc, "Chunk management not set");
-            CHECK(this->chunker_->Start(cmc), "Failed to start per-volume chunker: " <<
+            CHECK(this->chunker_->Start(), "Failed to start per-volume chunker: " <<
                 "volume " << DebugString());
         }
 

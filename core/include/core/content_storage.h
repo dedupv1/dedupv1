@@ -110,11 +110,6 @@ class ContentStorage : public dedupv1::StatisticProvider {
     dedupv1::Chunker* default_chunker_;
 
     /**
-     * resource management to avoid chunk allocations.
-     */
-    dedupv1::base::ResourceManagement<Chunk>* chunk_management_;
-
-    /**
      * if true, the filter chain for chunks of a request is executed in parallel
      * thread pool jobs.
      * If false, the filter chain for the chunks of a request are executed
@@ -310,7 +305,6 @@ class ContentStorage : public dedupv1::StatisticProvider {
      * @param block_index block index to use
      * @param filter_chain filter chain to use
      * @param chunk_store chunk store to use
-     * @param chunk_management chunk management to use
      * @param log log to use
      * @param block_locks block locks to use.
      * @param block_size block size to use
@@ -323,7 +317,6 @@ class ContentStorage : public dedupv1::StatisticProvider {
             dedupv1::chunkindex::ChunkIndex* chunk_index,
             dedupv1::chunkstore::ChunkStore* chunk_store,
             dedupv1::filter::FilterChain* filter_chain,
-            dedupv1::base::ResourceManagement<Chunk>* chunk_management,
             dedupv1::log::Log* log,
             dedupv1::BlockLocks* block_locks,
             uint32_t block_size);

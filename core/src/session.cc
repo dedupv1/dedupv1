@@ -33,7 +33,6 @@
 #include <core/block_mapping.h>
 #include <core/open_request.h>
 #include <base/logging.h>
-#include <core/chunk_store.h>
 #include <core/log_consumer.h>
 #include <core/block_index.h>
 #include <core/chunk.h>
@@ -64,9 +63,8 @@ Session::Session() {
     buffer_size_ = 0;
 }
 
-bool Session::Init(uint32_t block_size, ChunkStore* chunk_store, Chunker* chunker, Fingerprinter* fingerprinter,
+bool Session::Init(uint32_t block_size, Chunker* chunker, Fingerprinter* fingerprinter,
                    const std::set<const dedupv1::filter::Filter*>& enabled_filters) {
-    DCHECK(chunk_store, "Chunk store not set");
     DCHECK(chunker, "chunker not set");
     DCHECK(fingerprinter, "Fingerprinter not set");
 

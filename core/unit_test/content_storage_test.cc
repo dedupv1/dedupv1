@@ -77,7 +77,7 @@ protected:
 
         chunker = Chunker::Factory().Create("static");
         ASSERT_TRUE(chunker);
-        ASSERT_TRUE(chunker->Start(system->chunk_management()));
+        ASSERT_TRUE(chunker->Start());
 
         memset(test_data[0], 1, BLOCK_SIZE);
         memset(test_data[1], 2, BLOCK_SIZE);

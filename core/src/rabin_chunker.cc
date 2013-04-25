@@ -85,8 +85,6 @@ Chunker* RabinChunker::CreateChunker() {
 }
 
 ChunkerSession* RabinChunker::CreateSession() {
-    CHECK_RETURN(cmc_, NULL, "Static chunker not started");
-
     RabinChunkerSession* s = new RabinChunkerSession(this);
     CHECK_RETURN(s, NULL, "Failed to alloc rabin chunker session");
 
@@ -158,7 +156,6 @@ RabinChunker::RabinChunker() {
     stats_.close_forced_chunks_ = 0;
     memset(t_, 0, 256);
     memset(u_, 0, 256);
-    cmc_ = NULL;
     breakmark_ = 0;
 }
 
@@ -171,10 +168,9 @@ RabinChunker::Statistics::Statistics() {
 RabinChunker::~RabinChunker() {
 }
 
-bool RabinChunker::Start(ResourceManagement<Chunk>* cmc) {
+bool RabinChunker::Start() {
     CHECK(this->min_chunk_ <= avg_chunk_, "Minimal chunk size larger than average chunk size");
     CHECK(this->avg_chunk_ <= max_chunk_, "Average chunk size larger than maximal chunk size");
-    CHECK(cmc, "Chunk resource management not set");
 
     CHECK(poly_.IsIrreducible(), "Polynom is not irreducible:" << ToLong(poly_));
 
@@ -183,7 +179,6 @@ bool RabinChunker::Start(ResourceManagement<Chunk>* cmc) {
     position_window_before_min_size_ = min_chunk_ - window_size_;
     CalculateModTable();
     CalculateInvertTable();
-    this->cmc_ = cmc;
     return true;
 }
 
@@ -306,13 +301,9 @@ bool RabinChunkerSession::AcceptChunk(list<Chunk*>* chunks, const byte* data, ui
     DCHECK(this->overflow_chunk_data_, "Current chunk not set");
     DCHECK(chunks, "chunks result not set");
 
-    Chunk* c = chunker_->cmc_->Acquire();
+    Chunk* c = new Chunk(overflow_chunk_data_pos_ + size);
     CHECK(c, "Chunk not acquired");
     DCHECK(c->data(), "Chunk data not set");
-    DCHECK(c->max_size() >= this->overflow_chunk_data_pos_ + size,
-        "Current chunk too large: overflow chunk size " << overflow_chunk_data_pos_ <<
-        ", size " << size <<
-        ", max size " << c->max_size());
     DCHECK(this->overflow_chunk_data_pos_ + size > 0,
         "Current chunk has size zero: overflow chunk size " << overflow_chunk_data_pos_ <<
         ", size " << size);
@@ -327,7 +318,6 @@ bool RabinChunkerSession::AcceptChunk(list<Chunk*>* chunks, const byte* data, ui
     if (likely(size > 0)) {
         memcpy(c->mutable_data() + overflow_chunk_data_pos_, data, size);
     }
-    c->set_size(this->overflow_chunk_data_pos_ + size);
     chunks->push_back(c);
 
     // reset

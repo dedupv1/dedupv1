@@ -31,7 +31,6 @@
 #include "chunker_test.h"
 
 using std::list;
-using dedupv1::base::ResourceManagement;
 
 namespace dedupv1 {
 namespace contentstorage {
@@ -41,28 +40,17 @@ protected:
     USE_LOGGING_EXPECTATION();
 
     Chunker* chunker;
-    ResourceManagement<Chunk>* cmc;
 
     virtual void SetUp() {
-        cmc = new ResourceManagement<Chunk>();
-        ASSERT_TRUE(cmc);
-        ASSERT_TRUE(cmc->Init("chunks", 128, new ChunkResourceType()));
-        ASSERT_TRUE(cmc);
-
         chunker = Chunker::Factory().Create("static");
         ASSERT_TRUE(chunker);
-        ASSERT_TRUE(chunker->Start(cmc));
+        ASSERT_TRUE(chunker->Start());
     }
 
     virtual void TearDown() {
         if (chunker) {
             chunker->Close();
             chunker = NULL;
-        }
-
-        if (cmc) {
-            cmc->Close();
-            cmc = NULL;
         }
     }
 };
@@ -110,7 +98,7 @@ TEST_F(StaticChunkerTest, Chunk) {
     fclose(file);
 
     for (i = chunks.begin()++; i != chunks.end(); i++) {
-        cmc->Release(*i);
+        delete *i;
     }
 }
 
@@ -153,7 +141,7 @@ TEST_F(StaticChunkerTest, ChunkWithOffset) {
     fclose(file);
 
     for (i = chunks.begin()++; i != chunks.end(); i++) {
-        cmc->Release(*i);
+        delete *i;
     }
 }
 

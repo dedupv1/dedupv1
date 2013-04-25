@@ -22,7 +22,6 @@
 #include <core/chunker.h>
 #include <core/chunk_mapping.h>
 #include <core/fingerprinter.h>
-#include <base/resource_management.h>
 #include <core/chunk.h>
 #include <base/logging.h>
 #include <test_util/log_assert.h>
@@ -40,7 +39,6 @@ LOGGER("RabinChunkerTest");
 
 using std::set;
 using std::list;
-using dedupv1::base::ResourceManagement;
 using dedupv1::base::make_bytestring;
 
 namespace dedupv1 {
@@ -50,27 +48,17 @@ protected:
     USE_LOGGING_EXPECTATION();
 
     RabinChunker* chunker;
-    ResourceManagement<Chunk>* cmc;
 
     virtual void SetUp() {
-        cmc = new ResourceManagement<Chunk>();
-
-        cmc->Init("chunks", 1024 * 1024, new ChunkResourceType());
-        ASSERT_TRUE(cmc);
-
         chunker = dynamic_cast<RabinChunker*>(Chunker::Factory().Create("rabin"));
         ASSERT_TRUE(chunker);
-        ASSERT_TRUE(chunker->Start(cmc));
+        ASSERT_TRUE(chunker->Start());
     }
 
     virtual void TearDown() {
         if (chunker) {
             ASSERT_TRUE(chunker->Close());
             chunker = NULL;
-        }
-        if (cmc) {
-            ASSERT_TRUE(cmc->Close());
-            cmc = NULL;
         }
     }
 };
@@ -103,7 +91,7 @@ TEST_F(RabinChunkerTest, WrongMinimalChunkSize) {
 
     ASSERT_TRUE(chunker->SetOption("avg-chunk-size", "4K"));
     ASSERT_TRUE(chunker->SetOption("min-chunk-size", "8K"));
-    ASSERT_FALSE(chunker->Start(cmc));
+    ASSERT_FALSE(chunker->Start());
 }
 
 TEST_F(RabinChunkerTest, WrongMaximalChunkSize) {
@@ -118,7 +106,7 @@ TEST_F(RabinChunkerTest, WrongMaximalChunkSize) {
 
     ASSERT_TRUE(chunker->SetOption("avg-chunk-size", "4K"));
     ASSERT_TRUE(chunker->SetOption("max-chunk-size", "2K"));
-    ASSERT_FALSE(chunker->Start(cmc));
+    ASSERT_FALSE(chunker->Start());
 }
 
 TEST_F(RabinChunkerTest, Create) {
@@ -280,7 +268,7 @@ TEST_F(RabinChunkerTest, SwitchingFingerprint) {
     }
     EXPECT_EQ(1, fps.size());
     for (list<Chunk*>::iterator i = chunks.begin(); i != chunks.end(); i++) {
-        EXPECT_TRUE(cmc->Release(*i));
+        delete *i;
     }
     EXPECT_TRUE(fp->Close());
     fp = NULL;
@@ -312,7 +300,7 @@ TEST_F(RabinChunkerTest, Fingerprint) {
         fp->Fingerprint(chunk->data(), chunk->size(), digest_session1, &fp_size);
     }
     for (list<Chunk*>::iterator i = chunks.begin(); i != chunks.end(); i++) {
-        cmc->Release(*i);
+        delete *i;
     }
     chunks.clear();
 
@@ -338,7 +326,7 @@ TEST_F(RabinChunkerTest, Fingerprint) {
     fclose(file);
 
     for (list<Chunk*>::iterator i = chunks.begin(); i != chunks.end(); i++) {
-        cmc->Release(*i);
+        delete *i;
 
     }
     fp->Close();
@@ -369,18 +357,7 @@ TEST_F(RabinChunkerTest, Performance) {
         pos += size;
     }
 
-    // pre allocate chunks
     list<Chunk*> chunks;
-    for (int i = 0; i <= (data_size / (4 * 1024)); i++) {
-        Chunk* c = cmc->Acquire();
-        ASSERT_TRUE(c);
-        chunks.push_back(c);
-    }
-    list<Chunk*>::iterator i;
-    for (i = chunks.begin(); i != chunks.end(); i++) {
-        ASSERT_TRUE(cmc->Release(*i));
-    }
-    chunks.clear();
 
     tbb::tick_count start_time = tbb::tick_count::now();
 
@@ -405,7 +382,7 @@ TEST_F(RabinChunkerTest, Performance) {
 
         list<Chunk*>::iterator ci;
         for (ci = chunks.begin(); ci != chunks.end(); ci++) {
-            ASSERT_TRUE(cmc->Release(*ci));
+            delete *ci;
         }
         chunks.clear();
     }

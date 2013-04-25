@@ -56,7 +56,6 @@ Chunker* StaticChunker::CreateChunker() {
 }
 
 ChunkerSession* StaticChunker::CreateSession() {
-    CHECK_RETURN(cmc_, NULL, "Static chunker not started");
     return new StaticChunkerSession(this);
 }
 
@@ -71,16 +70,12 @@ StaticChunkerSession::StaticChunkerSession(StaticChunker* chunker) {
 
 StaticChunker::StaticChunker() {
     avg_chunk_size_ = Chunk::kDefaultAvgChunkSize;
-    cmc_ = NULL;
 }
 
 StaticChunker::~StaticChunker() {
 }
 
-bool StaticChunker::Start(ResourceManagement<Chunk>* cmc) {
-    CHECK(cmc, "Chunk resource management not set");
-    this->cmc_ = cmc;
-
+bool StaticChunker::Start() {
     DEBUG("Starting static chunker");
     return true;
 }
@@ -105,12 +100,8 @@ string StaticChunker::PrintProfile() {
 bool StaticChunkerSession::AcceptChunk(list<Chunk*>* chunks) {
     CHECK(chunks, "Chunks not set");
 
-    Chunk* c = chunker->cmc_->Acquire();
-    CHECK(c, "Failed to acquire chunk");
-    CHECK(current_chunk_pos < c->max_size(), "Chunk too large");
-
+    Chunk* c = new Chunk(current_chunk_pos);
     memcpy(c->mutable_data(), current_chunk, current_chunk_pos);
-    c->set_size(current_chunk_pos);
 
     chunks->push_back(c);
     current_chunk_pos = 0;

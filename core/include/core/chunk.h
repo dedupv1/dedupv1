@@ -45,12 +45,6 @@ class Chunk {
          */
         size_t size_;
 
-        /**
-         * Maximal size of the chunk. This is equal
-         * to the size of the data buffer
-         */
-        size_t max_size_;
-
     public:
         /**
          * Minimal chunk size. The minimal chunk size
@@ -73,14 +67,7 @@ class Chunk {
          * Constructor
          * @return
          */
-        Chunk();
-
-        /**
-         * Inits the chunk
-         * @param size
-         * @return true iff ok, otherwise an error has occurred
-         */
-        bool Init(size_t size);
+        Chunk(uint32_t size);
 
         /**
          * Destructor
@@ -89,33 +76,16 @@ class Chunk {
         virtual ~Chunk();
 
         /**
-         * TODO (dmeister) Rename in Release as in other parts of the system
-         */
-        void Detach();
-
-        /**
          * size of the chunk
          * @return
          */
         inline size_t size() const;
 
         /**
-         * Maximal size the chunk can have
-         * @return
-         */
-        inline size_t max_size() const;
-
-        /**
          * returns the chunk data
          * @return
          */
         inline const byte* data() const;
-
-        /**
-         * sets the size
-         * @param size
-         */
-        inline void set_size(size_t size);
 
         /**
          * returns a mutable data pointer
@@ -125,48 +95,12 @@ class Chunk {
         DISALLOW_COPY_AND_ASSIGN(Chunk);
 };
 
-/**
- * Resource type for chunks.
- * Used to recycle chunk instances.
- *
- * TODO (dmeister): Still needed with tcmalloc
- */
-class ChunkResourceType : public dedupv1::base::ResourceType<Chunk> {
-    public:
-    /**
-     * Creates a new chunk instance
-     * @return
-     */
-    virtual Chunk* Create();
-
-    /**
-     * Reinits a chunk.
-     *
-     * @param resource
-     */
-    virtual void Reinit(Chunk* resource);
-
-    /**
-     * Closes an unused chunk.
-     * @param resource
-     */
-    virtual void Close(Chunk* resource);
-};
-
 size_t Chunk::size() const {
     return size_;
 }
 
-size_t Chunk::max_size() const {
-    return max_size_;
-}
-
 const byte* Chunk::data() const {
     return data_;
-}
-
-void Chunk::set_size(size_t size) {
-    this->size_ = size;
 }
 
 byte* Chunk::mutable_data() {

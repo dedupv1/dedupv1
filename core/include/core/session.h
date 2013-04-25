@@ -143,7 +143,6 @@ class Session {
      * @return true iff ok, otherwise an error has occurred
          */
         bool Init(uint32_t block_size,
-                dedupv1::chunkstore::ChunkStore* chunk_store,
                 Chunker* chunker_factory,
                 Fingerprinter* fingerprinter,
                 const std::set<const dedupv1::filter::Filter*>& enabled_filter);

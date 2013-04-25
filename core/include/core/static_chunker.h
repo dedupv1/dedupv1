@@ -52,11 +52,6 @@ class StaticChunker : public Chunker {
     unsigned int avg_chunk_size_;
 
     /**
-     * Reference to the chunk management
-     */
-    dedupv1::base::ResourceManagement<Chunk>* cmc_;
-
-    /**
      * Holds profile information about the static chunker
      */
     dedupv1::base::Profile profile_;
@@ -79,7 +74,7 @@ class StaticChunker : public Chunker {
      * Starts the static chunker
      * @return true iff ok, otherwise an error has occurred
      */
-    virtual bool Start(dedupv1::base::ResourceManagement<Chunk>* cmc);
+    virtual bool Start();
 
     /**
      * Create a new chunker session.

@@ -107,7 +107,6 @@ ContentStorage::ContentStorage() {
     chunk_index_ = NULL;
     chunk_store_ = NULL;
     block_locks_ = NULL;
-    chunk_management_ = NULL;
     filter_chain_ = NULL;
     tp_ = NULL;
     parallel_filter_chain_ = true;
@@ -175,7 +174,6 @@ bool ContentStorage::Start(dedupv1::base::Threadpool* tp,
                            dedupv1::chunkindex::ChunkIndex* chunk_index,
                            ChunkStore* chunk_store,
                            FilterChain* filter_chain,
-                           ResourceManagement<Chunk>* chunk_management,
                            Log* log,
                            BlockLocks* block_locks,
                            uint32_t block_size) {
@@ -186,7 +184,6 @@ bool ContentStorage::Start(dedupv1::base::Threadpool* tp,
     this->chunk_index_ = chunk_index;
     this->filter_chain_ = filter_chain;
     this->chunk_store_ = chunk_store;
-    this->chunk_management_ = chunk_management;
     this->log_ = log;
     this->block_locks_ = block_locks;
     this->block_size_ = block_size;
@@ -196,7 +193,7 @@ bool ContentStorage::Start(dedupv1::base::Threadpool* tp,
         this->default_chunker_ = Chunker::Factory().Create("rabin");
         CHECK(default_chunker_, "Failed to create default chunker");
     }
-    CHECK(this->default_chunker_->Start(chunk_management),
+    CHECK(this->default_chunker_->Start(),
         "Cannot start chunker");
 
     return true;
@@ -259,7 +256,7 @@ Session* ContentStorage::CreateSession(Chunker* chunker,
         chunker_to_use = default_chunker_;
     }
 
-    if (!session->Init(block_size_, this->chunk_store_, chunker_to_use, fingerprint, filters)) {
+    if (!session->Init(block_size_, chunker_to_use, fingerprint, filters)) {
         ERROR("Error initing session: chunker " << (chunker_to_use == chunker ? "volume" : "default"));
         if (session->fingerprinter() == NULL) {
             // Init failed before fingerprinter was assigned, we still have to ownership
@@ -597,9 +594,7 @@ bool ContentStorage::WriteBlock(Session* session, Request* request, RequestStati
 
     list<Chunk*>::const_iterator ci;
     for (ci = chunks.begin(); ci != chunks.end(); ci++) {
-        if (!this->chunk_management_->Release(*ci)) {
-            WARNING("Cannot release chunk");
-        }
+        delete *ci;
     }
     chunks.clear();
 
