@@ -26,6 +26,25 @@ import platform
 import shutil
 import json
 
+def get_valgrind_version():
+    """ returns the version of valgrind or None
+    """
+    try:
+      output = subprocess.check_output(["valgrind", "--version"])
+      version_str = output.split("-")[-1]
+      return [int(v) for v in version_str.split(".")]
+    except:
+      return None
+
+def is_higher_version(v, reference):
+  for (a, b) in zip(v, reference):
+    if a > b:
+      return True
+    if a < b:
+      return False
+  # same version
+  return True
+
 class TestSuite:
     def __init__(self, type, testmode, options, dir, work_dir = None):
         self.type = type
@@ -36,25 +55,46 @@ class TestSuite:
         self.dir = dir
         self.work_dir = work_dir
 
+    def get_valgrind_prefix(self):
+        suppression_file = "../../scripts/valgrind/dedupv1.supp"
+        version = get_valgrind_version()
+        has_soname_synonyms = version is not None and is_higher_version(version, (3,8,1))
+        prefix = "valgrind"
+        if has_soname_synonyms:
+            prefix = prefix + " --soname-synonyms=somalloc=*tcmalloc*"
+
+        suppression_file = "../../scripts/valgrind/dedupv1.supp"
+        prefix = prefix + " --suppressions=%s" % (suppression_file)
+
+        return prefix
+
     def get_prefix_env_for_testmode(self):
         suppression_file = "../../scripts/valgrind/dedupv1.supp"
         prefix = ""
         env = os.environ.copy()
         if self.testmode == "VALGRIND-XML":
-            valgrind_xml_output_file = os.path.normpath(os.path.join("../../", self.output, "valgrind/%s-valgrind.xml" % (self.type)))
-            valgrind_output_file = os.path.normpath(os.path.join("../../", self.output, "valgrind/%s-valgrind.txt" % (self.type)))
-            prefix = "valgrind -q --leak-check=full --suppressions=%s --xml=yes --xml-file=%s --log-file=%s" % (
-                    suppression_file, valgrind_xml_output_file, valgrind_output_file)
+            valgrind_xml_output_file = os.path.normpath(os.path.join("../../", 
+              self.output, 
+              "valgrind/%s-valgrind.xml" % (self.type)))
+
+            valgrind_output_file = os.path.normpath(os.path.join("../../", 
+              self.output, 
+              "valgrind/%s-valgrind.txt" % (self.type)))
+
+            prefix = "%s -q --leak-check=full --xml=yes --xml-file=%s --log-file=%s" % (
+                    self.get_valgrind_prefix(), valgrind_xml_output_file, valgrind_output_file)
         elif self.testmode == "VALGRIND":
-            prefix = "valgrind  --leak-check=full --show-reachable=yes --suppressions=%s --malloc-fill=AA --free-fill=BB" % suppression_file  
+            prefix = "%s  --leak-check=full --show-reachable=yes  --malloc-fill=AA --free-fill=BB" % (
+                self.get_valgrind_prefix())
         elif self.testmode == "CACHEGRIND":
-            prefix = "valgrind --tool=cachegrind"
+            prefix = "%s --tool=cachegrind" % (self.get_valgrind_prefix())
         elif self.testmode == "PTRCHECK":
-            prefix = "valgrind --suppressions=%s --tool=exp-ptrcheck" % suppression_file  
+            prefix = "%s--tool=exp-ptrcheck" % (self.get_valgrind_prefix())
         elif self.testmode == "HELGRIND":
-            prefix = "valgrind --suppressions=%s --tool=helgrind" % suppression_file 
+            prefix = "%s --tool=helgrind" % (self.get_valgrind_prefix())
         elif self.testmode == "VALGRIND-SUPP":
-            prefix = "valgrind  --leak-check=full --show-reachable=yes --gen-suppressions=yes --suppressions=%s" % suppression_file
+            prefix = "%s --leak-check=full --show-reachable=yes --gen-suppressions=yes" % (
+                self.get_valgrind_prefix())
         elif self.testmode == "GDB":
             prefix = "gdb --args"
         elif self.testmode == "DUMA":
@@ -63,7 +103,6 @@ class TestSuite:
             env["DUMA_REPORT_ALL_LEAKS"] = "1"
         elif self.testmode == "COV":
             pass
-#            app = app.replace("debug", "debug-coverage")
         elif self.testmode == "MEMPROFILE":
             env["HEAPPROFILE"] = "heapprofile"
         elif self.testmode == "MEMCHECK":
@@ -108,14 +147,22 @@ class TestSuite:
             os.mkdir(orig_work_dir)
 
     def check_app_for_custom_mallocs(self, app_path):
+        """
+          if a valgrind mode is used with an old valgrind version, there should be no other custom malloc
+        """
         if self.testmode.find("VALGRIND") >= 0:
-            # if a valgrind mode is used, there should be no other custom malloc
+            version = get_valgrind_version()
+            if version is None:
+                raise Exception("Cannot determine valgrind version")
+            if is_higher_version(version, (3,8,1)):
+                return
+
             malloc_libs = set(["libtcmalloc", "libtbbmalloc"])
-            p = subprocess.Popen(["/usr/bin/ldd",  app_path], stdout=subprocess.PIPE, cwd = self.dir)
-            for line in p.stdout:
-                for malloc_lib in malloc_libs:
-                    if line.find(malloc_lib) >= 0:
-                        raise Exception("Unit test binary for type %s contains malloc library: %s" % (self.type, malloc_lib))
+            ldd_output = subprocess.check_output(["/usr/bin/ldd",  app_path], 
+                cwd = self.dir)
+            for malloc_lib in malloc_libs:
+                if ldd_output.find(malloc_lib) >= 0:
+                  raise Exception("Unit test binary for type %s contains malloc library: %s" % (self.type, malloc_lib))
 
     def execute(self, argv):
         (prefix, env) = self.get_prefix_env_for_testmode()
@@ -138,8 +185,11 @@ class TestSuite:
             self.prepare_cov()
 
         if not self.textoutput:
-            output_file = os.path.normpath(os.path.join("../../", self.output, "test/%s.xml" % (self.type)))
-            command = " ".join([prefix, app, '--gtest_output="xml:%s"' % (output_file)] + argv)
+            output_file = os.path.normpath(os.path.join("../../", 
+              self.output, 
+              "test/%s.xml" % (self.type)))
+            command = " ".join([prefix, app, '--gtest_output="xml:%s"' % (
+              output_file)] + argv)
         else:
             command = " ".join([prefix, app] + argv)
 
@@ -151,7 +201,8 @@ class TestSuite:
         return rc == 0
 
     def prepare_cov(self):
-        run("lcov --zerocounters --directory build/debug-coverage/%s_test/" % (self.type))
+        run("lcov --zerocounters --directory build/debug-coverage/%s_test/" % (
+          self.type))
 
     def gather_cov(self):
         coverage_dir = os.path.normpath(os.path.join(self.output, "coverage"))
@@ -159,10 +210,12 @@ class TestSuite:
             os.mkdir(coverage_dir)
         if not self.textoutput:
             output_file = os.path.join(coverage_dir, "%s_cov.xml" % (self.type))
-            run("scripts/gcovr -r %s --xml | python filter_path.py --stdin > %s" % (os.path.abspath("."), output_file))
+            run("scripts/gcovr -r %s --xml | python filter_path.py --stdin > %s" % (
+              os.path.abspath("."), output_file))
         else:
             output_file = os.path.join(coverage_dir, "%s_cov.txt" % (self.type))
-            run("scripts/gcovr -r %s | python filter_path.py --stdin > %s" % (os.path.abspath("."), output_file))
+            run("scripts/gcovr -r %s | python filter_path.py --stdin > %s" % (
+              os.path.abspath("."), output_file))
 
 def run(command, *args, **kwargs):
     def build_command():
