@@ -123,11 +123,12 @@ class TestSuite:
         self.check_work_dir()
         self.check_app_for_custom_mallocs(app)
 
-        # TODO (dmeister): Really still needed?
         if platform.uname()[0] == "Darwin":
-            env["DYLD_LIBRARY_PATH"] = env.get("DYLD_LIBRARY_PATH","") + ":/opt/dedupv1/lib"
+          libary_path_env_name = "DYLD_LIBRARY_PATH"
         else:
-          env["LD_LIBRARY_PATH"] = ":".join([env.get("LD_LIBRARY_PATH", ""),
+          libary_path_env_name = "LD_LIBRARY_PATH"
+        env[libary_path_env_name = ":".join([env.get(libary_path_env_name, ""),
+            os.path.join("/opt/dedupv1/lib"),
             os.path.join(self.get_build_path(), "dedupv1_base_lib"),
             os.path.join(self.get_build_path(), "dedupv1_test_util_lib"),
             os.path.join(self.get_build_path(), "dedupv1_core_lib"),
